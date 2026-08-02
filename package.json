@@ -2,11 +2,20 @@
   "name": "websume-app",
   "private": true,
   "version": "1.0.0",
-  "description": "Websume — full-stack scaffold (React + TypeScript client, Node/Express + TypeScript object-oriented API)",
+  "description": "Websume — full-stack scaffold. client/ (React+Vite) pairs with either server/ (Node+Express+SQLite, local dev) or worker/ (Cloudflare Workers+Hono+D1, production on Cloudflare).",
   "scripts": {
     "install:all": "npm install --prefix server && npm install --prefix client",
     "dev:server": "npm run dev --prefix server",
     "dev:client": "npm run dev --prefix client",
-    "seed": "npm run seed --prefix server"
+    "seed": "npm run seed --prefix server",
+    "install:worker": "npm install --prefix worker && npm install --prefix client",
+    "build:client": "npm run build --prefix client",
+    "dev:worker": "npm run dev --prefix worker",
+    "deploy:worker": "npm run build --prefix client && npm run deploy --prefix worker",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.118.0"
   }
 }

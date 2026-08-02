@@ -8,7 +8,7 @@ export interface AuthenticatedRequest extends Request {
 
 const authService = new AuthService();
 
-export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export async function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   const header = req.headers.authorization;
   if (!header?.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Missing or invalid Authorization header." });
@@ -16,7 +16,7 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
   const token = header.slice("Bearer ".length);
   try {
     const payload = authService.verifyToken(token);
-    const user = authService.getUserById(payload.userId);
+    const user = await authService.getUserById(payload.userId);
     if (!user) return res.status(401).json({ error: "User no longer exists." });
     req.user = user;
     next();

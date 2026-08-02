@@ -27,17 +27,20 @@ export interface UpdateResumeInput {
 export class ResumeRepository extends BaseRepository<ResumeRecord> {
   protected readonly table = "resumes";
 
-  findBySlug(slug: string): ResumeRecord | undefined {
-    return this.db.prepare(`SELECT * FROM resumes WHERE slug = ?`).get(slug) as ResumeRecord | undefined;
+  async findBySlug(slug: string): Promise<ResumeRecord | undefined> {
+    const { rows } = await this.pool.query(`SELECT * FROM resumes WHERE "slug" = $1`, [slug]);
+    return rows[0] as ResumeRecord | undefined;
   }
 
-  findAllForUser(userId: string): ResumeRecord[] {
-    return this.db
-      .prepare(`SELECT * FROM resumes WHERE userId = ? ORDER BY updatedAt DESC`)
-      .all(userId) as ResumeRecord[];
+  async findAllForUser(userId: string): Promise<ResumeRecord[]> {
+    const { rows } = await this.pool.query(
+      `SELECT * FROM resumes WHERE "userId" = $1 ORDER BY "updatedAt" DESC`,
+      [userId]
+    );
+    return rows as ResumeRecord[];
   }
 
-  create(input: CreateResumeInput): ResumeRecord {
+  async create(input: CreateResumeInput): Promise<ResumeRecord> {
     const now = new Date().toISOString();
     const record: ResumeRecord = {
       id: nanoid(12),
@@ -55,12 +58,12 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       createdAt: now,
       updatedAt: now,
     };
-    this.insertRow(record as unknown as Record<string, unknown>);
+    await this.insertRow(record as unknown as Record<string, unknown>);
     return record;
   }
 
-  update(id: string, input: UpdateResumeInput): ResumeRecord | undefined {
-    const existing = this.findById(id);
+  async update(id: string, input: UpdateResumeInput): Promise<ResumeRecord | undefined> {
+    const existing = await this.findById(id);
     if (!existing) return undefined;
 
     const merged: ResumeRecord = {
@@ -74,19 +77,21 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       generatedBullets: input.generatedBullets ? JSON.stringify(input.generatedBullets) : existing.generatedBullets,
       updatedAt: new Date().toISOString(),
     };
-    this.updateRow(id, merged as unknown as Record<string, unknown>);
+    await this.updateRow(id, merged as unknown as Record<string, unknown>);
     return merged;
   }
 
-  incrementViewCount(id: string): void {
-    this.db.prepare(`UPDATE resumes SET viewCount = viewCount + 1 WHERE id = ?`).run(id);
+  async incrementViewCount(id: string): Promise<void> {
+    await this.pool.query(`UPDATE resumes SET "viewCount" = "viewCount" + 1 WHERE "id" = $1`, [id]);
   }
 }
 
 function slugify(title: string): string {
-  return title
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "") || "resume";
+  return (
+    title
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "") || "resume"
+  );
 }

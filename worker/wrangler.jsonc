@@ -1,0 +1,35 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "websume",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Serves the built React app (client/dist) directly from Cloudflare's edge.
+  // Static files are matched first; anything under /api/* always hits the
+  // Worker (see run_worker_first), and anything else that doesn't match a
+  // real file falls back to index.html for client-side routing.
+  "assets": {
+    "directory": "../client/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": false
+  },
+
+  // Created via `npm run db:create` — copy the database_id it prints into
+  // the entry below (it is NOT the same as database_name).
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "websume-db",
+      "database_id": "31f92c39-c4d5-42a0-8a75-ff9bd95cdbc7",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Non-secret config. JWT_SECRET is intentionally NOT here — set it with
+  // `npm run secret:jwt` so it's encrypted rather than committed to git.
+  "vars": {
+    "CLIENT_ORIGIN": "https://websume-app.legumes-postage-9k.workers.dev/"
+  }
+}

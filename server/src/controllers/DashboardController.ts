@@ -12,8 +12,8 @@ export class DashboardController {
 
   summary = async (req: AuthenticatedRequest, res: Response) => {
     const user = req.user!;
-    const resumes = this.resumeService.listForUser(user.id);
-    const usage = this.subscriptionService.usageFor(user);
+    const resumes = await this.resumeService.listForUser(user.id);
+    const usage = await this.subscriptionService.usageFor(user);
 
     res.json({
       myResumes: resumes.map((r) => r.toJSON()),

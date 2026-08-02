@@ -5,11 +5,12 @@ import { SubscriptionTier, UserRecord } from "../types";
 export class UserRepository extends BaseRepository<UserRecord> {
   protected readonly table = "users";
 
-  findByEmail(email: string): UserRecord | undefined {
-    return this.db.prepare(`SELECT * FROM users WHERE email = ?`).get(email) as UserRecord | undefined;
+  async findByEmail(email: string): Promise<UserRecord | undefined> {
+    const { rows } = await this.pool.query(`SELECT * FROM users WHERE "email" = $1`, [email]);
+    return rows[0] as UserRecord | undefined;
   }
 
-  create(input: { name: string; email: string; passwordHash: string; profession: string | null }): UserRecord {
+  async create(input: { name: string; email: string; passwordHash: string; profession: string | null }): Promise<UserRecord> {
     const record: UserRecord = {
       id: nanoid(12),
       name: input.name,
@@ -19,18 +20,21 @@ export class UserRepository extends BaseRepository<UserRecord> {
       subscriptionTier: SubscriptionTier.Starter,
       createdAt: new Date().toISOString(),
     };
-    this.insertRow(record as unknown as Record<string, unknown>);
+    await this.insertRow(record as unknown as Record<string, unknown>);
     return record;
   }
 
-  updateSubscriptionTier(userId: string, tier: SubscriptionTier): void {
-    this.db.prepare(`UPDATE users SET subscriptionTier = ? WHERE id = ?`).run(tier, userId);
+  async updateSubscriptionTier(userId: string, tier: SubscriptionTier): Promise<void> {
+    await this.pool.query(`UPDATE users SET "subscriptionTier" = $1 WHERE "id" = $2`, [tier, userId]);
   }
 
-  countResumesForUser(userId: string): number {
-    const row = this.db
-      .prepare(`SELECT COUNT(*) as count FROM resumes WHERE userId = ?`)
-      .get(userId) as { count: number };
-    return row.count;
+  async countResumesForUser(userId: string): Promise<number> {
+    // COUNT(*) comes back as a bigint (stringified) from pg by default;
+    // casting to ::int keeps this a plain JS number, matching the D1 version.
+    const { rows } = await this.pool.query(
+      `SELECT COUNT(*)::int as count FROM resumes WHERE "userId" = $1`,
+      [userId]
+    );
+    return rows[0]?.count ?? 0;
   }
 }

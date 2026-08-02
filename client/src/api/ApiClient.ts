@@ -1,4 +1,9 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+// Relative by default: once deployed, the Worker serves both the built
+// client and the /api/* routes from the same origin, so no absolute URL
+// (and no CORS) is needed. Override with VITE_API_URL only when running
+// the Vite dev server (port 5173) against a separately-running
+// `wrangler dev` (port 8787) for hot-reload frontend development.
+const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 export class ApiError extends Error {
   constructor(message: string, public readonly status: number) {

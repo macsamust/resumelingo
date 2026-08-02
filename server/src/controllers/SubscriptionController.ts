@@ -11,7 +11,7 @@ export class SubscriptionController {
   };
 
   usage = async (req: AuthenticatedRequest, res: Response) => {
-    res.json({ usage: this.subscriptionService.usageFor(req.user!) });
+    res.json({ usage: await this.subscriptionService.usageFor(req.user!) });
   };
 
   changeTier = async (req: AuthenticatedRequest, res: Response) => {
@@ -19,7 +19,7 @@ export class SubscriptionController {
     if (!Object.values(SubscriptionTier).includes(tier)) {
       return res.status(400).json({ error: "Invalid subscription tier." });
     }
-    const user = this.subscriptionService.changeTier(req.user!.id, tier);
+    const user = await this.subscriptionService.changeTier(req.user!.id, tier);
     res.json({ user: user.toPublicJSON() });
   };
 }

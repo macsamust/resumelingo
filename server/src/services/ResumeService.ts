@@ -25,19 +25,20 @@ export class ResumeService {
     private readonly generator: IContentGenerator = new RuleBasedContentGenerator()
   ) {}
 
-  listForUser(userId: string): Resume[] {
-    return this.resumes.findAllForUser(userId).map((r) => new Resume(r));
+  async listForUser(userId: string): Promise<Resume[]> {
+    const records = await this.resumes.findAllForUser(userId);
+    return records.map((r) => new Resume(r));
   }
 
-  getOwned(userId: string, resumeId: string): Resume {
-    const record = this.resumes.findById(resumeId);
+  async getOwned(userId: string, resumeId: string): Promise<Resume> {
+    const record = await this.resumes.findById(resumeId);
     if (!record) throw new ResumeNotFoundError("Resume not found.");
     if (record.userId !== userId) throw new ResumeAccessError("You do not have access to this resume.");
     return new Resume(record);
   }
 
-  create(user: User, input: CreateResumeRequest): Resume {
-    const currentCount = this.users.countResumesForUser(user.id);
+  async create(user: User, input: CreateResumeRequest): Promise<Resume> {
+    const currentCount = await this.users.countResumesForUser(user.id);
     if (!user.canCreateAdditionalResume(currentCount)) {
       throw new ResumeLimitError(
         `Your ${user.plan.name} plan is limited to ${user.plan.resumeLimit} resume(s). Upgrade to add more.`
@@ -45,7 +46,7 @@ export class ResumeService {
     }
 
     const generated = this.generator.generate(input.profession, input.answers);
-    const record = this.resumes.create({
+    const record = await this.resumes.create({
       userId: user.id,
       title: input.title,
       profession: input.profession,
@@ -59,8 +60,8 @@ export class ResumeService {
     return new Resume(record);
   }
 
-  update(userId: string, resumeId: string, input: UpdateResumeInput): Resume {
-    const existing = this.getOwned(userId, resumeId); // throws if not found/owned
+  async update(userId: string, resumeId: string, input: UpdateResumeInput): Promise<Resume> {
+    const existing = await this.getOwned(userId, resumeId); // throws if not found/owned
 
     // Regenerate content if the answers changed, so editing stays "live."
     let generatedSummary = input.generatedSummary;
@@ -71,17 +72,17 @@ export class ResumeService {
       generatedBullets = generated.bullets;
     }
 
-    const updated = this.resumes.update(resumeId, { ...input, generatedSummary, generatedBullets });
+    const updated = await this.resumes.update(resumeId, { ...input, generatedSummary, generatedBullets });
     return new Resume(updated!);
   }
 
-  delete(userId: string, resumeId: string): void {
-    this.getOwned(userId, resumeId); // throws if not found/owned
-    this.resumes.delete(resumeId);
+  async delete(userId: string, resumeId: string): Promise<void> {
+    await this.getOwned(userId, resumeId); // throws if not found/owned
+    await this.resumes.delete(resumeId);
   }
 
-  getPublicBySlug(slug: string, password?: string): Resume {
-    const record = this.resumes.findBySlug(slug);
+  async getPublicBySlug(slug: string, password?: string): Promise<Resume> {
+    const record = await this.resumes.findBySlug(slug);
     if (!record) throw new ResumeNotFoundError("Resume not found.");
     const resume = new Resume(record);
     if (!resume.isAccessibleWithout(password)) {
@@ -91,7 +92,7 @@ export class ResumeService {
           : "This resume is private."
       );
     }
-    this.resumes.incrementViewCount(record.id);
+    await this.resumes.incrementViewCount(record.id);
     return resume;
   }
 }

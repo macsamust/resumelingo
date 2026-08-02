@@ -6,7 +6,7 @@ export class PublicController {
 
   getBySlug = async (req: Request, res: Response) => {
     const password = typeof req.query.password === "string" ? req.query.password : undefined;
-    const resume = this.resumeService.getPublicBySlug(req.params.slug, password);
+    const resume = await this.resumeService.getPublicBySlug(req.params.slug, password);
     res.json({ resume: resume.toPublicJSON() });
   };
 }

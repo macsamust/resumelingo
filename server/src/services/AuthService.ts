@@ -12,11 +12,11 @@ export class AuthService {
   ) {}
 
   async register(input: { name: string; email: string; password: string; profession?: string }) {
-    const existing = this.users.findByEmail(input.email);
+    const existing = await this.users.findByEmail(input.email);
     if (existing) throw new AuthError("An account with that email already exists.");
 
     const passwordHash = await bcrypt.hash(input.password, 10);
-    const record = this.users.create({
+    const record = await this.users.create({
       name: input.name,
       email: input.email,
       passwordHash,
@@ -28,7 +28,7 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
-    const record = this.users.findByEmail(email);
+    const record = await this.users.findByEmail(email);
     if (!record) throw new AuthError("Invalid email or password.");
 
     const matches = await bcrypt.compare(password, record.passwordHash);
@@ -39,8 +39,8 @@ export class AuthService {
     return { user, token };
   }
 
-  getUserById(userId: string): User | undefined {
-    const record = this.users.findById(userId);
+  async getUserById(userId: string): Promise<User | undefined> {
+    const record = await this.users.findById(userId);
     return record ? new User(record) : undefined;
   }
 

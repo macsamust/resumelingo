@@ -134,7 +134,7 @@ export function ResumeEditPage() {
             </div>
           )}
           <p className="hero-note" style={{ marginBottom: 16 }}>
-            websume.local/r/{resume.slug}
+            {window.location.origin}/r/{resume.slug}
           </p>
 
           <h2>Answers</h2>

@@ -10,15 +10,15 @@ export class SubscriptionService {
     return SUBSCRIPTION_PLANS;
   }
 
-  changeTier(userId: string, tier: SubscriptionTier): User {
+  async changeTier(userId: string, tier: SubscriptionTier): Promise<User> {
     getPlan(tier); // throws if invalid tier
-    this.users.updateSubscriptionTier(userId, tier);
-    const record = this.users.findById(userId)!;
-    return new User(record);
+    await this.users.updateSubscriptionTier(userId, tier);
+    const record = await this.users.findById(userId);
+    return new User(record!);
   }
 
-  usageFor(user: User) {
-    const used = this.users.countResumesForUser(user.id);
+  async usageFor(user: User) {
+    const used = await this.users.countResumesForUser(user.id);
     const limit = user.plan.resumeLimit;
     return {
       tier: user.subscriptionTier,

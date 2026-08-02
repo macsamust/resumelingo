@@ -6,6 +6,7 @@ dotenv.config();
  * to look at immediately after `npm install`. Safe to re-run — it skips
  * creation if the demo account already exists.
  */
+import { migrate } from "./database";
 import { AuthService, AuthError } from "../services/AuthService";
 import { ResumeService } from "../services/ResumeService";
 import { LinkVisibility } from "../types";
@@ -25,6 +26,8 @@ async function getOrCreateDemoUser(authService: AuthService, email: string, pass
 }
 
 async function seed() {
+  await migrate();
+
   const authService = new AuthService();
   const resumeService = new ResumeService();
 
@@ -33,7 +36,7 @@ async function seed() {
 
   const user = await getOrCreateDemoUser(authService, demoEmail, demoPassword);
 
-  const resume = resumeService.create(user, {
+  const resume = await resumeService.create(user, {
     title: "Cloud Architect Resume",
     profession: "software-engineer",
     templateKey: "technical",
@@ -55,4 +58,7 @@ seed()
   .catch((err) => {
     console.error("Seed failed:", err);
     process.exitCode = 1;
+  })
+  .finally(() => {
+    process.exit();
   });
