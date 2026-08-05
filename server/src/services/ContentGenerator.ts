@@ -1,4 +1,5 @@
 import { getProfessionByKey } from "../config/professions";
+import { AchievementEntry } from "../types";
 
 export interface GeneratedContent {
   summary: string;
@@ -13,16 +14,22 @@ export interface GeneratedContent {
  * swapped in via ResumeService's constructor without touching callers.
  */
 export interface IContentGenerator {
-  generate(profession: string, answers: Record<string, string>): GeneratedContent;
+  generate(profession: string, answers: Record<string, string>, achievements?: AchievementEntry[]): GeneratedContent;
 }
 
 export class RuleBasedContentGenerator implements IContentGenerator {
-  generate(profession: string, answers: Record<string, string>): GeneratedContent {
+  generate(profession: string, answers: Record<string, string>, achievements: AchievementEntry[] = []): GeneratedContent {
     const definition = getProfessionByKey(profession);
     const label = definition?.label ?? profession;
 
     const summary = this.buildSummary(label, answers);
-    const bullets = this.buildBullets(answers);
+    // Challenge/Action/Result entries produce genuinely impact-focused
+    // bullets (the STAR/CAR method) and take priority when present, since
+    // they're the person's own account of what changed because of their
+    // work — not just a restatement of a tool or certification they listed.
+    // Falls back to the old per-answer bullets so resumes created before
+    // this field existed (or left blank) still get something reasonable.
+    const bullets = achievements.length > 0 ? this.buildStarBullets(achievements) : this.buildBullets(answers);
 
     return { summary, bullets };
   }
@@ -34,6 +41,53 @@ export class RuleBasedContentGenerator implements IContentGenerator {
     return `Results-driven ${professionLabel} with ${years}${skillClause}, known for translating requirements into measurable outcomes and consistently exceeding expectations.`;
   }
 
+  /**
+   * Turns each Challenge/Action/Result entry into one bullet, action-led
+   * (standard resume convention: lead with a strong verb) followed by the
+   * challenge it addressed and the measurable result — e.g. "Redesigned the
+   * onboarding flow in response to a 40% signup drop-off, resulting in a 25%
+   * increase in completed signups." Entries missing a piece still produce a
+   * bullet from whatever was filled in, rather than being skipped outright.
+   */
+  private buildStarBullets(achievements: AchievementEntry[]): string[] {
+    return achievements
+      .map((a) => this.toStarBullet(a))
+      .filter((bullet): bullet is string => !!bullet);
+  }
+
+  private toStarBullet(achievement: AchievementEntry): string | undefined {
+    const action = this.asClause(achievement.action);
+    const challenge = this.asClause(achievement.challenge);
+    const result = this.asClause(achievement.result);
+
+    const segments: string[] = [];
+    if (action) segments.push(this.capitalize(action));
+    if (challenge) segments.push(`in response to ${challenge}`);
+    if (result) segments.push(`resulting in ${result}`);
+
+    if (segments.length === 0) return undefined;
+    return `${segments.join(", ")}.`;
+  }
+
+  /** Lowercases the leading word and strips trailing punctuation, so free text can be spliced mid-sentence. */
+  private asClause(text: string | undefined): string {
+    if (!text) return "";
+    const trimmed = text.trim().replace(/[.!?]+$/, "");
+    if (!trimmed) return "";
+    return trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
+  }
+
+  private capitalize(text: string): string {
+    if (!text) return text;
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  /**
+   * Fallback used only when no achievements are provided (e.g. a resume
+   * created before this field existed, or left blank). Instead of Websume's
+   * original AI-backed generator, this is intentionally simple template
+   * logic restating the raw profession Q&A answers.
+   */
   private buildBullets(answers: Record<string, string>): string[] {
     const bullets: string[] = [];
     for (const [key, value] of Object.entries(answers)) {
@@ -46,12 +100,6 @@ export class RuleBasedContentGenerator implements IContentGenerator {
     return bullets;
   }
 
-  /**
-   * The core "Instead of 'Managed team' -> 'Led a cross-functional
-   * engineering team of twelve...'" transformation described in the
-   * Websume product overview. This is intentionally simple template
-   * logic; a real AI-backed generator would replace this method only.
-   */
   private turnAnswerIntoAchievement(key: string, value: string): string {
     const readableKey = key.replace(/([A-Z])/g, " $1").toLowerCase().trim();
     const items = value

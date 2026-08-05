@@ -26,4 +26,19 @@ export class AuthController {
   me = async (req: AuthenticatedRequest, res: Response) => {
     res.json({ user: req.user!.toPublicJSON() });
   };
+
+  updateProfile = async (req: AuthenticatedRequest, res: Response) => {
+    const { name, email, profession } = req.body ?? {};
+    const user = await this.authService.updateProfile(req.user!.id, { name, email, profession });
+    res.json({ user: user.toPublicJSON() });
+  };
+
+  changePassword = async (req: AuthenticatedRequest, res: Response) => {
+    const { currentPassword, newPassword } = req.body ?? {};
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "currentPassword and newPassword are required." });
+    }
+    await this.authService.changePassword(req.user!.id, currentPassword, newPassword);
+    res.json({ success: true });
+  };
 }

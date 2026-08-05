@@ -38,24 +38,57 @@ export async function migrate(): Promise<void> {
       "passwordHash" TEXT NOT NULL,
       "profession" TEXT,
       "subscriptionTier" TEXT NOT NULL DEFAULT 'starter',
+      "stripeCustomerId" TEXT,
+      "stripeSubscriptionId" TEXT,
       "createdAt" TEXT NOT NULL
     );
+
+    -- Adds Stripe billing columns for installs whose users table already
+    -- existed before subscription billing was wired up. Safe to run on every
+    -- boot: IF NOT EXISTS makes this a no-op once the columns are present.
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS "stripeCustomerId" TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS "stripeSubscriptionId" TEXT;
 
     CREATE TABLE IF NOT EXISTS resumes (
       "id" TEXT PRIMARY KEY,
       "userId" TEXT NOT NULL REFERENCES users("id"),
       "slug" TEXT NOT NULL UNIQUE,
+      "fullName" TEXT NOT NULL DEFAULT '',
       "title" TEXT NOT NULL,
       "profession" TEXT NOT NULL,
       "templateKey" TEXT NOT NULL,
       "visibility" TEXT NOT NULL DEFAULT 'public',
       "accessPassword" TEXT,
       "answers" TEXT NOT NULL DEFAULT '{}',
+      "experience" TEXT NOT NULL DEFAULT '[]',
+      "education" TEXT NOT NULL DEFAULT '[]',
+      "awards" TEXT NOT NULL DEFAULT '[]',
+      "achievements" TEXT NOT NULL DEFAULT '[]',
       "generatedSummary" TEXT NOT NULL DEFAULT '',
       "generatedBullets" TEXT NOT NULL DEFAULT '[]',
       "viewCount" INTEGER NOT NULL DEFAULT 0,
       "createdAt" TEXT NOT NULL,
       "updatedAt" TEXT NOT NULL
     );
+
+    -- Adds the person's full name for installs whose resumes table already
+    -- existed before this field was added. Safe to run on every boot.
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "fullName" TEXT NOT NULL DEFAULT '';
+
+    -- Adds structured, chronologically-ordered work history (company, title,
+    -- start/end dates, "currently work here") for installs whose resumes
+    -- table predates this field. Stored as a JSON-serialized array, same
+    -- pattern as "answers" and "generatedBullets" above.
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "experience" TEXT NOT NULL DEFAULT '[]';
+
+    -- Adds education history and awards/honors, same JSON-array pattern as
+    -- "experience" above, for installs whose resumes table predates them.
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "education" TEXT NOT NULL DEFAULT '[]';
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "awards" TEXT NOT NULL DEFAULT '[]';
+
+    -- Adds structured Challenge/Action/Result achievement entries, which
+    -- ContentGenerator.ts turns into STAR-method bullets (see that file).
+    -- Same JSON-array pattern as "experience" above.
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "achievements" TEXT NOT NULL DEFAULT '[]';
   `);
 }

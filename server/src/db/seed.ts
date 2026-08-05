@@ -1,5 +1,7 @@
-import dotenv from "dotenv";
-dotenv.config();
+// Must be the very first import — see the comment in src/index.ts for why
+// `import "dotenv/config"` (not a later `dotenv.config()` call) is required
+// under ESM so env vars are loaded before ./database reads DATABASE_URL.
+import "dotenv/config";
 
 /**
  * Creates one demo account with a sample resume so the app has something

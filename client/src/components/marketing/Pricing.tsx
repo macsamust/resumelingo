@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { catalogApi } from "../../api";
+import { useAuth } from "../../context/AuthContext";
 import { SubscriptionPlan } from "../../types";
 
 const FALLBACK_PLANS: SubscriptionPlan[] = [
@@ -10,7 +11,9 @@ const FALLBACK_PLANS: SubscriptionPlan[] = [
 ];
 
 export function Pricing() {
+  const { user } = useAuth();
   const [plans, setPlans] = useState<SubscriptionPlan[]>(FALLBACK_PLANS);
+  const [checkingOut, setCheckingOut] = useState<string | null>(null);
 
   useEffect(() => {
     catalogApi
@@ -18,6 +21,17 @@ export function Pricing() {
       .then((res) => setPlans(res.plans))
       .catch(() => setPlans(FALLBACK_PLANS));
   }, []);
+
+  const handleUpgrade = async (tier: "professional" | "premium") => {
+    setCheckingOut(tier);
+    try {
+      const { url } = await catalogApi.checkout(tier);
+      window.location.href = url;
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Couldn't start checkout. Please try again.");
+      setCheckingOut(null);
+    }
+  };
 
   return (
     <section id="pricing">
@@ -47,12 +61,32 @@ export function Pricing() {
                   <li key={f}>{f}</li>
                 ))}
               </ul>
-              <Link
-                to="/signup"
-                className={`btn btn-block ${plan.tier === "professional" ? "btn-primary" : "btn-ghost"}`}
-              >
-                {plan.tier === "starter" ? "Start free" : plan.tier === "professional" ? "Upgrade to Professional" : "Go Premium"}
-              </Link>
+              {plan.tier !== "starter" && user ? (
+                user.subscriptionTier === plan.tier ? (
+                  <button className="btn btn-block btn-ghost" disabled>
+                    Current plan
+                  </button>
+                ) : (
+                  <button
+                    className={`btn btn-block ${plan.tier === "professional" ? "btn-primary" : "btn-ghost"}`}
+                    disabled={checkingOut === plan.tier}
+                    onClick={() => handleUpgrade(plan.tier as "professional" | "premium")}
+                  >
+                    {checkingOut === plan.tier
+                      ? "Redirecting to checkout…"
+                      : plan.tier === "professional"
+                      ? "Upgrade to Professional"
+                      : "Go Premium"}
+                  </button>
+                )
+              ) : (
+                <Link
+                  to="/signup"
+                  className={`btn btn-block ${plan.tier === "professional" ? "btn-primary" : "btn-ghost"}`}
+                >
+                  {plan.tier === "starter" ? "Start free" : plan.tier === "professional" ? "Upgrade to Professional" : "Go Premium"}
+                </Link>
+              )}
             </div>
           ))}
         </div>

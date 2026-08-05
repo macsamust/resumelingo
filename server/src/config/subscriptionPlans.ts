@@ -13,6 +13,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanDefinition[] = [
     name: "Professional",
     priceMonthly: 9.99,
     resumeLimit: 3,
+    stripePriceId: process.env.STRIPE_PRICE_PROFESSIONAL,
     features: [
       "Three resumes",
       "Unlimited edits",
@@ -29,6 +30,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanDefinition[] = [
     name: "Premium",
     priceMonthly: 19.99,
     resumeLimit: -1,
+    stripePriceId: process.env.STRIPE_PRICE_PREMIUM,
     features: [
       "Everything in Professional",
       "Unlimited resumes",

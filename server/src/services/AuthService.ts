@@ -47,4 +47,32 @@ export class AuthService {
   verifyToken(token: string) {
     return this.tokens.verify(token);
   }
+
+  /** Updates name/email/profession. Rejects an email change if another account already uses it. */
+  async updateProfile(
+    userId: string,
+    input: { name?: string; email?: string; profession?: string | null }
+  ): Promise<User> {
+    if (input.email) {
+      const existing = await this.users.findByEmail(input.email);
+      if (existing && existing.id !== userId) {
+        throw new AuthError("An account with that email already exists.");
+      }
+    }
+    await this.users.update(userId, input);
+    const record = await this.users.findById(userId);
+    return new User(record!);
+  }
+
+  /** Requires the current password to confirm identity before setting a new one. */
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const record = await this.users.findById(userId);
+    if (!record) throw new AuthError("User not found.");
+
+    const matches = await bcrypt.compare(currentPassword, record.passwordHash);
+    if (!matches) throw new AuthError("Current password is incorrect.");
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.users.updatePasswordHash(userId, passwordHash);
+  }
 }

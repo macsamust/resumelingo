@@ -19,8 +19,19 @@ export class CatalogApi extends ApiClient {
     return this.get<{ plans: SubscriptionPlan[] }>("/subscriptions/plans");
   }
 
+  /** Downgrade only — paid tiers go through checkout() below. */
   changeTier(tier: string) {
     return this.post<{ user: unknown }>("/subscriptions/change-tier", { tier });
+  }
+
+  /** Starts a Stripe Checkout session for upgrading to a paid tier. Redirect the browser to the returned url. */
+  checkout(tier: "professional" | "premium") {
+    return this.post<{ url: string }>("/subscriptions/checkout", { tier });
+  }
+
+  /** Opens Stripe's hosted Billing Portal (manage payment method, switch plan, cancel). */
+  billingPortal() {
+    return this.post<{ url: string }>("/subscriptions/portal");
   }
 
   dashboardSummary() {

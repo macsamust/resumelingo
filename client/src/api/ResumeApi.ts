@@ -1,13 +1,18 @@
 import { ApiClient } from "./ApiClient";
-import { LinkVisibility, Resume } from "../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, Resume, WorkExperienceEntry } from "../types";
 
 export interface CreateResumeInput {
+  fullName?: string;
   title: string;
   profession: string;
   templateKey: string;
   visibility?: LinkVisibility;
   accessPassword?: string | null;
   answers: Record<string, string>;
+  experience?: WorkExperienceEntry[];
+  education?: EducationEntry[];
+  awards?: AwardEntry[];
+  achievements?: AchievementEntry[];
 }
 
 export class ResumeApi extends ApiClient {

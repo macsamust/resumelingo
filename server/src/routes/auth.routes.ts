@@ -9,5 +9,7 @@ const controller = new AuthController();
 router.post("/register", asyncHandler(controller.register));
 router.post("/login", asyncHandler(controller.login));
 router.get("/me", requireAuth, asyncHandler(controller.me));
+router.put("/me", requireAuth, asyncHandler(controller.updateProfile));
+router.put("/me/password", requireAuth, asyncHandler(controller.changePassword));
 
 export default router;

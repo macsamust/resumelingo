@@ -2,11 +2,27 @@ import express from "express";
 import cors from "cors";
 import routes from "./routes";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
+import { SubscriptionController } from "./controllers/SubscriptionController";
+import { asyncHandler } from "./controllers/asyncHandler";
 
 export function createApp() {
   const app = express();
 
   app.use(cors({ origin: process.env.CLIENT_ORIGIN || "http://localhost:5173" }));
+
+  // Stripe webhook: must be registered before express.json() and use
+  // express.raw() instead, since verifying the `stripe-signature` header
+  // requires the exact raw request bytes Stripe signed — a JSON-parsed and
+  // re-serialized body would no longer match the signature. Because this
+  // exact path+method is matched here first, it never reaches express.json()
+  // below.
+  const subscriptionController = new SubscriptionController();
+  app.post(
+    "/api/webhooks/stripe",
+    express.raw({ type: "application/json" }),
+    asyncHandler(subscriptionController.webhook)
+  );
+
   app.use(express.json());
 
   app.get("/health", (_req, res) => res.json({ status: "ok", service: "websume-server" }));

@@ -2,9 +2,22 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { DynamicQuestionForm } from "../components/builder/DynamicQuestionForm";
+import { ExperienceEditor } from "../components/builder/ExperienceEditor";
+import { EducationEditor } from "../components/builder/EducationEditor";
+import { AwardsEditor } from "../components/builder/AwardsEditor";
+import { AchievementEditor } from "../components/builder/AchievementEditor";
 import { ResumePreview } from "../components/builder/ResumePreview";
 import { ApiError, catalogApi, resumeApi } from "../api";
-import { LinkVisibility, ProfessionDefinition, Resume, TemplateDefinition } from "../types";
+import {
+  AchievementEntry,
+  AwardEntry,
+  EducationEntry,
+  LinkVisibility,
+  ProfessionDefinition,
+  Resume,
+  TemplateDefinition,
+  WorkExperienceEntry,
+} from "../types";
 
 export function ResumeEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -12,11 +25,16 @@ export function ResumeEditPage() {
   const [resume, setResume] = useState<Resume | null>(null);
   const [professionDetail, setProfessionDetail] = useState<ProfessionDefinition | null>(null);
   const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
+  const [fullName, setFullName] = useState("");
   const [title, setTitle] = useState("");
   const [templateKey, setTemplateKey] = useState("");
   const [visibility, setVisibility] = useState<LinkVisibility>("public");
   const [accessPassword, setAccessPassword] = useState("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [experience, setExperience] = useState<WorkExperienceEntry[]>([]);
+  const [education, setEducation] = useState<EducationEntry[]>([]);
+  const [awards, setAwards] = useState<AwardEntry[]>([]);
+  const [achievements, setAchievements] = useState<AchievementEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -27,10 +45,15 @@ export function ResumeEditPage() {
       .then(([resumeRes, templatesRes]) => {
         const r = resumeRes.resume;
         setResume(r);
+        setFullName(r.fullName);
         setTitle(r.title);
         setTemplateKey(r.templateKey);
         setVisibility(r.visibility);
         setAnswers(r.answers);
+        setExperience(r.experience);
+        setEducation(r.education);
+        setAwards(r.awards);
+        setAchievements(r.achievements);
         setTemplates(templatesRes.templates);
         return catalogApi.getProfessionQuestions(r.profession);
       })
@@ -46,11 +69,16 @@ export function ResumeEditPage() {
     setSaving(true);
     try {
       const { resume: updated } = await resumeApi.update(id, {
+        fullName,
         title,
         templateKey,
         visibility,
         accessPassword: visibility === "password" ? accessPassword : null,
         answers,
+        experience,
+        education,
+        awards,
+        achievements,
       });
       setResume(updated);
     } catch (err) {
@@ -100,6 +128,10 @@ export function ResumeEditPage() {
         <div className="builder-panel">
           <h2>Details</h2>
           <div className="field">
+            <label>Your full name</label>
+            <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </div>
+          <div className="field">
             <label>Resume title</label>
             <input value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
@@ -137,6 +169,21 @@ export function ResumeEditPage() {
             {window.location.origin}/r/{resume.slug}
           </p>
 
+          <h2>Work Experience</h2>
+          <ExperienceEditor experience={experience} onChange={setExperience} />
+
+          <h2>Education</h2>
+          <EducationEditor education={education} onChange={setEducation} />
+
+          <h2>Awards</h2>
+          <AwardsEditor awards={awards} onChange={setAwards} />
+
+          <h2>Key Achievements</h2>
+          <p className="hero-note" style={{ marginBottom: 16 }}>
+            Describe a challenge, what you did, and the result — this is what turns into impact-focused resume bullets.
+          </p>
+          <AchievementEditor achievements={achievements} onChange={setAchievements} />
+
           <h2>Answers</h2>
           {professionDetail && (
             <DynamicQuestionForm
@@ -152,11 +199,16 @@ export function ResumeEditPage() {
         </div>
 
         <ResumePreview
+          fullName={fullName}
           title={title}
           professionLabel={resume.professionLabel}
+          templateKey={templateKey}
           templateName={templates.find((t) => t.key === templateKey)?.name}
           summary={resume.generatedSummary}
           bullets={resume.generatedBullets}
+          experience={experience}
+          education={education}
+          awards={awards}
         />
       </form>
       <p className="form-footnote">

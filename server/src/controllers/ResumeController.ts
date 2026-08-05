@@ -16,17 +16,34 @@ export class ResumeController {
   };
 
   create = async (req: AuthenticatedRequest, res: Response) => {
-    const { title, profession, templateKey, visibility, accessPassword, answers } = req.body ?? {};
-    if (!title || !profession || !templateKey || !answers) {
-      return res.status(400).json({ error: "title, profession, templateKey, and answers are required." });
-    }
-    const resume = await this.resumeService.create(req.user!, {
+    const {
+      fullName,
       title,
       profession,
       templateKey,
       visibility,
       accessPassword,
       answers,
+      experience,
+      education,
+      awards,
+      achievements,
+    } = req.body ?? {};
+    if (!title || !profession || !templateKey || !answers) {
+      return res.status(400).json({ error: "title, profession, templateKey, and answers are required." });
+    }
+    const resume = await this.resumeService.create(req.user!, {
+      fullName,
+      title,
+      profession,
+      templateKey,
+      visibility,
+      accessPassword,
+      answers,
+      experience,
+      education,
+      awards,
+      achievements,
     });
     res.status(201).json({ resume: resume.toJSON() });
   };

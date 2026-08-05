@@ -9,6 +9,8 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   refresh: () => Promise<void>;
+  /** Syncs context state after a profile edit (ProfilePage calls authApi itself, then this). */
+  updateUser: (user: AuthUser) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -57,8 +59,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const updateUser = (updated: AuthUser) => setUser(updated);
+
   return (
-    <AuthContext.Provider value={{ user, loading, register, login, logout, refresh }}>
+    <AuthContext.Provider value={{ user, loading, register, login, logout, refresh, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

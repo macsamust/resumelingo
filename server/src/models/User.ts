@@ -13,6 +13,8 @@ export class User {
   readonly passwordHash: string;
   readonly profession: string | null;
   readonly subscriptionTier: SubscriptionTier;
+  readonly stripeCustomerId: string | null;
+  readonly stripeSubscriptionId: string | null;
   readonly createdAt: string;
 
   constructor(record: UserRecord) {
@@ -22,6 +24,8 @@ export class User {
     this.passwordHash = record.passwordHash;
     this.profession = record.profession;
     this.subscriptionTier = record.subscriptionTier;
+    this.stripeCustomerId = record.stripeCustomerId ?? null;
+    this.stripeSubscriptionId = record.stripeSubscriptionId ?? null;
     this.createdAt = record.createdAt;
   }
 

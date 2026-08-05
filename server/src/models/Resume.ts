@@ -1,4 +1,4 @@
-import { LinkVisibility, ResumeRecord } from "../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, ResumeRecord, WorkExperienceEntry } from "../types";
 import { getTemplateByKey } from "../config/templates";
 import { getProfessionByKey } from "../config/professions";
 
@@ -11,12 +11,17 @@ export class Resume {
   readonly id: string;
   readonly userId: string;
   readonly slug: string;
+  readonly fullName: string;
   readonly title: string;
   readonly profession: string;
   readonly templateKey: string;
   readonly visibility: LinkVisibility;
   readonly accessPassword: string | null;
   readonly answers: Record<string, string>;
+  readonly experience: WorkExperienceEntry[];
+  readonly education: EducationEntry[];
+  readonly awards: AwardEntry[];
+  readonly achievements: AchievementEntry[];
   readonly generatedSummary: string;
   readonly generatedBullets: string[];
   readonly viewCount: number;
@@ -27,12 +32,17 @@ export class Resume {
     this.id = record.id;
     this.userId = record.userId;
     this.slug = record.slug;
+    this.fullName = record.fullName;
     this.title = record.title;
     this.profession = record.profession;
     this.templateKey = record.templateKey;
     this.visibility = record.visibility;
     this.accessPassword = record.accessPassword;
     this.answers = JSON.parse(record.answers || "{}");
+    this.experience = JSON.parse(record.experience || "[]");
+    this.education = JSON.parse(record.education || "[]");
+    this.awards = JSON.parse(record.awards || "[]");
+    this.achievements = JSON.parse(record.achievements || "[]");
     this.generatedSummary = record.generatedSummary;
     this.generatedBullets = JSON.parse(record.generatedBullets || "[]");
     this.viewCount = record.viewCount;
@@ -61,6 +71,7 @@ export class Resume {
       id: this.id,
       userId: this.userId,
       slug: this.slug,
+      fullName: this.fullName,
       title: this.title,
       profession: this.profession,
       professionLabel: this.professionLabel,
@@ -69,6 +80,10 @@ export class Resume {
       visibility: this.visibility,
       hasPassword: !!this.accessPassword,
       answers: this.answers,
+      experience: this.experience,
+      education: this.education,
+      awards: this.awards,
+      achievements: this.achievements,
       generatedSummary: this.generatedSummary,
       generatedBullets: this.generatedBullets,
       viewCount: this.viewCount,
@@ -79,11 +94,15 @@ export class Resume {
 
   toPublicJSON() {
     return {
+      fullName: this.fullName,
       title: this.title,
       professionLabel: this.professionLabel,
       templateKey: this.templateKey,
       template: this.template,
       answers: this.answers,
+      experience: this.experience,
+      education: this.education,
+      awards: this.awards,
       generatedSummary: this.generatedSummary,
       generatedBullets: this.generatedBullets,
       slug: this.slug,

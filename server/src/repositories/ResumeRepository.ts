@@ -1,25 +1,35 @@
 import { nanoid } from "nanoid";
 import { BaseRepository } from "./BaseRepository";
-import { LinkVisibility, ResumeRecord } from "../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, ResumeRecord, WorkExperienceEntry } from "../types";
 
 export interface CreateResumeInput {
   userId: string;
+  fullName: string;
   title: string;
   profession: string;
   templateKey: string;
   visibility: LinkVisibility;
   accessPassword: string | null;
   answers: Record<string, string>;
+  experience: WorkExperienceEntry[];
+  education: EducationEntry[];
+  awards: AwardEntry[];
+  achievements: AchievementEntry[];
   generatedSummary: string;
   generatedBullets: string[];
 }
 
 export interface UpdateResumeInput {
+  fullName?: string;
   title?: string;
   templateKey?: string;
   visibility?: LinkVisibility;
   accessPassword?: string | null;
   answers?: Record<string, string>;
+  experience?: WorkExperienceEntry[];
+  education?: EducationEntry[];
+  awards?: AwardEntry[];
+  achievements?: AchievementEntry[];
   generatedSummary?: string;
   generatedBullets?: string[];
 }
@@ -46,12 +56,17 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       id: nanoid(12),
       userId: input.userId,
       slug: `${slugify(input.title)}-${nanoid(6)}`,
+      fullName: input.fullName,
       title: input.title,
       profession: input.profession,
       templateKey: input.templateKey,
       visibility: input.visibility,
       accessPassword: input.accessPassword,
       answers: JSON.stringify(input.answers),
+      experience: JSON.stringify(input.experience),
+      education: JSON.stringify(input.education),
+      awards: JSON.stringify(input.awards),
+      achievements: JSON.stringify(input.achievements),
       generatedSummary: input.generatedSummary,
       generatedBullets: JSON.stringify(input.generatedBullets),
       viewCount: 0,
@@ -68,11 +83,16 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
 
     const merged: ResumeRecord = {
       ...existing,
+      fullName: input.fullName ?? existing.fullName,
       title: input.title ?? existing.title,
       templateKey: input.templateKey ?? existing.templateKey,
       visibility: input.visibility ?? existing.visibility,
       accessPassword: input.accessPassword !== undefined ? input.accessPassword : existing.accessPassword,
       answers: input.answers ? JSON.stringify(input.answers) : existing.answers,
+      experience: input.experience ? JSON.stringify(input.experience) : existing.experience,
+      education: input.education ? JSON.stringify(input.education) : existing.education,
+      awards: input.awards ? JSON.stringify(input.awards) : existing.awards,
+      achievements: input.achievements ? JSON.stringify(input.achievements) : existing.achievements,
       generatedSummary: input.generatedSummary ?? existing.generatedSummary,
       generatedBullets: input.generatedBullets ? JSON.stringify(input.generatedBullets) : existing.generatedBullets,
       updatedAt: new Date().toISOString(),

@@ -3,19 +3,24 @@ import { UserRepository } from "../repositories/UserRepository";
 import { IContentGenerator, RuleBasedContentGenerator } from "./ContentGenerator";
 import { Resume } from "../models/Resume";
 import { User } from "../models/User";
-import { LinkVisibility } from "../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, WorkExperienceEntry } from "../types";
 
 export class ResumeLimitError extends Error {}
 export class ResumeNotFoundError extends Error {}
 export class ResumeAccessError extends Error {}
 
 export interface CreateResumeRequest {
+  fullName?: string;
   title: string;
   profession: string;
   templateKey: string;
   visibility?: LinkVisibility;
   accessPassword?: string | null;
   answers: Record<string, string>;
+  experience?: WorkExperienceEntry[];
+  education?: EducationEntry[];
+  awards?: AwardEntry[];
+  achievements?: AchievementEntry[];
 }
 
 export class ResumeService {
@@ -45,15 +50,22 @@ export class ResumeService {
       );
     }
 
-    const generated = this.generator.generate(input.profession, input.answers);
+    const generated = this.generator.generate(input.profession, input.answers, input.achievements ?? []);
     const record = await this.resumes.create({
       userId: user.id,
+      // Defaults to the account holder's name, but is editable per resume —
+      // e.g. someone building a resume for a different display name/nickname.
+      fullName: input.fullName?.trim() || user.name,
       title: input.title,
       profession: input.profession,
       templateKey: input.templateKey,
       visibility: input.visibility ?? LinkVisibility.Public,
       accessPassword: input.accessPassword ?? null,
       answers: input.answers,
+      experience: input.experience ?? [],
+      education: input.education ?? [],
+      awards: input.awards ?? [],
+      achievements: input.achievements ?? [],
       generatedSummary: generated.summary,
       generatedBullets: generated.bullets,
     });
@@ -63,11 +75,16 @@ export class ResumeService {
   async update(userId: string, resumeId: string, input: UpdateResumeInput): Promise<Resume> {
     const existing = await this.getOwned(userId, resumeId); // throws if not found/owned
 
-    // Regenerate content if the answers changed, so editing stays "live."
+    // Regenerate content if the answers or achievements changed, so editing
+    // stays "live." Either one can arrive alone (the edit page always sends
+    // both together, but this stays correct even if a caller doesn't), so
+    // whichever wasn't provided falls back to what's already saved.
     let generatedSummary = input.generatedSummary;
     let generatedBullets = input.generatedBullets;
-    if (input.answers) {
-      const generated = this.generator.generate(existing.profession, input.answers);
+    if (input.answers || input.achievements) {
+      const answers = input.answers ?? existing.answers;
+      const achievements = input.achievements ?? existing.achievements;
+      const generated = this.generator.generate(existing.profession, answers, achievements);
       generatedSummary = generated.summary;
       generatedBullets = generated.bullets;
     }

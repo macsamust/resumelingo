@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ApiError, catalogApi } from "../api";
 import { PublicResume } from "../types";
+import { ResumePreview } from "../components/builder/ResumePreview";
 
 export function PublicResumePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -68,22 +69,19 @@ export function PublicResumePage() {
 
   return (
     <div className="public-resume-page">
-      <div className="public-resume-card">
-        <div className="public-resume-header">
-          <h1>{resume.title}</h1>
-          <p>
-            {resume.professionLabel}
-            {resume.template ? ` · ${resume.template.name} template` : ""}
-          </p>
-        </div>
-        {resume.generatedSummary && <p className="preview-summary">{resume.generatedSummary}</p>}
-        {resume.generatedBullets.length > 0 && (
-          <ul className="preview-bullets">
-            {resume.generatedBullets.map((b, i) => (
-              <li key={i}>{b}</li>
-            ))}
-          </ul>
-        )}
+      <ResumePreview
+        fullName={resume.fullName}
+        title={resume.title}
+        professionLabel={resume.professionLabel}
+        templateKey={resume.templateKey}
+        templateName={resume.template?.name}
+        summary={resume.generatedSummary}
+        bullets={resume.generatedBullets}
+        experience={resume.experience}
+        education={resume.education}
+        awards={resume.awards}
+      />
+      <div className="public-resume-card public-resume-details">
         <div className="answer-grid">
           {Object.entries(resume.answers)
             .filter(([, v]) => v && v.trim())

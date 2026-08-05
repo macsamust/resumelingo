@@ -2,19 +2,38 @@ import { FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { DynamicQuestionForm } from "../components/builder/DynamicQuestionForm";
+import { ExperienceEditor } from "../components/builder/ExperienceEditor";
+import { EducationEditor } from "../components/builder/EducationEditor";
+import { AwardsEditor } from "../components/builder/AwardsEditor";
+import { AchievementEditor } from "../components/builder/AchievementEditor";
 import { ResumePreview } from "../components/builder/ResumePreview";
 import { ApiError, catalogApi, resumeApi } from "../api";
-import { ProfessionDefinition, ProfessionSummary, TemplateDefinition } from "../types";
+import { useAuth } from "../context/AuthContext";
+import {
+  AchievementEntry,
+  AwardEntry,
+  EducationEntry,
+  ProfessionDefinition,
+  ProfessionSummary,
+  TemplateDefinition,
+  WorkExperienceEntry,
+} from "../types";
 
 export function ResumeBuilderPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [professions, setProfessions] = useState<ProfessionSummary[]>([]);
   const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
   const [professionKey, setProfessionKey] = useState("");
   const [professionDetail, setProfessionDetail] = useState<ProfessionDefinition | null>(null);
   const [templateKey, setTemplateKey] = useState("modern");
+  const [fullName, setFullName] = useState(user?.name ?? "");
   const [title, setTitle] = useState("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [experience, setExperience] = useState<WorkExperienceEntry[]>([]);
+  const [education, setEducation] = useState<EducationEntry[]>([]);
+  const [awards, setAwards] = useState<AwardEntry[]>([]);
+  const [achievements, setAchievements] = useState<AchievementEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -38,10 +57,15 @@ export function ResumeBuilderPage() {
     setSubmitting(true);
     try {
       const { resume } = await resumeApi.create({
+        fullName,
         title: title || `${professionDetail?.label ?? "New"} Resume`,
         profession: professionKey,
         templateKey,
         answers,
+        experience,
+        education,
+        awards,
+        achievements,
       });
       navigate(`/resumes/${resume.id}/edit`);
     } catch (err) {
@@ -60,6 +84,10 @@ export function ResumeBuilderPage() {
       <form onSubmit={onSubmit} className="builder-grid">
         <div className="builder-panel">
           <h2>1. Tell us about the role</h2>
+          <div className="field">
+            <label>Your full name</label>
+            <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Jordan Lee" />
+          </div>
           <div className="field">
             <label>Resume title</label>
             <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Cloud Architect Resume" />
@@ -89,7 +117,22 @@ export function ResumeBuilderPage() {
             ))}
           </div>
 
-          <h2>3. Answer a few questions</h2>
+          <h2>3. Work experience</h2>
+          <ExperienceEditor experience={experience} onChange={setExperience} />
+
+          <h2>4. Education</h2>
+          <EducationEditor education={education} onChange={setEducation} />
+
+          <h2>5. Awards</h2>
+          <AwardsEditor awards={awards} onChange={setAwards} />
+
+          <h2>6. Key achievements</h2>
+          <p className="hero-note" style={{ marginBottom: 16 }}>
+            Describe a challenge, what you did, and the result — this is what turns into impact-focused resume bullets.
+          </p>
+          <AchievementEditor achievements={achievements} onChange={setAchievements} />
+
+          <h2>7. Answer a few questions</h2>
           {professionDetail && (
             <DynamicQuestionForm
               questions={professionDetail.questions}
@@ -104,11 +147,16 @@ export function ResumeBuilderPage() {
         </div>
 
         <ResumePreview
+          fullName={fullName}
           title={title}
           professionLabel={professionDetail?.label ?? ""}
+          templateKey={templateKey}
           templateName={templates.find((t) => t.key === templateKey)?.name}
           summary=""
           bullets={[]}
+          experience={experience}
+          education={education}
+          awards={awards}
         />
       </form>
     </AppShell>

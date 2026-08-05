@@ -18,4 +18,12 @@ export class AuthApi extends ApiClient {
   me() {
     return this.get<{ user: AuthUser }>("/auth/me");
   }
+
+  updateProfile(input: { name?: string; email?: string; profession?: string | null }) {
+    return this.put<{ user: AuthUser }>("/auth/me", input);
+  }
+
+  changePassword(input: { currentPassword: string; newPassword: string }) {
+    return this.put<{ success: true }>("/auth/me/password", input);
+  }
 }

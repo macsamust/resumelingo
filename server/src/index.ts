@@ -1,5 +1,9 @@
-import dotenv from "dotenv";
-dotenv.config();
+// Must be the very first import: under ESM, all `import` statements are
+// hoisted and run before any other top-level code, so a later `dotenv.config()`
+// call would fire *after* other imports (like ./app -> ./db/database) have
+// already read process.env.DATABASE_URL. `dotenv/config` runs its side effect
+// during module evaluation, so putting it first guarantees it runs first too.
+import "dotenv/config";
 
 import { createApp } from "./app";
 import { migrate } from "./db/database";
