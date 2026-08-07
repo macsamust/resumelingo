@@ -91,7 +91,7 @@ export function ResumePreview({
   } as CSSProperties;
 
   const heading = title || "Untitled Resume";
-  const roleLine = templateName ? `${professionLabel} · ${templateName} template` : professionLabel;
+  const roleLine = professionLabel;
 
   // Contact line: email and LinkedIn are hyperlinked (LinkedIn spelled out as
   // its full URL rather than a plain "LinkedIn" label); phone is plain text.
@@ -231,6 +231,16 @@ export function ResumePreview({
     </>
   );
 
+  // Shown above the resume document itself (never inside .preview-panel) so
+  // the person building the resume can see which template is active without
+  // that label leaking into the resume's own content — it must not appear
+  // when the resume is downloaded, shared, or printed.
+  const templateTag = templateName && (
+    <div className="preview-template-tag" style={cssVars}>
+      Template: {templateName}
+    </div>
+  );
+
   if (style.family === "sidebar") {
     const sideFirst = (style.sideAlign ?? "left") === "left";
     const sideContent = (
@@ -238,11 +248,6 @@ export function ResumePreview({
         {fullName && <p className="tpl-fullname">{fullName}</p>}
         <h2>{heading}</h2>
         <p className="tpl-role">{professionLabel}</p>
-        {templateName && (
-          <p className="tpl-role" style={{ opacity: 0.75 }}>
-            {templateName} template
-          </p>
-        )}
         {contactLine}
         {style.badge && (
           <span className="tpl-badge" style={{ background: "rgba(255,255,255,.18)", color: "#fff" }}>
@@ -259,21 +264,24 @@ export function ResumePreview({
     );
 
     return (
-      <div
-        className={`preview-panel tpl-sidebar ${sideFirst ? "tpl-side-left" : "tpl-side-right"}`}
-        style={cssVars}
-      >
-        {sideFirst ? (
-          <>
-            {sideContent}
-            {mainContent}
-          </>
-        ) : (
-          <>
-            {mainContent}
-            {sideContent}
-          </>
-        )}
+      <div className="preview-col">
+        {templateTag}
+        <div
+          className={`preview-panel tpl-sidebar ${sideFirst ? "tpl-side-left" : "tpl-side-right"}`}
+          style={cssVars}
+        >
+          {sideFirst ? (
+            <>
+              {sideContent}
+              {mainContent}
+            </>
+          ) : (
+            <>
+              {mainContent}
+              {sideContent}
+            </>
+          )}
+        </div>
       </div>
     );
   }
@@ -284,16 +292,19 @@ export function ResumePreview({
   const family = style.family;
   const bannerClass = family === "executive-banner" && style.bannerAlign === "center" ? "tpl-banner-center" : "";
   return (
-    <div className={`preview-panel tpl-${family} ${bannerClass}`} style={cssVars}>
-      <div className="tpl-header">
-        {fullName && <p className="tpl-fullname">{fullName}</p>}
-        <h2>{heading}</h2>
-        <p className="tpl-role">{roleLine}</p>
-        {contactLine}
+    <div className="preview-col">
+      {templateTag}
+      <div className={`preview-panel tpl-${family} ${bannerClass}`} style={cssVars}>
+        <div className="tpl-header">
+          {fullName && <p className="tpl-fullname">{fullName}</p>}
+          <h2>{heading}</h2>
+          <p className="tpl-role">{roleLine}</p>
+          {contactLine}
+        </div>
+        {style.badge && <span className="tpl-badge">{style.badge}</span>}
+        {orderedSections}
+        {awardsBlock}
       </div>
-      {style.badge && <span className="tpl-badge">{style.badge}</span>}
-      {orderedSections}
-      {awardsBlock}
     </div>
   );
 }

@@ -207,7 +207,9 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .experience-current input { width: auto; }
 .experience-remove { padding: 6px 12px; font-size: 12.5px; }
 
-.preview-panel { position: sticky; top: 90px; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 28px; overflow: hidden; }
+.preview-col { position: sticky; top: 90px; }
+.preview-panel { position: static; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 28px; overflow: hidden; }
+.preview-template-tag { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; padding: 4px 10px; border-radius: 999px; background: var(--tpl-accent-soft, #eef2ff); color: var(--tpl-accent, var(--indigo)); margin-bottom: 10px; }
 .preview-panel h2 { font-size: 20px; color: var(--navy); margin-bottom: 4px; }
 .preview-panel .preview-role { color: var(--muted); font-size: 14px; margin-bottom: 18px; }
 .preview-summary { font-size: 14.5px; color: var(--navy-light); margin-bottom: 18px; line-height: 1.7; }
@@ -320,6 +322,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .tpl-minimal-clean .tpl-section + .tpl-section { border-top-color: var(--border); }
 
 .public-resume-page { max-width: 760px; margin: 0 auto; padding: 60px 24px; }
+.public-resume-page .preview-col { position: static; top: auto; }
 .public-resume-page .preview-panel { position: static; top: auto; margin-bottom: 24px; box-shadow: 0 20px 40px -24px rgba(15, 23, 42, .2); }
 .public-resume-card { background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 44px; }
 .public-resume-details { padding: 32px 44px; }
