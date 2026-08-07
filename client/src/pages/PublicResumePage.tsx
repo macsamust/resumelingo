@@ -71,6 +71,9 @@ export function PublicResumePage() {
     <div className="public-resume-page">
       <ResumePreview
         fullName={resume.fullName}
+        contactEmail={resume.contactEmail}
+        contactPhone={resume.contactPhone}
+        contactLinkedIn={resume.contactLinkedIn}
         title={resume.title}
         professionLabel={resume.professionLabel}
         templateKey={resume.templateKey}

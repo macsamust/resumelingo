@@ -18,6 +18,9 @@ export class ResumeController {
   create = async (req: AuthenticatedRequest, res: Response) => {
     const {
       fullName,
+      contactEmail,
+      contactPhone,
+      contactLinkedIn,
       title,
       profession,
       templateKey,
@@ -34,6 +37,9 @@ export class ResumeController {
     }
     const resume = await this.resumeService.create(req.user!, {
       fullName,
+      contactEmail,
+      contactPhone,
+      contactLinkedIn,
       title,
       profession,
       templateKey,

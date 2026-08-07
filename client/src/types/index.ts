@@ -84,6 +84,9 @@ export interface Resume {
   userId: string;
   slug: string;
   fullName: string;
+  contactEmail: string;
+  contactPhone: string;
+  contactLinkedIn: string;
   title: string;
   profession: string;
   professionLabel: string;
@@ -105,6 +108,9 @@ export interface Resume {
 
 export interface PublicResume {
   fullName: string;
+  contactEmail: string;
+  contactPhone: string;
+  contactLinkedIn: string;
   title: string;
   professionLabel: string;
   templateKey: string;

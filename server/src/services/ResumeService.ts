@@ -11,6 +11,9 @@ export class ResumeAccessError extends Error {}
 
 export interface CreateResumeRequest {
   fullName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  contactLinkedIn?: string;
   title: string;
   profession: string;
   templateKey: string;
@@ -56,6 +59,11 @@ export class ResumeService {
       // Defaults to the account holder's name, but is editable per resume —
       // e.g. someone building a resume for a different display name/nickname.
       fullName: input.fullName?.trim() || user.name,
+      // Defaults contact email to the account's email — phone and LinkedIn
+      // have no natural default and are left blank until the user fills them in.
+      contactEmail: input.contactEmail?.trim() || user.email,
+      contactPhone: input.contactPhone?.trim() ?? "",
+      contactLinkedIn: input.contactLinkedIn?.trim() ?? "",
       title: input.title,
       profession: input.profession,
       templateKey: input.templateKey,

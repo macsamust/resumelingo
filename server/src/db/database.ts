@@ -54,6 +54,9 @@ export async function migrate(): Promise<void> {
       "userId" TEXT NOT NULL REFERENCES users("id"),
       "slug" TEXT NOT NULL UNIQUE,
       "fullName" TEXT NOT NULL DEFAULT '',
+      "contactEmail" TEXT NOT NULL DEFAULT '',
+      "contactPhone" TEXT NOT NULL DEFAULT '',
+      "contactLinkedIn" TEXT NOT NULL DEFAULT '',
       "title" TEXT NOT NULL,
       "profession" TEXT NOT NULL,
       "templateKey" TEXT NOT NULL,
@@ -90,5 +93,11 @@ export async function migrate(): Promise<void> {
     -- ContentGenerator.ts turns into STAR-method bullets (see that file).
     -- Same JSON-array pattern as "experience" above.
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "achievements" TEXT NOT NULL DEFAULT '[]';
+
+    -- Adds header contact info (email, phone, LinkedIn URL) for installs
+    -- whose resumes table predates these fields.
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "contactEmail" TEXT NOT NULL DEFAULT '';
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "contactPhone" TEXT NOT NULL DEFAULT '';
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "contactLinkedIn" TEXT NOT NULL DEFAULT '';
   `);
 }

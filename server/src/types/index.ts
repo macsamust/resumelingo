@@ -95,6 +95,9 @@ export interface ResumeRecord {
   userId: string;
   slug: string;
   fullName: string;
+  contactEmail: string;
+  contactPhone: string;
+  contactLinkedIn: string; // full URL, e.g. https://www.linkedin.com/in/jordanlee
   title: string;
   profession: string;
   templateKey: string;

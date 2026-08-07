@@ -28,6 +28,9 @@ export function ResumeBuilderPage() {
   const [professionDetail, setProfessionDetail] = useState<ProfessionDefinition | null>(null);
   const [templateKey, setTemplateKey] = useState("modern");
   const [fullName, setFullName] = useState(user?.name ?? "");
+  const [contactEmail, setContactEmail] = useState(user?.email ?? "");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactLinkedIn, setContactLinkedIn] = useState("");
   const [title, setTitle] = useState("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [experience, setExperience] = useState<WorkExperienceEntry[]>([]);
@@ -58,6 +61,9 @@ export function ResumeBuilderPage() {
     try {
       const { resume } = await resumeApi.create({
         fullName,
+        contactEmail,
+        contactPhone,
+        contactLinkedIn,
         title: title || `${professionDetail?.label ?? "New"} Resume`,
         profession: professionKey,
         templateKey,
@@ -87,6 +93,32 @@ export function ResumeBuilderPage() {
           <div className="field">
             <label>Your full name</label>
             <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Jordan Lee" />
+          </div>
+          <div className="field">
+            <label>Email</label>
+            <input
+              type="email"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+              placeholder="e.g. jordan@example.com"
+            />
+          </div>
+          <div className="field">
+            <label>Phone</label>
+            <input
+              type="tel"
+              value={contactPhone}
+              onChange={(e) => setContactPhone(e.target.value)}
+              placeholder="e.g. (555) 123-4567"
+            />
+          </div>
+          <div className="field">
+            <label>LinkedIn URL</label>
+            <input
+              value={contactLinkedIn}
+              onChange={(e) => setContactLinkedIn(e.target.value)}
+              placeholder="e.g. https://www.linkedin.com/in/jordanlee"
+            />
           </div>
           <div className="field">
             <label>Resume title</label>
@@ -148,6 +180,9 @@ export function ResumeBuilderPage() {
 
         <ResumePreview
           fullName={fullName}
+          contactEmail={contactEmail}
+          contactPhone={contactPhone}
+          contactLinkedIn={contactLinkedIn}
           title={title}
           professionLabel={professionDetail?.label ?? ""}
           templateKey={templateKey}

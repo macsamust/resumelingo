@@ -26,6 +26,9 @@ export function ResumeEditPage() {
   const [professionDetail, setProfessionDetail] = useState<ProfessionDefinition | null>(null);
   const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
   const [fullName, setFullName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactLinkedIn, setContactLinkedIn] = useState("");
   const [title, setTitle] = useState("");
   const [templateKey, setTemplateKey] = useState("");
   const [visibility, setVisibility] = useState<LinkVisibility>("public");
@@ -46,6 +49,9 @@ export function ResumeEditPage() {
         const r = resumeRes.resume;
         setResume(r);
         setFullName(r.fullName);
+        setContactEmail(r.contactEmail);
+        setContactPhone(r.contactPhone);
+        setContactLinkedIn(r.contactLinkedIn);
         setTitle(r.title);
         setTemplateKey(r.templateKey);
         setVisibility(r.visibility);
@@ -70,6 +76,9 @@ export function ResumeEditPage() {
     try {
       const { resume: updated } = await resumeApi.update(id, {
         fullName,
+        contactEmail,
+        contactPhone,
+        contactLinkedIn,
         title,
         templateKey,
         visibility,
@@ -130,6 +139,22 @@ export function ResumeEditPage() {
           <div className="field">
             <label>Your full name</label>
             <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </div>
+          <div className="field">
+            <label>Email</label>
+            <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
+          </div>
+          <div className="field">
+            <label>Phone</label>
+            <input type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} />
+          </div>
+          <div className="field">
+            <label>LinkedIn URL</label>
+            <input
+              value={contactLinkedIn}
+              onChange={(e) => setContactLinkedIn(e.target.value)}
+              placeholder="e.g. https://www.linkedin.com/in/jordanlee"
+            />
           </div>
           <div className="field">
             <label>Resume title</label>
@@ -200,6 +225,9 @@ export function ResumeEditPage() {
 
         <ResumePreview
           fullName={fullName}
+          contactEmail={contactEmail}
+          contactPhone={contactPhone}
+          contactLinkedIn={contactLinkedIn}
           title={title}
           professionLabel={resume.professionLabel}
           templateKey={templateKey}

@@ -4,6 +4,9 @@ import { AwardEntry, EducationEntry, WorkExperienceEntry } from "../../types";
 
 interface Props {
   fullName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  contactLinkedIn?: string;
   title: string;
   professionLabel: string;
   templateKey?: string;
@@ -46,6 +49,11 @@ function sortAwards(entries: AwardEntry[]): AwardEntry[] {
   return [...entries].sort((a, b) => ((a.date || "") < (b.date || "") ? 1 : (a.date || "") > (b.date || "") ? -1 : 0));
 }
 
+/** Adds https:// to a LinkedIn URL typed without a protocol, so the link always resolves. */
+function withProtocol(url: string): string {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
 /**
  * Live preview panel — mirrors the "every change updates instantly, choose a
  * format and have it previewed" feature from the product overview.
@@ -62,6 +70,9 @@ function sortAwards(entries: AwardEntry[]): AwardEntry[] {
  */
 export function ResumePreview({
   fullName,
+  contactEmail,
+  contactPhone,
+  contactLinkedIn,
   title,
   professionLabel,
   templateKey,
@@ -81,6 +92,43 @@ export function ResumePreview({
 
   const heading = title || "Untitled Resume";
   const roleLine = templateName ? `${professionLabel} · ${templateName} template` : professionLabel;
+
+  // Contact line: email and LinkedIn are hyperlinked (LinkedIn spelled out as
+  // its full URL rather than a plain "LinkedIn" label); phone is plain text.
+  const contactItems: { key: string; node: JSX.Element }[] = [];
+  if (contactEmail) {
+    contactItems.push({
+      key: "email",
+      node: (
+        <a href={`mailto:${contactEmail}`} className="tpl-contact-link">
+          {contactEmail}
+        </a>
+      ),
+    });
+  }
+  if (contactPhone) {
+    contactItems.push({ key: "phone", node: <span>{contactPhone}</span> });
+  }
+  if (contactLinkedIn) {
+    contactItems.push({
+      key: "linkedin",
+      node: (
+        <a href={withProtocol(contactLinkedIn)} target="_blank" rel="noreferrer" className="tpl-contact-link">
+          {contactLinkedIn}
+        </a>
+      ),
+    });
+  }
+  const contactLine = contactItems.length > 0 && (
+    <p className="tpl-contact">
+      {contactItems.map((item, i) => (
+        <span key={item.key}>
+          {i > 0 && <span className="tpl-contact-sep"> · </span>}
+          {item.node}
+        </span>
+      ))}
+    </p>
+  );
 
   const summaryBlock = (
     <div className="tpl-section">
@@ -195,6 +243,7 @@ export function ResumePreview({
             {templateName} template
           </p>
         )}
+        {contactLine}
         {style.badge && (
           <span className="tpl-badge" style={{ background: "rgba(255,255,255,.18)", color: "#fff" }}>
             {style.badge}
@@ -240,6 +289,7 @@ export function ResumePreview({
         {fullName && <p className="tpl-fullname">{fullName}</p>}
         <h2>{heading}</h2>
         <p className="tpl-role">{roleLine}</p>
+        {contactLine}
       </div>
       {style.badge && <span className="tpl-badge">{style.badge}</span>}
       {orderedSections}

@@ -3,6 +3,9 @@ import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, Resume, W
 
 export interface CreateResumeInput {
   fullName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  contactLinkedIn?: string;
   title: string;
   profession: string;
   templateKey: string;

@@ -12,6 +12,9 @@ export class Resume {
   readonly userId: string;
   readonly slug: string;
   readonly fullName: string;
+  readonly contactEmail: string;
+  readonly contactPhone: string;
+  readonly contactLinkedIn: string;
   readonly title: string;
   readonly profession: string;
   readonly templateKey: string;
@@ -33,6 +36,9 @@ export class Resume {
     this.userId = record.userId;
     this.slug = record.slug;
     this.fullName = record.fullName;
+    this.contactEmail = record.contactEmail;
+    this.contactPhone = record.contactPhone;
+    this.contactLinkedIn = record.contactLinkedIn;
     this.title = record.title;
     this.profession = record.profession;
     this.templateKey = record.templateKey;
@@ -72,6 +78,9 @@ export class Resume {
       userId: this.userId,
       slug: this.slug,
       fullName: this.fullName,
+      contactEmail: this.contactEmail,
+      contactPhone: this.contactPhone,
+      contactLinkedIn: this.contactLinkedIn,
       title: this.title,
       profession: this.profession,
       professionLabel: this.professionLabel,
@@ -95,6 +104,9 @@ export class Resume {
   toPublicJSON() {
     return {
       fullName: this.fullName,
+      contactEmail: this.contactEmail,
+      contactPhone: this.contactPhone,
+      contactLinkedIn: this.contactLinkedIn,
       title: this.title,
       professionLabel: this.professionLabel,
       templateKey: this.templateKey,
