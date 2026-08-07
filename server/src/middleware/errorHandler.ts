@@ -1,9 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import { AuthError } from "../services/AuthService";
+import { AdminAuthError } from "../services/AdminService";
 import { ResumeAccessError, ResumeLimitError, ResumeNotFoundError } from "../services/ResumeService";
 
 const STATUS_BY_ERROR = [
   { type: AuthError, status: 401 },
+  { type: AdminAuthError, status: 401 },
   { type: ResumeNotFoundError, status: 404 },
   { type: ResumeAccessError, status: 403 },
   { type: ResumeLimitError, status: 402 },

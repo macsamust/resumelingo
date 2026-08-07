@@ -99,5 +99,81 @@ export async function migrate(): Promise<void> {
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "contactEmail" TEXT NOT NULL DEFAULT '';
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "contactPhone" TEXT NOT NULL DEFAULT '';
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "contactLinkedIn" TEXT NOT NULL DEFAULT '';
+
+    -- Lets an admin disable a user's login without deleting their account/data.
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS "suspended" BOOLEAN NOT NULL DEFAULT false;
+
+    -- Admins are a deliberately separate table/role from users (see
+    -- types/index.ts AdminRecord and services/AdminService.ts) rather than a
+    -- flag on the users table, so admin auth is fully isolated from user auth.
+    CREATE TABLE IF NOT EXISTS admins (
+      "id" TEXT PRIMARY KEY,
+      "name" TEXT NOT NULL,
+      "email" TEXT NOT NULL UNIQUE,
+      "passwordHash" TEXT NOT NULL,
+      "createdAt" TEXT NOT NULL
+    );
+
+    -- Templates move from a static config array to a DB-backed table here so
+    -- an admin can add, edit, disable, or delete them at runtime. See
+    -- config/templates.ts for the in-memory cache read by the rest of the
+    -- app (Resume model, public template list) and repositories/TemplateRepository.ts
+    -- for admin CRUD. "sortOrder" controls display order in the template picker.
+    CREATE TABLE IF NOT EXISTS templates (
+      "key" TEXT PRIMARY KEY,
+      "name" TEXT NOT NULL,
+      "description" TEXT NOT NULL DEFAULT '',
+      "enabled" BOOLEAN NOT NULL DEFAULT true,
+      "sortOrder" INTEGER NOT NULL DEFAULT 0,
+      "createdAt" TEXT NOT NULL,
+      "updatedAt" TEXT NOT NULL
+    );
+
+    -- Subscription plans move from a static config array to a DB-backed
+    -- table here so an admin can edit displayed name/price/resume
+    -- limit/features. Deliberately has no stripePriceId column — see
+    -- PlanRecord in types/index.ts for why.
+    CREATE TABLE IF NOT EXISTS plans (
+      "tier" TEXT PRIMARY KEY,
+      "name" TEXT NOT NULL,
+      "priceMonthly" REAL NOT NULL,
+      "resumeLimit" INTEGER NOT NULL,
+      "features" TEXT NOT NULL DEFAULT '[]',
+      "updatedAt" TEXT NOT NULL
+    );
   `);
+
+  await seedCatalogDefaults();
+}
+
+/**
+ * Seeds the templates/plans tables from the original static config arrays
+ * the first time each row is missing (ON CONFLICT DO NOTHING), so upgrading
+ * an existing install populates the new admin-editable tables with the same
+ * 15 templates and 3 plans it already had, without overwriting any admin
+ * edits made since. Safe to call on every boot.
+ */
+async function seedCatalogDefaults(): Promise<void> {
+  const { DEFAULT_TEMPLATES } = await import("../config/templates");
+  const { DEFAULT_PLANS } = await import("../config/subscriptionPlans");
+  const now = new Date().toISOString();
+
+  for (let i = 0; i < DEFAULT_TEMPLATES.length; i++) {
+    const t = DEFAULT_TEMPLATES[i];
+    await pool.query(
+      `INSERT INTO templates ("key", "name", "description", "enabled", "sortOrder", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, true, $4, $5, $5)
+       ON CONFLICT ("key") DO NOTHING`,
+      [t.key, t.name, t.description, i, now]
+    );
+  }
+
+  for (const p of DEFAULT_PLANS) {
+    await pool.query(
+      `INSERT INTO plans ("tier", "name", "priceMonthly", "resumeLimit", "features", "updatedAt")
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT ("tier") DO NOTHING`,
+      [p.tier, p.name, p.priceMonthly, p.resumeLimit, JSON.stringify(p.features), now]
+    );
+  }
 }

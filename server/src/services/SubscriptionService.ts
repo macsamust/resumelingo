@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { UserRepository } from "../repositories/UserRepository";
-import { SUBSCRIPTION_PLANS, getPlan } from "../config/subscriptionPlans";
+import { getPlan, listPlans } from "../config/subscriptionPlans";
 import { SubscriptionTier } from "../types";
 import { User } from "../models/User";
 import { StripeService } from "./StripeService";
@@ -12,7 +12,7 @@ export class SubscriptionService {
   ) {}
 
   listPlans() {
-    return SUBSCRIPTION_PLANS;
+    return listPlans();
   }
 
   /**
@@ -97,7 +97,7 @@ export class SubscriptionService {
     if (!user) return; // webhook for a customer we don't recognize — ignore
 
     const priceId = subscription.items.data[0]?.price.id;
-    const plan = SUBSCRIPTION_PLANS.find((p) => p.stripePriceId === priceId);
+    const plan = listPlans().find((p) => p.stripePriceId === priceId);
     if (!plan) return; // price we don't map to a plan — ignore rather than guess
 
     const isActive = subscription.status === "active" || subscription.status === "trialing";

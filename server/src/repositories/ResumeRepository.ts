@@ -116,6 +116,11 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
   async incrementViewCount(id: string): Promise<void> {
     await this.pool.query(`UPDATE resumes SET "viewCount" = "viewCount" + 1 WHERE "id" = $1`, [id]);
   }
+
+  /** Admin action — deletes every resume owned by a user, e.g. right before deleting the account itself (resumes.userId has a foreign key to users). */
+  async deleteAllForUser(userId: string): Promise<void> {
+    await this.pool.query(`DELETE FROM resumes WHERE "userId" = $1`, [userId]);
+  }
 }
 
 function slugify(title: string): string {

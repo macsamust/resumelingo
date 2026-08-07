@@ -34,6 +34,8 @@ export class AuthService {
     const matches = await bcrypt.compare(password, record.passwordHash);
     if (!matches) throw new AuthError("Invalid email or password.");
 
+    if (record.suspended) throw new AuthError("This account has been suspended. Contact support for help.");
+
     const user = new User(record);
     const token = this.tokens.sign({ userId: user.id, email: user.email });
     return { user, token };

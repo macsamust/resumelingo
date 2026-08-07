@@ -7,11 +7,22 @@ import "dotenv/config";
 
 import { createApp } from "./app";
 import { migrate } from "./db/database";
+import { TemplateRepository } from "./repositories/TemplateRepository";
+import { PlanRepository } from "./repositories/PlanRepository";
+import { AdminService } from "./services/AdminService";
 
 const PORT = Number(process.env.PORT) || 4000;
 
 async function start() {
   await migrate();
+
+  // Populate the in-memory template/plan caches (see config/templates.ts and
+  // config/subscriptionPlans.ts) from the DB tables migrate() just seeded,
+  // and create the first admin account from env vars if none exists yet.
+  await new TemplateRepository().refreshCache();
+  await new PlanRepository().refreshCache();
+  await new AdminService().ensureBootstrapAdmin();
+
   const app = createApp();
   app.listen(PORT, () => {
     console.log(`Websume API listening on http://localhost:${PORT}`);

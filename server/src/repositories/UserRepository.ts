@@ -20,6 +20,7 @@ export class UserRepository extends BaseRepository<UserRecord> {
       subscriptionTier: SubscriptionTier.Starter,
       stripeCustomerId: null,
       stripeSubscriptionId: null,
+      suspended: false,
       createdAt: new Date().toISOString(),
     };
     await this.insertRow(record as unknown as Record<string, unknown>);
@@ -53,6 +54,11 @@ export class UserRepository extends BaseRepository<UserRecord> {
    */
   async updateSubscriptionTier(userId: string, tier: SubscriptionTier): Promise<void> {
     await this.pool.query(`UPDATE users SET "subscriptionTier" = $1 WHERE "id" = $2`, [tier, userId]);
+  }
+
+  /** Admin action — disables/re-enables login without touching the account's data. */
+  async setSuspended(userId: string, suspended: boolean): Promise<void> {
+    await this.pool.query(`UPDATE users SET "suspended" = $1 WHERE "id" = $2`, [suspended, userId]);
   }
 
   async findByStripeCustomerId(customerId: string): Promise<UserRecord | undefined> {

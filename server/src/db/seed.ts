@@ -11,6 +11,8 @@ import "dotenv/config";
 import { migrate } from "./database";
 import { AuthService, AuthError } from "../services/AuthService";
 import { ResumeService } from "../services/ResumeService";
+import { TemplateRepository } from "../repositories/TemplateRepository";
+import { PlanRepository } from "../repositories/PlanRepository";
 import { LinkVisibility } from "../types";
 import { User } from "../models/User";
 
@@ -29,6 +31,8 @@ async function getOrCreateDemoUser(authService: AuthService, email: string, pass
 
 async function seed() {
   await migrate();
+  await new TemplateRepository().refreshCache();
+  await new PlanRepository().refreshCache();
 
   const authService = new AuthService();
   const resumeService = new ResumeService();

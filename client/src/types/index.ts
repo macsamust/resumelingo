@@ -124,6 +124,45 @@ export interface PublicResume {
   slug: string;
 }
 
+export interface AdminAuthUser {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string;
+}
+
+/** One row in the admin's user list — an AuthUser plus admin-only fields. */
+export interface AdminUserSummary {
+  id: string;
+  name: string;
+  email: string;
+  profession: string | null;
+  subscriptionTier: SubscriptionTier;
+  plan: SubscriptionPlan;
+  createdAt: string;
+  suspended: boolean;
+  resumeCount: number;
+}
+
+export interface AdminPlan {
+  tier: SubscriptionTier;
+  name: string;
+  priceMonthly: number;
+  resumeLimit: number;
+  features: string[];
+  updatedAt: string;
+}
+
+export interface AdminTemplate {
+  key: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DashboardSummary {
   myResumes: Resume[];
   sharedLinks: { title: string; slug: string; visibility: LinkVisibility }[];

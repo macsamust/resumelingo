@@ -19,14 +19,18 @@ export class ApiError extends Error {
 export class ApiClient {
   protected token: string | null = null;
 
-  constructor(private readonly baseUrl: string = API_URL) {
-    this.token = localStorage.getItem("websume_token");
+  // storageKey defaults to the regular-user token key; AdminApi passes a
+  // distinct key ("websume_admin_token") so an admin session and a regular
+  // user session can coexist in the same browser without clobbering each
+  // other's token.
+  constructor(private readonly baseUrl: string = API_URL, private readonly storageKey: string = "websume_token") {
+    this.token = localStorage.getItem(this.storageKey);
   }
 
   setToken(token: string | null) {
     this.token = token;
-    if (token) localStorage.setItem("websume_token", token);
-    else localStorage.removeItem("websume_token");
+    if (token) localStorage.setItem(this.storageKey, token);
+    else localStorage.removeItem(this.storageKey);
   }
 
   protected async request<T>(path: string, options: RequestInit = {}): Promise<T> {

@@ -1,7 +1,13 @@
 import jwt from "jsonwebtoken";
 import { AuthTokenPayload } from "../types";
 
-export class TokenService {
+/**
+ * Generic so AdminService can reuse this with AdminTokenPayload and its own
+ * secret (ADMIN_JWT_SECRET) — keeping admin tokens structurally and
+ * cryptographically distinct from regular user tokens, so one can never be
+ * mistaken for or replayed as the other.
+ */
+export class TokenService<TPayload extends object = AuthTokenPayload> {
   private readonly secret: string;
   private readonly expiresIn: string;
 
@@ -10,11 +16,11 @@ export class TokenService {
     this.expiresIn = expiresIn;
   }
 
-  sign(payload: AuthTokenPayload): string {
+  sign(payload: TPayload): string {
     return jwt.sign(payload, this.secret, { expiresIn: this.expiresIn as jwt.SignOptions["expiresIn"] });
   }
 
-  verify(token: string): AuthTokenPayload {
-    return jwt.verify(token, this.secret) as AuthTokenPayload;
+  verify(token: string): TPayload {
+    return jwt.verify(token, this.secret) as TPayload;
   }
 }

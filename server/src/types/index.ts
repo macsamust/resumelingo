@@ -47,7 +47,49 @@ export interface UserRecord {
   subscriptionTier: SubscriptionTier;
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
+  suspended: boolean;
   createdAt: string;
+}
+
+/**
+ * Admin accounts are a deliberately separate role/auth system from regular
+ * users (see services/AdminService.ts) — their own table, own JWT secret,
+ * own login route — rather than an isAdmin flag on the users table, so a
+ * compromised user token can never be replayed as an admin token.
+ */
+export interface AdminRecord {
+  id: string;
+  name: string;
+  email: string;
+  passwordHash: string;
+  createdAt: string;
+}
+
+/** DB-backed template row (see repositories/TemplateRepository.ts). `enabled` controls whether it's offered to users; disabled templates stay selectable by resumes that already used them. */
+export interface TemplateRecord {
+  key: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * DB-backed subscription plan row (see repositories/PlanRepository.ts).
+ * Deliberately does NOT store stripePriceId — that stays sourced from
+ * STRIPE_PRICE_* env vars (see config/subscriptionPlans.ts) so editing a
+ * plan's price here changes what's *displayed*, not what Stripe actually
+ * charges, which must still be changed in the Stripe dashboard.
+ */
+export interface PlanRecord {
+  tier: SubscriptionTier;
+  name: string;
+  priceMonthly: number;
+  resumeLimit: number;
+  features: string; // JSON-serialized string[]
+  updatedAt: string;
 }
 
 /** One job in a resume's work history. Dates are "YYYY-MM" (from an <input type="month">). */
@@ -117,5 +159,10 @@ export interface ResumeRecord {
 
 export interface AuthTokenPayload {
   userId: string;
+  email: string;
+}
+
+export interface AdminTokenPayload {
+  adminId: string;
   email: string;
 }
