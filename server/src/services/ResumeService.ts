@@ -88,12 +88,13 @@ export class ResumeService {
     assertTemplateAllowed(user.subscriptionTier, input.templateKey);
     assertPhotoSizeOk(input.photoUrl);
 
-    const generated = this.generator.generate(input.profession, input.answers, input.achievements ?? []);
+    const fullName = input.fullName?.trim() || user.name;
+    const generated = this.generator.generate(input.profession, input.answers, input.achievements ?? [], fullName);
     const record = await this.resumes.create({
       userId: user.id,
       // Defaults to the account holder's name, but is editable per resume —
       // e.g. someone building a resume for a different display name/nickname.
-      fullName: input.fullName?.trim() || user.name,
+      fullName,
       // Defaults contact email to the account's email — phone and LinkedIn
       // have no natural default and are left blank until the user fills them in.
       contactEmail: input.contactEmail?.trim() || user.email,
@@ -131,11 +132,14 @@ export class ResumeService {
     // whichever wasn't provided falls back to what's already saved.
     let generatedSummary = input.generatedSummary;
     let generatedBullets = input.generatedBullets;
-    if (input.answers || input.achievements || (input.profession && input.profession !== existing.profession)) {
+    const professionChanged = !!input.profession && input.profession !== existing.profession;
+    const nameChanged = !!input.fullName && input.fullName !== existing.fullName;
+    if (input.answers || input.achievements || professionChanged || nameChanged) {
       const profession = input.profession ?? existing.profession;
       const answers = input.answers ?? existing.answers;
       const achievements = input.achievements ?? existing.achievements;
-      const generated = this.generator.generate(profession, answers, achievements);
+      const fullName = input.fullName ?? existing.fullName;
+      const generated = this.generator.generate(profession, answers, achievements, fullName);
       generatedSummary = generated.summary;
       generatedBullets = generated.bullets;
     }

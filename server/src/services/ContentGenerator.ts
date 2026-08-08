@@ -14,15 +14,31 @@ export interface GeneratedContent {
  * swapped in via ResumeService's constructor without touching callers.
  */
 export interface IContentGenerator {
-  generate(profession: string, answers: Record<string, string>, achievements?: AchievementEntry[]): GeneratedContent;
+  generate(
+    profession: string,
+    answers: Record<string, string>,
+    achievements?: AchievementEntry[],
+    fullName?: string
+  ): GeneratedContent;
 }
 
 export class RuleBasedContentGenerator implements IContentGenerator {
-  generate(profession: string, answers: Record<string, string>, achievements: AchievementEntry[] = []): GeneratedContent {
+  generate(
+    profession: string,
+    answers: Record<string, string>,
+    achievements: AchievementEntry[] = [],
+    fullName?: string
+  ): GeneratedContent {
     const definition = getProfessionByKey(profession);
     const label = definition?.label ?? profession;
 
-    const summary = this.buildSummary(label, answers);
+    // The "Other" profession's label ("Other") isn't a real job title, so
+    // "Results-driven Other with..." reads oddly. Lead with the person's
+    // name instead: "{Name} is results-driven with...".
+    const summary =
+      profession === "other" && fullName?.trim()
+        ? this.buildOtherSummary(fullName.trim(), answers)
+        : this.buildSummary(label, answers);
     // Challenge/Action/Result entries produce genuinely impact-focused
     // bullets (the STAR/CAR method) and take priority when present, since
     // they're the person's own account of what changed because of their
@@ -39,6 +55,13 @@ export class RuleBasedContentGenerator implements IContentGenerator {
     const topSkill = this.firstListValue(answers);
     const skillClause = topSkill ? ` specializing in ${topSkill}` : "";
     return `Results-driven ${professionLabel} with ${years}${skillClause}, known for translating requirements into measurable outcomes and consistently exceeding expectations.`;
+  }
+
+  private buildOtherSummary(fullName: string, answers: Record<string, string>): string {
+    const years = answers.yearsExperience ? `${answers.yearsExperience}+ years of experience` : "experienced professional";
+    const topSkill = this.firstListValue(answers);
+    const skillClause = topSkill ? ` specializing in ${topSkill}` : "";
+    return `${fullName} is results-driven with ${years}${skillClause}, known for translating requirements into measurable outcomes and consistently exceeding expectations.`;
   }
 
   /**
