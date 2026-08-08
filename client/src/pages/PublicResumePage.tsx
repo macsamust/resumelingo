@@ -2,7 +2,75 @@ import { FormEvent, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ApiError, catalogApi } from "../api";
 import { PublicResume } from "../types";
-import { ResumePreview } from "../components/builder/ResumePreview";
+import { formatMonth, ResumePreview, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
+
+/** Plain-text rendering of a resume — same content and order as the on-screen preview, for the "Download as text" export. */
+function resumeToPlainText(resume: PublicResume): string {
+  const lines: string[] = [];
+
+  if (resume.fullName) lines.push(resume.fullName);
+  lines.push(resume.title || "Untitled Resume");
+  const contactLine = [resume.contactEmail, resume.contactPhone, resume.contactLinkedIn].filter(Boolean).join("  |  ");
+  if (contactLine) lines.push(contactLine);
+  lines.push("");
+
+  if (resume.generatedSummary) {
+    lines.push("SUMMARY");
+    lines.push(resume.generatedSummary);
+    lines.push("");
+  }
+
+  const experience = resume.experience?.length ? sortByDateRange(resume.experience) : [];
+  if (experience.length > 0) {
+    lines.push("EXPERIENCE");
+    for (const job of experience) {
+      const dates = `${formatMonth(job.startDate)} – ${job.current ? "Present" : formatMonth(job.endDate)}`;
+      lines.push(`${job.title || "Untitled role"}${job.company ? `, ${job.company}` : ""} (${dates})`);
+    }
+    lines.push("");
+  }
+
+  const education = resume.education?.length ? sortByDateRange(resume.education) : [];
+  if (education.length > 0) {
+    lines.push("EDUCATION");
+    for (const school of education) {
+      const degreeLine = [school.degree, school.fieldOfStudy].filter(Boolean).join(", ");
+      const dates = `${formatMonth(school.startDate)} – ${school.current ? "Present" : formatMonth(school.endDate)}`;
+      lines.push(`${degreeLine}${school.school ? `, ${school.school}` : ""} (${dates})`);
+    }
+    lines.push("");
+  }
+
+  if (resume.generatedBullets?.length > 0) {
+    lines.push("HIGHLIGHTS");
+    for (const bullet of resume.generatedBullets) lines.push(`- ${bullet}`);
+    lines.push("");
+  }
+
+  const awards = resume.awards?.length ? sortAwards(resume.awards) : [];
+  if (awards.length > 0) {
+    lines.push("AWARDS");
+    for (const award of awards) {
+      lines.push(`${award.title || "Untitled award"}${award.issuer ? `, ${award.issuer}` : ""} (${formatMonth(award.date)})`);
+      if (award.description) lines.push(award.description);
+    }
+    lines.push("");
+  }
+
+  return lines.join("\n").trim() + "\n";
+}
+
+function downloadTextFile(filename: string, contents: string): void {
+  const blob = new Blob([contents], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 export function PublicResumePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -67,8 +135,21 @@ export function PublicResumePage() {
     return <div className="empty-state">{error || "Resume not found."}</div>;
   }
 
+  const onDownloadText = () => {
+    const filename = `${(resume.title || "resume").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "resume"}.txt`;
+    downloadTextFile(filename, resumeToPlainText(resume));
+  };
+
   return (
     <div className="public-resume-page">
+      <div className="public-resume-actions">
+        <button className="btn btn-primary" onClick={() => window.print()} type="button">
+          Print / Save as PDF
+        </button>
+        <button className="btn btn-ghost" onClick={onDownloadText} type="button">
+          Download as text (.txt)
+        </button>
+      </div>
       <ResumePreview
         fullName={resume.fullName}
         contactEmail={resume.contactEmail}

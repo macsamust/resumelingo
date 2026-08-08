@@ -324,6 +324,16 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .public-resume-page { max-width: 760px; margin: 0 auto; padding: 60px 24px; }
 .public-resume-page .preview-col { position: static; top: auto; }
 .public-resume-page .preview-panel { position: static; top: auto; margin-bottom: 24px; box-shadow: 0 20px 40px -24px rgba(15, 23, 42, .2); }
+.public-resume-actions { display: flex; gap: 12px; margin-bottom: 24px; }
+
+/* Printing/"Save as PDF" (window.print()) shows only the resume itself —
+   the raw interview Q&A card and the action buttons above aren't part of
+   the resume document, so both are hidden in the print stylesheet below. */
+@media print {
+  .public-resume-actions, .public-resume-details { display: none !important; }
+  .public-resume-page { max-width: none; margin: 0; padding: 0; }
+  .public-resume-page .preview-panel { box-shadow: none; border: none; }
+}
 .public-resume-card { background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 44px; }
 .public-resume-details { padding: 32px 44px; }
 .public-resume-header { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 24px; }

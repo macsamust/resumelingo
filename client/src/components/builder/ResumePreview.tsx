@@ -18,8 +18,12 @@ interface Props {
   awards?: AwardEntry[];
 }
 
-/** Formats "YYYY-MM" (from an <input type="month">) as "Mon YYYY", e.g. "2021-05" -> "May 2021". */
-function formatMonth(value: string | null | undefined): string {
+/**
+ * Formats "YYYY-MM" (from an <input type="month">) as "Mon YYYY", e.g.
+ * "2021-05" -> "May 2021". Exported so the plain-text export on
+ * PublicResumePage.tsx formats dates identically to the on-screen preview.
+ */
+export function formatMonth(value: string | null | undefined): string {
   if (!value) return "";
   const [year, month] = value.split("-");
   const date = new Date(Number(year), Number(month) - 1);
@@ -35,7 +39,7 @@ function formatMonth(value: string | null | undefined): string {
  * the public page — is guaranteed to show the same order regardless of the
  * order entries were added.
  */
-function sortByDateRange<T extends { current: boolean; startDate: string; endDate: string | null }>(entries: T[]): T[] {
+export function sortByDateRange<T extends { current: boolean; startDate: string; endDate: string | null }>(entries: T[]): T[] {
   return [...entries].sort((a, b) => {
     if (a.current !== b.current) return a.current ? -1 : 1;
     const aKey = (a.current ? null : a.endDate) || a.startDate || "";
@@ -45,7 +49,7 @@ function sortByDateRange<T extends { current: boolean; startDate: string; endDat
 }
 
 /** Most recent award first. */
-function sortAwards(entries: AwardEntry[]): AwardEntry[] {
+export function sortAwards(entries: AwardEntry[]): AwardEntry[] {
   return [...entries].sort((a, b) => ((a.date || "") < (b.date || "") ? 1 : (a.date || "") > (b.date || "") ? -1 : 0));
 }
 
