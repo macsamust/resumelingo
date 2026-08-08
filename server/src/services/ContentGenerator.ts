@@ -60,17 +60,17 @@ export class RuleBasedContentGenerator implements IContentGenerator {
 
   /**
    * Builds a generic, professionally-worded description of the role itself
-   * (not the person) — e.g. "A successful comedian is a versatile public
-   * performer who combines sharp writing, deep audience connection, and
-   * precise timing to evoke laughter. Key traits include originality, an
-   * authentic stage persona, and strong resilience under pressure."
-   * Falls back to a generic "professional" description when no usable role
-   * can be pulled from the title.
+   * (not the person), as a comma appositive — e.g. "A successful
+   * entertainer, versatile public performer who combines sharp writing,
+   * deep audience connection, and precise timing to evoke laughter. Key
+   * traits include originality, an authentic stage persona, and strong
+   * resilience under pressure." Falls back to a generic "professional"
+   * description when no usable role can be pulled from the title.
    */
   private buildOtherSummary(title: string | undefined): string {
     const role = this.roleFromTitle(title) ?? "professional";
-    const { descriptor, traits, outcome, keyTraits } = findRoleDescription(role);
-    return `A successful ${role} is a ${descriptor} who combines ${traits[0]}, ${traits[1]}, and ${traits[2]} to ${outcome}. Key traits include ${keyTraits[0]}, ${keyTraits[1]}, and ${keyTraits[2]}.`;
+    const { category, descriptor, traits, outcome, keyTraits } = findRoleDescription(role);
+    return `A successful ${category}, ${descriptor} who combines ${traits[0]}, ${traits[1]}, and ${traits[2]} to ${outcome}. Key traits include ${keyTraits[0]}, ${keyTraits[1]}, and ${keyTraits[2]}.`;
   }
 
   /**

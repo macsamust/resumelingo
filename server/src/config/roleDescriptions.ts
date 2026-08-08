@@ -11,11 +11,18 @@
  * this is a curated set of role profiles, written in the same voice a
  * search for "what makes a successful {role}" would turn up, with a
  * generic-but-still-professional fallback for any role that isn't matched.
+ *
+ * The About statement reads as a comma appositive — "A successful
+ * {category}, {descriptor} who combines..." — so `category` is the broad
+ * field noun (e.g. "entertainer") and `descriptor` further specifies it
+ * (e.g. "versatile public performer") without repeating the same noun.
  */
 export interface RoleDescription {
   /** Matched against the role text (case-insensitive, substring match). */
   keywords: string[];
-  /** e.g. "versatile public performer" */
+  /** Broad field noun, e.g. "entertainer". Spliced into "A successful {category}, ...". */
+  category: string;
+  /** e.g. "versatile public performer" — spliced right after the category as an appositive. */
   descriptor: string;
   /** Exactly three traits, spliced into "combines X, Y, and Z". */
   traits: [string, string, string];
@@ -28,6 +35,7 @@ export interface RoleDescription {
 export const ROLE_DESCRIPTIONS: RoleDescription[] = [
   {
     keywords: ["comedian", "comedy"],
+    category: "entertainer",
     descriptor: "versatile public performer",
     traits: ["sharp writing", "deep audience connection", "precise timing"],
     outcome: "evoke laughter",
@@ -35,6 +43,7 @@ export const ROLE_DESCRIPTIONS: RoleDescription[] = [
   },
   {
     keywords: ["actor", "actress", "performer"],
+    category: "performer",
     descriptor: "versatile performing artist",
     traits: ["emotional range", "disciplined preparation", "commanding stage presence"],
     outcome: "bring a character to life",
@@ -42,6 +51,7 @@ export const ROLE_DESCRIPTIONS: RoleDescription[] = [
   },
   {
     keywords: ["musician", "singer", "vocalist", "songwriter", "band"],
+    category: "musician",
     descriptor: "dedicated performing artist",
     traits: ["technical musicianship", "creative expression", "consistent stage energy"],
     outcome: "move an audience",
@@ -49,6 +59,7 @@ export const ROLE_DESCRIPTIONS: RoleDescription[] = [
   },
   {
     keywords: ["writer", "author", "novelist", "journalist", "blogger", "copywriter"],
+    category: "writer",
     descriptor: "disciplined storyteller",
     traits: ["a distinct voice", "rigorous research", "careful revision"],
     outcome: "communicate ideas clearly",
@@ -56,6 +67,7 @@ export const ROLE_DESCRIPTIONS: RoleDescription[] = [
   },
   {
     keywords: ["chef", "cook", "culinary", "baker"],
+    category: "chef",
     descriptor: "skilled culinary professional",
     traits: ["technical precision", "creative flavor pairing", "composure under pressure"],
     outcome: "deliver a memorable dining experience",
@@ -63,6 +75,7 @@ export const ROLE_DESCRIPTIONS: RoleDescription[] = [
   },
   {
     keywords: ["photographer", "photography", "videographer", "filmmaker"],
+    category: "photographer",
     descriptor: "detail-oriented visual storyteller",
     traits: ["a strong creative eye", "technical mastery of light and composition", "clear client communication"],
     outcome: "capture lasting images",
@@ -70,6 +83,7 @@ export const ROLE_DESCRIPTIONS: RoleDescription[] = [
   },
   {
     keywords: ["artist", "painter", "illustrator", "sculptor", "designer"],
+    category: "artist",
     descriptor: "versatile creative professional",
     traits: ["a distinct visual style", "technical craftsmanship", "openness to feedback"],
     outcome: "bring ideas to life visually",
@@ -77,6 +91,7 @@ export const ROLE_DESCRIPTIONS: RoleDescription[] = [
   },
   {
     keywords: ["coach", "trainer", "instructor", "tutor"],
+    category: "coach",
     descriptor: "motivating and knowledgeable mentor",
     traits: ["clear instruction", "individualized guidance", "consistent encouragement"],
     outcome: "help others reach their goals",
@@ -84,13 +99,15 @@ export const ROLE_DESCRIPTIONS: RoleDescription[] = [
   },
   {
     keywords: ["consultant", "advisor", "freelance", "entrepreneur", "founder"],
+    category: "consultant",
     descriptor: "resourceful independent professional",
     traits: ["strategic thinking", "clear communication", "hands-on problem-solving"],
     outcome: "deliver results clients can rely on",
     keyTraits: ["adaptability", "initiative", "strong follow-through"],
   },
   {
-    keywords: ["athlete", "player", "coach"],
+    keywords: ["athlete", "player"],
+    category: "athlete",
     descriptor: "highly disciplined competitor",
     traits: ["rigorous training", "mental toughness", "teamwork under pressure"],
     outcome: "perform at a consistently high level",
@@ -101,7 +118,8 @@ export const ROLE_DESCRIPTIONS: RoleDescription[] = [
 /** Generic-but-professional fallback for a role that doesn't match any curated profile above. */
 export const GENERIC_ROLE_DESCRIPTION: RoleDescription = {
   keywords: [],
-  descriptor: "dedicated professional",
+  category: "professional",
+  descriptor: "dedicated, results-oriented individual",
   traits: ["clear communication", "sound judgment", "steady follow-through"],
   outcome: "consistently deliver strong results",
   keyTraits: ["adaptability", "attention to detail", "a strong work ethic"],
