@@ -7,7 +7,11 @@ import { LinkVisibility } from "../types";
 
 export class ResumeLimitError extends Error {}
 export class ResumeNotFoundError extends Error {}
-export class ResumeAccessError extends Error {}
+export class ResumeAccessError extends Error {
+  constructor(message: string, public readonly reason: "password" | "private" | "forbidden" = "forbidden") {
+    super(message);
+  }
+}
 
 export interface CreateResumeRequest {
   title: string;
@@ -80,15 +84,16 @@ export class ResumeService {
     await this.resumes.delete(resumeId);
   }
 
-  async getPublicBySlug(slug: string, password?: string): Promise<Resume> {
+  async getPublicBySlug(slug: string, password?: string, requestingUserId?: string): Promise<Resume> {
     const record = await this.resumes.findBySlug(slug);
     if (!record) throw new ResumeNotFoundError("Resume not found.");
     const resume = new Resume(record);
-    if (!resume.isAccessibleWithout(password)) {
+    if (!resume.isAccessibleBy(requestingUserId, password)) {
       throw new ResumeAccessError(
         resume.visibility === LinkVisibility.PasswordProtected
           ? "This resume is password-protected."
-          : "This resume is private."
+          : "This resume is private — only the owner can view it.",
+        resume.visibility === LinkVisibility.PasswordProtected ? "password" : "private"
       );
     }
     await this.resumes.incrementViewCount(record.id);

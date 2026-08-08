@@ -16,8 +16,9 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
   const match = STATUS_BY_ERROR.find(({ type }) => err instanceof type);
   const status = match?.status ?? 500;
   const message = err instanceof Error ? err.message : "Unexpected server error.";
+  const reason = err instanceof ResumeAccessError ? err.reason : undefined;
   if (status === 500) console.error(err);
-  res.status(status).json({ error: message });
+  res.status(status).json({ error: message, ...(reason ? { reason } : {}) });
 }
 
 export function notFoundHandler(_req: Request, res: Response) {

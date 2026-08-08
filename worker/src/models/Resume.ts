@@ -47,12 +47,14 @@ export class Resume {
     return getTemplateByKey(this.templateKey);
   }
 
-  isAccessibleWithout(password?: string): boolean {
+  /** userId is the *requesting* user, if any (undefined for anonymous visitors). */
+  isAccessibleBy(userId?: string, password?: string): boolean {
+    if (userId && userId === this.userId) return true; // owner can always view their own resume, any visibility
     if (this.visibility === LinkVisibility.Public) return true;
     if (this.visibility === LinkVisibility.PasswordProtected) {
       return !!password && password === this.accessPassword;
     }
-    return false;
+    return false; // private — owner-only, and the owner case is already handled above
   }
 
   toJSON() {

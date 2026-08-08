@@ -34,7 +34,7 @@ websume-app/
 ### Shared layers (`models/`, `config/`)
 
 - **models/** — `User`, `Resume`: wrap a raw DB row with behavior (e.g.
-  `user.canCreateAdditionalResume()`, `resume.isAccessibleWithout(password)`).
+  `user.canCreateAdditionalResume()`, `resume.isAccessibleBy(userId, password)`).
   Identical in both backends — no I/O.
 - **config/** — static product data: `professions.ts` (the question set per
   profession), `templates.ts` (15 resume templates), `subscriptionPlans.ts`

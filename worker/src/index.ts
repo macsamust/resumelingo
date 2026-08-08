@@ -50,7 +50,8 @@ app.onError((err, c) => {
       ? 402
       : 500;
   if (status === 500) console.error(err);
-  return c.json({ error: err.message || "Unexpected server error." }, status);
+  const reason = err instanceof ResumeAccessError ? err.reason : undefined;
+  return c.json({ error: err.message || "Unexpected server error.", ...(reason ? { reason } : {}) }, status);
 });
 
 app.notFound((c) => c.json({ error: "Route not found." }, 404));

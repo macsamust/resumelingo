@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { ApiError, catalogApi } from "../api";
 import { PublicResume } from "../types";
 import { formatMonth, ResumePreview, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
@@ -91,7 +91,11 @@ export function PublicResumePage() {
         setPasswordRequired(false);
       })
       .catch((err) => {
-        if (err instanceof ApiError && err.status === 403) {
+        if (err instanceof ApiError && err.status === 403 && err.reason === "private") {
+          // Private/owner-only resumes have no password to enter — asking for
+          // one would send the visitor into a form they can never satisfy.
+          setError("This Websume is private. Only the owner can view it — sign in as the owner to access it.");
+        } else if (err instanceof ApiError && err.status === 403) {
           setPasswordRequired(true);
         } else if (err instanceof ApiError && err.status === 404) {
           setError("This resume link doesn't exist or was removed.");
@@ -132,7 +136,16 @@ export function PublicResumePage() {
   }
 
   if (error || !resume) {
-    return <div className="empty-state">{error || "Resume not found."}</div>;
+    return (
+      <div className="empty-state">
+        <p>{error || "Resume not found."}</p>
+        {error?.startsWith("This Websume is private") && (
+          <Link to="/login" className="btn btn-primary">
+            Sign in
+          </Link>
+        )}
+      </div>
+    );
   }
 
   const onDownloadText = () => {

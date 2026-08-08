@@ -6,7 +6,7 @@
 const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 export class ApiError extends Error {
-  constructor(message: string, public readonly status: number) {
+  constructor(message: string, public readonly status: number, public readonly reason?: string) {
     super(message);
   }
 }
@@ -45,7 +45,7 @@ export class ApiClient {
     const body = isJson ? await response.json().catch(() => ({})) : undefined;
 
     if (!response.ok) {
-      throw new ApiError(body?.error || response.statusText, response.status);
+      throw new ApiError(body?.error || response.statusText, response.status, body?.reason);
     }
     return body as T;
   }
