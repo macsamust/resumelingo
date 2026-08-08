@@ -6,6 +6,8 @@ interface CareerTopic {
   id: string;
   tag: string;
   title: string;
+  /** "Month YYYY" this topic's tips/sources were last checked against current sources — bump whenever the content below actually changes (see the quarterly refresh task). */
+  updated: string;
   intro: string;
   tips: string[];
   sources: { label: string; url: string }[];
@@ -22,6 +24,7 @@ const TOPICS: CareerTopic[] = [
     id: "resume-tips",
     tag: "01",
     title: "Resume Tips",
+    updated: "August 2026",
     intro:
       "Hiring in 2026 has shifted from \"where have you worked\" to \"what can you do, and how fast can you learn.\" The strongest resumes are clean, skills-forward, and built around measurable impact rather than a list of duties.",
     tips: [
@@ -41,6 +44,7 @@ const TOPICS: CareerTopic[] = [
     id: "interview-tips",
     tag: "02",
     title: "Interview Tips",
+    updated: "August 2026",
     intro:
       "Interviews are leaning harder on real-time problem-solving and behavioral evidence over rehearsed answers — but the fundamentals of structuring a clear, specific answer still decide most outcomes.",
     tips: [
@@ -60,6 +64,7 @@ const TOPICS: CareerTopic[] = [
     id: "salary-negotiation",
     tag: "03",
     title: "Salary Negotiation",
+    updated: "August 2026",
     intro:
       "Negotiating is expected, not confrontational — most hiring managers budget for it. The leverage you have is highest the moment an offer is made, before you've accepted anything.",
     tips: [
@@ -79,6 +84,7 @@ const TOPICS: CareerTopic[] = [
     id: "career-advice",
     tag: "04",
     title: "Career Advice",
+    updated: "August 2026",
     intro:
       "Careers are less linear than they used to be, and titles matter less than the skills and visibility you build along the way. The advice that holds up: get good, get seen, and get sponsored.",
     tips: [
@@ -98,6 +104,7 @@ const TOPICS: CareerTopic[] = [
     id: "promotion-advice",
     tag: "05",
     title: "Promotion Advice",
+    updated: "August 2026",
     intro:
       "Promotions go to people who are already doing pieces of the next job, and who've made sure their manager knows it. Waiting quietly for recognition rarely works.",
     tips: [
@@ -117,6 +124,7 @@ const TOPICS: CareerTopic[] = [
     id: "career-planning",
     tag: "06",
     title: "Career Planning",
+    updated: "August 2026",
     intro:
       "Rigid 5- and 10-year plans age poorly when roles and skills shift this fast. The more durable approach is a short-horizon plan you revisit often.",
     tips: [
@@ -136,6 +144,7 @@ const TOPICS: CareerTopic[] = [
     id: "networking",
     tag: "07",
     title: "Networking",
+    updated: "August 2026",
     intro:
       "The most effective networkers treat it as an ongoing habit, not an occasional event. A little consistent effort beats an occasional big push every time.",
     tips: [
@@ -155,6 +164,7 @@ const TOPICS: CareerTopic[] = [
     id: "recruiters",
     tag: "08",
     title: "Recruiters",
+    updated: "August 2026",
     intro:
       "Recruiters are triaging a lot of noise. Being easy to find, easy to understand at a glance, and specific in outreach is what actually gets a response.",
     tips: [
@@ -174,6 +184,7 @@ const TOPICS: CareerTopic[] = [
     id: "industry-news",
     tag: "09",
     title: "Industry News",
+    updated: "August 2026",
     intro:
       "The job market is shifting from the strongly candidate-driven conditions of the past few years toward a more balanced, more AI-influenced hiring process.",
     tips: [
@@ -271,7 +282,9 @@ export function CareerCenterPage() {
           {TOPICS.map((topic) => (
             <article className="career-section" id={topic.id} key={topic.id}>
               <span className="career-section-tag">{topic.tag}</span>
-              <h2>{topic.title}</h2>
+              <h2>
+                {topic.title} <span className="career-updated">(updated {topic.updated})</span>
+              </h2>
               <p className="career-intro">{topic.intro}</p>
               <ul className="career-tips">
                 {topic.tips.map((tip, i) => (

@@ -399,6 +399,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .career-section { background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 36px 40px; scroll-margin-top: 90px; position: relative; }
 .career-section-tag { position: absolute; top: 32px; right: 40px; font-size: 34px; font-weight: 800; color: var(--bg); }
 .career-section h2 { font-size: 24px; color: var(--navy); margin-bottom: 12px; }
+.career-updated { font-size: 12.5px; font-weight: 400; color: var(--muted); }
 .career-intro { color: var(--muted); font-size: 15px; margin-bottom: 18px; max-width: 680px; }
 .career-tips { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-bottom: 22px; }
 .career-tips li { display: flex; gap: 10px; align-items: flex-start; font-size: 14.5px; color: var(--navy-light); line-height: 1.55; }
