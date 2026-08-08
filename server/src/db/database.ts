@@ -57,6 +57,7 @@ export async function migrate(): Promise<void> {
       "contactEmail" TEXT NOT NULL DEFAULT '',
       "contactPhone" TEXT NOT NULL DEFAULT '',
       "contactLinkedIn" TEXT NOT NULL DEFAULT '',
+      "photoUrl" TEXT NOT NULL DEFAULT '',
       "title" TEXT NOT NULL,
       "profession" TEXT NOT NULL,
       "templateKey" TEXT NOT NULL,
@@ -99,6 +100,11 @@ export async function migrate(): Promise<void> {
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "contactEmail" TEXT NOT NULL DEFAULT '';
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "contactPhone" TEXT NOT NULL DEFAULT '';
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "contactLinkedIn" TEXT NOT NULL DEFAULT '';
+
+    -- Adds an optional personal photo (data: URL, resized/compressed
+    -- client-side before upload) used by the "Portrait" template's header
+    -- badge in place of the monogram-initials placeholder.
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "photoUrl" TEXT NOT NULL DEFAULT '';
 
     -- Lets an admin disable a user's login without deleting their account/data.
     ALTER TABLE users ADD COLUMN IF NOT EXISTS "suspended" BOOLEAN NOT NULL DEFAULT false;

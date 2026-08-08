@@ -15,6 +15,18 @@ export class ResumeAccessError extends Error {
   }
 }
 export class TemplateAccessError extends Error {}
+export class PhotoTooLargeError extends Error {}
+
+// ~2MB of base64 text comfortably covers a photo resized/compressed
+// client-side (see client/src/utils/image.ts) before upload; this is a
+// server-side backstop in case that client-side step is ever bypassed.
+const MAX_PHOTO_DATA_URL_LENGTH = 2_000_000;
+
+function assertPhotoSizeOk(photoUrl: string | undefined): void {
+  if (photoUrl && photoUrl.length > MAX_PHOTO_DATA_URL_LENGTH) {
+    throw new PhotoTooLargeError("That photo is too large — please use a smaller image.");
+  }
+}
 
 /**
  * Throws if `tier` isn't allowed to use `templateKey`'s category. A no-op
@@ -34,6 +46,7 @@ export interface CreateResumeRequest {
   contactEmail?: string;
   contactPhone?: string;
   contactLinkedIn?: string;
+  photoUrl?: string;
   title: string;
   profession: string;
   templateKey: string;
@@ -73,6 +86,7 @@ export class ResumeService {
       );
     }
     assertTemplateAllowed(user.subscriptionTier, input.templateKey);
+    assertPhotoSizeOk(input.photoUrl);
 
     const generated = this.generator.generate(input.profession, input.answers, input.achievements ?? []);
     const record = await this.resumes.create({
@@ -85,6 +99,7 @@ export class ResumeService {
       contactEmail: input.contactEmail?.trim() || user.email,
       contactPhone: input.contactPhone?.trim() ?? "",
       contactLinkedIn: input.contactLinkedIn?.trim() ?? "",
+      photoUrl: input.photoUrl ?? "",
       title: input.title,
       profession: input.profession,
       templateKey: input.templateKey,
@@ -108,6 +123,7 @@ export class ResumeService {
       const userRecord = await this.users.findById(userId);
       if (userRecord) assertTemplateAllowed(new User(userRecord).subscriptionTier, input.templateKey);
     }
+    assertPhotoSizeOk(input.photoUrl);
 
     // Regenerate content if the answers or achievements changed, so editing
     // stays "live." Either one can arrive alone (the edit page always sends

@@ -153,6 +153,14 @@ export interface ResumeRecord {
   contactEmail: string;
   contactPhone: string;
   contactLinkedIn: string; // full URL, e.g. https://www.linkedin.com/in/jordanlee
+  /**
+   * A data: URL (base64-encoded, resized/compressed client-side before
+   * upload — see client/src/utils/image.ts) for the personal photo used by
+   * the "Portrait" template's header. Empty string when no photo is set.
+   * Stored inline rather than in object storage since this app has no file
+   * storage service configured; resizing client-side keeps rows small.
+   */
+  photoUrl: string;
   title: string;
   profession: string;
   templateKey: string;

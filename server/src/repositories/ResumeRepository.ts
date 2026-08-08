@@ -8,6 +8,7 @@ export interface CreateResumeInput {
   contactEmail: string;
   contactPhone: string;
   contactLinkedIn: string;
+  photoUrl: string;
   title: string;
   profession: string;
   templateKey: string;
@@ -27,6 +28,7 @@ export interface UpdateResumeInput {
   contactEmail?: string;
   contactPhone?: string;
   contactLinkedIn?: string;
+  photoUrl?: string;
   title?: string;
   templateKey?: string;
   visibility?: LinkVisibility;
@@ -66,6 +68,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       contactEmail: input.contactEmail,
       contactPhone: input.contactPhone,
       contactLinkedIn: input.contactLinkedIn,
+      photoUrl: input.photoUrl,
       title: input.title,
       profession: input.profession,
       templateKey: input.templateKey,
@@ -96,6 +99,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       contactEmail: input.contactEmail ?? existing.contactEmail,
       contactPhone: input.contactPhone ?? existing.contactPhone,
       contactLinkedIn: input.contactLinkedIn ?? existing.contactLinkedIn,
+      photoUrl: input.photoUrl ?? existing.photoUrl,
       title: input.title ?? existing.title,
       templateKey: input.templateKey ?? existing.templateKey,
       visibility: input.visibility ?? existing.visibility,

@@ -90,6 +90,7 @@ export interface Resume {
   contactEmail: string;
   contactPhone: string;
   contactLinkedIn: string;
+  photoUrl: string;
   title: string;
   profession: string;
   professionLabel: string;
@@ -114,6 +115,7 @@ export interface PublicResume {
   contactEmail: string;
   contactPhone: string;
   contactLinkedIn: string;
+  photoUrl: string;
   title: string;
   professionLabel: string;
   templateKey: string;

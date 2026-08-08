@@ -7,10 +7,12 @@ import { ExperienceEditor } from "../components/builder/ExperienceEditor";
 import { EducationEditor } from "../components/builder/EducationEditor";
 import { AwardsEditor } from "../components/builder/AwardsEditor";
 import { AchievementEditor } from "../components/builder/AchievementEditor";
+import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { ResumePreview } from "../components/builder/ResumePreview";
 import { ApiError, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL } from "../utils/templateAccess";
+import { getTemplateStyle } from "../config/templateStyles";
 import {
   AchievementEntry,
   AwardEntry,
@@ -33,6 +35,7 @@ export function ResumeEditPage() {
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactLinkedIn, setContactLinkedIn] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
   const [title, setTitle] = useState("");
   const [templateKey, setTemplateKey] = useState("");
   const [visibility, setVisibility] = useState<LinkVisibility>("public");
@@ -47,6 +50,10 @@ export function ResumeEditPage() {
   const [loading, setLoading] = useState(true);
   const [forceOpen, setForceOpen] = useState<ForceOpenSignal | undefined>(undefined);
 
+  // The photo upload only applies to the "Portrait" template's
+  // photo-banner-sidebar layout — hidden for every other template.
+  const usesPhoto = getTemplateStyle(templateKey || "modern").family === "photo-banner-sidebar";
+
   useEffect(() => {
     if (!id) return;
     Promise.all([resumeApi.getById(id), catalogApi.listTemplates()])
@@ -57,6 +64,7 @@ export function ResumeEditPage() {
         setContactEmail(r.contactEmail);
         setContactPhone(r.contactPhone);
         setContactLinkedIn(r.contactLinkedIn);
+        setPhotoUrl(r.photoUrl);
         setTitle(r.title);
         setTemplateKey(r.templateKey);
         setVisibility(r.visibility);
@@ -84,6 +92,7 @@ export function ResumeEditPage() {
         contactEmail,
         contactPhone,
         contactLinkedIn,
+        photoUrl,
         title,
         templateKey,
         visibility,
@@ -175,6 +184,7 @@ export function ResumeEditPage() {
                 placeholder="e.g. https://www.linkedin.com/in/jordanlee"
               />
             </div>
+            {usesPhoto && <PhotoUploader value={photoUrl} onChange={setPhotoUrl} />}
             <div className="field">
               <label>Resume title</label>
               <input value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -266,6 +276,7 @@ export function ResumeEditPage() {
           contactEmail={contactEmail}
           contactPhone={contactPhone}
           contactLinkedIn={contactLinkedIn}
+          photoUrl={photoUrl}
           title={title}
           professionLabel={resume.professionLabel}
           templateKey={templateKey}

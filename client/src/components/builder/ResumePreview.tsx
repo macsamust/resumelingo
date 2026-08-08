@@ -7,6 +7,8 @@ interface Props {
   contactEmail?: string;
   contactPhone?: string;
   contactLinkedIn?: string;
+  /** Data: URL of an uploaded personal photo — only rendered by the "Portrait" template's photo-banner-sidebar family; other templates ignore it. */
+  photoUrl?: string;
   title: string;
   professionLabel: string;
   templateKey?: string;
@@ -58,7 +60,7 @@ function withProtocol(url: string): string {
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
 }
 
-/** First + last initials (e.g. "Elvira Montanez" -> "EM") for the "photo-banner-sidebar" family's avatar badge — there's no photo upload in the resume model, so this stands in for a portrait. */
+/** First + last initials (e.g. "Elvira Montanez" -> "EM") for the "photo-banner-sidebar" family's avatar badge — shown when the resume has no uploaded photo. */
 function getInitials(name?: string): string {
   if (!name) return "";
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -87,6 +89,7 @@ export function ResumePreview({
   contactEmail,
   contactPhone,
   contactLinkedIn,
+  photoUrl,
   title,
   professionLabel,
   templateKey,
@@ -365,10 +368,14 @@ export function ResumePreview({
               <p className="tpl-role">{roleLine}</p>
               {contactGrid}
             </div>
-            {initials && (
-              <div className="tpl-photo-badge" aria-hidden="true">
-                {initials}
-              </div>
+            {photoUrl ? (
+              <img src={photoUrl} alt={fullName ? `${fullName}'s photo` : "Profile photo"} className="tpl-photo-img" />
+            ) : (
+              initials && (
+                <div className="tpl-photo-badge" aria-hidden="true">
+                  {initials}
+                </div>
+              )
             )}
           </div>
           <div className="tpl-photo-body">

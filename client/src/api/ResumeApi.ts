@@ -6,6 +6,7 @@ export interface CreateResumeInput {
   contactEmail?: string;
   contactPhone?: string;
   contactLinkedIn?: string;
+  photoUrl?: string;
   title: string;
   profession: string;
   templateKey: string;

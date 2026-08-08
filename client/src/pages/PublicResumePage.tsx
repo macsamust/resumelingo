@@ -195,6 +195,7 @@ export function PublicResumePage() {
         contactEmail={resume.contactEmail}
         contactPhone={resume.contactPhone}
         contactLinkedIn={resume.contactLinkedIn}
+        photoUrl={resume.photoUrl}
         title={resume.title}
         professionLabel={resume.professionLabel}
         templateKey={resume.templateKey}

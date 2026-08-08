@@ -15,6 +15,7 @@ export class Resume {
   readonly contactEmail: string;
   readonly contactPhone: string;
   readonly contactLinkedIn: string;
+  readonly photoUrl: string;
   readonly title: string;
   readonly profession: string;
   readonly templateKey: string;
@@ -39,6 +40,7 @@ export class Resume {
     this.contactEmail = record.contactEmail;
     this.contactPhone = record.contactPhone;
     this.contactLinkedIn = record.contactLinkedIn;
+    this.photoUrl = record.photoUrl;
     this.title = record.title;
     this.profession = record.profession;
     this.templateKey = record.templateKey;
@@ -83,6 +85,7 @@ export class Resume {
       contactEmail: this.contactEmail,
       contactPhone: this.contactPhone,
       contactLinkedIn: this.contactLinkedIn,
+      photoUrl: this.photoUrl,
       title: this.title,
       profession: this.profession,
       professionLabel: this.professionLabel,
@@ -109,6 +112,7 @@ export class Resume {
       contactEmail: this.contactEmail,
       contactPhone: this.contactPhone,
       contactLinkedIn: this.contactLinkedIn,
+      photoUrl: this.photoUrl,
       title: this.title,
       professionLabel: this.professionLabel,
       templateKey: this.templateKey,
