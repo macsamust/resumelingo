@@ -10,6 +10,7 @@ import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { ResumePreview } from "../components/builder/ResumePreview";
 import { ApiError, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
+import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL } from "../utils/templateAccess";
 import { getTemplateStyle } from "../config/templateStyles";
 import {
   AchievementEntry,
@@ -146,16 +147,27 @@ export function ResumeBuilderPage() {
 
           <h2>2. Choose a template</h2>
           <div className="template-choices">
-            {templates.map((t) => (
-              <span
-                key={t.key}
-                className={`template-pill ${templateKey === t.key ? "active" : ""}`}
-                onClick={() => setTemplateKey(t.key)}
-                title={t.description}
-              >
-                {t.name}
-              </span>
-            ))}
+            {templates.map((t) => {
+              const locked = !!user && !canUseTemplate(user.subscriptionTier, t.category);
+              const upgradeHint = `Upgrade to ${TIER_LABEL[CATEGORY_MIN_TIER[t.category]]} to use this template.`;
+              return (
+                <span
+                  key={t.key}
+                  className={`template-pill ${templateKey === t.key ? "active" : ""} ${locked ? "locked" : ""}`}
+                  onClick={() => {
+                    if (!locked) setTemplateKey(t.key);
+                  }}
+                  title={locked ? `${upgradeHint} ${t.description}` : t.description}
+                >
+                  {t.name}
+                  {locked && (
+                    <span className="template-pill-lock" aria-hidden="true">
+                      🔒
+                    </span>
+                  )}
+                </span>
+              );
+            })}
           </div>
           {usesPhoto && <PhotoUploader value={photoUrl} onChange={setPhotoUrl} />}
 
