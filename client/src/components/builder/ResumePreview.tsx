@@ -7,7 +7,7 @@ interface Props {
   contactEmail?: string;
   contactPhone?: string;
   contactLinkedIn?: string;
-  /** Data: URL of an uploaded personal photo — only rendered by templates with a photo-banner-sidebar or corner-photo-sidebar family (Portrait, Designer); other templates ignore it. */
+  /** Data: URL of an uploaded personal photo — only rendered by photo-capable template families (Portrait, Designer, Monochrome, Showcase); other templates ignore it. */
   photoUrl?: string;
   title: string;
   professionLabel: string;
@@ -453,6 +453,122 @@ export function ResumePreview({
               {experienceBlock}
               {educationBlock}
               {awardsBlock}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (style.family === "photo-sidebar-underline") {
+    const initials = getInitials(fullName);
+    const sidebarContact = contactItems.length > 0 && (
+      <div className="tpl-section">
+        <span className="tpl-section-label">Contact</span>
+        <ul className="tpl-mono-contact-list">
+          {contactItems.map((item) => (
+            <li key={item.key}>{item.node}</li>
+          ))}
+        </ul>
+      </div>
+    );
+
+    return (
+      <div className="preview-col">
+        {templateTag}
+        <div className="preview-panel tpl-photo-sidebar-underline" style={cssVars}>
+          <div className="tpl-mono-header">
+            <div className="tpl-mono-photo-wrap">
+              {photoUrl ? (
+                <img
+                  src={photoUrl}
+                  alt={fullName ? `${fullName}'s photo` : "Profile photo"}
+                  className="tpl-mono-photo-img"
+                />
+              ) : (
+                initials && (
+                  <div className="tpl-mono-photo-badge" aria-hidden="true">
+                    {initials}
+                  </div>
+                )
+              )}
+            </div>
+            <div className="tpl-mono-header-text">
+              {fullName && <p className="tpl-fullname">{fullName}</p>}
+              <h2>{heading}</h2>
+            </div>
+          </div>
+          <div className="tpl-mono-body">
+            <div className="tpl-mono-side">
+              {sidebarContact}
+              {educationBlock}
+              {bulletsBlock}
+            </div>
+            <div className="tpl-mono-main">
+              {summaryBlock}
+              {experienceBlock}
+              {awardsBlock}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (style.family === "pill-grid-cards") {
+    const initials = getInitials(fullName);
+    const contactCard = contactItems.length > 0 && (
+      <div className="tpl-pill-card tpl-pill-contact">
+        <div className="tpl-section">
+          <span className="tpl-section-label">Contact</span>
+          <ul className="tpl-pill-contact-list">
+            {contactItems.map((item) => (
+              <li key={item.key}>{item.node}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
+    const skillsCard = bulletsBlock && <div className="tpl-pill-card tpl-pill-skills">{bulletsBlock}</div>;
+    const experienceCard = experienceBlock && <div className="tpl-pill-card tpl-pill-experience">{experienceBlock}</div>;
+    const educationCard = educationBlock && <div className="tpl-pill-card tpl-pill-education">{educationBlock}</div>;
+    const awardsCard = awardsBlock && <div className="tpl-pill-card tpl-pill-awards">{awardsBlock}</div>;
+
+    return (
+      <div className="preview-col">
+        {templateTag}
+        <div className="preview-panel tpl-pill-grid-cards" style={cssVars}>
+          <div className="tpl-pill-header">
+            <div className="tpl-pill-photo-wrap">
+              {photoUrl ? (
+                <img
+                  src={photoUrl}
+                  alt={fullName ? `${fullName}'s photo` : "Profile photo"}
+                  className="tpl-pill-photo-img"
+                />
+              ) : (
+                initials && (
+                  <div className="tpl-pill-photo-badge" aria-hidden="true">
+                    {initials}
+                  </div>
+                )
+              )}
+            </div>
+            <div className="tpl-pill-header-text">
+              {fullName && <p className="tpl-fullname">{fullName}</p>}
+              <h2>{heading}</h2>
+              {summary && <p className="tpl-pill-intro">{summary}</p>}
+            </div>
+          </div>
+          <div className="tpl-pill-grid">
+            <div className="tpl-pill-col">
+              {contactCard}
+              {skillsCard}
+              {awardsCard}
+            </div>
+            <div className="tpl-pill-col">
+              {experienceCard}
+              {educationCard}
             </div>
           </div>
         </div>

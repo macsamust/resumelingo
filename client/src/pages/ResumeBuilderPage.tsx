@@ -45,9 +45,8 @@ export function ResumeBuilderPage() {
   const [submitting, setSubmitting] = useState(false);
 
   // The photo upload only applies to templates that actually render a photo
-  // (Portrait's photo-banner-sidebar, Designer's corner-photo-sidebar) —
-  // hidden for every other template.
-  const PHOTO_FAMILIES = ["photo-banner-sidebar", "corner-photo-sidebar"];
+  // (Portrait, Designer, Monochrome, Showcase) — hidden for every other template.
+  const PHOTO_FAMILIES = ["photo-banner-sidebar", "corner-photo-sidebar", "photo-sidebar-underline", "pill-grid-cards"];
   const usesPhoto = PHOTO_FAMILIES.includes(getTemplateStyle(templateKey).family);
 
   useEffect(() => {

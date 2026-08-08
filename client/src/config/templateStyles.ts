@@ -23,7 +23,9 @@ export type LayoutFamily =
   | "minimal-clean"
   | "timeline-sidebar"
   | "photo-banner-sidebar"
-  | "corner-photo-sidebar";
+  | "corner-photo-sidebar"
+  | "photo-sidebar-underline"
+  | "pill-grid-cards";
 export type Flow = "summary-first" | "bullets-first";
 
 export interface TemplateStyle {
@@ -177,6 +179,28 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     family: "corner-photo-sidebar",
     accent: "#1e2a4a", accentSoft: "#e7eaf3", font: SANS_CORPORATE,
     flow: "summary-first", summaryLabel: "About Me", bulletsLabel: "Expertise",
+  },
+
+  // Grayscale photo beside a light gray sidebar (Contact, Education,
+  // Skills) — main column stays plain white (Summary, Experience) — every
+  // section headed by bold tracked-letter text with a thin underline
+  // instead of a colored marker. See ResumePreview.tsx's
+  // "photo-sidebar-underline" branch and global.css's .tpl-mono-* rules.
+  monochrome: {
+    family: "photo-sidebar-underline",
+    accent: "#1f2937", accentSoft: "#f2f3f4", font: SANS_MODERN,
+    flow: "summary-first", summaryLabel: "Summary", bulletsLabel: "Skills",
+  },
+
+  // Photo + name header over an intro paragraph, then a two-column grid of
+  // bordered, rounded cards (Contact/Skills/Awards on the left, Experience/
+  // Education on the right), each tagged with a colorful rounded pill
+  // instead of a plain label. See ResumePreview.tsx's "pill-grid-cards"
+  // branch and global.css's .tpl-pill-* rules.
+  showcase: {
+    family: "pill-grid-cards",
+    accent: "#16181d", accentSoft: "#f8fafc", font: SANS_GEOMETRIC,
+    flow: "summary-first", summaryLabel: "About", bulletsLabel: "Skills",
   },
 };
 

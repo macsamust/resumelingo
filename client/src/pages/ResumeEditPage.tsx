@@ -54,9 +54,8 @@ export function ResumeEditPage() {
   const [forceOpen, setForceOpen] = useState<ForceOpenSignal | undefined>(undefined);
 
   // The photo upload only applies to templates that actually render a photo
-  // (Portrait's photo-banner-sidebar, Designer's corner-photo-sidebar) —
-  // hidden for every other template.
-  const PHOTO_FAMILIES = ["photo-banner-sidebar", "corner-photo-sidebar"];
+  // (Portrait, Designer, Monochrome, Showcase) — hidden for every other template.
+  const PHOTO_FAMILIES = ["photo-banner-sidebar", "corner-photo-sidebar", "photo-sidebar-underline", "pill-grid-cards"];
   const usesPhoto = PHOTO_FAMILIES.includes(getTemplateStyle(templateKey || "modern").family);
 
   useEffect(() => {

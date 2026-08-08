@@ -470,6 +470,75 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   color: var(--tpl-accent); display: flex; align-items: center; justify-content: center; font-size: 11px;
 }
 
+/* photo-sidebar-underline: a grayscale photo beside a light gray sidebar
+   (Contact, Education, Skills) — main column (Summary, Experience, Awards)
+   stays plain white — every section headed by bold tracked-letter text
+   with a thin underline instead of a colored dot marker. */
+.tpl-photo-sidebar-underline { padding: 0; }
+.tpl-mono-header { display: flex; align-items: center; gap: 24px; padding: 30px 28px 18px; }
+.tpl-mono-photo-wrap { flex-shrink: 0; }
+.tpl-mono-photo-img, .tpl-mono-photo-badge { width: 110px; height: 110px; border-radius: 50%; box-sizing: border-box; }
+.tpl-mono-photo-img { object-fit: cover; filter: grayscale(1); border: 3px solid #fff; box-shadow: 0 0 0 2px var(--border); }
+.tpl-mono-photo-badge {
+  display: flex; align-items: center; justify-content: center; background: var(--tpl-accent-soft);
+  color: var(--tpl-accent); font-weight: 800; font-size: 30px;
+}
+.tpl-mono-header-text { min-width: 0; }
+.tpl-mono-header-text .tpl-fullname { letter-spacing: .1em; }
+.tpl-mono-header-text h2 {
+  letter-spacing: .08em; font-weight: 500; color: var(--muted); text-transform: uppercase; font-size: 13px;
+}
+.tpl-mono-body { display: grid; grid-template-columns: 34% 1fr; border-top: 1px solid var(--border); }
+.tpl-mono-side { background: var(--tpl-accent-soft); padding: 26px 22px; min-width: 0; }
+.tpl-mono-main { padding: 26px 28px; min-width: 0; }
+/* Bold tracked-letter labels with a thin underline instead of the small
+   dot-marker label every other family uses. */
+.tpl-photo-sidebar-underline .tpl-section-label {
+  display: block; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--navy); padding-bottom: 8px; margin-bottom: 14px; border-bottom: 2px solid var(--navy);
+}
+.tpl-photo-sidebar-underline .tpl-section-label::before { display: none; }
+.tpl-photo-sidebar-underline .tpl-section + .tpl-section { border-top: none; margin-top: 22px; padding-top: 0; }
+.tpl-mono-contact-list { list-style: none; font-size: 12.5px; color: var(--navy-light); }
+.tpl-mono-contact-list li { margin-bottom: 9px; word-break: break-word; }
+.tpl-mono-contact-list li:last-child { margin-bottom: 0; }
+
+/* pill-grid-cards: photo + name header over an intro paragraph, then a
+   two-column grid of bordered, rounded cards (Contact/Skills/Awards on the
+   left, Experience/Education on the right), each tagged with a colorful
+   rounded pill overlapping its top edge instead of a plain label. */
+.tpl-pill-grid-cards { padding: 30px 28px 34px; }
+.tpl-pill-header { display: flex; align-items: flex-start; gap: 22px; margin-bottom: 26px; }
+.tpl-pill-photo-wrap { flex-shrink: 0; }
+.tpl-pill-photo-img, .tpl-pill-photo-badge {
+  width: 104px; height: 104px; border-radius: 50%; border: 4px solid #16181d; box-sizing: border-box;
+}
+.tpl-pill-photo-img { object-fit: cover; }
+.tpl-pill-photo-badge {
+  display: flex; align-items: center; justify-content: center; background: var(--tpl-accent-soft);
+  color: var(--tpl-accent); font-weight: 800; font-size: 28px;
+}
+.tpl-pill-header-text { min-width: 0; padding-top: 4px; }
+.tpl-pill-intro { font-size: 13px; color: var(--navy-light); line-height: 1.7; margin-top: 10px; max-width: 520px; }
+.tpl-pill-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.tpl-pill-col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.tpl-pill-card { position: relative; border: 2px solid #16181d; border-radius: 18px; padding: 24px 18px 16px; background: #fff; }
+.tpl-pill-card .tpl-section { margin-bottom: 0; }
+.tpl-pill-card .tpl-section-label {
+  position: absolute; top: -15px; left: 18px; display: inline-flex; align-items: center;
+  padding: 6px 18px; border-radius: 999px; border: 2px solid #16181d; font-size: 11.5px; font-weight: 700;
+  letter-spacing: .05em; text-transform: uppercase; margin-bottom: 0; background: var(--tpl-accent); color: #fff;
+}
+.tpl-pill-card .tpl-section-label::before { display: none; }
+.tpl-pill-contact .tpl-section-label { background: #f5c344; color: #1a1a1a; }
+.tpl-pill-skills .tpl-section-label { background: #4c8bf5; color: #fff; }
+.tpl-pill-experience .tpl-section-label { background: #f0508a; color: #fff; }
+.tpl-pill-education .tpl-section-label { background: #38b6e6; color: #1a1a1a; }
+.tpl-pill-awards .tpl-section-label { background: #4caf6b; color: #fff; }
+.tpl-pill-contact-list { list-style: none; font-size: 12.5px; color: var(--navy-light); }
+.tpl-pill-contact-list li { margin-bottom: 9px; word-break: break-word; }
+.tpl-pill-contact-list li:last-child { margin-bottom: 0; }
+
 .public-resume-page { max-width: 760px; margin: 0 auto; padding: 60px 24px; }
 .public-resume-page .preview-col { position: static; top: auto; }
 .public-resume-page .preview-panel { position: static; top: auto; margin-bottom: 24px; box-shadow: 0 20px 40px -24px rgba(15, 23, 42, .2); }
@@ -593,4 +662,8 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   .tpl-corner-body { grid-template-columns: 1fr; }
   .tpl-corner-side { border-right: none; border-bottom: 1px solid var(--border); }
   .tpl-corner-header { flex-direction: column; text-align: center; }
+  .tpl-mono-body { grid-template-columns: 1fr; }
+  .tpl-mono-header { flex-direction: column; text-align: center; }
+  .tpl-pill-grid { grid-template-columns: 1fr; }
+  .tpl-pill-header { flex-direction: column; }
 }
