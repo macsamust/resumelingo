@@ -10,7 +10,7 @@ import { getPlan } from "../config/subscriptionPlans";
 export class ResumeLimitError extends Error {}
 export class ResumeNotFoundError extends Error {}
 export class ResumeAccessError extends Error {
-  constructor(message: string, public readonly reason: "password" | "private" | "forbidden" = "forbidden") {
+  constructor(message: string, public readonly reason: "password" | "private" | "forbidden" | "expired" = "forbidden") {
     super(message);
   }
 }
@@ -52,6 +52,7 @@ export interface CreateResumeRequest {
   templateKey: string;
   visibility?: LinkVisibility;
   accessPassword?: string | null;
+  accessPasswordExpiresAt?: string | null;
   answers: Record<string, string>;
   experience?: WorkExperienceEntry[];
   education?: EducationEntry[];
@@ -106,6 +107,7 @@ export class ResumeService {
       templateKey: input.templateKey,
       visibility: input.visibility ?? LinkVisibility.Public,
       accessPassword: input.accessPassword ?? null,
+      accessPasswordExpiresAt: input.accessPasswordExpiresAt ?? null,
       answers: input.answers,
       experience: input.experience ?? [],
       education: input.education ?? [],
@@ -159,6 +161,13 @@ export class ResumeService {
     const record = await this.resumes.findBySlug(slug);
     if (!record) throw new ResumeNotFoundError("Resume not found.");
     const resume = new Resume(record);
+    const isOwner = !!requestingUserId && requestingUserId === resume.userId;
+    // Checked ahead of the general isAccessibleBy() below so an expired link
+    // reports a distinct reason ("expired") instead of just looking like a
+    // wrong password — the owner can still always open their own resume.
+    if (!isOwner && resume.isPasswordExpired) {
+      throw new ResumeAccessError("This link has expired and is no longer accessible.", "expired");
+    }
     if (!resume.isAccessibleBy(requestingUserId, password)) {
       throw new ResumeAccessError(
         resume.visibility === LinkVisibility.PasswordProtected

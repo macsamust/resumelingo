@@ -100,6 +100,8 @@ export interface Resume {
   template?: TemplateDefinition;
   visibility: LinkVisibility;
   hasPassword: boolean;
+  /** ISO timestamp. Once past, a password-protected link is deactivated even with the correct password. Null means no expiration. */
+  accessPasswordExpiresAt: string | null;
   answers: Record<string, string>;
   experience: WorkExperienceEntry[];
   education: EducationEntry[];

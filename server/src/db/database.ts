@@ -63,6 +63,7 @@ export async function migrate(): Promise<void> {
       "templateKey" TEXT NOT NULL,
       "visibility" TEXT NOT NULL DEFAULT 'public',
       "accessPassword" TEXT,
+      "accessPasswordExpiresAt" TEXT,
       "answers" TEXT NOT NULL DEFAULT '{}',
       "experience" TEXT NOT NULL DEFAULT '[]',
       "education" TEXT NOT NULL DEFAULT '[]',
@@ -108,6 +109,14 @@ export async function migrate(): Promise<void> {
 
     -- Lets an admin disable a user's login without deleting their account/data.
     ALTER TABLE users ADD COLUMN IF NOT EXISTS "suspended" BOOLEAN NOT NULL DEFAULT false;
+
+    -- Optional expiration for a password-protected resume link: once past,
+    -- the link is deactivated (getPublicBySlug in ResumeService rejects it
+    -- with reason "expired") even with the correct password. NULL means no
+    -- expiration. Only meaningful when visibility = 'password', but not
+    -- enforced at the column level since it's harmless to keep a leftover
+    -- value around if someone switches visibility away and back.
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "accessPasswordExpiresAt" TEXT;
 
     -- Admins are a deliberately separate table/role from users (see
     -- types/index.ts AdminRecord and services/AdminService.ts) rather than a

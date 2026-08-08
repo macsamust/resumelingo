@@ -12,6 +12,7 @@ export interface CreateResumeInput {
   templateKey: string;
   visibility?: LinkVisibility;
   accessPassword?: string | null;
+  accessPasswordExpiresAt?: string | null;
   answers: Record<string, string>;
   experience?: WorkExperienceEntry[];
   education?: EducationEntry[];

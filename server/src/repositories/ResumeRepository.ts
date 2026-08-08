@@ -14,6 +14,7 @@ export interface CreateResumeInput {
   templateKey: string;
   visibility: LinkVisibility;
   accessPassword: string | null;
+  accessPasswordExpiresAt?: string | null;
   answers: Record<string, string>;
   experience: WorkExperienceEntry[];
   education: EducationEntry[];
@@ -34,6 +35,7 @@ export interface UpdateResumeInput {
   templateKey?: string;
   visibility?: LinkVisibility;
   accessPassword?: string | null;
+  accessPasswordExpiresAt?: string | null;
   answers?: Record<string, string>;
   experience?: WorkExperienceEntry[];
   education?: EducationEntry[];
@@ -75,6 +77,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       templateKey: input.templateKey,
       visibility: input.visibility,
       accessPassword: input.accessPassword,
+      accessPasswordExpiresAt: input.accessPasswordExpiresAt ?? null,
       answers: JSON.stringify(input.answers),
       experience: JSON.stringify(input.experience),
       education: JSON.stringify(input.education),
@@ -106,6 +109,8 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       templateKey: input.templateKey ?? existing.templateKey,
       visibility: input.visibility ?? existing.visibility,
       accessPassword: input.accessPassword !== undefined ? input.accessPassword : existing.accessPassword,
+      accessPasswordExpiresAt:
+        input.accessPasswordExpiresAt !== undefined ? input.accessPasswordExpiresAt : existing.accessPasswordExpiresAt,
       answers: input.answers ? JSON.stringify(input.answers) : existing.answers,
       experience: input.experience ? JSON.stringify(input.experience) : existing.experience,
       education: input.education ? JSON.stringify(input.education) : existing.education,

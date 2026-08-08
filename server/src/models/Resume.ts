@@ -21,6 +21,7 @@ export class Resume {
   readonly templateKey: string;
   readonly visibility: LinkVisibility;
   readonly accessPassword: string | null;
+  readonly accessPasswordExpiresAt: string | null;
   readonly answers: Record<string, string>;
   readonly experience: WorkExperienceEntry[];
   readonly education: EducationEntry[];
@@ -46,6 +47,7 @@ export class Resume {
     this.templateKey = record.templateKey;
     this.visibility = record.visibility;
     this.accessPassword = record.accessPassword;
+    this.accessPasswordExpiresAt = record.accessPasswordExpiresAt;
     this.answers = JSON.parse(record.answers || "{}");
     this.experience = JSON.parse(record.experience || "[]");
     this.education = JSON.parse(record.education || "[]");
@@ -66,11 +68,27 @@ export class Resume {
     return getTemplateByKey(this.templateKey);
   }
 
+  /**
+   * True once a password-protected link's expiration has passed. Only ever
+   * true for LinkVisibility.PasswordProtected — other visibilities have no
+   * expiration concept. Checked separately from isAccessibleBy (rather than
+   * folded into it) so ResumeService.getPublicBySlug can report a distinct
+   * "expired" reason instead of the generic "wrong password" one.
+   */
+  get isPasswordExpired(): boolean {
+    return (
+      this.visibility === LinkVisibility.PasswordProtected &&
+      !!this.accessPasswordExpiresAt &&
+      new Date(this.accessPasswordExpiresAt).getTime() < Date.now()
+    );
+  }
+
   /** userId is the *requesting* user, if any (undefined for anonymous visitors). */
   isAccessibleBy(userId?: string, password?: string): boolean {
     if (userId && userId === this.userId) return true; // owner can always view their own resume, any visibility
     if (this.visibility === LinkVisibility.Public) return true;
     if (this.visibility === LinkVisibility.PasswordProtected) {
+      if (this.isPasswordExpired) return false;
       return !!password && password === this.accessPassword;
     }
     return false; // private — owner-only, and the owner case is already handled above
@@ -93,6 +111,7 @@ export class Resume {
       template: this.template,
       visibility: this.visibility,
       hasPassword: !!this.accessPassword,
+      accessPasswordExpiresAt: this.accessPasswordExpiresAt,
       answers: this.answers,
       experience: this.experience,
       education: this.education,

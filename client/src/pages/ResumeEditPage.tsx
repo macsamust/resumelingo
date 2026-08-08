@@ -25,6 +25,14 @@ import {
   WorkExperienceEntry,
 } from "../types";
 
+/** "2024-06-01T14:30:00.000Z" -> "2024-06-01T14:30" (local time) for a `<input type="datetime-local">`'s value. Empty string for a missing/invalid input. */
+function isoToDatetimeLocal(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export function ResumeEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -43,6 +51,8 @@ export function ResumeEditPage() {
   const [templateKey, setTemplateKey] = useState("");
   const [visibility, setVisibility] = useState<LinkVisibility>("public");
   const [accessPassword, setAccessPassword] = useState("");
+  // Local-time "datetime-local" input value, converted to/from ISO on load/save.
+  const [accessPasswordExpiresAt, setAccessPasswordExpiresAt] = useState("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [experience, setExperience] = useState<WorkExperienceEntry[]>([]);
   const [education, setEducation] = useState<EducationEntry[]>([]);
@@ -72,6 +82,7 @@ export function ResumeEditPage() {
         setTitle(r.title);
         setTemplateKey(r.templateKey);
         setVisibility(r.visibility);
+        setAccessPasswordExpiresAt(r.accessPasswordExpiresAt ? isoToDatetimeLocal(r.accessPasswordExpiresAt) : "");
         setAnswers(r.answers);
         setExperience(r.experience);
         setEducation(r.education);
@@ -112,6 +123,8 @@ export function ResumeEditPage() {
         templateKey,
         visibility,
         accessPassword: visibility === "password" ? accessPassword : null,
+        accessPasswordExpiresAt:
+          visibility === "password" && accessPasswordExpiresAt ? new Date(accessPasswordExpiresAt).toISOString() : null,
         answers,
         experience,
         education,
@@ -252,10 +265,30 @@ export function ResumeEditPage() {
               </select>
             </div>
             {visibility === "password" && (
-              <div className="field">
-                <label>Access password</label>
-                <input value={accessPassword} onChange={(e) => setAccessPassword(e.target.value)} placeholder="Set a password" />
-              </div>
+              <>
+                <div className="field">
+                  <label>Access password</label>
+                  <input value={accessPassword} onChange={(e) => setAccessPassword(e.target.value)} placeholder="Set a password" />
+                </div>
+                <div className="field">
+                  <label>Link expires (optional)</label>
+                  <input
+                    type="datetime-local"
+                    value={accessPasswordExpiresAt}
+                    onChange={(e) => setAccessPasswordExpiresAt(e.target.value)}
+                  />
+                  <p className="hero-note" style={{ marginTop: 6, marginBottom: 0 }}>
+                    {accessPasswordExpiresAt
+                      ? "After this time, the link stops working — even with the correct password."
+                      : "Leave blank for a link that never expires."}
+                  </p>
+                  {resume.accessPasswordExpiresAt && new Date(resume.accessPasswordExpiresAt).getTime() < Date.now() && (
+                    <p className="form-error" style={{ marginTop: 8, marginBottom: 0 }}>
+                      This link's expiration has already passed — it's currently deactivated.
+                    </p>
+                  )}
+                </div>
+              </>
             )}
             <p className="hero-note" style={{ marginBottom: 0 }}>
               {window.location.origin}/r/{resume.slug}

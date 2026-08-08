@@ -168,6 +168,8 @@ export interface ResumeRecord {
   templateKey: string;
   visibility: LinkVisibility;
   accessPassword: string | null;
+  /** ISO timestamp. Once past, a password-protected link is deactivated even with the correct password (see Resume.isPasswordExpired). NULL means no expiration. */
+  accessPasswordExpiresAt: string | null;
   answers: string; // JSON-serialized Record<string, string>
   experience: string; // JSON-serialized WorkExperienceEntry[]
   education: string; // JSON-serialized EducationEntry[]

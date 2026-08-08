@@ -126,6 +126,10 @@ export function PublicResumePage() {
           // Private/owner-only resumes have no password to enter — asking for
           // one would send the visitor into a form they can never satisfy.
           setError("This Websume is private. Only the owner can view it — sign in as the owner to access it.");
+        } else if (err instanceof ApiError && err.status === 403 && err.reason === "expired") {
+          // Expired password-protected links are deactivated outright — no
+          // password prompt, since no password would work at this point.
+          setError("This resume link has expired and is no longer accessible.");
         } else if (err instanceof ApiError && err.status === 403) {
           setPasswordRequired(true);
         } else if (err instanceof ApiError && err.status === 404) {
