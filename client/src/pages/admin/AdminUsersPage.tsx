@@ -136,7 +136,9 @@ export function AdminUsersPage() {
   return (
     <AdminShell>
       <div className="app-page-head">
-        <h1>Users</h1>
+        <h1>
+          Users <span className="app-page-head-count">({users.length})</span>
+        </h1>
         <input
           className="admin-search"
           value={query}
