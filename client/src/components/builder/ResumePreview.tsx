@@ -290,6 +290,47 @@ export function ResumePreview({
     );
   }
 
+  if (style.family === "timeline-sidebar") {
+    // Contact info renders as a labeled, stacked list in the sidebar for
+    // this family (rather than the single "email · phone · linkedin" line
+    // every other family uses) — closer to a dedicated "Contact" panel.
+    const sidebarContact = contactItems.length > 0 && (
+      <div className="tpl-section">
+        <span className="tpl-section-label">Contact</span>
+        <ul className="tpl-timeline-contact-list">
+          {contactItems.map((item) => (
+            <li key={item.key}>{item.node}</li>
+          ))}
+        </ul>
+      </div>
+    );
+
+    return (
+      <div className="preview-col">
+        {templateTag}
+        <div className="preview-panel tpl-timeline-sidebar" style={cssVars}>
+          <div className="tpl-timeline-header">
+            {fullName && <p className="tpl-fullname">{fullName}</p>}
+            <h2>{heading}</h2>
+            <p className="tpl-role">{roleLine}</p>
+          </div>
+          <div className="tpl-timeline-body">
+            <div className="tpl-timeline-side">
+              {sidebarContact}
+              {bulletsBlock}
+            </div>
+            <div className="tpl-timeline-main">
+              {summaryBlock}
+              {experienceBlock}
+              {educationBlock}
+              {awardsBlock}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // executive-banner, centered-serif, cv-academic, and minimal-clean all share
   // the same single-column structure — the CSS classes per family (see
   // global.css) plus bannerAlign are what actually make them look distinct.

@@ -345,6 +345,36 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .tpl-minimal-clean .tpl-section-label::before { background: var(--muted); }
 .tpl-minimal-clean .tpl-section + .tpl-section { border-top-color: var(--border); }
 
+/* timeline-sidebar: full-width name/role banner over a divider, then a
+   contact+skills sidebar beside a main column where each section (Profile,
+   Experience, Education, Awards) is marked with a timeline dot and
+   connecting line — see ResumePreview.tsx's "timeline-sidebar" branch. */
+.tpl-timeline-sidebar { padding: 0; }
+.tpl-timeline-sidebar .tpl-timeline-header { padding: 28px 28px 20px; border-bottom: 2px solid var(--tpl-accent); }
+.tpl-timeline-sidebar .tpl-timeline-header h2 { font-weight: 800; letter-spacing: -.01em; }
+.tpl-timeline-sidebar .tpl-timeline-header .tpl-role { text-transform: uppercase; letter-spacing: .08em; font-size: 12.5px; font-weight: 600; margin-bottom: 0; }
+.tpl-timeline-body { display: grid; grid-template-columns: 34% 1fr; }
+.tpl-timeline-side { padding: 24px 22px; border-right: 1px solid var(--border); min-width: 0; }
+.tpl-timeline-side .tpl-section + .tpl-section { margin-top: 22px; padding-top: 18px; }
+.tpl-timeline-contact-list { list-style: none; font-size: 12.5px; color: var(--navy-light); }
+.tpl-timeline-contact-list li { margin-bottom: 8px; word-break: break-word; }
+.tpl-timeline-contact-list li:last-child { margin-bottom: 0; }
+.tpl-timeline-main { padding: 24px 28px; min-width: 0; }
+/* The timeline itself: each section becomes a "stop" with a connecting
+   line (::before) and a filled dot marker (::after) instead of the plain
+   dot-and-divider every other family uses for .tpl-section-label. */
+.tpl-timeline-main .tpl-section { position: relative; padding-left: 26px; margin-top: 0; padding-top: 0; border-top: none; }
+.tpl-timeline-main .tpl-section + .tpl-section { margin-top: 24px; }
+.tpl-timeline-main .tpl-section::before {
+  content: ""; position: absolute; left: 5px; top: 4px; bottom: -24px; width: 1px; background: var(--border);
+}
+.tpl-timeline-main .tpl-section:last-child::before { display: none; }
+.tpl-timeline-main .tpl-section::after {
+  content: ""; position: absolute; left: 0; top: 2px; width: 11px; height: 11px; border-radius: 50%;
+  background: var(--tpl-accent); box-shadow: 0 0 0 3px #fff;
+}
+.tpl-timeline-main .tpl-section-label::before { display: none; }
+
 .public-resume-page { max-width: 760px; margin: 0 auto; padding: 60px 24px; }
 .public-resume-page .preview-col { position: static; top: auto; }
 .public-resume-page .preview-panel { position: static; top: auto; margin-bottom: 24px; box-shadow: 0 20px 40px -24px rgba(15, 23, 42, .2); }
@@ -451,4 +481,6 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   section { padding: 56px 0; }
   .app-content { padding: 24px 16px; }
   .preview-panel.tpl-sidebar.tpl-side-left, .preview-panel.tpl-sidebar.tpl-side-right { grid-template-columns: 1fr; }
+  .tpl-timeline-body { grid-template-columns: 1fr; }
+  .tpl-timeline-side { border-right: none; border-bottom: 1px solid var(--border); }
 }

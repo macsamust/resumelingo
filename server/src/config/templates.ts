@@ -23,6 +23,7 @@ export const DEFAULT_TEMPLATES: TemplateDefinition[] = [
   { key: "healthcare", name: "Healthcare", description: "Clinical experience and licensure forward.", category: TemplateCategory.Upgrade },
   { key: "academic", name: "Academic", description: "CV-style layout for education and research.", category: TemplateCategory.Premium },
   { key: "government-contractor", name: "Government Contractor", description: "Highlights clearance and contract vehicles.", category: TemplateCategory.Premium },
+  { key: "timeline", name: "Timeline", description: "Full-width name banner over a contact-and-skills sidebar, with an icon-marker career timeline.", category: TemplateCategory.Upgrade },
 ];
 
 /** Ranked 1:1 with TemplateCategory below — higher tier can use anything at or below its rank. */

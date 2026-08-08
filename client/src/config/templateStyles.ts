@@ -15,7 +15,7 @@
  *     "summary-first" templates lead with narrative framing. Section labels
  *     (summaryLabel / bulletsLabel) also vary per template's tone.
  */
-export type LayoutFamily = "executive-banner" | "sidebar" | "centered-serif" | "cv-academic" | "minimal-clean";
+export type LayoutFamily = "executive-banner" | "sidebar" | "centered-serif" | "cv-academic" | "minimal-clean" | "timeline-sidebar";
 export type Flow = "summary-first" | "bullets-first";
 
 export interface TemplateStyle {
@@ -133,6 +133,16 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     family: "minimal-clean",
     accent: "#0d9488", accentSoft: "#f0fdfa", font: SERIF_LITERARY,
     flow: "summary-first", summaryLabel: "Clinical Summary", bulletsLabel: "Clinical Highlights", badge: "Clinical",
+  },
+
+  // Full-width name/role banner over a contact-and-skills sidebar, with an
+  // icon-marker timeline running down the main column (Profile, Experience,
+  // Education, Awards each get a marker) — see ResumePreview.tsx's
+  // "timeline-sidebar" branch and global.css's .tpl-timeline-sidebar rules.
+  timeline: {
+    family: "timeline-sidebar",
+    accent: "#111827", accentSoft: "#e5e7eb", font: SANS_GEOMETRIC,
+    flow: "summary-first", summaryLabel: "Profile", bulletsLabel: "Skills",
   },
 };
 
