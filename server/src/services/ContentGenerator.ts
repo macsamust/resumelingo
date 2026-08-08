@@ -1,4 +1,5 @@
 import { getProfessionByKey } from "../config/professions";
+import { findRoleDescription } from "../config/roleDescriptions";
 import { AchievementEntry } from "../types";
 
 export interface GeneratedContent {
@@ -35,14 +36,10 @@ export class RuleBasedContentGenerator implements IContentGenerator {
     const label = definition?.label ?? profession;
 
     // The "Other" profession's label ("Other") isn't a real job title, so
-    // "Results-driven Other with..." reads oddly. Lead with the person's
-    // name instead, and pull the actual role out of the Resume title
-    // (e.g. "Freelance Photographer Resume" -> "Freelance Photographer")
-    // so the statement still names what the person does.
-    const summary =
-      profession === "other" && fullName?.trim()
-        ? this.buildOtherSummary(fullName.trim(), answers, title)
-        : this.buildSummary(label, answers);
+    // instead of the standard "Results-driven {label} with..." shape, build
+    // a generic professional description of the role pulled from the
+    // Resume title (e.g. "Comedian Resume" -> "Comedian").
+    const summary = profession === "other" ? this.buildOtherSummary(title) : this.buildSummary(label, answers);
     // Challenge/Action/Result entries produce genuinely impact-focused
     // bullets (the STAR/CAR method) and take priority when present, since
     // they're the person's own account of what changed because of their
@@ -61,28 +58,32 @@ export class RuleBasedContentGenerator implements IContentGenerator {
     return `Results-driven ${professionLabel} with ${years}${skillClause}, known for translating requirements into measurable outcomes and consistently exceeding expectations.`;
   }
 
-  private buildOtherSummary(fullName: string, answers: Record<string, string>, title?: string): string {
-    const years = answers.yearsExperience ? `${answers.yearsExperience}+ years of experience` : "experienced professional";
-    const topSkill = this.firstListValue(answers);
-    const skillClause = topSkill ? ` specializing in ${topSkill}` : "";
-    const role = this.roleFromTitle(title);
-    const roleClause = role ? ` as a ${role}` : "";
-    return `${fullName} is results-driven${roleClause} with ${years}${skillClause}, known for translating requirements into measurable outcomes and consistently exceeding expectations.`;
+  /**
+   * Builds a generic, professionally-worded description of the role itself
+   * (not the person) — e.g. "A successful comedian is a versatile public
+   * performer who combines sharp writing, deep audience connection, and
+   * precise timing to evoke laughter. Key traits include originality, an
+   * authentic stage persona, and strong resilience under pressure."
+   * Falls back to a generic "professional" description when no usable role
+   * can be pulled from the title.
+   */
+  private buildOtherSummary(title: string | undefined): string {
+    const role = this.roleFromTitle(title) ?? "professional";
+    const { descriptor, traits, outcome, keyTraits } = findRoleDescription(role);
+    return `A successful ${role} is a ${descriptor} who combines ${traits[0]}, ${traits[1]}, and ${traits[2]} to ${outcome}. Key traits include ${keyTraits[0]}, ${keyTraits[1]}, and ${keyTraits[2]}.`;
   }
 
   /**
    * Resume titles are typically "{Role} Resume" (see the New Resume page's
    * default title), so strip a trailing "resume" word to recover just the
    * role — e.g. "Freelance Photographer Resume" -> "Freelance Photographer".
-   * Returns undefined for a blank or generic ("New Resume") title so the
-   * summary falls back to not naming a role at all rather than saying
-   * something meaningless like "as a new".
+   * Returns undefined for a blank or generic ("New Resume") title.
    */
   private roleFromTitle(title: string | undefined): string | undefined {
     if (!title) return undefined;
     const stripped = title.trim().replace(/\s*resume\s*$/i, "").trim();
     if (!stripped || stripped.toLowerCase() === "new") return undefined;
-    return stripped;
+    return stripped.toLowerCase();
   }
 
   /**
