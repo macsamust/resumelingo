@@ -127,7 +127,7 @@ export function ResumeEditPage() {
         <h1>Edit Resume</h1>
         <div style={{ display: "flex", gap: 10 }}>
           <a href={`/r/${resume.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost">
-            View public link
+            View resume
           </a>
           <button className="btn btn-ghost" onClick={onDelete}>
             Delete
