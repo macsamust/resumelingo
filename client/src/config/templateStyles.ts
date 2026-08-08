@@ -144,9 +144,9 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     flow: "summary-first", summaryLabel: "Clinical Summary", bulletsLabel: "Clinical Highlights", badge: "Clinical",
   },
 
-  // Full-width name/role banner over a contact-and-skills sidebar, with an
-  // icon-marker timeline running down the main column (Profile, Experience,
-  // Education, Awards each get a marker) — see ResumePreview.tsx's
+  // Full-width name/role banner over a contact-and-profile sidebar, with an
+  // icon-marker timeline running down the larger main column (Skills,
+  // Experience, Education, Awards each get a marker) — see ResumePreview.tsx's
   // "timeline-sidebar" branch and global.css's .tpl-timeline-sidebar rules.
   timeline: {
     family: "timeline-sidebar",
