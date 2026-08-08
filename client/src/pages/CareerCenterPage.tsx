@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useHashScroll } from "../hooks/useHashScroll";
+import { useAuth } from "../context/AuthContext";
 
 interface CareerTopic {
   id: string;
@@ -190,10 +191,58 @@ const TOPICS: CareerTopic[] = [
   },
 ];
 
+/** Career Center is a Professional/Premium perk — Starter ("Basic") accounts and signed-out visitors see an upgrade prompt instead of the content. */
+const ALLOWED_TIERS = new Set(["professional", "premium"]);
+
+function CareerCenterLocked({ signedIn }: { signedIn: boolean }) {
+  return (
+    <main className="career-page">
+      <section className="career-hero">
+        <div className="wrap">
+          <div className="career-locked">
+            <span className="section-tag">Career Center</span>
+            <h1>This page is for Professional and Premium subscribers</h1>
+            <p>
+              {signedIn
+                ? "Your current plan doesn't include the Career Center. Upgrade to Professional or Premium to unlock resume tips, interview prep, salary negotiation guidance, and more."
+                : "Sign in with a Professional or Premium account to unlock resume tips, interview prep, salary negotiation guidance, and more. Starting on the free Starter plan? Upgrade any time from your dashboard."}
+            </p>
+            <div className="career-locked-actions">
+              {signedIn ? (
+                <Link to="/dashboard" className="btn btn-primary">
+                  Upgrade my plan
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login" className="btn btn-primary">
+                    Log in
+                  </Link>
+                  <Link to="/signup" className="btn btn-ghost">
+                    Sign up
+                  </Link>
+                </>
+              )}
+              <Link to="/#pricing" className="btn btn-ghost">
+                See plans & pricing
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
 export function CareerCenterPage() {
   // So links like /career-center#salary-negotiation (from the footer, the
   // landing page teaser, or elsewhere) land on the right section.
   useHashScroll();
+  const { user, loading } = useAuth();
+
+  if (loading) return <div className="spinner-page">Loading…</div>;
+  if (!user || !ALLOWED_TIERS.has(user.subscriptionTier)) {
+    return <CareerCenterLocked signedIn={!!user} />;
+  }
 
   return (
     <main className="career-page">

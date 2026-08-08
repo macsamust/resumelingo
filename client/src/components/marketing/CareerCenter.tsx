@@ -15,8 +15,8 @@ export function CareerCenter() {
       <div className="wrap">
         <div className="section-head">
           <span className="section-tag">Career Center</span>
-          <h2>Support built into every subscription</h2>
-          <p>Resume tips, interview prep, salary negotiation, and more — free to browse, tailored once you're in your dashboard.</p>
+          <h2>Built into Professional and Premium</h2>
+          <p>Resume tips, interview prep, salary negotiation, and more — included with any Professional or Premium subscription.</p>
         </div>
         <div className="resources-grid">
           {RESOURCES.map((r) => (

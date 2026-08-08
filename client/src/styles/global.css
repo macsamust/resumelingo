@@ -386,6 +386,10 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 /* Career Center page (/career-center) */
 .career-hero { padding: 72px 0 40px; }
 .career-hero h1 { font-size: 38px; color: var(--navy); letter-spacing: -.01em; margin-bottom: 14px; }
+.career-locked { text-align: center; max-width: 560px; margin: 40px auto; }
+.career-locked h1 { font-size: 30px; }
+.career-locked p { color: var(--muted); font-size: 15.5px; margin-bottom: 28px; }
+.career-locked-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .career-toc { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 760px; margin: 0 auto; }
 .career-toc a { font-size: 13.5px; font-weight: 600; color: var(--indigo); background: #eef2ff; padding: 8px 14px; border-radius: 999px; }
 .career-toc a:hover { background: #e0e7ff; }
