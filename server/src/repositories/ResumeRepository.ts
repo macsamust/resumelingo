@@ -30,6 +30,7 @@ export interface UpdateResumeInput {
   contactLinkedIn?: string;
   photoUrl?: string;
   title?: string;
+  profession?: string;
   templateKey?: string;
   visibility?: LinkVisibility;
   accessPassword?: string | null;
@@ -101,6 +102,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       contactLinkedIn: input.contactLinkedIn ?? existing.contactLinkedIn,
       photoUrl: input.photoUrl ?? existing.photoUrl,
       title: input.title ?? existing.title,
+      profession: input.profession ?? existing.profession,
       templateKey: input.templateKey ?? existing.templateKey,
       visibility: input.visibility ?? existing.visibility,
       accessPassword: input.accessPassword !== undefined ? input.accessPassword : existing.accessPassword,

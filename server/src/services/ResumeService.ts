@@ -131,10 +131,11 @@ export class ResumeService {
     // whichever wasn't provided falls back to what's already saved.
     let generatedSummary = input.generatedSummary;
     let generatedBullets = input.generatedBullets;
-    if (input.answers || input.achievements) {
+    if (input.answers || input.achievements || (input.profession && input.profession !== existing.profession)) {
+      const profession = input.profession ?? existing.profession;
       const answers = input.answers ?? existing.answers;
       const achievements = input.achievements ?? existing.achievements;
-      const generated = this.generator.generate(existing.profession, answers, achievements);
+      const generated = this.generator.generate(profession, answers, achievements);
       generatedSummary = generated.summary;
       generatedBullets = generated.bullets;
     }

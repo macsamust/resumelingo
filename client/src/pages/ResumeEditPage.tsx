@@ -19,6 +19,7 @@ import {
   EducationEntry,
   LinkVisibility,
   ProfessionDefinition,
+  ProfessionSummary,
   Resume,
   TemplateDefinition,
   WorkExperienceEntry,
@@ -29,6 +30,8 @@ export function ResumeEditPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [resume, setResume] = useState<Resume | null>(null);
+  const [professions, setProfessions] = useState<ProfessionSummary[]>([]);
+  const [professionKey, setProfessionKey] = useState("");
   const [professionDetail, setProfessionDetail] = useState<ProfessionDefinition | null>(null);
   const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
   const [fullName, setFullName] = useState("");
@@ -56,8 +59,8 @@ export function ResumeEditPage() {
 
   useEffect(() => {
     if (!id) return;
-    Promise.all([resumeApi.getById(id), catalogApi.listTemplates()])
-      .then(([resumeRes, templatesRes]) => {
+    Promise.all([resumeApi.getById(id), catalogApi.listTemplates(), catalogApi.listProfessions()])
+      .then(([resumeRes, templatesRes, professionsRes]) => {
         const r = resumeRes.resume;
         setResume(r);
         setFullName(r.fullName);
@@ -74,12 +77,22 @@ export function ResumeEditPage() {
         setAwards(r.awards);
         setAchievements(r.achievements);
         setTemplates(templatesRes.templates);
+        setProfessions(professionsRes.professions);
+        setProfessionKey(r.profession);
         return catalogApi.getProfessionQuestions(r.profession);
       })
       .then((res) => setProfessionDetail(res.profession))
       .catch(() => setError("Couldn't load this resume."))
       .finally(() => setLoading(false));
   }, [id]);
+
+  // Switching profession swaps the question set below, so previously answered
+  // questions that no longer apply are cleared rather than silently kept.
+  const onProfessionChange = (key: string) => {
+    setProfessionKey(key);
+    setAnswers({});
+    catalogApi.getProfessionQuestions(key).then((res) => setProfessionDetail(res.profession));
+  };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -94,6 +107,7 @@ export function ResumeEditPage() {
         contactLinkedIn,
         photoUrl,
         title,
+        profession: professionKey,
         templateKey,
         visibility,
         accessPassword: visibility === "password" ? accessPassword : null,
@@ -189,6 +203,16 @@ export function ResumeEditPage() {
               <label>Resume title</label>
               <input value={title} onChange={(e) => setTitle(e.target.value)} />
             </div>
+            <div className="field">
+              <label>Profession</label>
+              <select value={professionKey} onChange={(e) => onProfessionChange(e.target.value)}>
+                {professions.map((p) => (
+                  <option key={p.key} value={p.key}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </CollapsibleSection>
 
           <CollapsibleSection title="Template" forceOpen={forceOpen}>
@@ -278,7 +302,7 @@ export function ResumeEditPage() {
           contactLinkedIn={contactLinkedIn}
           photoUrl={photoUrl}
           title={title}
-          professionLabel={resume.professionLabel}
+          professionLabel={professionDetail?.label ?? resume.professionLabel}
           templateKey={templateKey}
           templateName={templates.find((t) => t.key === templateKey)?.name}
           summary={resume.generatedSummary}
