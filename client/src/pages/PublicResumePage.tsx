@@ -57,6 +57,19 @@ function resumeToPlainText(resume: PublicResume): string {
     lines.push("");
   }
 
+  // Profession-specific Q&A (e.g. Languages, Frameworks, Cloud Platforms,
+  // Certifications, Years Experience for a Software Engineer resume) — the
+  // same "Additional Details" content shown below the resume on screen and
+  // in print, included here too so the text export isn't missing it.
+  const answerEntries = Object.entries(resume.answers).filter(([, v]) => v && v.trim());
+  if (answerEntries.length > 0) {
+    lines.push("ADDITIONAL DETAILS");
+    for (const [key, value] of answerEntries) {
+      lines.push(`${key.replace(/([A-Z])/g, " $1").trim()}: ${value}`);
+    }
+    lines.push("");
+  }
+
   return lines.join("\n").trim() + "\n";
 }
 
@@ -177,18 +190,23 @@ export function PublicResumePage() {
         education={resume.education}
         awards={resume.awards}
       />
-      <div className="public-resume-card public-resume-details">
-        <div className="answer-grid">
-          {Object.entries(resume.answers)
-            .filter(([, v]) => v && v.trim())
-            .map(([key, value]) => (
-              <div key={key}>
-                <div className="answer-key">{key.replace(/([A-Z])/g, " $1")}</div>
-                <div className="answer-value">{value}</div>
-              </div>
-            ))}
-        </div>
-      </div>
+      {(() => {
+        const answerEntries = Object.entries(resume.answers).filter(([, v]) => v && v.trim());
+        if (answerEntries.length === 0) return null;
+        return (
+          <div className="public-resume-card public-resume-details">
+            <h2 className="public-resume-details-heading">Additional Details</h2>
+            <div className="answer-grid">
+              {answerEntries.map(([key, value]) => (
+                <div key={key}>
+                  <div className="answer-key">{key.replace(/([A-Z])/g, " $1")}</div>
+                  <div className="answer-value">{value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
