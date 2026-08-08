@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
+import { CollapsibleSection } from "../components/builder/CollapsibleSection";
 import { DynamicQuestionForm } from "../components/builder/DynamicQuestionForm";
 import { ExperienceEditor } from "../components/builder/ExperienceEditor";
 import { EducationEditor } from "../components/builder/EducationEditor";
@@ -135,88 +136,96 @@ export function ResumeEditPage() {
       {error && <div className="form-error">{error}</div>}
       <form onSubmit={onSubmit} className="builder-grid">
         <div className="builder-panel">
-          <h2>Details</h2>
-          <div className="field">
-            <label>Your full name</label>
-            <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
-          </div>
-          <div className="field">
-            <label>Email</label>
-            <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
-          </div>
-          <div className="field">
-            <label>Phone</label>
-            <input type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} />
-          </div>
-          <div className="field">
-            <label>LinkedIn URL</label>
-            <input
-              value={contactLinkedIn}
-              onChange={(e) => setContactLinkedIn(e.target.value)}
-              placeholder="e.g. https://www.linkedin.com/in/jordanlee"
-            />
-          </div>
-          <div className="field">
-            <label>Resume title</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} />
-          </div>
-
-          <h2>Template</h2>
-          <div className="template-choices">
-            {templates.map((t) => (
-              <span
-                key={t.key}
-                className={`template-pill ${templateKey === t.key ? "active" : ""}`}
-                onClick={() => setTemplateKey(t.key)}
-                title={t.description}
-              >
-                {t.name}
-              </span>
-            ))}
-          </div>
-
-          <h2>Sharing</h2>
-          <div className="field">
-            <label>Link visibility</label>
-            <select value={visibility} onChange={(e) => setVisibility(e.target.value as LinkVisibility)}>
-              <option value="public">Public — anyone with the link</option>
-              <option value="password">Password-protected</option>
-              <option value="private">Private — owner only</option>
-            </select>
-          </div>
-          {visibility === "password" && (
+          <CollapsibleSection title="Details">
             <div className="field">
-              <label>Access password</label>
-              <input value={accessPassword} onChange={(e) => setAccessPassword(e.target.value)} placeholder="Set a password" />
+              <label>Your full name</label>
+              <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
             </div>
-          )}
-          <p className="hero-note" style={{ marginBottom: 16 }}>
-            {window.location.origin}/r/{resume.slug}
-          </p>
+            <div className="field">
+              <label>Email</label>
+              <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
+            </div>
+            <div className="field">
+              <label>Phone</label>
+              <input type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} />
+            </div>
+            <div className="field">
+              <label>LinkedIn URL</label>
+              <input
+                value={contactLinkedIn}
+                onChange={(e) => setContactLinkedIn(e.target.value)}
+                placeholder="e.g. https://www.linkedin.com/in/jordanlee"
+              />
+            </div>
+            <div className="field">
+              <label>Resume title</label>
+              <input value={title} onChange={(e) => setTitle(e.target.value)} />
+            </div>
+          </CollapsibleSection>
 
-          <h2>Work Experience</h2>
-          <ExperienceEditor experience={experience} onChange={setExperience} />
+          <CollapsibleSection title="Template">
+            <div className="template-choices">
+              {templates.map((t) => (
+                <span
+                  key={t.key}
+                  className={`template-pill ${templateKey === t.key ? "active" : ""}`}
+                  onClick={() => setTemplateKey(t.key)}
+                  title={t.description}
+                >
+                  {t.name}
+                </span>
+              ))}
+            </div>
+          </CollapsibleSection>
 
-          <h2>Education</h2>
-          <EducationEditor education={education} onChange={setEducation} />
+          <CollapsibleSection title="Sharing">
+            <div className="field">
+              <label>Link visibility</label>
+              <select value={visibility} onChange={(e) => setVisibility(e.target.value as LinkVisibility)}>
+                <option value="public">Public — anyone with the link</option>
+                <option value="password">Password-protected</option>
+                <option value="private">Private — owner only</option>
+              </select>
+            </div>
+            {visibility === "password" && (
+              <div className="field">
+                <label>Access password</label>
+                <input value={accessPassword} onChange={(e) => setAccessPassword(e.target.value)} placeholder="Set a password" />
+              </div>
+            )}
+            <p className="hero-note" style={{ marginBottom: 0 }}>
+              {window.location.origin}/r/{resume.slug}
+            </p>
+          </CollapsibleSection>
 
-          <h2>Awards</h2>
-          <AwardsEditor awards={awards} onChange={setAwards} />
+          <CollapsibleSection title="Work Experience">
+            <ExperienceEditor experience={experience} onChange={setExperience} />
+          </CollapsibleSection>
 
-          <h2>Key Achievements</h2>
-          <p className="hero-note" style={{ marginBottom: 16 }}>
-            Describe a challenge, what you did, and the result — this is what turns into impact-focused resume bullets.
-          </p>
-          <AchievementEditor achievements={achievements} onChange={setAchievements} />
+          <CollapsibleSection title="Education">
+            <EducationEditor education={education} onChange={setEducation} />
+          </CollapsibleSection>
 
-          <h2>Answers</h2>
-          {professionDetail && (
-            <DynamicQuestionForm
-              questions={professionDetail.questions}
-              answers={answers}
-              onChange={(key, value) => setAnswers((prev) => ({ ...prev, [key]: value }))}
-            />
-          )}
+          <CollapsibleSection title="Awards">
+            <AwardsEditor awards={awards} onChange={setAwards} />
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Key Achievements">
+            <p className="hero-note" style={{ marginBottom: 16 }}>
+              Describe a challenge, what you did, and the result — this is what turns into impact-focused resume bullets.
+            </p>
+            <AchievementEditor achievements={achievements} onChange={setAchievements} />
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Answers">
+            {professionDetail && (
+              <DynamicQuestionForm
+                questions={professionDetail.questions}
+                answers={answers}
+                onChange={(key, value) => setAnswers((prev) => ({ ...prev, [key]: value }))}
+              />
+            )}
+          </CollapsibleSection>
 
           <button className="btn btn-primary btn-block" type="submit" disabled={saving}>
             {saving ? "Saving…" : "Save changes"}
