@@ -89,7 +89,7 @@ export class ResumeService {
     assertPhotoSizeOk(input.photoUrl);
 
     const fullName = input.fullName?.trim() || user.name;
-    const generated = this.generator.generate(input.profession, input.answers, input.achievements ?? [], fullName);
+    const generated = this.generator.generate(input.profession, input.answers, input.achievements ?? [], fullName, input.title);
     const record = await this.resumes.create({
       userId: user.id,
       // Defaults to the account holder's name, but is editable per resume —
@@ -134,12 +134,14 @@ export class ResumeService {
     let generatedBullets = input.generatedBullets;
     const professionChanged = !!input.profession && input.profession !== existing.profession;
     const nameChanged = !!input.fullName && input.fullName !== existing.fullName;
-    if (input.answers || input.achievements || professionChanged || nameChanged) {
+    const titleChanged = !!input.title && input.title !== existing.title;
+    if (input.answers || input.achievements || professionChanged || nameChanged || titleChanged) {
       const profession = input.profession ?? existing.profession;
       const answers = input.answers ?? existing.answers;
       const achievements = input.achievements ?? existing.achievements;
       const fullName = input.fullName ?? existing.fullName;
-      const generated = this.generator.generate(profession, answers, achievements, fullName);
+      const title = input.title ?? existing.title;
+      const generated = this.generator.generate(profession, answers, achievements, fullName, title);
       generatedSummary = generated.summary;
       generatedBullets = generated.bullets;
     }

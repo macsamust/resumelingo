@@ -18,7 +18,8 @@ export interface IContentGenerator {
     profession: string,
     answers: Record<string, string>,
     achievements?: AchievementEntry[],
-    fullName?: string
+    fullName?: string,
+    title?: string
   ): GeneratedContent;
 }
 
@@ -27,17 +28,20 @@ export class RuleBasedContentGenerator implements IContentGenerator {
     profession: string,
     answers: Record<string, string>,
     achievements: AchievementEntry[] = [],
-    fullName?: string
+    fullName?: string,
+    title?: string
   ): GeneratedContent {
     const definition = getProfessionByKey(profession);
     const label = definition?.label ?? profession;
 
     // The "Other" profession's label ("Other") isn't a real job title, so
     // "Results-driven Other with..." reads oddly. Lead with the person's
-    // name instead: "{Name} is results-driven with...".
+    // name instead, and pull the actual role out of the Resume title
+    // (e.g. "Freelance Photographer Resume" -> "Freelance Photographer")
+    // so the statement still names what the person does.
     const summary =
       profession === "other" && fullName?.trim()
-        ? this.buildOtherSummary(fullName.trim(), answers)
+        ? this.buildOtherSummary(fullName.trim(), answers, title)
         : this.buildSummary(label, answers);
     // Challenge/Action/Result entries produce genuinely impact-focused
     // bullets (the STAR/CAR method) and take priority when present, since
@@ -57,11 +61,28 @@ export class RuleBasedContentGenerator implements IContentGenerator {
     return `Results-driven ${professionLabel} with ${years}${skillClause}, known for translating requirements into measurable outcomes and consistently exceeding expectations.`;
   }
 
-  private buildOtherSummary(fullName: string, answers: Record<string, string>): string {
+  private buildOtherSummary(fullName: string, answers: Record<string, string>, title?: string): string {
     const years = answers.yearsExperience ? `${answers.yearsExperience}+ years of experience` : "experienced professional";
     const topSkill = this.firstListValue(answers);
     const skillClause = topSkill ? ` specializing in ${topSkill}` : "";
-    return `${fullName} is results-driven with ${years}${skillClause}, known for translating requirements into measurable outcomes and consistently exceeding expectations.`;
+    const role = this.roleFromTitle(title);
+    const roleClause = role ? ` as a ${role}` : "";
+    return `${fullName} is results-driven${roleClause} with ${years}${skillClause}, known for translating requirements into measurable outcomes and consistently exceeding expectations.`;
+  }
+
+  /**
+   * Resume titles are typically "{Role} Resume" (see the New Resume page's
+   * default title), so strip a trailing "resume" word to recover just the
+   * role — e.g. "Freelance Photographer Resume" -> "Freelance Photographer".
+   * Returns undefined for a blank or generic ("New Resume") title so the
+   * summary falls back to not naming a role at all rather than saying
+   * something meaningless like "as a new".
+   */
+  private roleFromTitle(title: string | undefined): string | undefined {
+    if (!title) return undefined;
+    const stripped = title.trim().replace(/\s*resume\s*$/i, "").trim();
+    if (!stripped || stripped.toLowerCase() === "new") return undefined;
+    return stripped;
   }
 
   /**
