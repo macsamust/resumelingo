@@ -135,7 +135,10 @@ export function DashboardPage() {
         <div className="resume-list-grid">
           {summary.myResumes.map((r) => (
             <div className="resume-item-card" key={r.id}>
-              <span className="visibility-tag">{r.visibility}</span>
+              <div className="resume-item-tags">
+                <span className="visibility-tag">{r.visibility}</span>
+                <span className="resume-template-tag">Template: {r.template?.name ?? r.templateKey}</span>
+              </div>
               <h3>{r.title}</h3>
               <p className="meta">
                 {r.professionLabel} · {r.viewCount} view{r.viewCount === 1 ? "" : "s"}

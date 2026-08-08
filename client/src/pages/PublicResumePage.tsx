@@ -158,7 +158,6 @@ export function PublicResumePage() {
         title={resume.title}
         professionLabel={resume.professionLabel}
         templateKey={resume.templateKey}
-        templateName={resume.template?.name}
         summary={resume.generatedSummary}
         bullets={resume.generatedBullets}
         experience={resume.experience}
