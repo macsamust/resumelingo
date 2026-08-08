@@ -4,6 +4,20 @@ import { ApiError, catalogApi } from "../api";
 import { PublicResume } from "../types";
 import { formatMonth, ResumePreview, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
 
+/**
+ * Turns a camelCase profession-question key (e.g. "cloudPlatforms",
+ * "language", "yearsExperience") into a properly capitalized label
+ * ("Cloud Platforms", "Language", "Years Experience") for the Additional
+ * Details heading — used on screen, in print, and in the text export so
+ * all three stay consistent.
+ */
+function formatAnswerLabel(key: string): string {
+  return key
+    .replace(/([A-Z])/g, " $1")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 /** Plain-text rendering of a resume — same content and order as the on-screen preview, for the "Download as text" export. */
 function resumeToPlainText(resume: PublicResume): string {
   const lines: string[] = [];
@@ -65,7 +79,7 @@ function resumeToPlainText(resume: PublicResume): string {
   if (answerEntries.length > 0) {
     lines.push("ADDITIONAL DETAILS");
     for (const [key, value] of answerEntries) {
-      lines.push(`${key.replace(/([A-Z])/g, " $1").trim()}: ${value}`);
+      lines.push(`${formatAnswerLabel(key)}: ${value}`);
     }
     lines.push("");
   }
@@ -199,7 +213,7 @@ export function PublicResumePage() {
             <div className="answer-grid">
               {answerEntries.map(([key, value]) => (
                 <div key={key}>
-                  <div className="answer-key">{key.replace(/([A-Z])/g, " $1")}</div>
+                  <div className="answer-key">{formatAnswerLabel(key)}</div>
                   <div className="answer-value">{value}</div>
                 </div>
               ))}
