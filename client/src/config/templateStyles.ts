@@ -22,7 +22,8 @@ export type LayoutFamily =
   | "cv-academic"
   | "minimal-clean"
   | "timeline-sidebar"
-  | "photo-banner-sidebar";
+  | "photo-banner-sidebar"
+  | "corner-photo-sidebar";
 export type Flow = "summary-first" | "bullets-first";
 
 export interface TemplateStyle {
@@ -164,6 +165,18 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     accent: "#3b6ea5", accentSoft: "#eaf3f8", font: SANS_MODERN,
     flow: "summary-first", summaryLabel: "Professional Profile", bulletsLabel: "Relevant Skills",
     awardsLabel: "Volunteer Work & Affiliations",
+  },
+
+  // Bold circular photo over an accent-color corner block, name/title beside
+  // it, then a two-column body: a narrow sidebar (About Me, Contact,
+  // Expertise) beside a main column (Experience, Education, Awards) — each
+  // section labeled with a solid accent-color bar instead of the small
+  // dot-marker label every other family uses. See ResumePreview.tsx's
+  // "corner-photo-sidebar" branch and global.css's .tpl-corner-* rules.
+  designer: {
+    family: "corner-photo-sidebar",
+    accent: "#1e2a4a", accentSoft: "#e7eaf3", font: SANS_CORPORATE,
+    flow: "summary-first", summaryLabel: "About Me", bulletsLabel: "Expertise",
   },
 };
 

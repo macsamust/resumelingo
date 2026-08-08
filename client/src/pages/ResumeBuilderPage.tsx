@@ -44,10 +44,11 @@ export function ResumeBuilderPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // The photo upload only applies to the "Portrait" template's
-  // photo-banner-sidebar layout — hidden for every other template since
-  // they don't render a photo at all.
-  const usesPhoto = getTemplateStyle(templateKey).family === "photo-banner-sidebar";
+  // The photo upload only applies to templates that actually render a photo
+  // (Portrait's photo-banner-sidebar, Designer's corner-photo-sidebar) —
+  // hidden for every other template.
+  const PHOTO_FAMILIES = ["photo-banner-sidebar", "corner-photo-sidebar"];
+  const usesPhoto = PHOTO_FAMILIES.includes(getTemplateStyle(templateKey).family);
 
   useEffect(() => {
     catalogApi.listProfessions().then((res) => {

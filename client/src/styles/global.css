@@ -429,6 +429,47 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   background: var(--tpl-accent);
 }
 
+/* corner-photo-sidebar: a circular photo (or initials badge) over an
+   accent-color corner block, name/title beside it, then a narrow sidebar
+   (About Me, Contact, Expertise) beside a main column (Experience,
+   Education, Awards) — each section headed by a solid accent-color bar
+   instead of the small dot-marker label every other family uses. */
+.tpl-corner-photo-sidebar { padding: 0; }
+.tpl-corner-header { display: flex; align-items: center; gap: 26px; padding: 32px 28px 20px; }
+.tpl-corner-photo-wrap { position: relative; width: 108px; height: 108px; flex-shrink: 0; }
+.tpl-corner-photo-block {
+  position: absolute; top: -14px; left: -14px; width: 96px; height: 96px; background: var(--tpl-accent); z-index: 0;
+}
+.tpl-corner-photo-img, .tpl-corner-photo-badge {
+  position: relative; z-index: 1; width: 108px; height: 108px; border-radius: 50%; box-sizing: border-box;
+  border: 4px solid #fff; box-shadow: 0 0 0 2px var(--tpl-accent);
+}
+.tpl-corner-photo-img { object-fit: cover; }
+.tpl-corner-photo-badge {
+  background: var(--tpl-accent-soft); color: var(--tpl-accent); font-weight: 800; font-size: 30px;
+  display: flex; align-items: center; justify-content: center;
+}
+.tpl-corner-header-text { min-width: 0; }
+.tpl-corner-body { display: grid; grid-template-columns: 32% 1fr; border-top: 1px solid var(--border); }
+.tpl-corner-side { padding: 24px 22px; border-right: 1px solid var(--border); min-width: 0; }
+.tpl-corner-main { padding: 24px 26px; min-width: 0; }
+/* Section labels render as solid accent-color bars (rather than the small
+   dot-marker label every other family uses) to match the reference
+   design's "EXPERIENCE" / "EDUCATION" / "EXPERTISE" header bars. */
+.tpl-corner-photo-sidebar .tpl-section-label {
+  display: block; background: var(--tpl-accent); color: #fff; text-align: center;
+  padding: 7px 10px; border-radius: 3px; margin-bottom: 12px; font-size: 11.5px;
+}
+.tpl-corner-photo-sidebar .tpl-section-label::before { display: none; }
+.tpl-corner-photo-sidebar .tpl-section + .tpl-section { border-top: none; margin-top: 22px; padding-top: 0; }
+.tpl-corner-contact-list { list-style: none; font-size: 12.5px; color: var(--navy-light); }
+.tpl-corner-contact-list li { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; word-break: break-word; }
+.tpl-corner-contact-list li:last-child { margin-bottom: 0; }
+.tpl-corner-contact-icon {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--tpl-accent-soft);
+  color: var(--tpl-accent); display: flex; align-items: center; justify-content: center; font-size: 11px;
+}
+
 .public-resume-page { max-width: 760px; margin: 0 auto; padding: 60px 24px; }
 .public-resume-page .preview-col { position: static; top: auto; }
 .public-resume-page .preview-panel { position: static; top: auto; margin-bottom: 24px; box-shadow: 0 20px 40px -24px rgba(15, 23, 42, .2); }
@@ -549,4 +590,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   .tpl-photo-body { grid-template-columns: 1fr; }
   .tpl-photo-header { flex-direction: column; }
   .tpl-photo-contact-grid { grid-template-columns: 1fr; }
+  .tpl-corner-body { grid-template-columns: 1fr; }
+  .tpl-corner-side { border-right: none; border-bottom: 1px solid var(--border); }
+  .tpl-corner-header { flex-direction: column; text-align: center; }
 }

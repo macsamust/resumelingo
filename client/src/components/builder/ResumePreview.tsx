@@ -7,7 +7,7 @@ interface Props {
   contactEmail?: string;
   contactPhone?: string;
   contactLinkedIn?: string;
-  /** Data: URL of an uploaded personal photo — only rendered by the "Portrait" template's photo-banner-sidebar family; other templates ignore it. */
+  /** Data: URL of an uploaded personal photo — only rendered by templates with a photo-banner-sidebar or corner-photo-sidebar family (Portrait, Designer); other templates ignore it. */
   photoUrl?: string;
   title: string;
   professionLabel: string;
@@ -388,6 +388,70 @@ export function ResumePreview({
             </div>
             <div className="tpl-photo-side">
               {bulletsBlock}
+              {awardsBlock}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (style.family === "corner-photo-sidebar") {
+    const initials = getInitials(fullName);
+    // Contact info renders as a small icon + text list in the sidebar,
+    // mirroring the reference design's phone/email/location rows.
+    const CONTACT_ICON: Record<string, string> = { email: "✉", phone: "☎", linkedin: "🔗" };
+    const contactList = contactItems.length > 0 && (
+      <div className="tpl-section">
+        <span className="tpl-section-label">Contact</span>
+        <ul className="tpl-corner-contact-list">
+          {contactItems.map((item) => (
+            <li key={item.key}>
+              <span className="tpl-corner-contact-icon" aria-hidden="true">
+                {CONTACT_ICON[item.key] ?? "•"}
+              </span>
+              {item.node}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+
+    return (
+      <div className="preview-col">
+        {templateTag}
+        <div className="preview-panel tpl-corner-photo-sidebar" style={cssVars}>
+          <div className="tpl-corner-header">
+            <div className="tpl-corner-photo-wrap">
+              <div className="tpl-corner-photo-block" aria-hidden="true" />
+              {photoUrl ? (
+                <img
+                  src={photoUrl}
+                  alt={fullName ? `${fullName}'s photo` : "Profile photo"}
+                  className="tpl-corner-photo-img"
+                />
+              ) : (
+                initials && (
+                  <div className="tpl-corner-photo-badge" aria-hidden="true">
+                    {initials}
+                  </div>
+                )
+              )}
+            </div>
+            <div className="tpl-corner-header-text">
+              {fullName && <p className="tpl-fullname">{fullName}</p>}
+              <h2>{heading}</h2>
+            </div>
+          </div>
+          <div className="tpl-corner-body">
+            <div className="tpl-corner-side">
+              {summaryBlock}
+              {contactList}
+              {bulletsBlock}
+            </div>
+            <div className="tpl-corner-main">
+              {experienceBlock}
+              {educationBlock}
               {awardsBlock}
             </div>
           </div>
