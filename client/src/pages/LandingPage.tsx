@@ -1,3 +1,4 @@
+import { useHashScroll } from "../hooks/useHashScroll";
 import { Hero } from "../components/marketing/Hero";
 import { MissionVision } from "../components/marketing/MissionVision";
 import { ValueProposition } from "../components/marketing/ValueProposition";
@@ -12,6 +13,10 @@ import { FuturePremium } from "../components/marketing/FuturePremium";
 import { CTA } from "../components/marketing/CTA";
 
 export function LandingPage() {
+  // So links like Navbar/Footer's "/#pricing" land on the right section
+  // even when clicked from a different route (e.g. /career-center).
+  useHashScroll();
+
   return (
     <main>
       <Hero />

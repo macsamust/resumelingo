@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useHashScroll } from "../hooks/useHashScroll";
 
 interface CareerTopic {
   id: string;
@@ -191,18 +191,9 @@ const TOPICS: CareerTopic[] = [
 ];
 
 export function CareerCenterPage() {
-  const location = useLocation();
-
-  // React Router does client-side navigation (no full page load), so the
-  // browser's native "jump to #anchor" behavior doesn't fire on its own —
-  // this scrolls to the right section whenever arriving via a link like
-  // /career-center#salary-negotiation (from the footer, the landing page
-  // teaser, or another site's link into a specific topic).
-  useEffect(() => {
-    if (!location.hash) return;
-    const el = document.getElementById(location.hash.slice(1));
-    el?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [location.hash]);
+  // So links like /career-center#salary-negotiation (from the footer, the
+  // landing page teaser, or elsewhere) land on the right section.
+  useHashScroll();
 
   return (
     <main className="career-page">
