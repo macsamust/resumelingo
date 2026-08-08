@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
-import { CollapsibleSection } from "../components/builder/CollapsibleSection";
+import { CollapsibleSection, ForceOpenSignal } from "../components/builder/CollapsibleSection";
 import { DynamicQuestionForm } from "../components/builder/DynamicQuestionForm";
 import { ExperienceEditor } from "../components/builder/ExperienceEditor";
 import { EducationEditor } from "../components/builder/EducationEditor";
@@ -42,6 +42,7 @@ export function ResumeEditPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [forceOpen, setForceOpen] = useState<ForceOpenSignal | undefined>(undefined);
 
   useEffect(() => {
     if (!id) return;
@@ -140,7 +141,17 @@ export function ResumeEditPage() {
             {saving ? "Saving…" : "Save changes"}
           </button>
 
-          <CollapsibleSection title="Details">
+          <div className="builder-toggle-all">
+            <button type="button" onClick={() => setForceOpen({ open: true, token: Date.now() })}>
+              Expand all
+            </button>
+            <span aria-hidden="true">·</span>
+            <button type="button" onClick={() => setForceOpen({ open: false, token: Date.now() })}>
+              Collapse all
+            </button>
+          </div>
+
+          <CollapsibleSection title="Details" forceOpen={forceOpen}>
             <div className="field">
               <label>Your full name</label>
               <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
@@ -167,7 +178,7 @@ export function ResumeEditPage() {
             </div>
           </CollapsibleSection>
 
-          <CollapsibleSection title="Template">
+          <CollapsibleSection title="Template" forceOpen={forceOpen}>
             <div className="template-choices">
               {templates.map((t) => (
                 <span
@@ -182,7 +193,7 @@ export function ResumeEditPage() {
             </div>
           </CollapsibleSection>
 
-          <CollapsibleSection title="Sharing">
+          <CollapsibleSection title="Sharing" forceOpen={forceOpen}>
             <div className="field">
               <label>Link visibility</label>
               <select value={visibility} onChange={(e) => setVisibility(e.target.value as LinkVisibility)}>
@@ -202,26 +213,26 @@ export function ResumeEditPage() {
             </p>
           </CollapsibleSection>
 
-          <CollapsibleSection title="Work Experience">
+          <CollapsibleSection title="Work Experience" forceOpen={forceOpen}>
             <ExperienceEditor experience={experience} onChange={setExperience} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Education">
+          <CollapsibleSection title="Education" forceOpen={forceOpen}>
             <EducationEditor education={education} onChange={setEducation} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Awards">
+          <CollapsibleSection title="Awards" forceOpen={forceOpen}>
             <AwardsEditor awards={awards} onChange={setAwards} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Key Achievements">
+          <CollapsibleSection title="Key Achievements" forceOpen={forceOpen}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
               Describe a challenge, what you did, and the result — this is what turns into impact-focused resume bullets.
             </p>
             <AchievementEditor achievements={achievements} onChange={setAchievements} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Answers">
+          <CollapsibleSection title="Answers" forceOpen={forceOpen}>
             {professionDetail && (
               <DynamicQuestionForm
                 questions={professionDetail.questions}
