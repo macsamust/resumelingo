@@ -1,5 +1,6 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AdminShell } from "../../components/layout/AdminShell";
+import { nextSortState, SortableHeader, SortState } from "../../components/admin/SortableHeader";
 import { adminApi, ApiError } from "../../api";
 import { AdminTemplate, TemplateCategory } from "../../types";
 
@@ -12,6 +13,36 @@ const CATEGORY_LABELS: Record<TemplateCategory, string> = {
   premium: "Premium",
 };
 
+/** Rank for sorting by category, so it reflects the plan hierarchy rather than alphabetical order. */
+const CATEGORY_RANK: Record<TemplateCategory, number> = { basic: 0, upgrade: 1, premium: 2 };
+
+type TemplateSortKey = "key" | "name" | "description" | "category" | "sortOrder" | "enabled";
+
+function compareTemplates(a: AdminTemplate, b: AdminTemplate, sort: SortState<TemplateSortKey>): number {
+  let result: number;
+  switch (sort.key) {
+    case "key":
+      result = a.key.localeCompare(b.key);
+      break;
+    case "name":
+      result = a.name.localeCompare(b.name);
+      break;
+    case "description":
+      result = a.description.localeCompare(b.description);
+      break;
+    case "category":
+      result = CATEGORY_RANK[a.category] - CATEGORY_RANK[b.category];
+      break;
+    case "sortOrder":
+      result = a.sortOrder - b.sortOrder;
+      break;
+    case "enabled":
+      result = Number(a.enabled) - Number(b.enabled);
+      break;
+  }
+  return sort.direction === "asc" ? result : -result;
+}
+
 export function AdminTemplatesPage() {
   const [templates, setTemplates] = useState<AdminTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +51,10 @@ export function AdminTemplatesPage() {
   const [editing, setEditing] = useState<Record<string, { name: string; description: string; category: TemplateCategory; sortOrder: string }>>({});
   const [newTemplate, setNewTemplate] = useState(EMPTY_NEW);
   const [creating, setCreating] = useState(false);
+  const [sort, setSort] = useState<SortState<TemplateSortKey>>({ key: "sortOrder", direction: "asc" });
+
+  const sortedTemplates = useMemo(() => [...templates].sort((a, b) => compareTemplates(a, b, sort)), [templates, sort]);
+  const onSort = (key: TemplateSortKey) => setSort((prev) => nextSortState(prev, key));
 
   const load = () => {
     setLoading(true);
@@ -157,17 +192,17 @@ export function AdminTemplatesPage() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Key</th>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Category</th>
-              <th>Sort</th>
-              <th>Status</th>
+              <SortableHeader label="Key" sortKey="key" sort={sort} onSort={onSort} />
+              <SortableHeader label="Name" sortKey="name" sort={sort} onSort={onSort} />
+              <SortableHeader label="Description" sortKey="description" sort={sort} onSort={onSort} />
+              <SortableHeader label="Category" sortKey="category" sort={sort} onSort={onSort} />
+              <SortableHeader label="Sort" sortKey="sortOrder" sort={sort} onSort={onSort} />
+              <SortableHeader label="Status" sortKey="enabled" sort={sort} onSort={onSort} />
               <th></th>
             </tr>
           </thead>
           <tbody>
-            {templates.map((t) => {
+            {sortedTemplates.map((t) => {
               const draft = editing[t.key] ?? { name: t.name, description: t.description, category: t.category, sortOrder: String(t.sortOrder) };
               return (
                 <tr key={t.key}>

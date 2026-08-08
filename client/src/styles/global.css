@@ -451,6 +451,11 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .admin-search { padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; min-width: 260px; }
 .admin-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
 .admin-table th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); font-weight: 700; padding: 12px 14px; background: #f8fafc; border-bottom: 1px solid var(--border); }
+.admin-sortable-th { cursor: pointer; user-select: none; white-space: nowrap; }
+.admin-sortable-th:hover { color: var(--indigo); }
+.admin-sortable-th.active { color: var(--indigo); }
+.admin-sort-arrow { display: inline-block; margin-left: 5px; font-size: 10px; opacity: .6; }
+.admin-sortable-th.active .admin-sort-arrow { opacity: 1; }
 .admin-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
 .admin-table tr:last-child td { border-bottom: none; }
 .admin-table input, .admin-table select { padding: 6px 8px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13.5px; width: 100%; }

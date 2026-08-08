@@ -1,9 +1,40 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { AdminShell } from "../../components/layout/AdminShell";
+import { nextSortState, SortableHeader, SortState } from "../../components/admin/SortableHeader";
 import { adminApi, ApiError } from "../../api";
 import { AdminUserSummary, Resume, SubscriptionTier } from "../../types";
 
 const TIER_OPTIONS: SubscriptionTier[] = ["starter", "professional", "premium"];
+
+/** Rank for sorting, since alphabetical order ("premium" < "professional" < "starter") wouldn't reflect the actual plan hierarchy. */
+const TIER_RANK: Record<SubscriptionTier, number> = { starter: 0, professional: 1, premium: 2 };
+
+type UserSortKey = "name" | "email" | "subscriptionTier" | "resumeCount" | "suspended" | "createdAt";
+
+function compareUsers(a: AdminUserSummary, b: AdminUserSummary, sort: SortState<UserSortKey>): number {
+  let result: number;
+  switch (sort.key) {
+    case "name":
+      result = a.name.localeCompare(b.name);
+      break;
+    case "email":
+      result = a.email.localeCompare(b.email);
+      break;
+    case "subscriptionTier":
+      result = TIER_RANK[a.subscriptionTier] - TIER_RANK[b.subscriptionTier];
+      break;
+    case "resumeCount":
+      result = a.resumeCount - b.resumeCount;
+      break;
+    case "suspended":
+      result = Number(a.suspended) - Number(b.suspended);
+      break;
+    case "createdAt":
+      result = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      break;
+  }
+  return sort.direction === "asc" ? result : -result;
+}
 
 export function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUserSummary[]>([]);
@@ -13,6 +44,7 @@ export function AdminUsersPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [resumesById, setResumesById] = useState<Record<string, Resume[]>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [sort, setSort] = useState<SortState<UserSortKey>>({ key: "name", direction: "asc" });
 
   const load = () => {
     setLoading(true);
@@ -28,9 +60,11 @@ export function AdminUsersPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter((u) => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
-  }, [users, query]);
+    const matched = q ? users.filter((u) => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)) : users;
+    return [...matched].sort((a, b) => compareUsers(a, b, sort));
+  }, [users, query, sort]);
+
+  const onSort = (key: UserSortKey) => setSort((prev) => nextSortState(prev, key));
 
   const toggleExpand = async (user: AdminUserSummary) => {
     if (expandedId === user.id) {
@@ -117,12 +151,12 @@ export function AdminUsersPage() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Plan</th>
-              <th>Resumes</th>
-              <th>Status</th>
-              <th>Joined</th>
+              <SortableHeader label="Name" sortKey="name" sort={sort} onSort={onSort} />
+              <SortableHeader label="Email" sortKey="email" sort={sort} onSort={onSort} />
+              <SortableHeader label="Plan" sortKey="subscriptionTier" sort={sort} onSort={onSort} />
+              <SortableHeader label="Resumes" sortKey="resumeCount" sort={sort} onSort={onSort} />
+              <SortableHeader label="Status" sortKey="suspended" sort={sort} onSort={onSort} />
+              <SortableHeader label="Joined" sortKey="createdAt" sort={sort} onSort={onSort} />
               <th></th>
             </tr>
           </thead>
