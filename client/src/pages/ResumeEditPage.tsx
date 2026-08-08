@@ -131,14 +131,15 @@ export function ResumeEditPage() {
           <button className="btn btn-ghost" onClick={onDelete}>
             Delete
           </button>
-          <button className="btn btn-primary" type="submit" form="resume-edit-form" disabled={saving}>
-            {saving ? "Saving…" : "Save changes"}
-          </button>
         </div>
       </div>
       {error && <div className="form-error">{error}</div>}
       <form id="resume-edit-form" onSubmit={onSubmit} className="builder-grid">
         <div className="builder-panel">
+          <button className="btn btn-primary btn-block" type="submit" disabled={saving} style={{ marginBottom: 20 }}>
+            {saving ? "Saving…" : "Save changes"}
+          </button>
+
           <CollapsibleSection title="Details">
             <div className="field">
               <label>Your full name</label>
