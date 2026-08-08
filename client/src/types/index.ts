@@ -1,5 +1,7 @@
 export type SubscriptionTier = "starter" | "professional" | "premium";
 export type LinkVisibility = "public" | "password" | "private";
+/** Which subscription tier a template requires — 1:1 with SubscriptionTier (basic=starter, upgrade=professional, premium=premium). */
+export type TemplateCategory = "basic" | "upgrade" | "premium";
 
 export interface ProfessionQuestion {
   key: string;
@@ -21,6 +23,7 @@ export interface TemplateDefinition {
   key: string;
   name: string;
   description: string;
+  category: TemplateCategory;
 }
 
 /** One job in a resume's work history. Dates are "YYYY-MM" (from an <input type="month">). */
@@ -157,6 +160,7 @@ export interface AdminTemplate {
   key: string;
   name: string;
   description: string;
+  category: TemplateCategory;
   enabled: boolean;
   sortOrder: number;
   createdAt: string;

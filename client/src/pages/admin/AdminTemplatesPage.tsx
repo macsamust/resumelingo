@@ -1,16 +1,23 @@
 import { FormEvent, useEffect, useState } from "react";
 import { AdminShell } from "../../components/layout/AdminShell";
 import { adminApi, ApiError } from "../../api";
-import { AdminTemplate } from "../../types";
+import { AdminTemplate, TemplateCategory } from "../../types";
 
-const EMPTY_NEW = { key: "", name: "", description: "", sortOrder: "0" };
+const EMPTY_NEW = { key: "", name: "", description: "", category: "basic" as TemplateCategory, sortOrder: "0" };
+
+/** Labels shown in the category dropdown/table — mirrors the 1:1 mapping to subscription tiers (basic=Starter, upgrade=Professional, premium=Premium). */
+const CATEGORY_LABELS: Record<TemplateCategory, string> = {
+  basic: "Basic (Starter)",
+  upgrade: "Upgrade (Professional)",
+  premium: "Premium",
+};
 
 export function AdminTemplatesPage() {
   const [templates, setTemplates] = useState<AdminTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
-  const [editing, setEditing] = useState<Record<string, { name: string; description: string; sortOrder: string }>>({});
+  const [editing, setEditing] = useState<Record<string, { name: string; description: string; category: TemplateCategory; sortOrder: string }>>({});
   const [newTemplate, setNewTemplate] = useState(EMPTY_NEW);
   const [creating, setCreating] = useState(false);
 
@@ -21,9 +28,9 @@ export function AdminTemplatesPage() {
       .listTemplates()
       .then((res) => {
         setTemplates(res.templates);
-        const nextEditing: Record<string, { name: string; description: string; sortOrder: string }> = {};
+        const nextEditing: Record<string, { name: string; description: string; category: TemplateCategory; sortOrder: string }> = {};
         res.templates.forEach((t) => {
-          nextEditing[t.key] = { name: t.name, description: t.description, sortOrder: String(t.sortOrder) };
+          nextEditing[t.key] = { name: t.name, description: t.description, category: t.category, sortOrder: String(t.sortOrder) };
         });
         setEditing(nextEditing);
       })
@@ -43,6 +50,7 @@ export function AdminTemplatesPage() {
         key: newTemplate.key.trim() || undefined,
         name: newTemplate.name.trim(),
         description: newTemplate.description.trim(),
+        category: newTemplate.category,
         sortOrder: Number(newTemplate.sortOrder) || 0,
       });
       setNewTemplate(EMPTY_NEW);
@@ -61,6 +69,7 @@ export function AdminTemplatesPage() {
       await adminApi.updateTemplate(key, {
         name: draft.name,
         description: draft.description,
+        category: draft.category,
         sortOrder: Number(draft.sortOrder) || 0,
       });
       load();
@@ -124,6 +133,16 @@ export function AdminTemplatesPage() {
           </div>
         </div>
         <div className="field">
+          <label>Category (which plan can use it)</label>
+          <select value={newTemplate.category} onChange={(e) => setNewTemplate({ ...newTemplate, category: e.target.value as TemplateCategory })}>
+            {(Object.keys(CATEGORY_LABELS) as TemplateCategory[]).map((c) => (
+              <option key={c} value={c}>
+                {CATEGORY_LABELS[c]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
           <label>Description</label>
           <input value={newTemplate.description} onChange={(e) => setNewTemplate({ ...newTemplate, description: e.target.value })} placeholder="Short description shown in the template picker" />
         </div>
@@ -141,6 +160,7 @@ export function AdminTemplatesPage() {
               <th>Key</th>
               <th>Name</th>
               <th>Description</th>
+              <th>Category</th>
               <th>Sort</th>
               <th>Status</th>
               <th></th>
@@ -148,7 +168,7 @@ export function AdminTemplatesPage() {
           </thead>
           <tbody>
             {templates.map((t) => {
-              const draft = editing[t.key] ?? { name: t.name, description: t.description, sortOrder: String(t.sortOrder) };
+              const draft = editing[t.key] ?? { name: t.name, description: t.description, category: t.category, sortOrder: String(t.sortOrder) };
               return (
                 <tr key={t.key}>
                   <td className="hero-note">{t.key}</td>
@@ -163,6 +183,18 @@ export function AdminTemplatesPage() {
                       value={draft.description}
                       onChange={(e) => setEditing({ ...editing, [t.key]: { ...draft, description: e.target.value } })}
                     />
+                  </td>
+                  <td>
+                    <select
+                      value={draft.category}
+                      onChange={(e) => setEditing({ ...editing, [t.key]: { ...draft, category: e.target.value as TemplateCategory } })}
+                    >
+                      {(Object.keys(CATEGORY_LABELS) as TemplateCategory[]).map((c) => (
+                        <option key={c} value={c}>
+                          {CATEGORY_LABELS[c]}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                   <td>
                     <input

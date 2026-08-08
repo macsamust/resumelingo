@@ -18,7 +18,7 @@ export class AdminTemplateController {
   };
 
   create = async (req: AdminAuthenticatedRequest, res: Response) => {
-    const { name, description, key, enabled, sortOrder } = req.body ?? {};
+    const { name, description, key, category, enabled, sortOrder } = req.body ?? {};
     if (!name || typeof name !== "string") {
       return res.status(400).json({ error: "name is required." });
     }
@@ -34,6 +34,7 @@ export class AdminTemplateController {
       key: templateKey,
       name,
       description: description ?? "",
+      category,
       enabled: enabled ?? true,
       sortOrder: typeof sortOrder === "number" ? sortOrder : 0,
     });
@@ -41,8 +42,8 @@ export class AdminTemplateController {
   };
 
   update = async (req: AdminAuthenticatedRequest, res: Response) => {
-    const { name, description, enabled, sortOrder } = req.body ?? {};
-    const updated = await this.templates.update(req.params.key, { name, description, enabled, sortOrder });
+    const { name, description, category, enabled, sortOrder } = req.body ?? {};
+    const updated = await this.templates.update(req.params.key, { name, description, category, enabled, sortOrder });
     if (!updated) return res.status(404).json({ error: "Template not found." });
     res.json({ template: updated });
   };

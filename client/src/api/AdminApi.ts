@@ -1,5 +1,5 @@
 import { ApiClient } from "./ApiClient";
-import { AdminAuthUser, AdminPlan, AdminTemplate, AdminUserSummary, Resume } from "../types";
+import { AdminAuthUser, AdminPlan, AdminTemplate, AdminUserSummary, Resume, TemplateCategory } from "../types";
 
 export interface AdminAuthResponse {
   admin: AdminAuthUser;
@@ -56,11 +56,11 @@ export class AdminApi extends ApiClient {
     return this.get<{ templates: AdminTemplate[] }>("/admin/templates");
   }
 
-  createTemplate(input: { key?: string; name: string; description?: string; enabled?: boolean; sortOrder?: number }) {
+  createTemplate(input: { key?: string; name: string; description?: string; category?: TemplateCategory; enabled?: boolean; sortOrder?: number }) {
     return this.post<{ template: AdminTemplate }>("/admin/templates", input);
   }
 
-  updateTemplate(key: string, input: { name?: string; description?: string; enabled?: boolean; sortOrder?: number }) {
+  updateTemplate(key: string, input: { name?: string; description?: string; category?: TemplateCategory; enabled?: boolean; sortOrder?: number }) {
     return this.put<{ template: AdminTemplate }>(`/admin/templates/${key}`, input);
   }
 

@@ -10,7 +10,7 @@ import publicRoutes from "./routes/public.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
 import subscriptionRoutes from "./routes/subscription.routes";
 import { AuthError } from "./services/AuthService";
-import { ResumeAccessError, ResumeLimitError, ResumeNotFoundError } from "./services/ResumeService";
+import { ResumeAccessError, ResumeLimitError, ResumeNotFoundError, TemplateAccessError } from "./services/ResumeService";
 
 /**
  * Entry point for the whole Worker. wrangler.jsonc's `assets` config with
@@ -47,6 +47,8 @@ app.onError((err, c) => {
       : err instanceof ResumeAccessError
       ? 403
       : err instanceof ResumeLimitError
+      ? 402
+      : err instanceof TemplateAccessError
       ? 402
       : 500;
   if (status === 500) console.error(err);

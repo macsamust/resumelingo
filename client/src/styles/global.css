@@ -147,6 +147,9 @@ section { padding: 84px 0; }
 .template-pills { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 .template-pills span, .template-pill { background: #fff; border: 1px solid var(--border); padding: 9px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--navy-light); cursor: pointer; }
 .template-pill.active { border-color: var(--indigo); color: var(--indigo); background: #eef2ff; }
+.template-pill.locked { cursor: not-allowed; opacity: .55; }
+.template-pill.locked.active { border-color: var(--border); color: var(--navy-light); background: #fff; }
+.template-pill-lock { margin-left: 6px; font-size: 11px; }
 
 footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; margin-bottom: 40px; }

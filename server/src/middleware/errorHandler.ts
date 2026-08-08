@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { AuthError } from "../services/AuthService";
 import { AdminAuthError } from "../services/AdminService";
-import { ResumeAccessError, ResumeLimitError, ResumeNotFoundError } from "../services/ResumeService";
+import { ResumeAccessError, ResumeLimitError, ResumeNotFoundError, TemplateAccessError } from "../services/ResumeService";
 
 const STATUS_BY_ERROR = [
   { type: AuthError, status: 401 },
@@ -9,6 +9,7 @@ const STATUS_BY_ERROR = [
   { type: ResumeNotFoundError, status: 404 },
   { type: ResumeAccessError, status: 403 },
   { type: ResumeLimitError, status: 402 },
+  { type: TemplateAccessError, status: 402 },
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

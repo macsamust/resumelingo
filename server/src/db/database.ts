@@ -129,6 +129,15 @@ export async function migrate(): Promise<void> {
       "updatedAt" TEXT NOT NULL
     );
 
+    -- Which subscription tier a template requires ('basic' | 'upgrade' |
+    -- 'premium', see TemplateCategory) so the resume editor's template
+    -- picker and create/update flow can gate higher-tier templates behind
+    -- the matching plan. Added nullable with no default (rather than
+    -- DEFAULT 'basic' up front) so the one-time backfill in
+    -- seedCatalogDefaults() below can tell "never categorized yet" (NULL)
+    -- apart from an admin's real, deliberate 'basic' choice.
+    ALTER TABLE templates ADD COLUMN IF NOT EXISTS "category" TEXT;
+
     -- Subscription plans move from a static config array to a DB-backed
     -- table here so an admin can edit displayed name/price/resume
     -- limit/features. Deliberately has no stripePriceId column — see
@@ -144,6 +153,15 @@ export async function migrate(): Promise<void> {
   `);
 
   await seedCatalogDefaults();
+
+  // Finishes the "category" backfill above: anything still NULL at this
+  // point (a pre-existing custom template an admin added that isn't in
+  // DEFAULT_TEMPLATES) falls back to 'basic', then the column is locked
+  // down to NOT NULL with that same default for everything created from
+  // here on. Both statements are idempotent — safe to run on every boot.
+  await pool.query(`UPDATE templates SET "category" = 'basic' WHERE "category" IS NULL`);
+  await pool.query(`ALTER TABLE templates ALTER COLUMN "category" SET DEFAULT 'basic'`);
+  await pool.query(`ALTER TABLE templates ALTER COLUMN "category" SET NOT NULL`);
 }
 
 /**
@@ -161,11 +179,15 @@ async function seedCatalogDefaults(): Promise<void> {
   for (let i = 0; i < DEFAULT_TEMPLATES.length; i++) {
     const t = DEFAULT_TEMPLATES[i];
     await pool.query(
-      `INSERT INTO templates ("key", "name", "description", "enabled", "sortOrder", "createdAt", "updatedAt")
-       VALUES ($1, $2, $3, true, $4, $5, $5)
+      `INSERT INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, true, $5, $6, $6)
        ON CONFLICT ("key") DO NOTHING`,
-      [t.key, t.name, t.description, i, now]
+      [t.key, t.name, t.description, t.category, i, now]
     );
+    // Backfills the intended category for a template row that already
+    // existed before the "category" column did — never touches a row an
+    // admin has since categorized themselves (category IS NOT NULL by then).
+    await pool.query(`UPDATE templates SET "category" = $1 WHERE "key" = $2 AND "category" IS NULL`, [t.category, t.key]);
   }
 
   for (const p of DEFAULT_PLANS) {

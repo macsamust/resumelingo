@@ -1,11 +1,12 @@
 import { pool } from "../db/database";
-import { TemplateRecord } from "../types";
+import { TemplateCategory, TemplateRecord } from "../types";
 import { setTemplateCache } from "../config/templates";
 
 export interface CreateTemplateInput {
   key: string;
   name: string;
   description: string;
+  category?: TemplateCategory;
   enabled?: boolean;
   sortOrder?: number;
 }
@@ -13,6 +14,7 @@ export interface CreateTemplateInput {
 export interface UpdateTemplateInput {
   name?: string;
   description?: string;
+  category?: TemplateCategory;
   enabled?: boolean;
   sortOrder?: number;
 }
@@ -43,15 +45,16 @@ export class TemplateRepository {
       key: input.key,
       name: input.name,
       description: input.description,
+      category: input.category ?? TemplateCategory.Basic,
       enabled: input.enabled ?? true,
       sortOrder: input.sortOrder ?? 0,
       createdAt: now,
       updatedAt: now,
     };
     await this.pool.query(
-      `INSERT INTO templates ("key", "name", "description", "enabled", "sortOrder", "createdAt", "updatedAt")
-       VALUES ($1, $2, $3, $4, $5, $6, $6)`,
-      [record.key, record.name, record.description, record.enabled, record.sortOrder, now]
+      `INSERT INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $7)`,
+      [record.key, record.name, record.description, record.category, record.enabled, record.sortOrder, now]
     );
     await this.refreshCache();
     return record;
@@ -64,13 +67,14 @@ export class TemplateRepository {
       ...existing,
       name: input.name ?? existing.name,
       description: input.description ?? existing.description,
+      category: input.category ?? existing.category,
       enabled: input.enabled ?? existing.enabled,
       sortOrder: input.sortOrder ?? existing.sortOrder,
       updatedAt: new Date().toISOString(),
     };
     await this.pool.query(
-      `UPDATE templates SET "name" = $1, "description" = $2, "enabled" = $3, "sortOrder" = $4, "updatedAt" = $5 WHERE "key" = $6`,
-      [merged.name, merged.description, merged.enabled, merged.sortOrder, merged.updatedAt, key]
+      `UPDATE templates SET "name" = $1, "description" = $2, "category" = $3, "enabled" = $4, "sortOrder" = $5, "updatedAt" = $6 WHERE "key" = $7`,
+      [merged.name, merged.description, merged.category, merged.enabled, merged.sortOrder, merged.updatedAt, key]
     );
     await this.refreshCache();
     return merged;

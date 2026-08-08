@@ -4,6 +4,8 @@ import { IContentGenerator, RuleBasedContentGenerator } from "./ContentGenerator
 import { Resume } from "../models/Resume";
 import { User } from "../models/User";
 import { LinkVisibility } from "../types";
+import { CATEGORY_MIN_TIER, canUseTemplate, getTemplateByKey } from "../config/templates";
+import { getPlan } from "../config/subscriptionPlans";
 
 export class ResumeLimitError extends Error {}
 export class ResumeNotFoundError extends Error {}
@@ -11,6 +13,20 @@ export class ResumeAccessError extends Error {
   constructor(message: string, public readonly reason: "password" | "private" | "forbidden" = "forbidden") {
     super(message);
   }
+}
+export class TemplateAccessError extends Error {}
+
+/**
+ * Throws if `tier` isn't allowed to use `templateKey`'s category. A no-op
+ * (never throws) for an unknown key — template *existence* isn't validated
+ * here, only the tier gate for known templates, matching prior behavior.
+ */
+function assertTemplateAllowed(tier: User["subscriptionTier"], templateKey: string): void {
+  const template = getTemplateByKey(templateKey);
+  if (!template) return;
+  if (canUseTemplate(tier, template.category)) return;
+  const requiredPlan = getPlan(CATEGORY_MIN_TIER[template.category]);
+  throw new TemplateAccessError(`The "${template.name}" template requires the ${requiredPlan.name} plan. Upgrade to use it.`);
 }
 
 export interface CreateResumeRequest {
@@ -48,6 +64,7 @@ export class ResumeService {
         `Your ${user.plan.name} plan is limited to ${user.plan.resumeLimit} resume(s). Upgrade to add more.`
       );
     }
+    assertTemplateAllowed(user.subscriptionTier, input.templateKey);
 
     const generated = this.generator.generate(input.profession, input.answers);
     const record = await this.resumes.create({
@@ -66,6 +83,11 @@ export class ResumeService {
 
   async update(userId: string, resumeId: string, input: UpdateResumeInput): Promise<Resume> {
     const existing = await this.getOwned(userId, resumeId); // throws if not found/owned
+
+    if (input.templateKey && input.templateKey !== existing.templateKey) {
+      const userRecord = await this.users.findById(userId);
+      if (userRecord) assertTemplateAllowed(new User(userRecord).subscriptionTier, input.templateKey);
+    }
 
     let generatedSummary = input.generatedSummary;
     let generatedBullets = input.generatedBullets;

@@ -10,6 +10,17 @@ export enum LinkVisibility {
   Private = "private",
 }
 
+/**
+ * Which subscription tier a template requires. Ranked 1:1 with
+ * SubscriptionTier (basic=Starter, upgrade=Professional, premium=Premium)
+ * — see config/templates.ts's canUseTemplate() for the comparison.
+ */
+export enum TemplateCategory {
+  Basic = "basic",
+  Upgrade = "upgrade",
+  Premium = "premium",
+}
+
 export interface ProfessionQuestion {
   key: string;
   label: string;
@@ -27,6 +38,7 @@ export interface TemplateDefinition {
   key: string;
   name: string;
   description: string;
+  category: TemplateCategory;
 }
 
 export interface SubscriptionPlanDefinition {
