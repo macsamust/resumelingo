@@ -8,6 +8,8 @@ interface Props {
 const BLANK_ENTRY: WorkExperienceEntry = {
   company: "",
   title: "",
+  city: "",
+  state: "",
   startDate: "",
   endDate: "",
   current: false,
@@ -47,6 +49,24 @@ export function ExperienceEditor({ experience, onChange }: Props) {
               onChange={(e) => updateEntry(index, { title: e.target.value })}
               placeholder="e.g. Senior Software Engineer"
             />
+          </div>
+          <div className="experience-location">
+            <div className="field">
+              <label>City</label>
+              <input
+                value={entry.city ?? ""}
+                onChange={(e) => updateEntry(index, { city: e.target.value })}
+                placeholder="e.g. Austin"
+              />
+            </div>
+            <div className="field">
+              <label>State</label>
+              <input
+                value={entry.state ?? ""}
+                onChange={(e) => updateEntry(index, { state: e.target.value })}
+                placeholder="e.g. TX"
+              />
+            </div>
           </div>
           <div className="experience-dates">
             <div className="field">

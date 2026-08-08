@@ -39,7 +39,10 @@ function resumeToPlainText(resume: PublicResume): string {
     lines.push("EXPERIENCE");
     for (const job of experience) {
       const dates = `${formatMonth(job.startDate)} – ${job.current ? "Present" : formatMonth(job.endDate)}`;
-      lines.push(`${job.title || "Untitled role"}${job.company ? `, ${job.company}` : ""} (${dates})`);
+      const location = [job.city, job.state].filter(Boolean).join(", ");
+      lines.push(
+        `${job.title || "Untitled role"}${job.company ? `, ${job.company}` : ""}${location ? `, ${location}` : ""} (${dates})`
+      );
     }
     lines.push("");
   }

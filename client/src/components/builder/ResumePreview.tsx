@@ -183,7 +183,13 @@ export function ResumePreview({
                 {formatMonth(job.startDate)} – {job.current ? "Present" : formatMonth(job.endDate)}
               </span>
             </div>
-            {job.company && <div className="tpl-experience-company">{job.company}</div>}
+            {(job.company || job.city || job.state) && (
+              <div className="tpl-experience-company">
+                {job.company}
+                {job.company && (job.city || job.state) ? " · " : ""}
+                {[job.city, job.state].filter(Boolean).join(", ")}
+              </div>
+            )}
           </div>
         ))}
       </div>

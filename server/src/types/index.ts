@@ -109,6 +109,8 @@ export interface PlanRecord {
 export interface WorkExperienceEntry {
   company: string;
   title: string;
+  city?: string;
+  state?: string;
   startDate: string;
   endDate: string | null; // null when `current` is true
   current: boolean;
