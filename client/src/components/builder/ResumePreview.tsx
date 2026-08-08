@@ -108,7 +108,6 @@ export function ResumePreview({
   } as CSSProperties;
 
   const heading = title || "Untitled Resume";
-  const roleLine = professionLabel;
 
   // Contact line: email and LinkedIn are hyperlinked (LinkedIn spelled out as
   // its full URL rather than a plain "LinkedIn" label); phone is plain text.
@@ -264,7 +263,6 @@ export function ResumePreview({
       <div className="tpl-side">
         {fullName && <p className="tpl-fullname">{fullName}</p>}
         <h2>{heading}</h2>
-        <p className="tpl-role">{professionLabel}</p>
         {contactLine}
         {style.badge && (
           <span className="tpl-badge" style={{ background: "rgba(255,255,255,.18)", color: "#fff" }}>
@@ -325,7 +323,6 @@ export function ResumePreview({
           <div className="tpl-timeline-header">
             {fullName && <p className="tpl-fullname">{fullName}</p>}
             <h2>{heading}</h2>
-            <p className="tpl-role">{roleLine}</p>
           </div>
           <div className="tpl-timeline-body">
             <div className="tpl-timeline-side">
@@ -365,7 +362,6 @@ export function ResumePreview({
             <div className="tpl-photo-header-text">
               {fullName && <p className="tpl-fullname">{fullName}</p>}
               <h2>{heading}</h2>
-              <p className="tpl-role">{roleLine}</p>
               {contactGrid}
             </div>
             {photoUrl ? (
@@ -406,7 +402,6 @@ export function ResumePreview({
         <div className="tpl-header">
           {fullName && <p className="tpl-fullname">{fullName}</p>}
           <h2>{heading}</h2>
-          <p className="tpl-role">{roleLine}</p>
           {contactLine}
         </div>
         {style.badge && <span className="tpl-badge">{style.badge}</span>}
