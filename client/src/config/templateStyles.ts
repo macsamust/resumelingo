@@ -15,7 +15,14 @@
  *     "summary-first" templates lead with narrative framing. Section labels
  *     (summaryLabel / bulletsLabel) also vary per template's tone.
  */
-export type LayoutFamily = "executive-banner" | "sidebar" | "centered-serif" | "cv-academic" | "minimal-clean" | "timeline-sidebar";
+export type LayoutFamily =
+  | "executive-banner"
+  | "sidebar"
+  | "centered-serif"
+  | "cv-academic"
+  | "minimal-clean"
+  | "timeline-sidebar"
+  | "photo-banner-sidebar";
 export type Flow = "summary-first" | "bullets-first";
 
 export interface TemplateStyle {
@@ -26,6 +33,8 @@ export interface TemplateStyle {
   flow: Flow;
   summaryLabel: string;
   bulletsLabel: string;
+  /** Overrides the Awards section's label — defaults to "Awards" (see ResumePreview.tsx). */
+  awardsLabel?: string;
   badge?: string;
   sideAlign?: "left" | "right"; // sidebar family only
   bannerAlign?: "left" | "center"; // executive-banner family only
@@ -143,6 +152,18 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     family: "timeline-sidebar",
     accent: "#111827", accentSoft: "#e5e7eb", font: SANS_GEOMETRIC,
     flow: "summary-first", summaryLabel: "Profile", bulletsLabel: "Skills",
+  },
+
+  // Colored full-width banner (name/role/contact grid, plus an initials
+  // badge standing in for a profile photo — the resume model has no photo
+  // upload) over a two-column body: main column with a circular badge
+  // marker on every experience/education entry, and a light-tint sidebar
+  // for skills and volunteer work/affiliations.
+  portrait: {
+    family: "photo-banner-sidebar",
+    accent: "#3b6ea5", accentSoft: "#eaf3f8", font: SANS_MODERN,
+    flow: "summary-first", summaryLabel: "Professional Profile", bulletsLabel: "Relevant Skills",
+    awardsLabel: "Volunteer Work & Affiliations",
   },
 };
 

@@ -58,6 +58,16 @@ function withProtocol(url: string): string {
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
 }
 
+/** First + last initials (e.g. "Elvira Montanez" -> "EM") for the "photo-banner-sidebar" family's avatar badge — there's no photo upload in the resume model, so this stands in for a portrait. */
+function getInitials(name?: string): string {
+  if (!name) return "";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "";
+  const first = parts[0][0];
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+  return (first + last).toUpperCase();
+}
+
 /**
  * Live preview panel — mirrors the "every change updates instantly, choose a
  * format and have it previewed" feature from the product overview.
@@ -205,7 +215,7 @@ export function ResumePreview({
   const sortedAwards = awards.length > 0 ? sortAwards(awards) : [];
   const awardsBlock = sortedAwards.length > 0 && (
     <div className="tpl-section">
-      <span className="tpl-section-label">Awards</span>
+      <span className="tpl-section-label">{style.awardsLabel ?? "Awards"}</span>
       <div className="tpl-experience-list">
         {sortedAwards.map((award, i) => (
           <div className="tpl-experience-item" key={i}>
@@ -323,6 +333,52 @@ export function ResumePreview({
               {summaryBlock}
               {experienceBlock}
               {educationBlock}
+              {awardsBlock}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (style.family === "photo-banner-sidebar") {
+    const initials = getInitials(fullName);
+    // Contact items render in a 2-column grid inside the banner (rather
+    // than the single "email · phone · linkedin" line) to match the
+    // reference design's layout.
+    const contactGrid = contactItems.length > 0 && (
+      <div className="tpl-photo-contact-grid">
+        {contactItems.map((item) => (
+          <span key={item.key}>{item.node}</span>
+        ))}
+      </div>
+    );
+
+    return (
+      <div className="preview-col">
+        {templateTag}
+        <div className="preview-panel tpl-photo-banner-sidebar" style={cssVars}>
+          <div className="tpl-photo-header">
+            <div className="tpl-photo-header-text">
+              {fullName && <p className="tpl-fullname">{fullName}</p>}
+              <h2>{heading}</h2>
+              <p className="tpl-role">{roleLine}</p>
+              {contactGrid}
+            </div>
+            {initials && (
+              <div className="tpl-photo-badge" aria-hidden="true">
+                {initials}
+              </div>
+            )}
+          </div>
+          <div className="tpl-photo-body">
+            <div className="tpl-photo-main">
+              {summaryBlock}
+              {experienceBlock}
+              {educationBlock}
+            </div>
+            <div className="tpl-photo-side">
+              {bulletsBlock}
               {awardsBlock}
             </div>
           </div>

@@ -24,6 +24,7 @@ export const DEFAULT_TEMPLATES: TemplateDefinition[] = [
   { key: "academic", name: "Academic", description: "CV-style layout for education and research.", category: TemplateCategory.Premium },
   { key: "government-contractor", name: "Government Contractor", description: "Highlights clearance and contract vehicles.", category: TemplateCategory.Premium },
   { key: "timeline", name: "Timeline", description: "Full-width name banner over a contact-and-skills sidebar, with an icon-marker career timeline.", category: TemplateCategory.Upgrade },
+  { key: "portrait", name: "Portrait", description: "Colored photo banner over badge-marked work history, with a skills-and-volunteer-work sidebar.", category: TemplateCategory.Premium },
 ];
 
 /** Ranked 1:1 with TemplateCategory below — higher tier can use anything at or below its rank. */
