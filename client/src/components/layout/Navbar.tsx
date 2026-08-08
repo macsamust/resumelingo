@@ -15,7 +15,7 @@ export function Navbar() {
           <Link to="/#how">How it works</Link>
           <Link to="/#features">Features</Link>
           <Link to="/#pricing">Pricing</Link>
-          <Link to="/#resources">Career Center</Link>
+          <Link to="/career-center">Career Center</Link>
         </div>
         <div className="nav-actions">
           {user ? (

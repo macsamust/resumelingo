@@ -19,8 +19,9 @@ export function Footer() {
           </div>
           <div className="footer-col">
             <h4>Career Center</h4>
-            <Link to="/#resources">Resume tips</Link>
-            <Link to="/#resources">Interview & salary tips</Link>
+            <Link to="/career-center#resume-tips">Resume tips</Link>
+            <Link to="/career-center#interview-tips">Interview tips</Link>
+            <Link to="/career-center#salary-negotiation">Salary negotiation</Link>
             <Link to="/#stories">Success stories</Link>
           </div>
           <div className="footer-col">

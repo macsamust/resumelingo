@@ -3,6 +3,7 @@ import { Navbar } from "./components/layout/Navbar";
 import { Footer } from "./components/layout/Footer";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { LandingPage } from "./pages/LandingPage";
+import { CareerCenterPage } from "./pages/CareerCenterPage";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -26,6 +27,7 @@ export default function App() {
       {!isPublicResumeRoute && !isAdminRoute && <Navbar />}
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/career-center" element={<CareerCenterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/r/:slug" element={<PublicResumePage />} />
