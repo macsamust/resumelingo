@@ -114,6 +114,17 @@ export interface Resume {
   coverLetterEnabled: boolean;
   /** Generated cover letter text, or "" when coverLetterEnabled is false. */
   generatedCoverLetter: string;
+  /** "Recruiter Mode" toggle (Edit Resume, Premium-only) — see RecruiterCard. */
+  recruiterModeEnabled: boolean;
+  recruiterLocation: string;
+  recruiterAvailability: string;
+  /** One of config/recruiterOptions.ts's CLEARANCE_OPTIONS values, or "" if unset. */
+  recruiterClearance: string;
+  /** One of config/recruiterOptions.ts's WORK_AUTHORIZATION_OPTIONS values, or "" if unset. */
+  recruiterWorkAuthorization: string;
+  recruiterExpectedSalary: string;
+  /** One of config/recruiterOptions.ts's REMOTE_PREFERENCE_OPTIONS values, or "" if unset. */
+  recruiterRemotePreference: string;
   answers: Record<string, string>;
   experience: WorkExperienceEntry[];
   education: EducationEntry[];
@@ -126,6 +137,17 @@ export interface Resume {
   updatedAt: string;
 }
 
+/** The candidate summary card shown at the top of a public resume link when Recruiter Mode is on. "skills" is derived server-side from the resume's own bullets/answers, not a separate field. */
+export interface RecruiterCard {
+  location: string;
+  availability: string;
+  clearance: string;
+  workAuthorization: string;
+  expectedSalary: string;
+  remotePreference: string;
+  skills: string[];
+}
+
 export interface PublicResume {
   fullName: string;
   contactEmail: string;
@@ -136,6 +158,8 @@ export interface PublicResume {
   professionLabel: string;
   templateKey: string;
   template?: TemplateDefinition;
+  /** Null when the resume owner hasn't turned Recruiter Mode on. */
+  recruiterCard: RecruiterCard | null;
   answers: Record<string, string>;
   experience: WorkExperienceEntry[];
   education: EducationEntry[];

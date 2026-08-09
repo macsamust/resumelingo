@@ -1,6 +1,7 @@
 import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, ResumeRecord, WorkExperienceEntry } from "../types";
 import { getTemplateByKey } from "../config/templates";
 import { getProfessionByKey } from "../config/professions";
+import { extractKeywords } from "../utils/keywords";
 
 /**
  * Domain model for a resume. Handles JSON (de)serialization of the
@@ -24,6 +25,13 @@ export class Resume {
   readonly accessPasswordExpiresAt: string | null;
   readonly coverLetterEnabled: boolean;
   readonly generatedCoverLetter: string;
+  readonly recruiterModeEnabled: boolean;
+  readonly recruiterLocation: string;
+  readonly recruiterAvailability: string;
+  readonly recruiterClearance: string;
+  readonly recruiterWorkAuthorization: string;
+  readonly recruiterExpectedSalary: string;
+  readonly recruiterRemotePreference: string;
   readonly answers: Record<string, string>;
   readonly experience: WorkExperienceEntry[];
   readonly education: EducationEntry[];
@@ -52,6 +60,13 @@ export class Resume {
     this.accessPasswordExpiresAt = record.accessPasswordExpiresAt;
     this.coverLetterEnabled = record.coverLetterEnabled;
     this.generatedCoverLetter = record.generatedCoverLetter;
+    this.recruiterModeEnabled = record.recruiterModeEnabled;
+    this.recruiterLocation = record.recruiterLocation;
+    this.recruiterAvailability = record.recruiterAvailability;
+    this.recruiterClearance = record.recruiterClearance;
+    this.recruiterWorkAuthorization = record.recruiterWorkAuthorization;
+    this.recruiterExpectedSalary = record.recruiterExpectedSalary;
+    this.recruiterRemotePreference = record.recruiterRemotePreference;
     this.answers = JSON.parse(record.answers || "{}");
     this.experience = JSON.parse(record.experience || "[]");
     this.education = JSON.parse(record.education || "[]");
@@ -87,6 +102,28 @@ export class Resume {
     );
   }
 
+  /**
+   * The candidate summary card shown at the top of the public resume link
+   * when Recruiter Mode is on — null when it's off, so callers can just
+   * check truthiness instead of re-checking recruiterModeEnabled. "skills"
+   * isn't a stored field; it's derived from the resume's own generated
+   * bullets and answers (see utils/keywords.ts) so it can't drift out of
+   * sync with the actual resume content.
+   */
+  get recruiterCard() {
+    if (!this.recruiterModeEnabled) return null;
+    const skillsText = [...this.generatedBullets, ...Object.values(this.answers)].join(" ");
+    return {
+      location: this.recruiterLocation,
+      availability: this.recruiterAvailability,
+      clearance: this.recruiterClearance,
+      workAuthorization: this.recruiterWorkAuthorization,
+      expectedSalary: this.recruiterExpectedSalary,
+      remotePreference: this.recruiterRemotePreference,
+      skills: extractKeywords(skillsText, 8),
+    };
+  }
+
   /** userId is the *requesting* user, if any (undefined for anonymous visitors). */
   isAccessibleBy(userId?: string, password?: string): boolean {
     if (userId && userId === this.userId) return true; // owner can always view their own resume, any visibility
@@ -118,6 +155,13 @@ export class Resume {
       accessPasswordExpiresAt: this.accessPasswordExpiresAt,
       coverLetterEnabled: this.coverLetterEnabled,
       generatedCoverLetter: this.generatedCoverLetter,
+      recruiterModeEnabled: this.recruiterModeEnabled,
+      recruiterLocation: this.recruiterLocation,
+      recruiterAvailability: this.recruiterAvailability,
+      recruiterClearance: this.recruiterClearance,
+      recruiterWorkAuthorization: this.recruiterWorkAuthorization,
+      recruiterExpectedSalary: this.recruiterExpectedSalary,
+      recruiterRemotePreference: this.recruiterRemotePreference,
       answers: this.answers,
       experience: this.experience,
       education: this.education,
@@ -142,6 +186,7 @@ export class Resume {
       professionLabel: this.professionLabel,
       templateKey: this.templateKey,
       template: this.template,
+      recruiterCard: this.recruiterCard,
       answers: this.answers,
       experience: this.experience,
       education: this.education,

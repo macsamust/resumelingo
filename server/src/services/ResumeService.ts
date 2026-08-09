@@ -4,7 +4,7 @@ import { IContentGenerator, RuleBasedContentGenerator } from "./ContentGenerator
 import { ICoverLetterGenerator, pickTopExperience, RuleBasedCoverLetterGenerator } from "./CoverLetterGenerator";
 import { Resume } from "../models/Resume";
 import { User } from "../models/User";
-import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, TemplateCategory, WorkExperienceEntry } from "../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, SubscriptionTier, TemplateCategory, WorkExperienceEntry } from "../types";
 import { CATEGORY_MIN_TIER, canUseTemplate, getTemplateByKey } from "../config/templates";
 import { canUseVisibility, VISIBILITY_LABEL, VISIBILITY_MIN_TIER } from "../config/visibilityAccess";
 import { getPlan } from "../config/subscriptionPlans";
@@ -167,12 +167,22 @@ export class ResumeService {
 
     const templateChanging = !!input.templateKey && input.templateKey !== existing.templateKey;
     const visibilityChanging = !!input.visibility && input.visibility !== existing.visibility;
-    if (templateChanging || visibilityChanging) {
+    // Recruiter Mode is Premium-only — re-checked (and silently coerced off,
+    // not thrown, same as coverLetterEnabled below) on every update rather
+    // than only when the toggle changes, so a downgraded subscriber's public
+    // link stops showing the card on their very next save even if they never
+    // touch the toggle again.
+    const recruiterModeRequested = input.recruiterModeEnabled ?? existing.recruiterModeEnabled;
+    let recruiterModeEnabled = recruiterModeRequested;
+    if (templateChanging || visibilityChanging || recruiterModeRequested) {
       const userRecord = await this.users.findById(userId);
       if (userRecord) {
         const tier = new User(userRecord).subscriptionTier;
         if (templateChanging) assertTemplateAllowed(tier, input.templateKey!);
         if (visibilityChanging) assertVisibilityAllowed(tier, input.visibility!);
+        recruiterModeEnabled = recruiterModeRequested && tier === SubscriptionTier.Premium;
+      } else {
+        recruiterModeEnabled = false;
       }
     }
     assertPhotoSizeOk(input.photoUrl);
@@ -243,6 +253,7 @@ export class ResumeService {
       generatedBullets,
       coverLetterEnabled,
       generatedCoverLetter,
+      recruiterModeEnabled,
     });
     return new Resume(updated!);
   }

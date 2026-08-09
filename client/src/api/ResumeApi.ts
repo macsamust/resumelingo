@@ -14,6 +14,14 @@ export interface CreateResumeInput {
   accessPassword?: string | null;
   accessPasswordExpiresAt?: string | null;
   coverLetterEnabled?: boolean;
+  /** "Recruiter Mode" toggle — only takes effect server-side for Premium subscribers (see ResumeService.update). */
+  recruiterModeEnabled?: boolean;
+  recruiterLocation?: string;
+  recruiterAvailability?: string;
+  recruiterClearance?: string;
+  recruiterWorkAuthorization?: string;
+  recruiterExpectedSalary?: string;
+  recruiterRemotePreference?: string;
   answers: Record<string, string>;
   experience?: WorkExperienceEntry[];
   education?: EducationEntry[];

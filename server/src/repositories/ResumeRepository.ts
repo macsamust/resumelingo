@@ -40,6 +40,13 @@ export interface UpdateResumeInput {
   accessPasswordExpiresAt?: string | null;
   coverLetterEnabled?: boolean;
   generatedCoverLetter?: string;
+  recruiterModeEnabled?: boolean;
+  recruiterLocation?: string;
+  recruiterAvailability?: string;
+  recruiterClearance?: string;
+  recruiterWorkAuthorization?: string;
+  recruiterExpectedSalary?: string;
+  recruiterRemotePreference?: string;
   answers?: Record<string, string>;
   experience?: WorkExperienceEntry[];
   education?: EducationEntry[];
@@ -84,6 +91,15 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       accessPasswordExpiresAt: input.accessPasswordExpiresAt ?? null,
       coverLetterEnabled: input.coverLetterEnabled ?? false,
       generatedCoverLetter: input.generatedCoverLetter ?? "",
+      // Recruiter Mode is only ever turned on from Edit Resume, never at
+      // creation time — see ResumeEditPage.tsx / ResumeService.update.
+      recruiterModeEnabled: false,
+      recruiterLocation: "",
+      recruiterAvailability: "",
+      recruiterClearance: "",
+      recruiterWorkAuthorization: "",
+      recruiterExpectedSalary: "",
+      recruiterRemotePreference: "",
       answers: JSON.stringify(input.answers),
       experience: JSON.stringify(input.experience),
       education: JSON.stringify(input.education),
@@ -119,6 +135,16 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
         input.accessPasswordExpiresAt !== undefined ? input.accessPasswordExpiresAt : existing.accessPasswordExpiresAt,
       coverLetterEnabled: input.coverLetterEnabled !== undefined ? input.coverLetterEnabled : existing.coverLetterEnabled,
       generatedCoverLetter: input.generatedCoverLetter !== undefined ? input.generatedCoverLetter : existing.generatedCoverLetter,
+      recruiterModeEnabled: input.recruiterModeEnabled !== undefined ? input.recruiterModeEnabled : existing.recruiterModeEnabled,
+      recruiterLocation: input.recruiterLocation !== undefined ? input.recruiterLocation : existing.recruiterLocation,
+      recruiterAvailability: input.recruiterAvailability !== undefined ? input.recruiterAvailability : existing.recruiterAvailability,
+      recruiterClearance: input.recruiterClearance !== undefined ? input.recruiterClearance : existing.recruiterClearance,
+      recruiterWorkAuthorization:
+        input.recruiterWorkAuthorization !== undefined ? input.recruiterWorkAuthorization : existing.recruiterWorkAuthorization,
+      recruiterExpectedSalary:
+        input.recruiterExpectedSalary !== undefined ? input.recruiterExpectedSalary : existing.recruiterExpectedSalary,
+      recruiterRemotePreference:
+        input.recruiterRemotePreference !== undefined ? input.recruiterRemotePreference : existing.recruiterRemotePreference,
       answers: input.answers ? JSON.stringify(input.answers) : existing.answers,
       experience: input.experience ? JSON.stringify(input.experience) : existing.experience,
       education: input.education ? JSON.stringify(input.education) : existing.education,

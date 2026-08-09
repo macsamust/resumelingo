@@ -66,6 +66,13 @@ export async function migrate(): Promise<void> {
       "accessPasswordExpiresAt" TEXT,
       "coverLetterEnabled" BOOLEAN NOT NULL DEFAULT false,
       "generatedCoverLetter" TEXT NOT NULL DEFAULT '',
+      "recruiterModeEnabled" BOOLEAN NOT NULL DEFAULT false,
+      "recruiterLocation" TEXT NOT NULL DEFAULT '',
+      "recruiterAvailability" TEXT NOT NULL DEFAULT '',
+      "recruiterClearance" TEXT NOT NULL DEFAULT '',
+      "recruiterWorkAuthorization" TEXT NOT NULL DEFAULT '',
+      "recruiterExpectedSalary" TEXT NOT NULL DEFAULT '',
+      "recruiterRemotePreference" TEXT NOT NULL DEFAULT '',
       "answers" TEXT NOT NULL DEFAULT '{}',
       "experience" TEXT NOT NULL DEFAULT '[]',
       "education" TEXT NOT NULL DEFAULT '[]',
@@ -128,6 +135,19 @@ export async function migrate(): Promise<void> {
     -- regenerated on the same triggers as generatedSummary/generatedBullets.
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "coverLetterEnabled" BOOLEAN NOT NULL DEFAULT false;
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "generatedCoverLetter" TEXT NOT NULL DEFAULT '';
+
+    -- "Recruiter Mode" (Edit Resume, Premium only — enforced server-side in
+    -- ResumeService.update, not just hidden client-side) adds a candidate
+    -- summary card to the public resume link. All fields nullable/optional;
+    -- "skills" isn't stored here at all — it's derived at read time from
+    -- generatedBullets/answers (see Resume.recruiterCard / utils/keywords.ts).
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "recruiterModeEnabled" BOOLEAN NOT NULL DEFAULT false;
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "recruiterLocation" TEXT NOT NULL DEFAULT '';
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "recruiterAvailability" TEXT NOT NULL DEFAULT '';
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "recruiterClearance" TEXT NOT NULL DEFAULT '';
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "recruiterWorkAuthorization" TEXT NOT NULL DEFAULT '';
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "recruiterExpectedSalary" TEXT NOT NULL DEFAULT '';
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "recruiterRemotePreference" TEXT NOT NULL DEFAULT '';
 
     -- Admins are a deliberately separate table/role from users (see
     -- types/index.ts AdminRecord and services/AdminService.ts) rather than a

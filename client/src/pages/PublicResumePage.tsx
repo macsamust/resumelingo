@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ApiError, catalogApi } from "../api";
 import { PublicResume } from "../types";
 import { formatMonth, ResumePreview, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
+import { CLEARANCE_OPTIONS, recruiterOptionLabel, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
 
 /**
  * Turns a camelCase profession-question key (e.g. "cloudPlatforms",
@@ -197,6 +198,67 @@ export function PublicResumePage() {
           Download as text (.txt)
         </button>
       </div>
+      {resume.recruiterCard && (
+        <div className="public-resume-card public-resume-details" style={{ marginBottom: 24 }}>
+          <h2 className="public-resume-details-heading">Candidate Summary</h2>
+          <div className="answer-grid">
+            {resume.recruiterCard.location && (
+              <div>
+                <div className="answer-key">Location</div>
+                <div className="answer-value">{resume.recruiterCard.location}</div>
+              </div>
+            )}
+            {resume.recruiterCard.availability && (
+              <div>
+                <div className="answer-key">Availability</div>
+                <div className="answer-value">{resume.recruiterCard.availability}</div>
+              </div>
+            )}
+            {resume.recruiterCard.expectedSalary && (
+              <div>
+                <div className="answer-key">Expected Salary</div>
+                <div className="answer-value">{resume.recruiterCard.expectedSalary}</div>
+              </div>
+            )}
+            {resume.recruiterCard.clearance && (
+              <div>
+                <div className="answer-key">Clearance</div>
+                <div className="answer-value">{recruiterOptionLabel(CLEARANCE_OPTIONS, resume.recruiterCard.clearance)}</div>
+              </div>
+            )}
+            {resume.recruiterCard.workAuthorization && (
+              <div>
+                <div className="answer-key">Work Authorization</div>
+                <div className="answer-value">
+                  {recruiterOptionLabel(WORK_AUTHORIZATION_OPTIONS, resume.recruiterCard.workAuthorization)}
+                </div>
+              </div>
+            )}
+            {resume.recruiterCard.remotePreference && (
+              <div>
+                <div className="answer-key">Remote Preference</div>
+                <div className="answer-value">
+                  {recruiterOptionLabel(REMOTE_PREFERENCE_OPTIONS, resume.recruiterCard.remotePreference)}
+                </div>
+              </div>
+            )}
+          </div>
+          {resume.recruiterCard.skills.length > 0 && (
+            <div style={{ marginTop: 24 }}>
+              <div className="answer-key" style={{ marginBottom: 10 }}>
+                Skills
+              </div>
+              <div className="recruiter-skill-chips">
+                {resume.recruiterCard.skills.map((s) => (
+                  <span key={s} className="recruiter-skill-chip">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       <ResumePreview
         fullName={resume.fullName}
         contactEmail={resume.contactEmail}

@@ -174,6 +174,21 @@ export interface ResumeRecord {
   coverLetterEnabled: boolean;
   /** Rule-based generator output (see CoverLetterGenerator.ts) — empty string when coverLetterEnabled is false. */
   generatedCoverLetter: string;
+  /**
+   * "Recruiter Mode" toggle (Edit Resume, Premium-only — enforced in
+   * ResumeService.update) — when true, the public resume link shows a
+   * candidate summary card above the resume itself. See Resume.recruiterCard.
+   */
+  recruiterModeEnabled: boolean;
+  recruiterLocation: string;
+  recruiterAvailability: string;
+  /** One of config/recruiterOptions.ts's CLEARANCE_OPTIONS values, or "" if unset. */
+  recruiterClearance: string;
+  /** One of config/recruiterOptions.ts's WORK_AUTHORIZATION_OPTIONS values, or "" if unset. */
+  recruiterWorkAuthorization: string;
+  recruiterExpectedSalary: string;
+  /** One of config/recruiterOptions.ts's REMOTE_PREFERENCE_OPTIONS values, or "" if unset. */
+  recruiterRemotePreference: string;
   answers: string; // JSON-serialized Record<string, string>
   experience: string; // JSON-serialized WorkExperienceEntry[]
   education: string; // JSON-serialized EducationEntry[]

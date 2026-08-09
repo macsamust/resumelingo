@@ -15,6 +15,7 @@ import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL } from "../utils/template
 import { canUseVisibility, VISIBILITY_LABEL, VISIBILITY_MIN_TIER } from "../utils/visibilityAccess";
 import { getTemplateStyle } from "../config/templateStyles";
 import { buildResumeTextBlob, matchKeywords, runHealthChecks } from "../utils/atsCheck";
+import { CLEARANCE_OPTIONS, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
 import {
   AchievementEntry,
   AwardEntry,
@@ -65,6 +66,13 @@ export function ResumeEditPage() {
   const [achievements, setAchievements] = useState<AchievementEntry[]>([]);
   const [coverLetterEnabled, setCoverLetterEnabled] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
+  const [recruiterModeEnabled, setRecruiterModeEnabled] = useState(false);
+  const [recruiterLocation, setRecruiterLocation] = useState("");
+  const [recruiterAvailability, setRecruiterAvailability] = useState("");
+  const [recruiterClearance, setRecruiterClearance] = useState("");
+  const [recruiterWorkAuthorization, setRecruiterWorkAuthorization] = useState("");
+  const [recruiterExpectedSalary, setRecruiterExpectedSalary] = useState("");
+  const [recruiterRemotePreference, setRecruiterRemotePreference] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -101,6 +109,13 @@ export function ResumeEditPage() {
         setVisibility(r.visibility);
         setAccessPasswordExpiresAt(r.accessPasswordExpiresAt ? isoToDatetimeLocal(r.accessPasswordExpiresAt) : "");
         setCoverLetterEnabled(r.coverLetterEnabled);
+        setRecruiterModeEnabled(r.recruiterModeEnabled);
+        setRecruiterLocation(r.recruiterLocation);
+        setRecruiterAvailability(r.recruiterAvailability);
+        setRecruiterClearance(r.recruiterClearance);
+        setRecruiterWorkAuthorization(r.recruiterWorkAuthorization);
+        setRecruiterExpectedSalary(r.recruiterExpectedSalary);
+        setRecruiterRemotePreference(r.recruiterRemotePreference);
         setAnswers(r.answers);
         setExperience(r.experience);
         setEducation(r.education);
@@ -187,6 +202,13 @@ export function ResumeEditPage() {
         accessPasswordExpiresAt:
           visibility === "password" && accessPasswordExpiresAt ? new Date(accessPasswordExpiresAt).toISOString() : null,
         coverLetterEnabled,
+        recruiterModeEnabled,
+        recruiterLocation,
+        recruiterAvailability,
+        recruiterClearance,
+        recruiterWorkAuthorization,
+        recruiterExpectedSalary,
+        recruiterRemotePreference,
         answers,
         experience,
         education,
@@ -513,6 +535,88 @@ export function ResumeEditPage() {
                 </p>
               </CollapsibleSection>
             </div>
+          )}
+
+          {isPremium && (
+            <CollapsibleSection title="Recruiter Mode" forceOpen={forceOpen}>
+              <p className="hero-note" style={{ marginBottom: 16 }}>
+                Adds a candidate summary card to the top of your public resume link — skills (pulled automatically
+                from your resume), availability, clearance, location, work authorization, expected salary, and
+                remote preference. Every field below is optional and stays off until you turn this on.
+              </p>
+              <label className="checkbox-field">
+                <input
+                  type="checkbox"
+                  checked={recruiterModeEnabled}
+                  onChange={(e) => setRecruiterModeEnabled(e.target.checked)}
+                />
+                Enable Recruiter Mode for this resume
+              </label>
+              {recruiterModeEnabled && (
+                <>
+                  <div className="field">
+                    <label>Location</label>
+                    <input
+                      value={recruiterLocation}
+                      onChange={(e) => setRecruiterLocation(e.target.value)}
+                      placeholder="e.g. Austin, TX (open to relocation)"
+                    />
+                  </div>
+                  <div className="field">
+                    <label>Availability</label>
+                    <input
+                      value={recruiterAvailability}
+                      onChange={(e) => setRecruiterAvailability(e.target.value)}
+                      placeholder="e.g. Immediately, or 2 weeks notice"
+                    />
+                  </div>
+                  <div className="field">
+                    <label>Expected salary</label>
+                    <input
+                      value={recruiterExpectedSalary}
+                      onChange={(e) => setRecruiterExpectedSalary(e.target.value)}
+                      placeholder="e.g. $120k–140k"
+                    />
+                  </div>
+                  <div className="field">
+                    <label>Security clearance</label>
+                    <select value={recruiterClearance} onChange={(e) => setRecruiterClearance(e.target.value)}>
+                      {CLEARANCE_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label>Work authorization</label>
+                    <select
+                      value={recruiterWorkAuthorization}
+                      onChange={(e) => setRecruiterWorkAuthorization(e.target.value)}
+                    >
+                      {WORK_AUTHORIZATION_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label>Remote preference</label>
+                    <select
+                      value={recruiterRemotePreference}
+                      onChange={(e) => setRecruiterRemotePreference(e.target.value)}
+                    >
+                      {REMOTE_PREFERENCE_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+            </CollapsibleSection>
           )}
 
           <button className="btn btn-primary btn-block" type="submit" disabled={saving}>
