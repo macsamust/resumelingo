@@ -461,7 +461,12 @@ export function ResumeEditPage() {
               />
               Combine Work Experience with Achievements (nest each bullet under the job it belongs to)
             </label>
-            <AchievementEditor achievements={achievements} onChange={setAchievements} experience={experience} />
+            <AchievementEditor
+              achievements={achievements}
+              onChange={setAchievements}
+              experience={experience}
+              showJobLink={combineExperienceFormat}
+            />
           </CollapsibleSection>
 
           <CollapsibleSection title="Answers" forceOpen={forceOpen}>

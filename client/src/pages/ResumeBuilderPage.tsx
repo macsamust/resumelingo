@@ -207,7 +207,12 @@ export function ResumeBuilderPage() {
           <p className="hero-note" style={{ marginBottom: 16 }}>
             Describe a challenge, what you did, and the result — this is what turns into impact-focused resume bullets.
           </p>
-          <AchievementEditor achievements={achievements} onChange={setAchievements} experience={experience} />
+          <AchievementEditor
+            achievements={achievements}
+            onChange={setAchievements}
+            experience={experience}
+            showJobLink={false}
+          />
 
           <h2>7. Answer a few questions</h2>
           {professionDetail && (

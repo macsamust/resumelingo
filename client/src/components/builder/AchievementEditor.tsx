@@ -5,6 +5,8 @@ interface Props {
   onChange: (achievements: AchievementEntry[]) => void;
   /** Work history to offer in the "which job" dropdown — see AchievementEntry.experienceId. */
   experience: WorkExperienceEntry[];
+  /** Only show the "which job" dropdown (as the first field, above Challenge) when the combined-format checkbox is on — it's meaningless data to collect otherwise, since the flat layout never reads experienceId. */
+  showJobLink: boolean;
 }
 
 const BLANK_ENTRY: AchievementEntry = {
@@ -29,7 +31,7 @@ function experienceLabel(entry: WorkExperienceEntry): string {
  * ExperienceEditor, but no dates — an achievement is a single accomplishment,
  * not a role held over time.
  */
-export function AchievementEditor({ achievements, onChange, experience }: Props) {
+export function AchievementEditor({ achievements, onChange, experience, showJobLink }: Props) {
   const updateEntry = (index: number, patch: Partial<AchievementEntry>) => {
     onChange(achievements.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)));
   };
@@ -41,6 +43,22 @@ export function AchievementEditor({ achievements, onChange, experience }: Props)
     <div className="experience-editor">
       {achievements.map((entry, index) => (
         <div className="experience-row" key={index}>
+          {showJobLink && experience.length > 0 && (
+            <div className="field">
+              <label>Which job is this from? (optional)</label>
+              <select
+                value={entry.experienceId ?? ""}
+                onChange={(e) => updateEntry(index, { experienceId: e.target.value || null })}
+              >
+                <option value="">Not linked to a specific job</option>
+                {experience.map((job, jobIndex) => (
+                  <option key={job.id ?? jobIndex} value={job.id ?? ""} disabled={!job.id}>
+                    {experienceLabel(job)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="field">
             <label>Challenge — what problem existed?</label>
             <textarea
@@ -65,22 +83,6 @@ export function AchievementEditor({ achievements, onChange, experience }: Props)
               placeholder="e.g. A 25% increase in completed signups within one quarter"
             />
           </div>
-          {experience.length > 0 && (
-            <div className="field">
-              <label>Which job is this from? (optional)</label>
-              <select
-                value={entry.experienceId ?? ""}
-                onChange={(e) => updateEntry(index, { experienceId: e.target.value || null })}
-              >
-                <option value="">Not linked to a specific job</option>
-                {experience.map((job, jobIndex) => (
-                  <option key={job.id ?? jobIndex} value={job.id ?? ""} disabled={!job.id}>
-                    {experienceLabel(job)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
           <button type="button" className="btn btn-ghost experience-remove" onClick={() => removeEntry(index)}>
             Remove
           </button>
