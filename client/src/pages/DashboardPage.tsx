@@ -182,7 +182,8 @@ export function DashboardPage() {
               </div>
               <h3>{r.title}</h3>
               <p className="meta">
-                {r.professionLabel} · {r.viewCount} view{r.viewCount === 1 ? "" : "s"}
+                {r.professionLabel}
+                {showViewsAndStrengthTiles && ` · ${r.viewCount} view${r.viewCount === 1 ? "" : "s"}`}
               </p>
               <div className="resume-item-actions">
                 <Link to={`/resumes/${r.id}/edit`} className="btn btn-ghost">
