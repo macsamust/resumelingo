@@ -11,11 +11,13 @@ export class CareerCoachController {
 
   ask = async (req: AuthenticatedRequest, res: Response) => {
     const user = req.user!;
-    // Premium-only, per the feature request — not tied to any resume, so
-    // gated directly on the account's subscription tier, same pattern as
+    // Professional and Premium — not tied to any resume, so gated directly
+    // on the account's subscription tier, same pattern as
     // ThankYouLetterController.
-    if (user.subscriptionTier !== SubscriptionTier.Premium) {
-      return res.status(403).json({ error: "The AI Career Coach is a Premium feature. Upgrade to use this tool." });
+    if (user.subscriptionTier === SubscriptionTier.Starter) {
+      return res
+        .status(403)
+        .json({ error: "The AI Career Coach is a Professional and Premium feature. Upgrade to use this tool." });
     }
 
     const { question } = req.body ?? {};

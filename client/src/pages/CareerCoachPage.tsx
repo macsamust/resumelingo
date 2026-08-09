@@ -19,7 +19,7 @@ function CareerCoachLocked() {
         <h1>Career Coach</h1>
       </div>
       <div className="empty-state">
-        <p>The AI Career Coach is a Premium feature. Upgrade your plan to start asking questions.</p>
+        <p>The AI Career Coach is a Professional and Premium feature. Upgrade your plan to start asking questions.</p>
         <Link to="/dashboard" className="btn btn-primary">
           Upgrade my plan
         </Link>
@@ -43,7 +43,7 @@ export function CareerCoachPage() {
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (user && user.subscriptionTier !== "premium") return <CareerCoachLocked />;
+  if (user && user.subscriptionTier === "starter") return <CareerCoachLocked />;
 
   const ask = async (q: string) => {
     const trimmed = q.trim();

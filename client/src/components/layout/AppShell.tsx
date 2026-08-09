@@ -6,11 +6,15 @@ const LINKS = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/resumes/new", label: "New Resume" },
   { to: "/thank-you-letter", label: "Thank-You Letter" },
-  { to: "/career-coach", label: "Career Coach" },
+  // Professional and Premium only — see CareerCoachPage.tsx/CareerCoachController.ts,
+  // which enforce the same restriction server-side, so this is just tidying
+  // the nav rather than the actual gate.
+  { to: "/career-coach", label: "Career Coach", minTier: "professional" as const },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const links = LINKS.filter((link) => !link.minTier || user?.subscriptionTier !== "starter");
 
   return (
     <div className="app-shell">
@@ -26,7 +30,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
         )}
         <div className="app-sidebar-links">
-          {LINKS.map((link) => (
+          {links.map((link) => (
             <NavLink key={link.to} to={link.to} className={({ isActive }) => (isActive ? "active" : "")}>
               {link.label}
             </NavLink>
