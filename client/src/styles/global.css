@@ -216,6 +216,15 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .resume-item-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .resume-template-tag { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
 
+/* Strength tag on a "My Resumes" card — same pill shape as visibility/template
+   tags above, color-coded by Resume.strengthScore (see
+   DashboardPage.tsx's strengthTagClass): green = strong, amber = middling,
+   red = needs work. Same green/red hexes as .admin-status-tag / .ats-chip-*
+   elsewhere in the app, plus a matching amber for the middle tier. */
+.strength-tag-high { background: #dcfce7; color: #166534; border-color: transparent; }
+.strength-tag-medium { background: #fef3c7; color: #92400e; border-color: transparent; }
+.strength-tag-low { background: #fee2e2; color: #b91c1c; border-color: transparent; }
+
 .builder-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: flex-start; }
 .builder-panel { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
 .builder-panel h2 { font-size: 18px; margin-bottom: 16px; }

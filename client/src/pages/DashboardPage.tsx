@@ -94,6 +94,14 @@ export function DashboardPage() {
   const resumesByViews = [...summary.myResumes].sort((a, b) => b.viewCount - a.viewCount);
   const mostViewed = resumesByViews.find((r) => r.viewCount > 0) ?? null;
 
+  // Color-coded threshold for the "My Resumes" card strength tag — matches
+  // the green/amber/red bands already used for ATS Check pass/fail styling.
+  const strengthTagClass = (score: number): string => {
+    if (score >= 80) return "strength-tag-high";
+    if (score >= 50) return "strength-tag-medium";
+    return "strength-tag-low";
+  };
+
   const jobSearchResources = CAREER_RESOURCES.filter((r) => JOB_SEARCH_RESOURCE_ANCHORS.includes(r.anchor));
   const resumeTipsTopic = CAREER_TOPICS.find((t) => t.id === "resume-tips");
   const careerArticles = CAREER_TOPICS.filter((t) => CAREER_ARTICLE_IDS.includes(t.id));
@@ -180,6 +188,11 @@ export function DashboardPage() {
               <div className="resume-item-tags">
                 <span className="visibility-tag">{r.visibility}</span>
                 <span className="resume-template-tag">Template: {r.template?.name ?? r.templateKey}</span>
+                {showViewsAndStrengthTiles && (
+                  <span className={`resume-template-tag ${strengthTagClass(r.strengthScore)}`}>
+                    Strength {r.strengthScore}%
+                  </span>
+                )}
               </div>
               <h3>{r.title}</h3>
               <p className="meta">
