@@ -232,7 +232,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .builder-divider::before, .builder-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 .builder-divider-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--indigo); white-space: nowrap; }
 .back-to-top-fab {
-  position: fixed; right: 28px; bottom: 28px; width: 46px; height: 46px; border-radius: 50%;
+  position: fixed; left: 252px; bottom: 28px; width: 46px; height: 46px; border-radius: 50%;
   background: var(--indigo); color: #fff; border: none; font-size: 20px; font-weight: 700; cursor: pointer;
   display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 24px -8px rgba(79,70,229,.55);
   z-index: 40; transition: transform .15s ease, background .15s ease;
@@ -691,6 +691,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   .price-card.featured { transform: none; }
   .app-shell { flex-direction: column; }
   .app-sidebar { width: 100%; display: flex; overflow-x: auto; }
+  .back-to-top-fab { left: 24px; }
 }
 @media (max-width: 640px) {
   .nav-links { display: none; }
