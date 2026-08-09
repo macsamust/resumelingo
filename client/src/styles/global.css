@@ -302,6 +302,37 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .ats-mini-list li.ats-fail span { color: #dc2626; }
 .ats-mini-link { font-size: 12.5px; font-weight: 600; color: var(--indigo); cursor: pointer; }
 .checkbox-field input { width: auto; }
+
+/* Small "?" hover bubble — used next to the ATS check label (see
+   ResumeEditPage.tsx). Pure CSS (:hover/:focus-visible on the wrapper) so
+   it needs no JS state; tabIndex on the wrapper makes it keyboard-reachable
+   too, not just mouse-hover. */
+.info-tooltip { position: relative; display: inline-flex; margin-left: 6px; vertical-align: middle; }
+.info-tooltip-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px; border-radius: 50%;
+  background: var(--border); color: var(--muted);
+  font-size: 10px; font-weight: 700; text-transform: none;
+  cursor: help; line-height: 1;
+}
+.info-tooltip-bubble {
+  position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  width: 240px; background: var(--navy); color: #fff;
+  font-size: 12px; font-weight: 500; text-transform: none; letter-spacing: normal;
+  line-height: 1.5; padding: 10px 12px; border-radius: 8px;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .15s ease;
+  z-index: 20;
+}
+.info-tooltip-bubble::after {
+  content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 5px solid transparent; border-top-color: var(--navy);
+}
+.info-tooltip:hover .info-tooltip-bubble,
+.info-tooltip:focus-visible .info-tooltip-bubble,
+.info-tooltip-icon:hover + .info-tooltip-bubble {
+  opacity: 1; visibility: visible;
+}
 .experience-remove { padding: 6px 12px; font-size: 12.5px; }
 
 .preview-col { position: sticky; top: 90px; }
