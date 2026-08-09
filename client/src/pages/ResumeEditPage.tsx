@@ -667,9 +667,8 @@ export function ResumeEditPage() {
                   <span className="info-tooltip" tabIndex={0}>
                     <span className="info-tooltip-icon" aria-hidden="true">?</span>
                     <span className="info-tooltip-bubble" role="tooltip">
-                      An ATS (Applicant Tracking System) is the software many employers use to scan and rank resumes
-                      before a person ever sees them. This check scores your resume's structure and compares it
-                      against a job description's keywords, so you can see how it's likely to hold up.
+                      This check scores your resume's structure and compares it against a job description's
+                      keywords, so you can see how it's likely to hold up.
                     </span>
                   </span>
                 </span>
