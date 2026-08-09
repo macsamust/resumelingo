@@ -28,10 +28,11 @@ export function DashboardPage() {
   // Total Views and Strength Score are perks of the paid tiers — Starter's
   // dashboard only gets the resume count and plan tiles.
   const showViewsAndStrengthTiles = isProfessional || isPremium;
-  // Shared Links, Career Articles, and Subscription Management are shared
-  // between the Professional and Premium dashboards — Resume Analytics, Job
-  // Search Resources, Resume Tips, and Success Stories stay Premium-only.
+  // Shared Links, Resume Analytics, Career Articles, and Subscription
+  // Management are shared between the Professional and Premium dashboards —
+  // Job Search Resources, Resume Tips, and Success Stories stay Premium-only.
   const showSharedLinks = isProfessional || isPremium;
+  const showResumeAnalytics = isProfessional || isPremium;
   const showCareerArticles = isProfessional || isPremium;
   const showSubscriptionManagement = isProfessional || isPremium;
 
@@ -206,8 +207,8 @@ export function DashboardPage() {
           <h2>{isProfessional ? "Unlock the Premium dashboard" : "Unlock more with Professional and Premium"}</h2>
           <p className="hero-note" style={{ marginBottom: 16 }}>
             {isProfessional
-              ? "Premium adds resume analytics, curated job search resources, resume tips, and subscriber success stories."
-              : "Professional adds a shared-links overview, career articles, and in-dashboard subscription management. Premium adds resume analytics, curated job search resources, resume tips, and subscriber success stories on top of that."}
+              ? "Premium adds curated job search resources, resume tips, and subscriber success stories."
+              : "Professional adds a shared-links overview, resume analytics, career articles, and in-dashboard subscription management. Premium adds curated job search resources, resume tips, and subscriber success stories on top of that."}
           </p>
           <Link to="/#pricing" className="btn btn-primary">
             See plans
@@ -215,7 +216,7 @@ export function DashboardPage() {
         </div>
       )}
 
-      {isPremium && (
+      {showResumeAnalytics && (
         <div className="builder-panel" style={{ marginTop: 36, marginBottom: 36 }}>
           <h2>Resume Analytics</h2>
           <p className="hero-note" style={{ marginBottom: 16 }}>
@@ -247,7 +248,7 @@ export function DashboardPage() {
       )}
 
       {showSharedLinks && (
-        <div className="builder-panel" style={{ marginTop: isPremium ? 0 : 36, marginBottom: 36 }}>
+        <div className="builder-panel" style={{ marginTop: showResumeAnalytics ? 0 : 36, marginBottom: 36 }}>
           <h2>Shared Links</h2>
           {summary.sharedLinks.length === 0 ? (
             <p className="hero-note">No shared links yet.</p>
