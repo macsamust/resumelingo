@@ -417,6 +417,11 @@ export function ResumeEditPage() {
 
           <div id="ats-check-section">
           <CollapsibleSection title="ATS Check" forceOpen={forceOpen}>
+            <p className="hero-note" style={{ marginBottom: 16 }}>
+              An ATS (Applicant Tracking System) is the software many employers use to scan and rank resumes before a
+              person ever sees them. This check scores your resume's structure and compares it against a job
+              description's keywords, so you can see how it's likely to hold up.
+            </p>
             {!isPremium ? (
               <>
                 <p className="hero-note" style={{ marginBottom: 0 }}>
