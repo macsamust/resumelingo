@@ -5,7 +5,10 @@ import { useAuth } from "../../context/AuthContext";
 const LINKS = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/resumes/new", label: "New Resume" },
-  { to: "/thank-you-letter", label: "Thank-You Letter" },
+  // Premium only — see ThankYouLetterPage.tsx/ThankYouLetterController.ts,
+  // which enforce the same restriction server-side, so this is just tidying
+  // the nav rather than the actual gate.
+  { to: "/thank-you-letter", label: "Thank-You Letter", minTier: "premium" as const },
   // Premium only — see CareerCoachPage.tsx/CareerCoachController.ts, which
   // enforce the same restriction server-side, so this is just tidying the
   // nav rather than the actual gate.
