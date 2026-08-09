@@ -170,6 +170,10 @@ export interface ResumeRecord {
   accessPassword: string | null;
   /** ISO timestamp. Once past, a password-protected link is deactivated even with the correct password (see Resume.isPasswordExpired). NULL means no expiration. */
   accessPasswordExpiresAt: string | null;
+  /** "Generate AI cover letter" checkbox — only meaningful (and only ever true) for a resume on a Premium-tier template; see ResumeService. */
+  coverLetterEnabled: boolean;
+  /** Rule-based generator output (see CoverLetterGenerator.ts) — empty string when coverLetterEnabled is false. */
+  generatedCoverLetter: string;
   answers: string; // JSON-serialized Record<string, string>
   experience: string; // JSON-serialized WorkExperienceEntry[]
   education: string; // JSON-serialized EducationEntry[]

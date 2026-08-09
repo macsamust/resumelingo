@@ -1,11 +1,18 @@
 import { ResumeRepository, UpdateResumeInput } from "../repositories/ResumeRepository";
 import { UserRepository } from "../repositories/UserRepository";
 import { IContentGenerator, RuleBasedContentGenerator } from "./ContentGenerator";
+import { ICoverLetterGenerator, pickTopExperience, RuleBasedCoverLetterGenerator } from "./CoverLetterGenerator";
 import { Resume } from "../models/Resume";
 import { User } from "../models/User";
-import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, WorkExperienceEntry } from "../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, TemplateCategory, WorkExperienceEntry } from "../types";
 import { CATEGORY_MIN_TIER, canUseTemplate, getTemplateByKey } from "../config/templates";
 import { getPlan } from "../config/subscriptionPlans";
+import { getProfessionByKey } from "../config/professions";
+
+/** Whether templateKey resolves to a Premium-category template — the gate for the "Generate AI cover letter" checkbox (see CreateResumeRequest/UpdateResumeInput's coverLetterEnabled). */
+function isPremiumTemplate(templateKey: string): boolean {
+  return getTemplateByKey(templateKey)?.category === TemplateCategory.Premium;
+}
 
 export class ResumeLimitError extends Error {}
 export class ResumeNotFoundError extends Error {}
@@ -53,6 +60,8 @@ export interface CreateResumeRequest {
   visibility?: LinkVisibility;
   accessPassword?: string | null;
   accessPasswordExpiresAt?: string | null;
+  /** "Generate AI cover letter" checkbox — silently coerced to false server-side when templateKey isn't a Premium-tier template (see isPremiumTemplate). */
+  coverLetterEnabled?: boolean;
   answers: Record<string, string>;
   experience?: WorkExperienceEntry[];
   education?: EducationEntry[];
@@ -64,7 +73,8 @@ export class ResumeService {
   constructor(
     private readonly resumes: ResumeRepository = new ResumeRepository(),
     private readonly users: UserRepository = new UserRepository(),
-    private readonly generator: IContentGenerator = new RuleBasedContentGenerator()
+    private readonly generator: IContentGenerator = new RuleBasedContentGenerator(),
+    private readonly coverLetterGenerator: ICoverLetterGenerator = new RuleBasedCoverLetterGenerator()
   ) {}
 
   async listForUser(userId: string): Promise<Resume[]> {
@@ -91,6 +101,21 @@ export class ResumeService {
 
     const fullName = input.fullName?.trim() || user.name;
     const generated = this.generator.generate(input.profession, input.answers, input.achievements ?? [], fullName, input.title);
+
+    // Silently coerced rather than throwing: the checkbox itself is only
+    // shown client-side for Premium-tier templates, but this keeps the
+    // server the actual source of truth rather than trusting the client.
+    const coverLetterEnabled = !!input.coverLetterEnabled && isPremiumTemplate(input.templateKey);
+    const generatedCoverLetter = coverLetterEnabled
+      ? this.coverLetterGenerator.generate({
+          fullName,
+          title: input.title,
+          professionLabel: getProfessionByKey(input.profession)?.label ?? input.profession,
+          summary: generated.summary,
+          topExperience: pickTopExperience(input.experience ?? []),
+        })
+      : "";
+
     const record = await this.resumes.create({
       userId: user.id,
       // Defaults to the account holder's name, but is editable per resume —
@@ -108,6 +133,8 @@ export class ResumeService {
       visibility: input.visibility ?? LinkVisibility.Public,
       accessPassword: input.accessPassword ?? null,
       accessPasswordExpiresAt: input.accessPasswordExpiresAt ?? null,
+      coverLetterEnabled,
+      generatedCoverLetter,
       answers: input.answers,
       experience: input.experience ?? [],
       education: input.education ?? [],
@@ -148,7 +175,53 @@ export class ResumeService {
       generatedBullets = generated.bullets;
     }
 
-    const updated = await this.resumes.update(resumeId, { ...input, generatedSummary, generatedBullets });
+    // Same "silently coerce, don't trust the client" gate as create(),
+    // evaluated against whichever templateKey ends up in effect this update.
+    const templateKeyFinal = input.templateKey ?? existing.templateKey;
+    const coverLetterEnabledRequested = input.coverLetterEnabled ?? existing.coverLetterEnabled;
+    const coverLetterEnabled = coverLetterEnabledRequested && isPremiumTemplate(templateKeyFinal);
+
+    let generatedCoverLetter = existing.generatedCoverLetter;
+    if (!coverLetterEnabled) {
+      // Cleared rather than left stale, so re-enabling later (or a template
+      // downgrade) never resurrects outdated content.
+      generatedCoverLetter = "";
+    } else {
+      const templateChanged = !!input.templateKey && input.templateKey !== existing.templateKey;
+      const coverLetterJustToggledOn = input.coverLetterEnabled !== undefined && !existing.coverLetterEnabled;
+      const experienceChanged = input.experience !== undefined;
+      const shouldRegenerate =
+        !existing.generatedCoverLetter ||
+        professionChanged ||
+        nameChanged ||
+        titleChanged ||
+        templateChanged ||
+        coverLetterJustToggledOn ||
+        experienceChanged ||
+        !!input.answers ||
+        !!input.achievements;
+      if (shouldRegenerate) {
+        const profession = input.profession ?? existing.profession;
+        const fullName = input.fullName ?? existing.fullName;
+        const title = input.title ?? existing.title;
+        const experience = input.experience ?? existing.experience;
+        generatedCoverLetter = this.coverLetterGenerator.generate({
+          fullName,
+          title,
+          professionLabel: getProfessionByKey(profession)?.label ?? profession,
+          summary: generatedSummary ?? existing.generatedSummary,
+          topExperience: pickTopExperience(experience),
+        });
+      }
+    }
+
+    const updated = await this.resumes.update(resumeId, {
+      ...input,
+      generatedSummary,
+      generatedBullets,
+      coverLetterEnabled,
+      generatedCoverLetter,
+    });
     return new Resume(updated!);
   }
 

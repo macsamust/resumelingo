@@ -15,6 +15,8 @@ export interface CreateResumeInput {
   visibility: LinkVisibility;
   accessPassword: string | null;
   accessPasswordExpiresAt?: string | null;
+  coverLetterEnabled?: boolean;
+  generatedCoverLetter?: string;
   answers: Record<string, string>;
   experience: WorkExperienceEntry[];
   education: EducationEntry[];
@@ -36,6 +38,8 @@ export interface UpdateResumeInput {
   visibility?: LinkVisibility;
   accessPassword?: string | null;
   accessPasswordExpiresAt?: string | null;
+  coverLetterEnabled?: boolean;
+  generatedCoverLetter?: string;
   answers?: Record<string, string>;
   experience?: WorkExperienceEntry[];
   education?: EducationEntry[];
@@ -78,6 +82,8 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       visibility: input.visibility,
       accessPassword: input.accessPassword,
       accessPasswordExpiresAt: input.accessPasswordExpiresAt ?? null,
+      coverLetterEnabled: input.coverLetterEnabled ?? false,
+      generatedCoverLetter: input.generatedCoverLetter ?? "",
       answers: JSON.stringify(input.answers),
       experience: JSON.stringify(input.experience),
       education: JSON.stringify(input.education),
@@ -111,6 +117,8 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       accessPassword: input.accessPassword !== undefined ? input.accessPassword : existing.accessPassword,
       accessPasswordExpiresAt:
         input.accessPasswordExpiresAt !== undefined ? input.accessPasswordExpiresAt : existing.accessPasswordExpiresAt,
+      coverLetterEnabled: input.coverLetterEnabled !== undefined ? input.coverLetterEnabled : existing.coverLetterEnabled,
+      generatedCoverLetter: input.generatedCoverLetter !== undefined ? input.generatedCoverLetter : existing.generatedCoverLetter,
       answers: input.answers ? JSON.stringify(input.answers) : existing.answers,
       experience: input.experience ? JSON.stringify(input.experience) : existing.experience,
       education: input.education ? JSON.stringify(input.education) : existing.education,

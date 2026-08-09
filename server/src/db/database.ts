@@ -64,6 +64,8 @@ export async function migrate(): Promise<void> {
       "visibility" TEXT NOT NULL DEFAULT 'public',
       "accessPassword" TEXT,
       "accessPasswordExpiresAt" TEXT,
+      "coverLetterEnabled" BOOLEAN NOT NULL DEFAULT false,
+      "generatedCoverLetter" TEXT NOT NULL DEFAULT '',
       "answers" TEXT NOT NULL DEFAULT '{}',
       "experience" TEXT NOT NULL DEFAULT '[]',
       "education" TEXT NOT NULL DEFAULT '[]',
@@ -117,6 +119,15 @@ export async function migrate(): Promise<void> {
     -- enforced at the column level since it's harmless to keep a leftover
     -- value around if someone switches visibility away and back.
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "accessPasswordExpiresAt" TEXT;
+
+    -- "Generate AI cover letter" checkbox (New Resume + Edit Resume) — only
+    -- offered for resumes on a Premium-tier template (see
+    -- ResumeService.create/update, which enforces that gate server-side
+    -- too, not just hides the checkbox client-side). generatedCoverLetter
+    -- is the rule-based generator's output (see CoverLetterGenerator.ts),
+    -- regenerated on the same triggers as generatedSummary/generatedBullets.
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "coverLetterEnabled" BOOLEAN NOT NULL DEFAULT false;
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "generatedCoverLetter" TEXT NOT NULL DEFAULT '';
 
     -- Admins are a deliberately separate table/role from users (see
     -- types/index.ts AdminRecord and services/AdminService.ts) rather than a

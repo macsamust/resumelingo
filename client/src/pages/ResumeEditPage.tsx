@@ -58,6 +58,7 @@ export function ResumeEditPage() {
   const [education, setEducation] = useState<EducationEntry[]>([]);
   const [awards, setAwards] = useState<AwardEntry[]>([]);
   const [achievements, setAchievements] = useState<AchievementEntry[]>([]);
+  const [coverLetterEnabled, setCoverLetterEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -67,6 +68,11 @@ export function ResumeEditPage() {
   // (Portrait, Designer, Monochrome, Showcase) — hidden for every other template.
   const PHOTO_FAMILIES = ["photo-banner-sidebar", "corner-photo-sidebar", "photo-sidebar-underline", "pill-grid-cards"];
   const usesPhoto = PHOTO_FAMILIES.includes(getTemplateStyle(templateKey || "modern").family);
+
+  // "Generate AI cover letter" is only offered for Premium-tier templates —
+  // enforced again server-side (see ResumeService), this just keeps the
+  // checkbox from appearing for a template that can't use it.
+  const selectedTemplateIsPremium = templates.find((t) => t.key === templateKey)?.category === "premium";
 
   useEffect(() => {
     if (!id) return;
@@ -83,6 +89,7 @@ export function ResumeEditPage() {
         setTemplateKey(r.templateKey);
         setVisibility(r.visibility);
         setAccessPasswordExpiresAt(r.accessPasswordExpiresAt ? isoToDatetimeLocal(r.accessPasswordExpiresAt) : "");
+        setCoverLetterEnabled(r.coverLetterEnabled);
         setAnswers(r.answers);
         setExperience(r.experience);
         setEducation(r.education);
@@ -97,6 +104,16 @@ export function ResumeEditPage() {
       .catch(() => setError("Couldn't load this resume."))
       .finally(() => setLoading(false));
   }, [id]);
+
+  // Switching to a non-Premium template hides the checkbox — also uncheck
+  // it, so it doesn't stay silently "on" in state for a template that can't
+  // use it. Skipped until templates/resume have both loaded, so this
+  // doesn't fire (and clobber the loaded value) before selectedTemplateIsPremium
+  // is meaningful.
+  useEffect(() => {
+    if (loading || templates.length === 0) return;
+    if (!selectedTemplateIsPremium) setCoverLetterEnabled(false);
+  }, [selectedTemplateIsPremium, loading, templates.length]);
 
   // Switching profession swaps the question set below, so previously answered
   // questions that no longer apply are cleared rather than silently kept.
@@ -125,6 +142,7 @@ export function ResumeEditPage() {
         accessPassword: visibility === "password" ? accessPassword : null,
         accessPasswordExpiresAt:
           visibility === "password" && accessPasswordExpiresAt ? new Date(accessPasswordExpiresAt).toISOString() : null,
+        coverLetterEnabled,
         answers,
         experience,
         education,
@@ -253,6 +271,16 @@ export function ResumeEditPage() {
                 );
               })}
             </div>
+            {selectedTemplateIsPremium && (
+              <label className="checkbox-field" style={{ marginTop: 12 }}>
+                <input
+                  type="checkbox"
+                  checked={coverLetterEnabled}
+                  onChange={(e) => setCoverLetterEnabled(e.target.checked)}
+                />
+                Generate an AI cover letter for this resume
+              </label>
+            )}
           </CollapsibleSection>
 
           <CollapsibleSection title="Sharing" forceOpen={forceOpen}>
@@ -323,6 +351,21 @@ export function ResumeEditPage() {
               />
             )}
           </CollapsibleSection>
+
+          {resume.coverLetterEnabled && (
+            <CollapsibleSection title="Cover Letter" forceOpen={forceOpen}>
+              {resume.generatedCoverLetter ? (
+                <p className="hero-note" style={{ whiteSpace: "pre-line", color: "var(--navy-light)" }}>
+                  {resume.generatedCoverLetter}
+                </p>
+              ) : (
+                <p className="hero-note">Your AI-generated cover letter will appear here after you save.</p>
+              )}
+              <p className="hero-note" style={{ marginTop: 12, marginBottom: 0 }}>
+                Regenerates automatically whenever your name, title, profession, work experience, or answers change.
+              </p>
+            </CollapsibleSection>
+          )}
 
           <button className="btn btn-primary btn-block" type="submit" disabled={saving}>
             {saving ? "Saving…" : "Save changes"}

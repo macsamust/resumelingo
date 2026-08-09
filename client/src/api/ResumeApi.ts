@@ -13,6 +13,7 @@ export interface CreateResumeInput {
   visibility?: LinkVisibility;
   accessPassword?: string | null;
   accessPasswordExpiresAt?: string | null;
+  coverLetterEnabled?: boolean;
   answers: Record<string, string>;
   experience?: WorkExperienceEntry[];
   education?: EducationEntry[];

@@ -22,6 +22,8 @@ export class Resume {
   readonly visibility: LinkVisibility;
   readonly accessPassword: string | null;
   readonly accessPasswordExpiresAt: string | null;
+  readonly coverLetterEnabled: boolean;
+  readonly generatedCoverLetter: string;
   readonly answers: Record<string, string>;
   readonly experience: WorkExperienceEntry[];
   readonly education: EducationEntry[];
@@ -48,6 +50,8 @@ export class Resume {
     this.visibility = record.visibility;
     this.accessPassword = record.accessPassword;
     this.accessPasswordExpiresAt = record.accessPasswordExpiresAt;
+    this.coverLetterEnabled = record.coverLetterEnabled;
+    this.generatedCoverLetter = record.generatedCoverLetter;
     this.answers = JSON.parse(record.answers || "{}");
     this.experience = JSON.parse(record.experience || "[]");
     this.education = JSON.parse(record.education || "[]");
@@ -112,6 +116,8 @@ export class Resume {
       visibility: this.visibility,
       hasPassword: !!this.accessPassword,
       accessPasswordExpiresAt: this.accessPasswordExpiresAt,
+      coverLetterEnabled: this.coverLetterEnabled,
+      generatedCoverLetter: this.generatedCoverLetter,
       answers: this.answers,
       experience: this.experience,
       education: this.education,

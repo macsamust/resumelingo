@@ -41,6 +41,7 @@ export function ResumeBuilderPage() {
   const [education, setEducation] = useState<EducationEntry[]>([]);
   const [awards, setAwards] = useState<AwardEntry[]>([]);
   const [achievements, setAchievements] = useState<AchievementEntry[]>([]);
+  const [coverLetterEnabled, setCoverLetterEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -48,6 +49,11 @@ export function ResumeBuilderPage() {
   // (Portrait, Designer, Monochrome, Showcase) — hidden for every other template.
   const PHOTO_FAMILIES = ["photo-banner-sidebar", "corner-photo-sidebar", "photo-sidebar-underline", "pill-grid-cards"];
   const usesPhoto = PHOTO_FAMILIES.includes(getTemplateStyle(templateKey).family);
+
+  // "Generate AI cover letter" is only offered for Premium-tier templates —
+  // enforced again server-side (see ResumeService), this just keeps the
+  // checkbox from appearing for a template that can't use it.
+  const selectedTemplateIsPremium = templates.find((t) => t.key === templateKey)?.category === "premium";
 
   useEffect(() => {
     catalogApi.listProfessions().then((res) => {
@@ -63,6 +69,12 @@ export function ResumeBuilderPage() {
     catalogApi.getProfessionQuestions(professionKey).then((res) => setProfessionDetail(res.profession));
   }, [professionKey]);
 
+  // Switching to a non-Premium template hides the checkbox — also uncheck
+  // it, so it doesn't stay silently "on" in state for a template that can't use it.
+  useEffect(() => {
+    if (!selectedTemplateIsPremium) setCoverLetterEnabled(false);
+  }, [selectedTemplateIsPremium]);
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -77,6 +89,7 @@ export function ResumeBuilderPage() {
         title: title || `${professionDetail?.label ?? "New"} Resume`,
         profession: professionKey,
         templateKey,
+        coverLetterEnabled,
         answers,
         experience,
         education,
@@ -170,6 +183,16 @@ export function ResumeBuilderPage() {
             })}
           </div>
           {usesPhoto && <PhotoUploader value={photoUrl} onChange={setPhotoUrl} />}
+          {selectedTemplateIsPremium && (
+            <label className="checkbox-field">
+              <input
+                type="checkbox"
+                checked={coverLetterEnabled}
+                onChange={(e) => setCoverLetterEnabled(e.target.checked)}
+              />
+              Generate an AI cover letter for this resume
+            </label>
+          )}
 
           <h2>3. Work experience</h2>
           <ExperienceEditor experience={experience} onChange={setExperience} />
