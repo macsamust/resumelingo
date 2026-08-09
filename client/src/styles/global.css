@@ -619,6 +619,8 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .admin-table input, .admin-table select { padding: 6px 8px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13.5px; width: 100%; }
 .admin-sort-input { width: 64px !important; }
 .admin-row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.admin-save-all-row { display: flex; justify-content: flex-end; margin: 0 0 12px; }
+.admin-save-all-row:last-child { margin: 12px 0 0; }
 .admin-danger { color: #b91c1c; border-color: #fecaca; }
 .admin-danger:hover { background: #fef2f2; border-color: #b91c1c; }
 .admin-status-tag { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; }

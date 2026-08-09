@@ -51,6 +51,7 @@ export function AdminTemplatesPage() {
   const [editing, setEditing] = useState<Record<string, { name: string; description: string; category: TemplateCategory; sortOrder: string }>>({});
   const [newTemplate, setNewTemplate] = useState(EMPTY_NEW);
   const [creating, setCreating] = useState(false);
+  const [savingAll, setSavingAll] = useState(false);
   const [sort, setSort] = useState<SortState<TemplateSortKey>>({ key: "sortOrder", direction: "asc" });
 
   const sortedTemplates = useMemo(() => [...templates].sort((a, b) => compareTemplates(a, b, sort)), [templates, sort]);
@@ -112,6 +113,31 @@ export function AdminTemplatesPage() {
       alert(err instanceof ApiError ? err.message : "Couldn't save template.");
     } finally {
       setBusyKey(null);
+    }
+  };
+
+  /** Saves every row's current draft (name/description/category/sortOrder) in one go, rather than one row at a time via the per-row Save button. */
+  const onSaveAll = async () => {
+    setSavingAll(true);
+    setError(null);
+    try {
+      await Promise.all(
+        templates.map((t) => {
+          const draft = editing[t.key];
+          if (!draft) return Promise.resolve();
+          return adminApi.updateTemplate(t.key, {
+            name: draft.name,
+            description: draft.description,
+            category: draft.category,
+            sortOrder: Number(draft.sortOrder) || 0,
+          });
+        })
+      );
+      load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't save all templates.");
+    } finally {
+      setSavingAll(false);
     }
   };
 
@@ -189,7 +215,13 @@ export function AdminTemplatesPage() {
       {loading ? (
         <div className="spinner-page">Loading templates…</div>
       ) : (
-        <table className="admin-table">
+        <>
+          <div className="admin-save-all-row">
+            <button className="btn btn-primary" type="button" disabled={savingAll || templates.length === 0} onClick={onSaveAll}>
+              {savingAll ? "Saving…" : "Save all"}
+            </button>
+          </div>
+          <table className="admin-table">
           <thead>
             <tr>
               <SortableHeader label="Key" sortKey="key" sort={sort} onSort={onSort} />
@@ -245,13 +277,13 @@ export function AdminTemplatesPage() {
                     </span>
                   </td>
                   <td className="admin-row-actions">
-                    <button className="btn btn-ghost btn-sm" disabled={busyKey === t.key} onClick={() => onSave(t.key)}>
+                    <button className="btn btn-ghost btn-sm" disabled={busyKey === t.key || savingAll} onClick={() => onSave(t.key)}>
                       Save
                     </button>
-                    <button className="btn btn-ghost btn-sm" disabled={busyKey === t.key} onClick={() => onToggleEnabled(t)}>
+                    <button className="btn btn-ghost btn-sm" disabled={busyKey === t.key || savingAll} onClick={() => onToggleEnabled(t)}>
                       {t.enabled ? "Disable" : "Enable"}
                     </button>
-                    <button className="btn btn-ghost btn-sm admin-danger" disabled={busyKey === t.key} onClick={() => onDelete(t)}>
+                    <button className="btn btn-ghost btn-sm admin-danger" disabled={busyKey === t.key || savingAll} onClick={() => onDelete(t)}>
                       Delete
                     </button>
                   </td>
@@ -259,7 +291,13 @@ export function AdminTemplatesPage() {
               );
             })}
           </tbody>
-        </table>
+          </table>
+          <div className="admin-save-all-row">
+            <button className="btn btn-primary" type="button" disabled={savingAll || templates.length === 0} onClick={onSaveAll}>
+              {savingAll ? "Saving…" : "Save all"}
+            </button>
+          </div>
+        </>
       )}
     </AdminShell>
   );
