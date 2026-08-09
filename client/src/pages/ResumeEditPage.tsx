@@ -452,6 +452,12 @@ export function ResumeEditPage() {
           </CollapsibleSection>
 
           {isPremium && (
+            <div className="builder-divider">
+              <span className="builder-divider-label">Premium Tools</span>
+            </div>
+          )}
+
+          {isPremium && (
             <div id="ats-check-section">
               <CollapsibleSection title="ATS Check" forceOpen={forceOpen}>
                 <p className="hero-note" style={{ marginBottom: 16 }}>
@@ -516,23 +522,6 @@ export function ResumeEditPage() {
                     )}
                   </div>
                 )}
-              </CollapsibleSection>
-            </div>
-          )}
-
-          {coverLetterEnabled && (
-            <div id="cover-letter-section">
-              <CollapsibleSection title="Cover Letter" forceOpen={forceOpen}>
-                {resume.coverLetterEnabled && resume.generatedCoverLetter ? (
-                  <p className="hero-note" style={{ whiteSpace: "pre-line", color: "var(--navy-light)" }}>
-                    {resume.generatedCoverLetter}
-                  </p>
-                ) : (
-                  <p className="hero-note">Your AI-generated cover letter will appear here after you save.</p>
-                )}
-                <p className="hero-note" style={{ marginTop: 12, marginBottom: 0 }}>
-                  Regenerates automatically whenever your name, title, profession, work experience, or answers change.
-                </p>
               </CollapsibleSection>
             </div>
           )}
@@ -617,6 +606,23 @@ export function ResumeEditPage() {
                 </>
               )}
             </CollapsibleSection>
+          )}
+
+          {coverLetterEnabled && (
+            <div id="cover-letter-section">
+              <CollapsibleSection title="Cover Letter" forceOpen={forceOpen}>
+                {resume.coverLetterEnabled && resume.generatedCoverLetter ? (
+                  <p className="hero-note" style={{ whiteSpace: "pre-line", color: "var(--navy-light)" }}>
+                    {resume.generatedCoverLetter}
+                  </p>
+                ) : (
+                  <p className="hero-note">Your AI-generated cover letter will appear here after you save.</p>
+                )}
+                <p className="hero-note" style={{ marginTop: 12, marginBottom: 0 }}>
+                  Regenerates automatically whenever your name, title, profession, work experience, or answers change.
+                </p>
+              </CollapsibleSection>
+            </div>
           )}
 
           <button className="btn btn-primary btn-block" type="submit" disabled={saving}>
