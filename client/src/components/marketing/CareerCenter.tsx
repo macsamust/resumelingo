@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
-const RESOURCES = [
+/** Exported so the Premium dashboard's "Job Search Resources" section can reuse this same list rather than duplicating it. */
+export const RESOURCES = [
   { tag: "Resume tips", title: "Profession-aligned advice", body: "Guidance on what to highlight, written for your specific field.", anchor: "resume-tips" },
   { tag: "Interview tips", title: "Interview prep", body: "What to expect and how to answer, by role and industry.", anchor: "interview-tips" },
   { tag: "Compensation", title: "Salary negotiation", body: "Practical guidance for negotiating pay and benefits with confidence.", anchor: "salary-negotiation" },

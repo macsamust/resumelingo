@@ -1,4 +1,5 @@
-const STORIES = [
+/** Exported so the Premium dashboard's "Success Stories" section can reuse this same list rather than duplicating it. */
+export const STORIES = [
   { initial: "C", quote: "I landed a Senior Engineer position within weeks of sharing my Websume link.", name: "Chris R.", role: "Senior Engineer" },
   { initial: "P", quote: "Switching templates and tightening my bullets with the AI generator helped me increase my salary by $28,000.", name: "Priya M.", role: "Program Manager" },
   { initial: "S", quote: "I used Websume to reposition my experience and successfully switched careers into tech.", name: "Sam T.", role: "Cloud Architect" },

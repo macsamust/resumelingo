@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useHashScroll } from "../hooks/useHashScroll";
 import { useAuth } from "../context/AuthContext";
 
-interface CareerTopic {
+export interface CareerTopic {
   id: string;
   tag: string;
   title: string;
@@ -19,7 +19,8 @@ interface CareerTopic {
  * one source — tips are synthesized across multiple reputable outlets so
  * this holds up even as any single article goes stale.
  */
-const TOPICS: CareerTopic[] = [
+/** Exported so the Premium dashboard's "Resume Tips" and "Career Articles" sections can pull teasers from this same content rather than duplicating it. */
+export const TOPICS: CareerTopic[] = [
   {
     id: "resume-tips",
     tag: "01",
