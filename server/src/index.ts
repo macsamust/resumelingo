@@ -9,6 +9,7 @@ import { createApp } from "./app";
 import { migrate } from "./db/database";
 import { TemplateRepository } from "./repositories/TemplateRepository";
 import { PlanRepository } from "./repositories/PlanRepository";
+import { RoleDescriptionRepository } from "./repositories/RoleDescriptionRepository";
 import { AdminService } from "./services/AdminService";
 
 const PORT = Number(process.env.PORT) || 4000;
@@ -21,6 +22,7 @@ async function start() {
   // and create the first admin account from env vars if none exists yet.
   await new TemplateRepository().refreshCache();
   await new PlanRepository().refreshCache();
+  await new RoleDescriptionRepository().refreshCache();
   await new AdminService().ensureBootstrapAdmin();
 
   const app = createApp();

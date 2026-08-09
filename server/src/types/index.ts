@@ -180,6 +180,28 @@ export interface SkillSuggestionRecord {
   updatedAt: string;
 }
 
+/**
+ * DB-backed row (see repositories/RoleDescriptionRepository.ts) feeding
+ * ContentGenerator's "Other" profession About-statement voice. Reads as
+ * "AI-generated" but is a curated, admin-editable list — same pattern as
+ * SkillSuggestionRecord above, except this one is also cached in-memory
+ * (see config/roleDescriptions.ts) since it's read on the hot resume-save
+ * path.
+ */
+export interface RoleDescriptionRecord {
+  id: string;
+  keywords: string[];
+  category: string;
+  descriptor: string;
+  traits: [string, string, string];
+  outcome: string;
+  keyTraits: [string, string, string];
+  isFallback: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ResumeRecord {
   id: string;
   userId: string;

@@ -253,6 +253,26 @@ export interface AdminSkillSuggestion extends SkillSuggestion {
   updatedAt: string;
 }
 
+/**
+ * Admin CRUD shape for a role description — the "Other" profession's About
+ * statement voice (see server's ContentGenerator.ts). Reads as
+ * "AI-generated" but is a curated, admin-editable list — see
+ * pages/admin/AdminRoleDescriptionsPage.tsx.
+ */
+export interface AdminRoleDescription {
+  id: string;
+  keywords: string[];
+  category: string;
+  descriptor: string;
+  traits: [string, string, string];
+  outcome: string;
+  keyTraits: [string, string, string];
+  isFallback: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** Premium-only — see server's DashboardController.buildResumeAnalytics(). Null for Starter/Professional. */
 export interface ResumeAnalytics {
   strengthDistribution: { strong: number; moderate: number; needsWork: number };

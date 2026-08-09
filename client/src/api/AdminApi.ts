@@ -1,5 +1,5 @@
 import { ApiClient } from "./ApiClient";
-import { AdminAuthUser, AdminPlan, AdminSkillSuggestion, AdminTemplate, AdminUserSummary, Resume, TemplateCategory } from "../types";
+import { AdminAuthUser, AdminPlan, AdminRoleDescription, AdminSkillSuggestion, AdminTemplate, AdminUserSummary, Resume, TemplateCategory } from "../types";
 
 export interface AdminAuthResponse {
   admin: AdminAuthUser;
@@ -82,5 +82,42 @@ export class AdminApi extends ApiClient {
 
   deleteSkillSuggestion(id: string) {
     return this.del<{ success: true }>(`/admin/skill-suggestions/${id}`);
+  }
+
+  listRoleDescriptions() {
+    return this.get<{ roleDescriptions: AdminRoleDescription[] }>("/admin/role-descriptions");
+  }
+
+  createRoleDescription(input: {
+    keywords: string[];
+    category: string;
+    descriptor: string;
+    traits: [string, string, string];
+    outcome: string;
+    keyTraits: [string, string, string];
+    isFallback?: boolean;
+    sortOrder?: number;
+  }) {
+    return this.post<{ roleDescription: AdminRoleDescription }>("/admin/role-descriptions", input);
+  }
+
+  updateRoleDescription(
+    id: string,
+    input: Partial<{
+      keywords: string[];
+      category: string;
+      descriptor: string;
+      traits: [string, string, string];
+      outcome: string;
+      keyTraits: [string, string, string];
+      isFallback: boolean;
+      sortOrder: number;
+    }>
+  ) {
+    return this.put<{ roleDescription: AdminRoleDescription }>(`/admin/role-descriptions/${id}`, input);
+  }
+
+  deleteRoleDescription(id: string) {
+    return this.del<{ success: true }>(`/admin/role-descriptions/${id}`);
   }
 }

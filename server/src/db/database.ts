@@ -280,6 +280,32 @@ export async function migrate(): Promise<void> {
       UNIQUE ("professionKey", "label", "category")
     );
     CREATE INDEX IF NOT EXISTS skill_suggestions_profession_idx ON skill_suggestions ("professionKey");
+
+    -- Role descriptions (the "Other" profession's About-statement voice —
+    -- see ContentGenerator.ts's buildOtherSummary) move from a static
+    -- config array to a DB-backed table here, same reasoning as templates
+    -- and skill_suggestions above. UNLIKE skill_suggestions, this DOES use
+    -- an in-memory cache (see config/roleDescriptions.ts) because
+    -- findRoleDescription() is called synchronously on every resume save
+    -- (ContentGenerator.generate, invoked from ResumeService.update) — the
+    -- whole point of not calling a live AI model here is to keep that path
+    -- instant, so it can't become an async DB round-trip per save.
+    -- "isFallback" marks the single generic row used when no keyword
+    -- matches (traits/keyTraits are JSON-serialized 3-element arrays).
+    CREATE TABLE IF NOT EXISTS role_descriptions (
+      "id" TEXT PRIMARY KEY,
+      "keywords" TEXT NOT NULL DEFAULT '[]',
+      "category" TEXT NOT NULL,
+      "descriptor" TEXT NOT NULL,
+      "traits" TEXT NOT NULL DEFAULT '[]',
+      "outcome" TEXT NOT NULL,
+      "keyTraits" TEXT NOT NULL DEFAULT '[]',
+      "isFallback" BOOLEAN NOT NULL DEFAULT false,
+      "sortOrder" INTEGER NOT NULL DEFAULT 0,
+      "createdAt" TEXT NOT NULL,
+      "updatedAt" TEXT NOT NULL,
+      UNIQUE ("category")
+    );
   `);
 
   await seedCatalogDefaults();
@@ -305,6 +331,7 @@ async function seedCatalogDefaults(): Promise<void> {
   const { DEFAULT_TEMPLATES } = await import("../config/templates");
   const { DEFAULT_PLANS } = await import("../config/subscriptionPlans");
   const { DEFAULT_SKILL_SUGGESTIONS } = await import("../config/skillSuggestions");
+  const { DEFAULT_ROLE_DESCRIPTIONS } = await import("../config/roleDescriptions");
   const now = new Date().toISOString();
 
   for (let i = 0; i < DEFAULT_TEMPLATES.length; i++) {
@@ -345,6 +372,28 @@ async function seedCatalogDefaults(): Promise<void> {
        VALUES ($1, $2, $3, $4, $5, $6, $6)
        ON CONFLICT ("professionKey", "label", "category") DO NOTHING`,
       [nanoid(12), s.professionKey, s.label, s.category, sortOrder, now]
+    );
+  }
+
+  for (let i = 0; i < DEFAULT_ROLE_DESCRIPTIONS.length; i++) {
+    const r = DEFAULT_ROLE_DESCRIPTIONS[i];
+    await pool.query(
+      `INSERT INTO role_descriptions
+         ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "sortOrder", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10)
+       ON CONFLICT ("category") DO NOTHING`,
+      [
+        nanoid(12),
+        JSON.stringify(r.keywords),
+        r.category,
+        r.descriptor,
+        JSON.stringify(r.traits),
+        r.outcome,
+        JSON.stringify(r.keyTraits),
+        r.isFallback ?? false,
+        i,
+        now,
+      ]
     );
   }
 }

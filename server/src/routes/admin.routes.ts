@@ -4,6 +4,7 @@ import { AdminUserController } from "../controllers/AdminUserController";
 import { AdminPlanController } from "../controllers/AdminPlanController";
 import { AdminTemplateController } from "../controllers/AdminTemplateController";
 import { AdminSkillSuggestionController } from "../controllers/AdminSkillSuggestionController";
+import { AdminRoleDescriptionController } from "../controllers/AdminRoleDescriptionController";
 import { asyncHandler } from "../controllers/asyncHandler";
 import { requireAdminAuth } from "../middleware/adminAuthMiddleware";
 
@@ -36,5 +37,11 @@ router.get("/skill-suggestions", requireAdminAuth, asyncHandler(skillSuggestionC
 router.post("/skill-suggestions", requireAdminAuth, asyncHandler(skillSuggestionController.create));
 router.put("/skill-suggestions/:id", requireAdminAuth, asyncHandler(skillSuggestionController.update));
 router.delete("/skill-suggestions/:id", requireAdminAuth, asyncHandler(skillSuggestionController.remove));
+
+const roleDescriptionController = new AdminRoleDescriptionController();
+router.get("/role-descriptions", requireAdminAuth, asyncHandler(roleDescriptionController.list));
+router.post("/role-descriptions", requireAdminAuth, asyncHandler(roleDescriptionController.create));
+router.put("/role-descriptions/:id", requireAdminAuth, asyncHandler(roleDescriptionController.update));
+router.delete("/role-descriptions/:id", requireAdminAuth, asyncHandler(roleDescriptionController.remove));
 
 export default router;

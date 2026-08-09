@@ -19,6 +19,7 @@ import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
 import { AdminPlansPage } from "./pages/admin/AdminPlansPage";
 import { AdminTemplatesPage } from "./pages/admin/AdminTemplatesPage";
 import { AdminSkillSuggestionsPage } from "./pages/admin/AdminSkillSuggestionsPage";
+import { AdminRoleDescriptionsPage } from "./pages/admin/AdminRoleDescriptionsPage";
 
 export default function App() {
   const location = useLocation();
@@ -112,6 +113,14 @@ export default function App() {
           element={
             <AdminProtectedRoute>
               <AdminSkillSuggestionsPage />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/role-descriptions"
+          element={
+            <AdminProtectedRoute>
+              <AdminRoleDescriptionsPage />
             </AdminProtectedRoute>
           }
         />
