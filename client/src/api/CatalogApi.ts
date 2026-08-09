@@ -1,5 +1,5 @@
 import { ApiClient } from "./ApiClient";
-import { DashboardSummary, ProfessionDefinition, ProfessionSummary, PublicResume, SubscriptionPlan, TemplateDefinition } from "../types";
+import { DashboardSummary, ProfessionDefinition, ProfessionSummary, PublicResume, SkillSuggestion, SubscriptionPlan, TemplateDefinition } from "../types";
 
 /** Read-mostly catalog + dashboard + public endpoints, grouped since none need dedicated state. */
 export class CatalogApi extends ApiClient {
@@ -17,6 +17,11 @@ export class CatalogApi extends ApiClient {
 
   listPlans() {
     return this.get<{ plans: SubscriptionPlan[] }>("/subscriptions/plans");
+  }
+
+  /** "Skills & Tools" picker suggestions (Edit Resume, Portrait template) for one profession — see SkillsAndToolsEditor.tsx. */
+  listSkillSuggestions(professionKey: string) {
+    return this.get<{ skillSuggestions: SkillSuggestion[] }>(`/skill-suggestions?profession=${encodeURIComponent(professionKey)}`);
   }
 
   /** Downgrade only — paid tiers go through checkout() below. */

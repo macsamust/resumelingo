@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { nanoid } from "nanoid";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
@@ -257,6 +258,28 @@ export async function migrate(): Promise<void> {
       "checkedAt" TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS resume_keyword_checks_resume_idx ON resume_keyword_checks ("resumeId");
+
+    -- "Skills & Tools" suggestion keywords (Edit Resume, Portrait template's
+    -- picker — see components/builder/SkillsAndToolsEditor.tsx) move from a
+    -- static per-profession config array to a DB-backed table here, same
+    -- reasoning as "templates" above: this reads as "AI-generated" to the
+    -- person using it, but is actually a curated, deterministic list, so an
+    -- admin should be able to edit it without a code deploy. See
+    -- config/skillSuggestions.ts for the seed data and
+    -- repositories/SkillSuggestionRepository.ts for admin CRUD. No
+    -- in-memory cache (unlike templates) since this is only read for a
+    -- picker UI, not a hot synchronous path.
+    CREATE TABLE IF NOT EXISTS skill_suggestions (
+      "id" TEXT PRIMARY KEY,
+      "professionKey" TEXT NOT NULL,
+      "label" TEXT NOT NULL,
+      "category" TEXT NOT NULL DEFAULT 'skill',
+      "sortOrder" INTEGER NOT NULL DEFAULT 0,
+      "createdAt" TEXT NOT NULL,
+      "updatedAt" TEXT NOT NULL,
+      UNIQUE ("professionKey", "label", "category")
+    );
+    CREATE INDEX IF NOT EXISTS skill_suggestions_profession_idx ON skill_suggestions ("professionKey");
   `);
 
   await seedCatalogDefaults();
@@ -281,6 +304,7 @@ export async function migrate(): Promise<void> {
 async function seedCatalogDefaults(): Promise<void> {
   const { DEFAULT_TEMPLATES } = await import("../config/templates");
   const { DEFAULT_PLANS } = await import("../config/subscriptionPlans");
+  const { DEFAULT_SKILL_SUGGESTIONS } = await import("../config/skillSuggestions");
   const now = new Date().toISOString();
 
   for (let i = 0; i < DEFAULT_TEMPLATES.length; i++) {
@@ -303,6 +327,24 @@ async function seedCatalogDefaults(): Promise<void> {
        VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT ("tier") DO NOTHING`,
       [p.tier, p.name, p.priceMonthly, p.resumeLimit, JSON.stringify(p.features), now]
+    );
+  }
+
+  // sortOrder is each row's position within its profession+category group
+  // (reset per group), matching the display order the static seed list used
+  // to have. ON CONFLICT on the (professionKey, label, category) uniqueness
+  // constraint makes this idempotent across boots without needing a
+  // deterministic id.
+  const groupIndex: Record<string, number> = {};
+  for (const s of DEFAULT_SKILL_SUGGESTIONS) {
+    const groupKey = `${s.professionKey}::${s.category}`;
+    const sortOrder = groupIndex[groupKey] ?? 0;
+    groupIndex[groupKey] = sortOrder + 1;
+    await pool.query(
+      `INSERT INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, $5, $6, $6)
+       ON CONFLICT ("professionKey", "label", "category") DO NOTHING`,
+      [nanoid(12), s.professionKey, s.label, s.category, sortOrder, now]
     );
   }
 }

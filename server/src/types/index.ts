@@ -164,6 +164,22 @@ export interface SkillOrTool {
   category: "skill" | "tool";
 }
 
+/**
+ * DB-backed suggestion row (see repositories/SkillSuggestionRepository.ts)
+ * feeding the Skills & Tools picker's keyword chips for a given profession.
+ * Reads as "AI-generated" to the person using it, but is a curated,
+ * admin-editable list — same "reads like AI but isn't" pattern as templates.
+ */
+export interface SkillSuggestionRecord {
+  id: string;
+  professionKey: string;
+  label: string;
+  category: "skill" | "tool";
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ResumeRecord {
   id: string;
   userId: string;

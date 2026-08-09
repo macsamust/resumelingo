@@ -3,6 +3,7 @@ import { AdminAuthController } from "../controllers/AdminAuthController";
 import { AdminUserController } from "../controllers/AdminUserController";
 import { AdminPlanController } from "../controllers/AdminPlanController";
 import { AdminTemplateController } from "../controllers/AdminTemplateController";
+import { AdminSkillSuggestionController } from "../controllers/AdminSkillSuggestionController";
 import { asyncHandler } from "../controllers/asyncHandler";
 import { requireAdminAuth } from "../middleware/adminAuthMiddleware";
 
@@ -29,5 +30,11 @@ router.get("/templates", requireAdminAuth, asyncHandler(templateController.list)
 router.post("/templates", requireAdminAuth, asyncHandler(templateController.create));
 router.put("/templates/:key", requireAdminAuth, asyncHandler(templateController.update));
 router.delete("/templates/:key", requireAdminAuth, asyncHandler(templateController.remove));
+
+const skillSuggestionController = new AdminSkillSuggestionController();
+router.get("/skill-suggestions", requireAdminAuth, asyncHandler(skillSuggestionController.list));
+router.post("/skill-suggestions", requireAdminAuth, asyncHandler(skillSuggestionController.create));
+router.put("/skill-suggestions/:id", requireAdminAuth, asyncHandler(skillSuggestionController.update));
+router.delete("/skill-suggestions/:id", requireAdminAuth, asyncHandler(skillSuggestionController.remove));
 
 export default router;

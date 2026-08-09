@@ -6,6 +6,7 @@ const LINKS = [
   { to: "/admin/users", label: "Users" },
   { to: "/admin/plans", label: "Plans & Pricing" },
   { to: "/admin/templates", label: "Templates" },
+  { to: "/admin/skill-suggestions", label: "Skills & Tools" },
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {

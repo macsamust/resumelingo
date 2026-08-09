@@ -18,6 +18,7 @@ import { AdminLoginPage } from "./pages/admin/AdminLoginPage";
 import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
 import { AdminPlansPage } from "./pages/admin/AdminPlansPage";
 import { AdminTemplatesPage } from "./pages/admin/AdminTemplatesPage";
+import { AdminSkillSuggestionsPage } from "./pages/admin/AdminSkillSuggestionsPage";
 
 export default function App() {
   const location = useLocation();
@@ -103,6 +104,14 @@ export default function App() {
           element={
             <AdminProtectedRoute>
               <AdminTemplatesPage />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/skill-suggestions"
+          element={
+            <AdminProtectedRoute>
+              <AdminSkillSuggestionsPage />
             </AdminProtectedRoute>
           }
         />

@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
+import { catalogApi } from "../../api";
 import { SkillOrTool } from "../../types";
-import { getSkillsAndToolsSuggestions } from "../../config/skillsAndTools";
 
 interface Props {
   professionKey: string;
@@ -11,14 +12,43 @@ interface Props {
 /**
  * Click-to-select "Skills & Tools" picker (Edit Resume, Portrait template
  * only — see ResumeEditPage.tsx and ResumePreview.tsx's photo-banner-sidebar
- * family). Suggestions come from config/skillsAndTools.ts, keyed by the
- * selected profession; clicking a suggestion toggles it in/out of `value`.
- * Selections persist across a profession change (only the suggestion list
- * updates) — same "don't destroy user data on an unrelated change" stance
- * as the rest of the builder.
+ * family). Suggestions are fetched from /skill-suggestions (see
+ * server's SkillSuggestionController.ts), keyed by the selected profession —
+ * an admin-editable list rather than a static config file, so an admin can
+ * add/remove keywords from the admin console without a code deploy.
+ * Clicking a suggestion toggles it in/out of `value`. Selections persist
+ * across a profession change (only the suggestion list updates) — same
+ * "don't destroy user data on an unrelated change" stance as the rest of
+ * the builder.
  */
 export function SkillsAndToolsEditor({ professionKey, professionLabel, value, onChange }: Props) {
-  const suggestions = getSkillsAndToolsSuggestions(professionKey);
+  const [skills, setSkills] = useState<string[]>([]);
+  const [tools, setTools] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    catalogApi
+      .listSkillSuggestions(professionKey)
+      .then((res) => {
+        if (cancelled) return;
+        setSkills(res.skillSuggestions.filter((s) => s.category === "skill").map((s) => s.label));
+        setTools(res.skillSuggestions.filter((s) => s.category === "tool").map((s) => s.label));
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSkills([]);
+          setTools([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [professionKey]);
 
   const isSelected = (label: string, category: SkillOrTool["category"]) =>
     value.some((v) => v.label === label && v.category === category);
@@ -59,8 +89,14 @@ export function SkillsAndToolsEditor({ professionKey, professionLabel, value, on
       <p className="hero-note" style={{ marginBottom: 16 }}>
         Suggested for <strong>{professionLabel}</strong> — click a keyword to add it.
       </p>
-      {renderGroup("Skills", "skill", suggestions.skills)}
-      {renderGroup("Tools", "tool", suggestions.tools)}
+      {loading ? (
+        <p className="hero-note">Loading suggestions…</p>
+      ) : (
+        <>
+          {renderGroup("Skills", "skill", skills)}
+          {renderGroup("Tools", "tool", tools)}
+        </>
+      )}
 
       {value.length > 0 && (
         <div className="skill-picker-group" style={{ marginBottom: 0 }}>

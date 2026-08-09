@@ -82,8 +82,9 @@ export interface AchievementEntry {
  * One entry in the "Skills & Tools" section (Portrait template only — see
  * ResumePreview.tsx's photo-banner-sidebar family, and
  * components/builder/SkillsAndToolsEditor.tsx). Picked by clicking a
- * suggested keyword (config/skillsAndTools.ts) rather than typed freehand,
- * so "category" is always known up front.
+ * suggested keyword (admin-editable — see api/CatalogApi.ts's
+ * listSkillSuggestions) rather than typed freehand, so "category" is always
+ * known up front.
  */
 export interface SkillOrTool {
   label: string;
@@ -232,6 +233,21 @@ export interface AdminTemplate {
   description: string;
   category: TemplateCategory;
   enabled: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Public (read-only) shape of a "Skills & Tools" suggestion keyword — see api/CatalogApi.ts's listSkillSuggestions. */
+export interface SkillSuggestion {
+  id: string;
+  professionKey: string;
+  label: string;
+  category: "skill" | "tool";
+}
+
+/** Admin CRUD shape — same fields plus sortOrder/timestamps — see api/AdminApi.ts. */
+export interface AdminSkillSuggestion extends SkillSuggestion {
   sortOrder: number;
   createdAt: string;
   updatedAt: string;

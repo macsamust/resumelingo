@@ -1,5 +1,5 @@
 import { ApiClient } from "./ApiClient";
-import { AdminAuthUser, AdminPlan, AdminTemplate, AdminUserSummary, Resume, TemplateCategory } from "../types";
+import { AdminAuthUser, AdminPlan, AdminSkillSuggestion, AdminTemplate, AdminUserSummary, Resume, TemplateCategory } from "../types";
 
 export interface AdminAuthResponse {
   admin: AdminAuthUser;
@@ -66,5 +66,21 @@ export class AdminApi extends ApiClient {
 
   deleteTemplate(key: string) {
     return this.del<{ success: true }>(`/admin/templates/${key}`);
+  }
+
+  listSkillSuggestions() {
+    return this.get<{ skillSuggestions: AdminSkillSuggestion[] }>("/admin/skill-suggestions");
+  }
+
+  createSkillSuggestion(input: { professionKey: string; label: string; category: "skill" | "tool"; sortOrder?: number }) {
+    return this.post<{ skillSuggestion: AdminSkillSuggestion }>("/admin/skill-suggestions", input);
+  }
+
+  updateSkillSuggestion(id: string, input: { professionKey?: string; label?: string; category?: "skill" | "tool"; sortOrder?: number }) {
+    return this.put<{ skillSuggestion: AdminSkillSuggestion }>(`/admin/skill-suggestions/${id}`, input);
+  }
+
+  deleteSkillSuggestion(id: string) {
+    return this.del<{ success: true }>(`/admin/skill-suggestions/${id}`);
   }
 }

@@ -1,25 +1,23 @@
 /**
- * Curated "Skills & Tools" suggestions per profession (Edit Resume,
- * Portrait template only — see components/builder/SkillsAndToolsEditor.tsx
- * and ResumePreview.tsx's photo-banner-sidebar family). Reads as
- * AI-suggested keywords to the person using it, but is deliberately a
- * static, deterministic lookup table rather than a live model call — same
- * "reads like AI but isn't" approach as ContentGenerator.ts,
- * CoverLetterGenerator.ts, and CareerCoachGenerator.ts elsewhere in this
- * app (no network AI dependency anywhere, by design, for cost and latency).
+ * Seed data only, used once (see db/database.ts's seedCatalogDefaults) to
+ * populate the "skill_suggestions" table the first time an install boots.
+ * Once seeded, the DB table — not this array — is the source of truth;
+ * admins edit suggestions via /api/admin/skill-suggestions (see
+ * repositories/SkillSuggestionRepository.ts), and the rest of the app reads
+ * them via /api/skill-suggestions (see controllers/SkillSuggestionController.ts).
  *
- * Keyed by the same profession key strings the rest of the app already
- * uses (config/professions.ts on the server, ProfessionSummary.key on the
- * client). "skills" are softer/transferable capabilities; "tools" are
- * named systems, software, or certifications — the same split the picker
- * UI and the Portrait sidebar both group by.
+ * This is the same list the client used to import directly from
+ * client/src/config/skillsAndTools.ts before this became admin-editable —
+ * kept here as the one-time seed so upgrading an existing install doesn't
+ * lose any of the original suggestions.
  */
-export interface SkillsAndToolsSuggestions {
-  skills: string[];
-  tools: string[];
+export interface SkillSuggestionSeed {
+  professionKey: string;
+  label: string;
+  category: "skill" | "tool";
 }
 
-export const SKILLS_AND_TOOLS_SUGGESTIONS: Record<string, SkillsAndToolsSuggestions> = {
+const SEED_LISTS: Record<string, { skills: string[]; tools: string[] }> = {
   "software-engineer": {
     skills: [
       "Problem solving",
@@ -141,7 +139,8 @@ export const SKILLS_AND_TOOLS_SUGGESTIONS: Record<string, SkillsAndToolsSuggesti
   },
 };
 
-/** Falls back to the "other" catch-all list for a profession key with no dedicated suggestions yet. */
-export function getSkillsAndToolsSuggestions(professionKey: string): SkillsAndToolsSuggestions {
-  return SKILLS_AND_TOOLS_SUGGESTIONS[professionKey] ?? SKILLS_AND_TOOLS_SUGGESTIONS.other;
-}
+/** Flattened seed rows, each carrying its own sortOrder (position within its profession+category group) — built once at module load. */
+export const DEFAULT_SKILL_SUGGESTIONS: SkillSuggestionSeed[] = Object.entries(SEED_LISTS).flatMap(([professionKey, lists]) => [
+  ...lists.skills.map((label) => ({ professionKey, label, category: "skill" as const })),
+  ...lists.tools.map((label) => ({ professionKey, label, category: "tool" as const })),
+]);
