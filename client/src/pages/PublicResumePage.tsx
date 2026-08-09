@@ -77,8 +77,9 @@ function resumeToPlainText(resume: PublicResume): string {
     lines.push("");
   }
 
-  // Portrait-only in the on-screen preview, but included here regardless of
-  // template — a text export shouldn't silently drop data the resume has.
+  // Premium-templates-only in the on-screen preview (see ResumePreview.tsx's
+  // showSkillsAndTools), but included here regardless of template — a text
+  // export shouldn't silently drop data the resume has.
   const skills = resume.skillsAndTools?.filter((s) => s.category === "skill") ?? [];
   const tools = resume.skillsAndTools?.filter((s) => s.category === "tool") ?? [];
   if (skills.length > 0 || tools.length > 0) {
@@ -302,6 +303,7 @@ export function PublicResumePage() {
         achievements={resume.achievements}
         combineExperienceFormat={resume.combineExperienceFormat}
         skillsAndTools={resume.skillsAndTools}
+        showSkillsAndTools={resume.template?.category === "premium"}
       />
       {(() => {
         const answerEntries = Object.entries(resume.answers).filter(([, v]) => v && v.trim());

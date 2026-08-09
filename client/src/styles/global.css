@@ -686,6 +686,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .tpl-pill-card .tpl-section-label::before { display: none; }
 .tpl-pill-contact .tpl-section-label { background: #f5c344; color: #1a1a1a; }
 .tpl-pill-skills .tpl-section-label { background: #4c8bf5; color: #fff; }
+.tpl-pill-skills-tools .tpl-section-label { background: #8a5cf6; color: #fff; }
 .tpl-pill-experience .tpl-section-label { background: #f0508a; color: #fff; }
 .tpl-pill-education .tpl-section-label { background: #38b6e6; color: #1a1a1a; }
 .tpl-pill-awards .tpl-section-label { background: #4caf6b; color: #fff; }

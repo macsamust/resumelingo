@@ -102,17 +102,18 @@ export function ResumeEditPage() {
   const PHOTO_FAMILIES = ["photo-banner-sidebar", "corner-photo-sidebar", "photo-sidebar-underline", "pill-grid-cards"];
   const usesPhoto = PHOTO_FAMILIES.includes(getTemplateStyle(templateKey || "modern").family);
 
-  // "Skills & Tools" is Portrait-only — that's the only template using this
-  // layout family (see config/templateStyles.ts) and the only one with a
-  // sidebar spot for it (see ResumePreview.tsx's photo-banner-sidebar
-  // branch). Selections are kept even if the template is switched away from
-  // Portrait and back, same as every other builder field.
-  const usesPortraitSkills = getTemplateStyle(templateKey || "modern").family === "photo-banner-sidebar";
-
   // "Generate AI cover letter" is only offered for Premium-tier templates —
   // enforced again server-side (see ResumeService), this just keeps the
   // checkbox from appearing for a template that can't use it.
   const selectedTemplateIsPremium = templates.find((t) => t.key === templateKey)?.category === "premium";
+
+  // "Skills & Tools" is available on every Premium-tier template (Portrait,
+  // Designer, Monochrome, Showcase, Federal, Creative, Academic,
+  // Government Contractor, Military Transition — see ResumePreview.tsx,
+  // which renders it in the spot that fits each template's own layout).
+  // Selections are kept even if the template is switched to a non-Premium
+  // one and back, same as every other builder field.
+  const usesSkillsAndTools = selectedTemplateIsPremium;
 
   useEffect(() => {
     if (!id) return;
@@ -413,11 +414,11 @@ export function ResumeEditPage() {
             )}
           </CollapsibleSection>
 
-          {usesPortraitSkills && (
+          {usesSkillsAndTools && (
             <CollapsibleSection title="Skills & Tools" forceOpen={forceOpen}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
-                Only shown on the Portrait template's sidebar. Click a suggested keyword to add it — skills and
-                tools are grouped separately in both the picker and the resume itself.
+                Available on every Premium template. Click a suggested keyword to add it — skills and tools are
+                grouped separately in both the picker and the resume itself.
               </p>
               <SkillsAndToolsEditor
                 professionKey={professionKey}
@@ -752,6 +753,7 @@ export function ResumeEditPage() {
             achievements={achievements}
             combineExperienceFormat={combineExperienceFormat}
             skillsAndTools={skillsAndTools}
+            showSkillsAndTools={usesSkillsAndTools}
           />
         </div>
       </form>

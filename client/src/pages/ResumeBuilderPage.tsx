@@ -243,6 +243,7 @@ export function ResumeBuilderPage() {
           experience={experience}
           education={education}
           awards={awards}
+          showSkillsAndTools={selectedTemplateIsPremium}
         />
       </form>
     </AppShell>

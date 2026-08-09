@@ -23,8 +23,10 @@ interface Props {
   achievements?: AchievementEntry[];
   /** "Combine Work Experience with Achievements" toggle — see types/index.ts Resume.combineExperienceFormat. */
   combineExperienceFormat?: boolean;
-  /** "Skills & Tools" section — only rendered by the Portrait template (photo-banner-sidebar family). Ignored by every other template. */
+  /** "Skills & Tools" section content — see showSkillsAndTools below for whether it actually renders. */
   skillsAndTools?: SkillOrTool[];
+  /** Whether to render the Skills & Tools section — true for every Premium-tier template, computed by the caller (which knows the template's category; this component only knows its layout family). False/omitted hides it even if skillsAndTools has entries, so a resume that's since moved off a Premium template doesn't keep showing a Premium-only section. */
+  showSkillsAndTools?: boolean;
 }
 
 /**
@@ -109,6 +111,7 @@ export function ResumePreview({
   achievements = [],
   combineExperienceFormat = false,
   skillsAndTools = [],
+  showSkillsAndTools = false,
 }: Props) {
   const style = getTemplateStyle(templateKey ?? "modern");
   const cssVars = {
@@ -277,14 +280,15 @@ export function ResumePreview({
     </div>
   );
 
-  // Portrait-only (photo-banner-sidebar family) — see Props.skillsAndTools.
-  // Skills and tools render as two separately-labeled groups with a rule
-  // between them (the "delineator") rather than one merged list, so the two
-  // kinds of keyword stay visually distinct even though they're picked from
-  // the same section in the builder.
+  // Premium-only (see Props.showSkillsAndTools) — rendered in whichever spot
+  // fits each layout family (see each family's branch below). Skills and
+  // tools render as two separately-labeled groups with a rule between them
+  // (the "delineator") rather than one merged list, so the two kinds of
+  // keyword stay visually distinct even though they're picked from the same
+  // section in the builder.
   const skills = skillsAndTools.filter((s) => s.category === "skill");
   const tools = skillsAndTools.filter((s) => s.category === "tool");
-  const skillsAndToolsBlock = skillsAndTools.length > 0 && (
+  const skillsAndToolsBlock = showSkillsAndTools && skillsAndTools.length > 0 && (
     <div className="tpl-section">
       <span className="tpl-section-label">Skills &amp; Tools</span>
       {skills.length > 0 && (
@@ -344,6 +348,7 @@ export function ResumePreview({
     const mainContent = (
       <div className="tpl-main">
         {orderedSections}
+        {skillsAndToolsBlock}
         {awardsBlock}
       </div>
     );
@@ -513,6 +518,7 @@ export function ResumePreview({
               {summaryBlock}
               {contactList}
               {bulletsBlock}
+              {skillsAndToolsBlock}
             </div>
             <div className="tpl-corner-main">
               {experienceBlock}
@@ -568,6 +574,7 @@ export function ResumePreview({
               {sidebarContact}
               {educationBlock}
               {bulletsBlock}
+              {skillsAndToolsBlock}
             </div>
             <div className="tpl-mono-main">
               {summaryBlock}
@@ -595,6 +602,9 @@ export function ResumePreview({
       </div>
     );
     const skillsCard = bulletsBlock && <div className="tpl-pill-card tpl-pill-skills">{bulletsBlock}</div>;
+    const skillsAndToolsCard = skillsAndToolsBlock && (
+      <div className="tpl-pill-card tpl-pill-skills-tools">{skillsAndToolsBlock}</div>
+    );
     const experienceCard = experienceBlock && <div className="tpl-pill-card tpl-pill-experience">{experienceBlock}</div>;
     const educationCard = educationBlock && <div className="tpl-pill-card tpl-pill-education">{educationBlock}</div>;
     const awardsCard = awardsBlock && <div className="tpl-pill-card tpl-pill-awards">{awardsBlock}</div>;
@@ -629,6 +639,7 @@ export function ResumePreview({
             <div className="tpl-pill-col">
               {contactCard}
               {skillsCard}
+              {skillsAndToolsCard}
               {awardsCard}
             </div>
             <div className="tpl-pill-col">
@@ -657,6 +668,7 @@ export function ResumePreview({
         </div>
         {style.badge && <span className="tpl-badge">{style.badge}</span>}
         {orderedSections}
+        {skillsAndToolsBlock}
         {awardsBlock}
       </div>
     </div>
