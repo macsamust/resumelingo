@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 const LINKS = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/resumes/new", label: "New Resume" },
+  { to: "/thank-you-letter", label: "Thank-You Letter" },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {

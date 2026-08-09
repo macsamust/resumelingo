@@ -11,6 +11,7 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { ResumeBuilderPage } from "./pages/ResumeBuilderPage";
 import { ResumeEditPage } from "./pages/ResumeEditPage";
 import { PublicResumePage } from "./pages/PublicResumePage";
+import { ThankYouLetterPage } from "./pages/ThankYouLetterPage";
 import { AdminProtectedRoute } from "./components/layout/AdminProtectedRoute";
 import { AdminLoginPage } from "./pages/admin/AdminLoginPage";
 import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
@@ -60,6 +61,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ResumeEditPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/thank-you-letter"
+          element={
+            <ProtectedRoute>
+              <ThankYouLetterPage />
             </ProtectedRoute>
           }
         />
