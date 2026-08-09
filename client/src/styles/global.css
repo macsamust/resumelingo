@@ -574,11 +574,6 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   .public-resume-tabs { display: none !important; }
   .public-resume-tab-panel-hidden { display: block; }
   .public-resume-cover-letter { page-break-before: always; }
-  /* "Print cover letter / Save as PDF" (see printOnly() in PublicResumePage.tsx)
-     toggles this class on <body> so only the cover letter panel prints,
-     without a leading blank page from the page-break-before above. */
-  body.print-cover-letter-only .public-resume-tab-panel:not(.public-resume-cover-letter) { display: none !important; }
-  body.print-cover-letter-only .public-resume-cover-letter { page-break-before: auto; }
   .public-resume-page { max-width: none; margin: 0; padding: 0; }
   .public-resume-page .preview-panel { box-shadow: none; border: none; }
   .public-resume-card { box-shadow: none; border: none; page-break-inside: avoid; }

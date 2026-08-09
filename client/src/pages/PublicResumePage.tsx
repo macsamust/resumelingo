@@ -90,26 +90,6 @@ function resumeToPlainText(resume: PublicResume): string {
   return lines.join("\n").trim() + "\n";
 }
 
-/**
- * Prints just the cover letter panel, leaving the main "Print / Save as
- * PDF" button's "print everything" behavior untouched. Toggles a class on
- * <body> directly (rather than React state) so it's guaranteed to be in
- * the DOM synchronously before window.print() reads it — a setState here
- * wouldn't necessarily have re-rendered/painted yet by the time print()
- * runs, since React batches updates outside this handler's own tick.
- * Cleaned up via the 'afterprint' event, which fires once the print
- * dialog/preview closes (both on successful print and on cancel).
- */
-function printOnly(className: string): void {
-  document.body.classList.add(className);
-  const cleanup = () => {
-    document.body.classList.remove(className);
-    window.removeEventListener("afterprint", cleanup);
-  };
-  window.addEventListener("afterprint", cleanup);
-  window.print();
-}
-
 function downloadTextFile(filename: string, contents: string): void {
   const blob = new Blob([contents], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -220,20 +200,15 @@ export function PublicResumePage() {
     <div className="public-resume-page">
       <div className="public-resume-actions">
         <button className="btn btn-primary" onClick={() => window.print()} type="button">
-          {hasCoverLetter ? "Print both / Save as PDF" : "Print / Save as PDF"}
+          Print / Save as PDF
         </button>
         <button className="btn btn-ghost" onClick={onDownloadText} type="button">
           Download as text (.txt)
         </button>
         {hasCoverLetter && (
-          <>
-            <button className="btn btn-ghost" onClick={() => printOnly("print-cover-letter-only")} type="button">
-              Print cover letter / Save as PDF
-            </button>
-            <button className="btn btn-ghost" onClick={onDownloadCoverLetterText} type="button">
-              Download cover letter (.txt)
-            </button>
-          </>
+          <button className="btn btn-ghost" onClick={onDownloadCoverLetterText} type="button">
+            Download cover letter (.txt)
+          </button>
         )}
       </div>
 
