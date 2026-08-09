@@ -25,6 +25,9 @@ export function DashboardPage() {
 
   const isPremium = user?.subscriptionTier === "premium";
   const isProfessional = user?.subscriptionTier === "professional";
+  // Total Views and Strength Score are perks of the paid tiers — Starter's
+  // dashboard only gets the resume count and plan tiles.
+  const showViewsAndStrengthTiles = isProfessional || isPremium;
   // Shared Links, Career Articles, and Subscription Management are shared
   // between the Professional and Premium dashboards — Resume Analytics, Job
   // Search Resources, Resume Tips, and Success Stories stay Premium-only.
@@ -124,14 +127,18 @@ export function DashboardPage() {
           <div className="dash-icon">📁</div>
           <p>{summary.myResumes.length} Resume{summary.myResumes.length === 1 ? "" : "s"}</p>
         </div>
-        <div className="dash-tile">
-          <div className="dash-icon">👀</div>
-          <p>{summary.resumeViews} Total Views</p>
-        </div>
-        <div className="dash-tile">
-          <div className="dash-icon">💪</div>
-          <p>{summary.profileStrengthScore}% Strength Score</p>
-        </div>
+        {showViewsAndStrengthTiles && (
+          <div className="dash-tile">
+            <div className="dash-icon">👀</div>
+            <p>{summary.resumeViews} Total Views</p>
+          </div>
+        )}
+        {showViewsAndStrengthTiles && (
+          <div className="dash-tile">
+            <div className="dash-icon">💪</div>
+            <p>{summary.profileStrengthScore}% Strength Score</p>
+          </div>
+        )}
         <div className="dash-tile">
           <div className="dash-icon">⚙️</div>
           <p>
