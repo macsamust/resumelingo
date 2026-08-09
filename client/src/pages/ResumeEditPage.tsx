@@ -667,7 +667,7 @@ export function ResumeEditPage() {
             </div>
           )}
 
-          <button className="btn btn-primary btn-block" type="submit" disabled={saving}>
+          <button className="btn btn-primary btn-block" type="submit" disabled={saving} style={{ marginTop: 28 }}>
             {saving ? "Saving…" : "Save changes"}
           </button>
         </div>
