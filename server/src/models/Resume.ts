@@ -110,15 +110,20 @@ export class Resume {
   /**
    * The candidate summary card shown at the top of the public resume link
    * when Recruiter Mode is on — null when it's off, so callers can just
-   * check truthiness instead of re-checking recruiterModeEnabled. "skills"
-   * isn't a stored field; it's derived from the resume's own generated
-   * bullets and answers (see utils/keywords.ts) so it can't drift out of
-   * sync with the actual resume content.
+   * check truthiness instead of re-checking recruiterModeEnabled.
+   * "skills" prefers the user's own picks from the "Skills & Tools" section
+   * (Edit Resume, Portrait template — see skillsAndTools) when there are
+   * any, since those are deliberate, curated choices rather than a guess.
+   * Falls back to the old extracted-keyword behavior (see utils/keywords.ts)
+   * for a resume that hasn't used that section — Recruiter Mode itself
+   * isn't Portrait-only, so most resumes using it still won't have
+   * skillsAndTools set.
    */
   get recruiterCard() {
     if (!this.recruiterModeEnabled) return null;
+    const pickedSkills = this.skillsAndTools.filter((s) => s.category === "skill").map((s) => s.label);
     const skillsText = [...this.generatedBullets, ...Object.values(this.answers)].join(" ");
-    const skills = extractKeywords(skillsText, 8);
+    const skills = pickedSkills.length > 0 ? pickedSkills : extractKeywords(skillsText, 8);
     return {
       location: this.recruiterLocation,
       availability: this.recruiterAvailability,
