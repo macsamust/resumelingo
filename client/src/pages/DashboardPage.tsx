@@ -28,11 +28,10 @@ export function DashboardPage() {
   // Total Views and Strength Score are perks of the paid tiers — Starter's
   // dashboard only gets the resume count and plan tiles.
   const showViewsAndStrengthTiles = isProfessional || isPremium;
-  // Shared Links, Resume Analytics, Career Articles, and Subscription
-  // Management are shared between the Professional and Premium dashboards —
-  // Job Search Resources, Resume Tips, and Success Stories stay Premium-only.
+  // Shared Links, Career Articles, and Subscription Management are shared
+  // between the Professional and Premium dashboards — Job Search Resources,
+  // Resume Tips, and Success Stories stay Premium-only.
   const showSharedLinks = isProfessional || isPremium;
-  const showResumeAnalytics = isProfessional || isPremium;
   const showCareerArticles = isProfessional || isPremium;
   const showSubscriptionManagement = isProfessional || isPremium;
 
@@ -89,10 +88,13 @@ export function DashboardPage() {
     );
   }
 
-  // Lightweight "Resume Analytics" — a per-resume breakdown of the existing
-  // view counter, no new backend tracking involved.
-  const resumesByViews = [...summary.myResumes].sort((a, b) => b.viewCount - a.viewCount);
-  const mostViewed = resumesByViews.find((r) => r.viewCount > 0) ?? null;
+  // "Most-viewed resume" callout — the one bit of Resume Analytics that
+  // wasn't just duplicating what's already on each card (title/views/
+  // strength all show there too, see strengthTagClass below).
+  const mostViewed = summary.myResumes.reduce<DashboardSummary["myResumes"][number] | null>(
+    (best, r) => (r.viewCount > 0 && (!best || r.viewCount > best.viewCount) ? r : best),
+    null
+  );
 
   // Color-coded threshold for the "My Resumes" card strength tag — matches
   // the green/amber/red bands already used for ATS Check pass/fail styling.
@@ -156,6 +158,13 @@ export function DashboardPage() {
           </p>
         </div>
       </div>
+
+      {showViewsAndStrengthTiles && mostViewed && (
+        <p className="hero-note" style={{ marginBottom: 20 }}>
+          "{mostViewed.title}" is your most-viewed resume, with {mostViewed.viewCount} view
+          {mostViewed.viewCount === 1 ? "" : "s"}.
+        </p>
+      )}
 
       {!showSubscriptionManagement && (
         <div style={{ display: "flex", gap: 12, marginBottom: 36 }}>
@@ -221,7 +230,7 @@ export function DashboardPage() {
           <p className="hero-note" style={{ marginBottom: 16 }}>
             {isProfessional
               ? "Premium adds curated job search resources, resume tips, and subscriber success stories."
-              : "Professional adds a shared-links overview, resume analytics, career articles, and in-dashboard subscription management. Premium adds curated job search resources, resume tips, and subscriber success stories on top of that."}
+              : "Professional adds view/strength tracking, a shared-links overview, career articles, and in-dashboard subscription management. Premium adds curated job search resources, resume tips, and subscriber success stories on top of that."}
           </p>
           <Link to="/#pricing" className="btn btn-primary">
             See plans
@@ -229,39 +238,8 @@ export function DashboardPage() {
         </div>
       )}
 
-      {showResumeAnalytics && (
-        <div className="builder-panel" style={{ marginTop: 36, marginBottom: 36 }}>
-          <h2>Resume Analytics</h2>
-          <p className="hero-note" style={{ marginBottom: 16 }}>
-            {mostViewed
-              ? `"${mostViewed.title}" is your most-viewed resume, with ${mostViewed.viewCount} view${mostViewed.viewCount === 1 ? "" : "s"}.`
-              : "No views yet — share a resume link to start seeing views here."}
-          </p>
-          {summary.myResumes.length > 0 && (
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Resume</th>
-                  <th>Views</th>
-                  <th>Strength</th>
-                </tr>
-              </thead>
-              <tbody>
-                {resumesByViews.map((r) => (
-                  <tr key={r.id}>
-                    <td>{r.title}</td>
-                    <td>{r.viewCount}</td>
-                    <td>{r.strengthScore}%</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
-
       {showSharedLinks && (
-        <div className="builder-panel" style={{ marginTop: showResumeAnalytics ? 0 : 36, marginBottom: 36 }}>
+        <div className="builder-panel" style={{ marginTop: 36, marginBottom: 36 }}>
           <h2>Shared Links</h2>
           {summary.sharedLinks.length === 0 ? (
             <p className="hero-note">No shared links yet.</p>
