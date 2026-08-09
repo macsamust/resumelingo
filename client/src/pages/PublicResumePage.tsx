@@ -102,8 +102,6 @@ function downloadTextFile(filename: string, contents: string): void {
   URL.revokeObjectURL(url);
 }
 
-type ResumeTab = "resume" | "cover-letter";
-
 export function PublicResumePage() {
   const { slug } = useParams<{ slug: string }>();
   const [resume, setResume] = useState<PublicResume | null>(null);
@@ -111,7 +109,6 @@ export function PublicResumePage() {
   const [passwordRequired, setPasswordRequired] = useState(false);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<ResumeTab>("resume");
 
   const load = (pwd?: string) => {
     if (!slug) return;
@@ -185,15 +182,9 @@ export function PublicResumePage() {
     );
   }
 
-  const baseFilename = (resume.title || "resume").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "resume";
-  const hasCoverLetter = !!resume.generatedCoverLetter?.trim();
-
   const onDownloadText = () => {
-    downloadTextFile(`${baseFilename}.txt`, resumeToPlainText(resume));
-  };
-
-  const onDownloadCoverLetterText = () => {
-    downloadTextFile(`${baseFilename}-cover-letter.txt`, resume.generatedCoverLetter.trim() + "\n");
+    const filename = `${(resume.title || "resume").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "resume"}.txt`;
+    downloadTextFile(filename, resumeToPlainText(resume));
   };
 
   return (
@@ -205,91 +196,39 @@ export function PublicResumePage() {
         <button className="btn btn-ghost" onClick={onDownloadText} type="button">
           Download as text (.txt)
         </button>
-        {hasCoverLetter && (
-          <button className="btn btn-ghost" onClick={onDownloadCoverLetterText} type="button">
-            Download cover letter (.txt)
-          </button>
-        )}
       </div>
-
-      {hasCoverLetter && (
-        <div className="public-resume-tabs" role="tablist">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "resume"}
-            className={`public-resume-tab ${activeTab === "resume" ? "active" : ""}`}
-            onClick={() => setActiveTab("resume")}
-          >
-            Resume
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === "cover-letter"}
-            className={`public-resume-tab ${activeTab === "cover-letter" ? "active" : ""}`}
-            onClick={() => setActiveTab("cover-letter")}
-          >
-            Cover Letter
-          </button>
-        </div>
-      )}
-
-      {/*
-        Both panels stay in the DOM regardless of the active tab — hidden on
-        screen via CSS, but forced visible in print (see global.css's
-        @media print rules) so "Print / Save as PDF" always offers both
-        documents. The browser's own print dialog lets the viewer choose to
-        print all pages or just a range, which covers "print both, or just
-        one, if so choose" without needing separate print buttons per tab.
-      */}
-      <div className={`public-resume-tab-panel ${activeTab === "resume" ? "" : "public-resume-tab-panel-hidden"}`}>
-        <ResumePreview
-          fullName={resume.fullName}
-          contactEmail={resume.contactEmail}
-          contactPhone={resume.contactPhone}
-          contactLinkedIn={resume.contactLinkedIn}
-          photoUrl={resume.photoUrl}
-          title={resume.title}
-          professionLabel={resume.professionLabel}
-          templateKey={resume.templateKey}
-          summary={resume.generatedSummary}
-          bullets={resume.generatedBullets}
-          experience={resume.experience}
-          education={resume.education}
-          awards={resume.awards}
-        />
-        {(() => {
-          const answerEntries = Object.entries(resume.answers).filter(([, v]) => v && v.trim());
-          if (answerEntries.length === 0) return null;
-          return (
-            <div className="public-resume-card public-resume-details">
-              <h2 className="public-resume-details-heading">Additional Details</h2>
-              <div className="answer-grid">
-                {answerEntries.map(([key, value]) => (
-                  <div key={key}>
-                    <div className="answer-key">{formatAnswerLabel(key)}</div>
-                    <div className="answer-value">{value}</div>
-                  </div>
-                ))}
-              </div>
+      <ResumePreview
+        fullName={resume.fullName}
+        contactEmail={resume.contactEmail}
+        contactPhone={resume.contactPhone}
+        contactLinkedIn={resume.contactLinkedIn}
+        photoUrl={resume.photoUrl}
+        title={resume.title}
+        professionLabel={resume.professionLabel}
+        templateKey={resume.templateKey}
+        summary={resume.generatedSummary}
+        bullets={resume.generatedBullets}
+        experience={resume.experience}
+        education={resume.education}
+        awards={resume.awards}
+      />
+      {(() => {
+        const answerEntries = Object.entries(resume.answers).filter(([, v]) => v && v.trim());
+        if (answerEntries.length === 0) return null;
+        return (
+          <div className="public-resume-card public-resume-details">
+            <h2 className="public-resume-details-heading">Additional Details</h2>
+            <div className="answer-grid">
+              {answerEntries.map(([key, value]) => (
+                <div key={key}>
+                  <div className="answer-key">{formatAnswerLabel(key)}</div>
+                  <div className="answer-value">{value}</div>
+                </div>
+              ))}
             </div>
-          );
-        })()}
-      </div>
-
-      {hasCoverLetter && (
-        <div
-          className={`public-resume-tab-panel public-resume-cover-letter ${
-            activeTab === "cover-letter" ? "" : "public-resume-tab-panel-hidden"
-          }`}
-        >
-          <div className="public-resume-card">
-            <h2 className="public-resume-details-heading">Cover Letter</h2>
-            <p className="public-resume-cover-letter-text">{resume.generatedCoverLetter}</p>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
