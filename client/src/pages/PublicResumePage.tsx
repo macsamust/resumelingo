@@ -3,7 +3,6 @@ import { Link, useParams } from "react-router-dom";
 import { ApiError, catalogApi } from "../api";
 import { PublicResume } from "../types";
 import { formatMonth, ResumePreview, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
-import { ResumeQRCode } from "../components/builder/ResumeQRCode";
 
 /**
  * Turns a camelCase profession-question key (e.g. "cloudPlatforms",
@@ -188,25 +187,15 @@ export function PublicResumePage() {
     downloadTextFile(filename, resumeToPlainText(resume));
   };
 
-  // Absolute URL, not just the slug, so the QR code resolves correctly when
-  // scanned from a printed page (no browser address bar to fall back on).
-  const resumeUrl = `${window.location.origin}/r/${resume.slug}`;
-
   return (
     <div className="public-resume-page">
-      <div className="public-resume-toolbar">
-        <div className="public-resume-actions">
-          <button className="btn btn-primary" onClick={() => window.print()} type="button">
-            Print / Save as PDF
-          </button>
-          <button className="btn btn-ghost" onClick={onDownloadText} type="button">
-            Download as text (.txt)
-          </button>
-        </div>
-        <div className="public-resume-qr-wrap">
-          <ResumeQRCode value={resumeUrl} />
-          <span className="public-resume-qr-label">Scan to view online</span>
-        </div>
+      <div className="public-resume-actions">
+        <button className="btn btn-primary" onClick={() => window.print()} type="button">
+          Print / Save as PDF
+        </button>
+        <button className="btn btn-ghost" onClick={onDownloadText} type="button">
+          Download as text (.txt)
+        </button>
       </div>
       <ResumePreview
         fullName={resume.fullName}
