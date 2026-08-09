@@ -6,15 +6,15 @@ const LINKS = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/resumes/new", label: "New Resume" },
   { to: "/thank-you-letter", label: "Thank-You Letter" },
-  // Professional and Premium only — see CareerCoachPage.tsx/CareerCoachController.ts,
-  // which enforce the same restriction server-side, so this is just tidying
-  // the nav rather than the actual gate.
-  { to: "/career-coach", label: "Career Coach", minTier: "professional" as const },
+  // Premium only — see CareerCoachPage.tsx/CareerCoachController.ts, which
+  // enforce the same restriction server-side, so this is just tidying the
+  // nav rather than the actual gate.
+  { to: "/career-coach", label: "Career Coach", minTier: "premium" as const },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const links = LINKS.filter((link) => !link.minTier || user?.subscriptionTier !== "starter");
+  const links = LINKS.filter((link) => !link.minTier || user?.subscriptionTier === link.minTier);
 
   return (
     <div className="app-shell">
