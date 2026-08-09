@@ -1,6 +1,7 @@
 import { Link, NavLink } from "react-router-dom";
 import { ReactNode } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { TIER_LABEL } from "../../utils/templateAccess";
 
 const LINKS = [
   { to: "/dashboard", label: "Dashboard" },
@@ -29,7 +30,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="app-sidebar-user-avatar" aria-hidden="true">
               {user.name.charAt(0).toUpperCase()}
             </span>
-            <span className="app-sidebar-user-name">{user.name}</span>
+            <span className="app-sidebar-user-info">
+              <span className="app-sidebar-user-name">{user.name}</span>
+              <span className="app-sidebar-user-tier">{TIER_LABEL[user.subscriptionTier]}</span>
+            </span>
           </Link>
         )}
         <div className="app-sidebar-links">

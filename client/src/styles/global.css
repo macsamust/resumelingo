@@ -200,7 +200,12 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   width: 28px; height: 28px; border-radius: 50%; background: #eef2ff; color: var(--indigo); flex-shrink: 0;
   display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 700;
 }
-.app-sidebar-user-name { font-size: 13px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-sidebar-user-info { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.app-sidebar-user-name { font-size: 13px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+/* Subscription tier next to the name — deliberately quieter than the name
+   itself (smaller, lighter, regular weight) so it reads as ambient context
+   rather than competing for attention. */
+.app-sidebar-user-tier { font-size: 11px; font-weight: 500; color: #94a3b8; white-space: nowrap; flex-shrink: 0; }
 .app-content { flex: 1; padding: 32px 36px; max-width: 1040px; }
 .app-page-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
 .app-page-head h1 { font-size: 26px; }
