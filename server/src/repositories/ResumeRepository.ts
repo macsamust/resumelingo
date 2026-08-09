@@ -17,6 +17,7 @@ export interface CreateResumeInput {
   accessPasswordExpiresAt?: string | null;
   coverLetterEnabled?: boolean;
   generatedCoverLetter?: string;
+  combineExperienceFormat?: boolean;
   answers: Record<string, string>;
   experience: WorkExperienceEntry[];
   education: EducationEntry[];
@@ -47,6 +48,7 @@ export interface UpdateResumeInput {
   recruiterWorkAuthorization?: string;
   recruiterExpectedSalary?: string;
   recruiterRemotePreference?: string;
+  combineExperienceFormat?: boolean;
   answers?: Record<string, string>;
   experience?: WorkExperienceEntry[];
   education?: EducationEntry[];
@@ -100,6 +102,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       recruiterWorkAuthorization: "",
       recruiterExpectedSalary: "",
       recruiterRemotePreference: "",
+      combineExperienceFormat: input.combineExperienceFormat ?? false,
       answers: JSON.stringify(input.answers),
       experience: JSON.stringify(input.experience),
       education: JSON.stringify(input.education),
@@ -145,6 +148,8 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
         input.recruiterExpectedSalary !== undefined ? input.recruiterExpectedSalary : existing.recruiterExpectedSalary,
       recruiterRemotePreference:
         input.recruiterRemotePreference !== undefined ? input.recruiterRemotePreference : existing.recruiterRemotePreference,
+      combineExperienceFormat:
+        input.combineExperienceFormat !== undefined ? input.combineExperienceFormat : existing.combineExperienceFormat,
       answers: input.answers ? JSON.stringify(input.answers) : existing.answers,
       experience: input.experience ? JSON.stringify(input.experience) : existing.experience,
       education: input.education ? JSON.stringify(input.education) : existing.education,

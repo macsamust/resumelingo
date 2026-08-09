@@ -36,6 +36,8 @@ export interface TemplateDefinition {
 
 /** One job in a resume's work history. Dates are "YYYY-MM" (from an <input type="month">). */
 export interface WorkExperienceEntry {
+  /** Stable client-generated id (see utils/id.ts) — lets an achievement link to a specific job via AchievementEntry.experienceId. Older entries created before this field existed may not have one yet; ResumeEditPage backfills those on load. */
+  id?: string;
   company: string;
   title: string;
   city?: string;
@@ -72,6 +74,8 @@ export interface AchievementEntry {
   challenge: string;
   action: string;
   result: string;
+  /** Links this achievement to a specific WorkExperienceEntry.id — used by the "combine Work Experience with Achievements" format to nest this achievement's bullet under that job. Null/undefined = not linked to any job. */
+  experienceId?: string | null;
 }
 
 export interface SubscriptionPlan {
@@ -125,6 +129,8 @@ export interface Resume {
   recruiterExpectedSalary: string;
   /** One of config/recruiterOptions.ts's REMOTE_PREFERENCE_OPTIONS values, or "" if unset. */
   recruiterRemotePreference: string;
+  /** "Combine Work Experience with Achievements" checkbox — when true, each achievement's bullet is nested under the job it's linked to (see AchievementEntry.experienceId) instead of listed in a separate flat Highlights section. */
+  combineExperienceFormat: boolean;
   answers: Record<string, string>;
   experience: WorkExperienceEntry[];
   education: EducationEntry[];
@@ -160,10 +166,13 @@ export interface PublicResume {
   template?: TemplateDefinition;
   /** Null when the resume owner hasn't turned Recruiter Mode on. */
   recruiterCard: RecruiterCard | null;
+  /** See Resume.combineExperienceFormat — same toggle, exposed here so the public link renders the same layout the owner chose. */
+  combineExperienceFormat: boolean;
   answers: Record<string, string>;
   experience: WorkExperienceEntry[];
   education: EducationEntry[];
   awards: AwardEntry[];
+  achievements: AchievementEntry[];
   generatedSummary: string;
   generatedBullets: string[];
   slug: string;

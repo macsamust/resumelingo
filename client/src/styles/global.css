@@ -366,6 +366,14 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .tpl-experience-company { font-size: 13.5px; color: var(--tpl-accent); font-weight: 600; margin-top: 2px; }
 .tpl-award-description { font-size: 13px; color: var(--navy-light); margin-top: 4px; line-height: 1.6; }
 
+/* Nested bullets under a job in "Combine Work Experience with Achievements"
+   mode (see ResumePreview.tsx's experienceBlock) — same marker/color
+   language as .preview-bullets, just indented to read as belonging to the
+   job above it rather than a separate flat section. */
+.tpl-experience-bullets { list-style: none; margin-top: 6px; padding-left: 4px; }
+.tpl-experience-bullets li { font-size: 13.5px; color: var(--navy-light); padding-left: 16px; position: relative; margin-bottom: 6px; line-height: 1.5; }
+.tpl-experience-bullets li::before { content: "•"; position: absolute; left: 0; color: var(--tpl-accent); font-weight: 800; }
+
 /* executive-banner: full-bleed colored header banner, single column below.
    bannerAlign "center" (executive, military-transition) centers the banner
    text; the default (corporate, consulting) stays left-aligned. */

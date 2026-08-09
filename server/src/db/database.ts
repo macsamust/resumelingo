@@ -73,6 +73,7 @@ export async function migrate(): Promise<void> {
       "recruiterWorkAuthorization" TEXT NOT NULL DEFAULT '',
       "recruiterExpectedSalary" TEXT NOT NULL DEFAULT '',
       "recruiterRemotePreference" TEXT NOT NULL DEFAULT '',
+      "combineExperienceFormat" BOOLEAN NOT NULL DEFAULT false,
       "answers" TEXT NOT NULL DEFAULT '{}',
       "experience" TEXT NOT NULL DEFAULT '[]',
       "education" TEXT NOT NULL DEFAULT '[]',
@@ -148,6 +149,12 @@ export async function migrate(): Promise<void> {
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "recruiterWorkAuthorization" TEXT NOT NULL DEFAULT '';
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "recruiterExpectedSalary" TEXT NOT NULL DEFAULT '';
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "recruiterRemotePreference" TEXT NOT NULL DEFAULT '';
+
+    -- "Combine Work Experience with Achievements" checkbox (Edit Resume, all
+    -- tiers) — when true, each achievement's bullet is nested under the job
+    -- it's linked to (see AchievementEntry.experienceId) instead of listed
+    -- separately in a flat Highlights section. See Resume.combineExperienceFormat.
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "combineExperienceFormat" BOOLEAN NOT NULL DEFAULT false;
 
     -- Admins are a deliberately separate table/role from users (see
     -- types/index.ts AdminRecord and services/AdminService.ts) rather than a

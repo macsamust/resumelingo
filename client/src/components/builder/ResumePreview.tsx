@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { getTemplateStyle } from "../../config/templateStyles";
-import { AwardEntry, EducationEntry, WorkExperienceEntry } from "../../types";
+import { AchievementEntry, AwardEntry, EducationEntry, WorkExperienceEntry } from "../../types";
+import { groupAchievementsByExperience } from "../../utils/starBullet";
 
 interface Props {
   fullName?: string;
@@ -18,6 +19,10 @@ interface Props {
   experience?: WorkExperienceEntry[];
   education?: EducationEntry[];
   awards?: AwardEntry[];
+  /** Raw achievement entries — only used when combineExperienceFormat is true, to compute each job's nested bullets live (see utils/starBullet.ts). Ignored otherwise, so the default flat-bullets path stays sourced purely from the `bullets` prop. */
+  achievements?: AchievementEntry[];
+  /** "Combine Work Experience with Achievements" toggle — see types/index.ts Resume.combineExperienceFormat. */
+  combineExperienceFormat?: boolean;
 }
 
 /**
@@ -99,6 +104,8 @@ export function ResumePreview({
   experience = [],
   education = [],
   awards = [],
+  achievements = [],
+  combineExperienceFormat = false,
 }: Props) {
   const style = getTemplateStyle(templateKey ?? "modern");
   const cssVars = {
@@ -159,39 +166,67 @@ export function ResumePreview({
     </div>
   );
 
-  const bulletsBlock = bullets.length > 0 && (
-    <div className="tpl-section">
-      <span className="tpl-section-label">{style.bulletsLabel}</span>
-      <ul className="preview-bullets">
-        {bullets.map((b, i) => (
-          <li key={i}>{b}</li>
-        ))}
-      </ul>
-    </div>
-  );
+  // In combined-format mode, each achievement's bullet nests under the job
+  // it's linked to (computed live from the achievement objects, not the
+  // server's saved `bullets` prop — see utils/starBullet.ts for why). The
+  // default/flat path below is left byte-for-byte unchanged, still sourced
+  // purely from `bullets`, to avoid any regression to existing resumes.
+  const grouped = combineExperienceFormat ? groupAchievementsByExperience(achievements, experience) : null;
+
+  const bulletsBlock = combineExperienceFormat
+    ? (grouped!.unlinked.length > 0 && (
+        <div className="tpl-section">
+          <span className="tpl-section-label">{style.bulletsLabel}</span>
+          <ul className="preview-bullets">
+            {grouped!.unlinked.map((b, i) => (
+              <li key={i}>{b}</li>
+            ))}
+          </ul>
+        </div>
+      ))
+    : bullets.length > 0 && (
+        <div className="tpl-section">
+          <span className="tpl-section-label">{style.bulletsLabel}</span>
+          <ul className="preview-bullets">
+            {bullets.map((b, i) => (
+              <li key={i}>{b}</li>
+            ))}
+          </ul>
+        </div>
+      );
 
   const sortedExperience = experience.length > 0 ? sortByDateRange(experience) : [];
   const experienceBlock = sortedExperience.length > 0 && (
     <div className="tpl-section">
       <span className="tpl-section-label">Experience</span>
       <div className="tpl-experience-list">
-        {sortedExperience.map((job, i) => (
-          <div className="tpl-experience-item" key={i}>
-            <div className="tpl-experience-head">
-              <span className="tpl-experience-title">{job.title || "Untitled role"}</span>
-              <span className="tpl-experience-dates">
-                {formatMonth(job.startDate)} – {job.current ? "Present" : formatMonth(job.endDate)}
-              </span>
-            </div>
-            {(job.company || job.city || job.state) && (
-              <div className="tpl-experience-company">
-                {job.company}
-                {job.company && (job.city || job.state) ? " · " : ""}
-                {[job.city, job.state].filter(Boolean).join(", ")}
+        {sortedExperience.map((job, i) => {
+          const jobBullets = combineExperienceFormat && job.id ? grouped!.byExperienceId[job.id] ?? [] : [];
+          return (
+            <div className="tpl-experience-item" key={i}>
+              <div className="tpl-experience-head">
+                <span className="tpl-experience-title">{job.title || "Untitled role"}</span>
+                <span className="tpl-experience-dates">
+                  {formatMonth(job.startDate)} – {job.current ? "Present" : formatMonth(job.endDate)}
+                </span>
               </div>
-            )}
-          </div>
-        ))}
+              {(job.company || job.city || job.state) && (
+                <div className="tpl-experience-company">
+                  {job.company}
+                  {job.company && (job.city || job.state) ? " · " : ""}
+                  {[job.city, job.state].filter(Boolean).join(", ")}
+                </div>
+              )}
+              {jobBullets.length > 0 && (
+                <ul className="tpl-experience-bullets">
+                  {jobBullets.map((b, bi) => (
+                    <li key={bi}>{b}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

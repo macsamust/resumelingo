@@ -107,6 +107,8 @@ export interface PlanRecord {
 
 /** One job in a resume's work history. Dates are "YYYY-MM" (from an <input type="month">). */
 export interface WorkExperienceEntry {
+  /** Stable client-generated id — lets an achievement link to a specific job via AchievementEntry.experienceId. */
+  id?: string;
   company: string;
   title: string;
   city?: string;
@@ -145,6 +147,8 @@ export interface AchievementEntry {
   challenge: string;
   action: string;
   result: string;
+  /** Links this achievement to a specific WorkExperienceEntry.id — used by the "combine Work Experience with Achievements" format to nest this achievement's bullet under that job. Null/undefined = not linked to any job. */
+  experienceId?: string | null;
 }
 
 export interface ResumeRecord {
@@ -189,6 +193,8 @@ export interface ResumeRecord {
   recruiterExpectedSalary: string;
   /** One of config/recruiterOptions.ts's REMOTE_PREFERENCE_OPTIONS values, or "" if unset. */
   recruiterRemotePreference: string;
+  /** "Combine Work Experience with Achievements" checkbox — when true, each achievement's bullet is nested under the job it's linked to (see AchievementEntry.experienceId) instead of listed in a separate flat Highlights section. */
+  combineExperienceFormat: boolean;
   answers: string; // JSON-serialized Record<string, string>
   experience: string; // JSON-serialized WorkExperienceEntry[]
   education: string; // JSON-serialized EducationEntry[]

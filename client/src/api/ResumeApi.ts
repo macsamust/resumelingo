@@ -22,6 +22,8 @@ export interface CreateResumeInput {
   recruiterWorkAuthorization?: string;
   recruiterExpectedSalary?: string;
   recruiterRemotePreference?: string;
+  /** "Combine Work Experience with Achievements" toggle — see types/index.ts Resume.combineExperienceFormat. Not tier-gated. */
+  combineExperienceFormat?: boolean;
   answers: Record<string, string>;
   experience?: WorkExperienceEntry[];
   education?: EducationEntry[];

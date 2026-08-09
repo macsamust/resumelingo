@@ -4,6 +4,7 @@ import { ApiError, catalogApi } from "../api";
 import { PublicResume } from "../types";
 import { formatMonth, ResumePreview, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
 import { CLEARANCE_OPTIONS, recruiterOptionLabel, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
+import { groupAchievementsByExperience } from "../utils/starBullet";
 
 /**
  * Turns a camelCase profession-question key (e.g. "cloudPlatforms",
@@ -35,6 +36,13 @@ function resumeToPlainText(resume: PublicResume): string {
     lines.push("");
   }
 
+  // Combined-format mode nests each achievement's bullet under the job it's
+  // linked to, matching the on-screen preview (see ResumePreview.tsx). The
+  // default path below is unchanged: a flat "HIGHLIGHTS" section.
+  const grouped = resume.combineExperienceFormat
+    ? groupAchievementsByExperience(resume.achievements ?? [], resume.experience ?? [])
+    : null;
+
   const experience = resume.experience?.length ? sortByDateRange(resume.experience) : [];
   if (experience.length > 0) {
     lines.push("EXPERIENCE");
@@ -44,6 +52,9 @@ function resumeToPlainText(resume: PublicResume): string {
       lines.push(
         `${job.title || "Untitled role"}${job.company ? `, ${job.company}` : ""}${location ? `, ${location}` : ""} (${dates})`
       );
+      if (grouped && job.id) {
+        for (const bullet of grouped.byExperienceId[job.id] ?? []) lines.push(`  - ${bullet}`);
+      }
     }
     lines.push("");
   }
@@ -59,9 +70,10 @@ function resumeToPlainText(resume: PublicResume): string {
     lines.push("");
   }
 
-  if (resume.generatedBullets?.length > 0) {
+  const highlightBullets = grouped ? grouped.unlinked : resume.generatedBullets ?? [];
+  if (highlightBullets.length > 0) {
     lines.push("HIGHLIGHTS");
-    for (const bullet of resume.generatedBullets) lines.push(`- ${bullet}`);
+    for (const bullet of highlightBullets) lines.push(`- ${bullet}`);
     lines.push("");
   }
 
@@ -273,6 +285,8 @@ export function PublicResumePage() {
         experience={resume.experience}
         education={resume.education}
         awards={resume.awards}
+        achievements={resume.achievements}
+        combineExperienceFormat={resume.combineExperienceFormat}
       />
       {(() => {
         const answerEntries = Object.entries(resume.answers).filter(([, v]) => v && v.trim());

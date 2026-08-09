@@ -16,6 +16,7 @@ import { canUseVisibility, VISIBILITY_LABEL, VISIBILITY_MIN_TIER } from "../util
 import { getTemplateStyle } from "../config/templateStyles";
 import { buildResumeTextBlob, matchKeywords, runHealthChecks } from "../utils/atsCheck";
 import { CLEARANCE_OPTIONS, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
+import { generateId } from "../utils/id";
 import {
   AchievementEntry,
   AwardEntry,
@@ -73,6 +74,7 @@ export function ResumeEditPage() {
   const [recruiterWorkAuthorization, setRecruiterWorkAuthorization] = useState("");
   const [recruiterExpectedSalary, setRecruiterExpectedSalary] = useState("");
   const [recruiterRemotePreference, setRecruiterRemotePreference] = useState("");
+  const [combineExperienceFormat, setCombineExperienceFormat] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -125,8 +127,11 @@ export function ResumeEditPage() {
         setRecruiterWorkAuthorization(r.recruiterWorkAuthorization);
         setRecruiterExpectedSalary(r.recruiterExpectedSalary);
         setRecruiterRemotePreference(r.recruiterRemotePreference);
+        setCombineExperienceFormat(r.combineExperienceFormat);
         setAnswers(r.answers);
-        setExperience(r.experience);
+        // Backfill a stable id onto any job saved before WorkExperienceEntry.id
+        // existed, so achievements can link to it via experienceId.
+        setExperience(r.experience.map((job) => (job.id ? job : { ...job, id: generateId() })));
         setEducation(r.education);
         setAwards(r.awards);
         setAchievements(r.achievements);
@@ -218,6 +223,7 @@ export function ResumeEditPage() {
         recruiterWorkAuthorization,
         recruiterExpectedSalary,
         recruiterRemotePreference,
+        combineExperienceFormat,
         answers,
         experience,
         education,
@@ -447,7 +453,15 @@ export function ResumeEditPage() {
             <p className="hero-note" style={{ marginBottom: 16 }}>
               Describe a challenge, what you did, and the result — this is what turns into impact-focused resume bullets.
             </p>
-            <AchievementEditor achievements={achievements} onChange={setAchievements} />
+            <label className="checkbox-field" style={{ marginBottom: 16 }}>
+              <input
+                type="checkbox"
+                checked={combineExperienceFormat}
+                onChange={(e) => setCombineExperienceFormat(e.target.checked)}
+              />
+              Combine Work Experience with Achievements (nest each bullet under the job it belongs to)
+            </label>
+            <AchievementEditor achievements={achievements} onChange={setAchievements} experience={experience} />
           </CollapsibleSection>
 
           <CollapsibleSection title="Answers" forceOpen={forceOpen}>
@@ -680,6 +694,8 @@ export function ResumeEditPage() {
             experience={experience}
             education={education}
             awards={awards}
+            achievements={achievements}
+            combineExperienceFormat={combineExperienceFormat}
           />
         </div>
       </form>

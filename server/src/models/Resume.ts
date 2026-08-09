@@ -32,6 +32,7 @@ export class Resume {
   readonly recruiterWorkAuthorization: string;
   readonly recruiterExpectedSalary: string;
   readonly recruiterRemotePreference: string;
+  readonly combineExperienceFormat: boolean;
   readonly answers: Record<string, string>;
   readonly experience: WorkExperienceEntry[];
   readonly education: EducationEntry[];
@@ -67,6 +68,7 @@ export class Resume {
     this.recruiterWorkAuthorization = record.recruiterWorkAuthorization;
     this.recruiterExpectedSalary = record.recruiterExpectedSalary;
     this.recruiterRemotePreference = record.recruiterRemotePreference;
+    this.combineExperienceFormat = record.combineExperienceFormat;
     this.answers = JSON.parse(record.answers || "{}");
     this.experience = JSON.parse(record.experience || "[]");
     this.education = JSON.parse(record.education || "[]");
@@ -162,6 +164,7 @@ export class Resume {
       recruiterWorkAuthorization: this.recruiterWorkAuthorization,
       recruiterExpectedSalary: this.recruiterExpectedSalary,
       recruiterRemotePreference: this.recruiterRemotePreference,
+      combineExperienceFormat: this.combineExperienceFormat,
       answers: this.answers,
       experience: this.experience,
       education: this.education,
@@ -187,10 +190,12 @@ export class Resume {
       templateKey: this.templateKey,
       template: this.template,
       recruiterCard: this.recruiterCard,
+      combineExperienceFormat: this.combineExperienceFormat,
       answers: this.answers,
       experience: this.experience,
       education: this.education,
       awards: this.awards,
+      achievements: this.achievements,
       generatedSummary: this.generatedSummary,
       generatedBullets: this.generatedBullets,
       slug: this.slug,

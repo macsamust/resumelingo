@@ -1,19 +1,23 @@
 import { WorkExperienceEntry } from "../../types";
+import { generateId } from "../../utils/id";
 
 interface Props {
   experience: WorkExperienceEntry[];
   onChange: (experience: WorkExperienceEntry[]) => void;
 }
 
-const BLANK_ENTRY: WorkExperienceEntry = {
-  company: "",
-  title: "",
-  city: "",
-  state: "",
-  startDate: "",
-  endDate: "",
-  current: false,
-};
+function blankEntry(): WorkExperienceEntry {
+  return {
+    id: generateId(),
+    company: "",
+    title: "",
+    city: "",
+    state: "",
+    startDate: "",
+    endDate: "",
+    current: false,
+  };
+}
 
 /**
  * Lets a user build a chronological work history: company, title held, a
@@ -27,7 +31,7 @@ export function ExperienceEditor({ experience, onChange }: Props) {
     onChange(experience.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)));
   };
 
-  const addEntry = () => onChange([...experience, { ...BLANK_ENTRY }]);
+  const addEntry = () => onChange([...experience, blankEntry()]);
   const removeEntry = (index: number) => onChange(experience.filter((_, i) => i !== index));
 
   return (
