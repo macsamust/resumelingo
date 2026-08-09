@@ -25,19 +25,13 @@ export class DashboardController {
     });
   };
 
+  // Per-resume score now lives on the model (Resume.strengthScore) so it's
+  // computed in one place and exposed on every resume's toJSON() too (see
+  // Premium dashboard's Resume Analytics table). This just averages it.
   private averageStrengthScore(resumes: Resume[]): number {
     if (resumes.length === 0) return 0;
-    const total = resumes.reduce((sum, r) => sum + this.strengthScore(r), 0);
+    const total = resumes.reduce((sum, r) => sum + r.strengthScore, 0);
     return Math.round(total / resumes.length);
-  }
-
-  private strengthScore(resume: Resume): number {
-    let score = 40;
-    const answerCount = Object.values(resume.answers).filter((v) => v && v.trim()).length;
-    score += Math.min(answerCount * 6, 40);
-    if (resume.generatedBullets.length >= 3) score += 10;
-    if (resume.generatedSummary.length > 80) score += 10;
-    return Math.min(score, 100);
   }
 
   private suggestImprovements(resumes: Resume[]): string[] {

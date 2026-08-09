@@ -126,6 +126,22 @@ export class Resume {
     };
   }
 
+  /**
+   * Per-resume Profile Strength Score (0-100) — same formula
+   * DashboardController.averageStrengthScore() averages across a user's
+   * resumes for the dashboard tile, now exposed per-resume too (Premium
+   * dashboard's Resume Analytics table) so it lives in one place instead of
+   * being duplicated between the model and the controller.
+   */
+  get strengthScore(): number {
+    let score = 40;
+    const answerCount = Object.values(this.answers).filter((v) => v && v.trim()).length;
+    score += Math.min(answerCount * 6, 40);
+    if (this.generatedBullets.length >= 3) score += 10;
+    if (this.generatedSummary.length > 80) score += 10;
+    return Math.min(score, 100);
+  }
+
   /** userId is the *requesting* user, if any (undefined for anonymous visitors). */
   isAccessibleBy(userId?: string, password?: string): boolean {
     if (userId && userId === this.userId) return true; // owner can always view their own resume, any visibility
@@ -173,6 +189,7 @@ export class Resume {
       generatedSummary: this.generatedSummary,
       generatedBullets: this.generatedBullets,
       viewCount: this.viewCount,
+      strengthScore: this.strengthScore,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };

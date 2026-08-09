@@ -229,6 +229,7 @@ export function DashboardPage() {
                 <tr>
                   <th>Resume</th>
                   <th>Views</th>
+                  <th>Strength</th>
                 </tr>
               </thead>
               <tbody>
@@ -236,6 +237,7 @@ export function DashboardPage() {
                   <tr key={r.id}>
                     <td>{r.title}</td>
                     <td>{r.viewCount}</td>
+                    <td>{r.strengthScore}%</td>
                   </tr>
                 ))}
               </tbody>

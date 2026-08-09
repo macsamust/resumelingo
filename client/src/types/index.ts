@@ -139,6 +139,8 @@ export interface Resume {
   generatedSummary: string;
   generatedBullets: string[];
   viewCount: number;
+  /** Profile Strength Score (0-100) for this resume alone — same formula as DashboardSummary.profileStrengthScore, which averages this across all of a user's resumes. See server's Resume.strengthScore. */
+  strengthScore: number;
   createdAt: string;
   updatedAt: string;
 }
