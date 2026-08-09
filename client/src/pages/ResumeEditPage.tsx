@@ -219,11 +219,25 @@ export function ResumeEditPage() {
     );
   }
 
+  const scrollToAtsCheck = () => {
+    setForceOpen({ open: true, token: Date.now() });
+    // Let the section actually expand before scrolling to it, otherwise a
+    // just-opened section's height isn't accounted for in the scroll target.
+    requestAnimationFrame(() => {
+      document.getElementById("ats-check-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
   return (
     <AppShell>
-      <div className="app-page-head">
+      <div className="app-page-head ats-sticky-head">
         <h1>Edit Resume</h1>
-        <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {isPremium && (
+            <button type="button" className="ats-score-badge" onClick={scrollToAtsCheck} title="Jump to ATS Check">
+              <span aria-hidden="true">🛡</span> ATS {healthCheck.score}%
+            </button>
+          )}
           <a href={`/r/${resume.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost">
             View resume
           </a>
@@ -406,6 +420,7 @@ export function ResumeEditPage() {
             )}
           </CollapsibleSection>
 
+          <div id="ats-check-section">
           <CollapsibleSection title="ATS Check" forceOpen={forceOpen}>
             {!isPremium ? (
               <>
@@ -479,6 +494,7 @@ export function ResumeEditPage() {
               </>
             )}
           </CollapsibleSection>
+          </div>
 
           {coverLetterEnabled && (
             <div id="cover-letter-section">
@@ -502,22 +518,49 @@ export function ResumeEditPage() {
           </button>
         </div>
 
-        <ResumePreview
-          fullName={fullName}
-          contactEmail={contactEmail}
-          contactPhone={contactPhone}
-          contactLinkedIn={contactLinkedIn}
-          photoUrl={photoUrl}
-          title={title}
-          professionLabel={professionDetail?.label ?? resume.professionLabel}
-          templateKey={templateKey}
-          templateName={templates.find((t) => t.key === templateKey)?.name}
-          summary={resume.generatedSummary}
-          bullets={resume.generatedBullets}
-          experience={experience}
-          education={education}
-          awards={awards}
-        />
+        <div className="preview-col">
+          {isPremium && (
+            <div className="ats-mini-card">
+              <div className="ats-mini-head">
+                <span>ATS check</span>
+                <span className="ats-mini-score">{healthCheck.score}%</span>
+              </div>
+              <ul className="ats-mini-list">
+                {healthCheck.items.slice(0, 3).map((item) => (
+                  <li key={item.id} className={item.passed ? "ats-pass" : "ats-fail"}>
+                    <span aria-hidden="true">{item.passed ? "✓" : "✗"}</span> {item.label}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="#ats-check-section"
+                className="ats-mini-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToAtsCheck();
+                }}
+              >
+                See full ATS Check ↓
+              </a>
+            </div>
+          )}
+          <ResumePreview
+            fullName={fullName}
+            contactEmail={contactEmail}
+            contactPhone={contactPhone}
+            contactLinkedIn={contactLinkedIn}
+            photoUrl={photoUrl}
+            title={title}
+            professionLabel={professionDetail?.label ?? resume.professionLabel}
+            templateKey={templateKey}
+            templateName={templates.find((t) => t.key === templateKey)?.name}
+            summary={resume.generatedSummary}
+            bullets={resume.generatedBullets}
+            experience={experience}
+            education={education}
+            awards={awards}
+          />
+        </div>
       </form>
       <p className="form-footnote">
         <Link to="/dashboard">← Back to dashboard</Link>
