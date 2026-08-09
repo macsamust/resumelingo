@@ -24,6 +24,13 @@ export function DashboardPage() {
   const checkoutStatus = searchParams.get("checkout");
 
   const isPremium = user?.subscriptionTier === "premium";
+  const isProfessional = user?.subscriptionTier === "professional";
+  // Shared Links, Career Articles, and Subscription Management are shared
+  // between the Professional and Premium dashboards — Resume Analytics, Job
+  // Search Resources, Resume Tips, and Success Stories stay Premium-only.
+  const showSharedLinks = isProfessional || isPremium;
+  const showCareerArticles = isProfessional || isPremium;
+  const showSubscriptionManagement = isProfessional || isPremium;
 
   const load = () => {
     setLoading(true);
@@ -134,17 +141,11 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {!isPremium && (
+      {!showSubscriptionManagement && (
         <div style={{ display: "flex", gap: 12, marginBottom: 36 }}>
-          {summary.subscription.tier === "starter" ? (
-            <Link to="/#pricing" className="btn btn-ghost">
-              Upgrade plan
-            </Link>
-          ) : (
-            <button className="btn btn-ghost" onClick={handleManageBilling} disabled={openingPortal}>
-              {openingPortal ? "Opening billing portal…" : "Manage billing"}
-            </button>
-          )}
+          <Link to="/#pricing" className="btn btn-ghost">
+            Upgrade plan
+          </Link>
         </div>
       )}
 
@@ -194,164 +195,173 @@ export function DashboardPage() {
 
       {!isPremium && (
         <div className="builder-panel" style={{ marginTop: 36 }}>
-          <h2>Unlock the Premium dashboard</h2>
+          <h2>{isProfessional ? "Unlock the Premium dashboard" : "Unlock more with Professional and Premium"}</h2>
           <p className="hero-note" style={{ marginBottom: 16 }}>
-            Premium adds resume analytics, a shared-links overview, curated job search resources, resume tips,
-            career articles, subscriber success stories, and in-dashboard subscription management.
+            {isProfessional
+              ? "Premium adds resume analytics, curated job search resources, resume tips, and subscriber success stories."
+              : "Professional adds a shared-links overview, career articles, and in-dashboard subscription management. Premium adds resume analytics, curated job search resources, resume tips, and subscriber success stories on top of that."}
           </p>
           <Link to="/#pricing" className="btn btn-primary">
-            See Premium plans
+            See plans
           </Link>
         </div>
       )}
 
       {isPremium && (
-        <>
-          <div className="builder-panel" style={{ marginTop: 36, marginBottom: 36 }}>
-            <h2>Resume Analytics</h2>
-            <p className="hero-note" style={{ marginBottom: 16 }}>
-              {mostViewed
-                ? `"${mostViewed.title}" is your most-viewed resume, with ${mostViewed.viewCount} view${mostViewed.viewCount === 1 ? "" : "s"}.`
-                : "No views yet — share a resume link to start seeing views here."}
-            </p>
-            {summary.myResumes.length > 0 && (
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Resume</th>
-                    <th>Views</th>
+        <div className="builder-panel" style={{ marginTop: 36, marginBottom: 36 }}>
+          <h2>Resume Analytics</h2>
+          <p className="hero-note" style={{ marginBottom: 16 }}>
+            {mostViewed
+              ? `"${mostViewed.title}" is your most-viewed resume, with ${mostViewed.viewCount} view${mostViewed.viewCount === 1 ? "" : "s"}.`
+              : "No views yet — share a resume link to start seeing views here."}
+          </p>
+          {summary.myResumes.length > 0 && (
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Resume</th>
+                  <th>Views</th>
+                </tr>
+              </thead>
+              <tbody>
+                {resumesByViews.map((r) => (
+                  <tr key={r.id}>
+                    <td>{r.title}</td>
+                    <td>{r.viewCount}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {resumesByViews.map((r) => (
-                    <tr key={r.id}>
-                      <td>{r.title}</td>
-                      <td>{r.viewCount}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-
-          <div className="builder-panel" style={{ marginBottom: 36 }}>
-            <h2>Shared Links</h2>
-            {summary.sharedLinks.length === 0 ? (
-              <p className="hero-note">No shared links yet.</p>
-            ) : (
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Resume</th>
-                    <th>Visibility</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {summary.sharedLinks.map((link) => (
-                    <tr key={link.slug}>
-                      <td>{link.title}</td>
-                      <td>
-                        <span className="visibility-tag">{link.visibility}</span>
-                      </td>
-                      <td className="admin-row-actions">
-                        <button className="btn btn-ghost btn-sm" onClick={() => handleCopyLink(link.slug)}>
-                          {copiedSlug === link.slug ? "Copied!" : "Copy link"}
-                        </button>
-                        <a href={`/r/${link.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
-                          Open
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-
-          <div style={{ marginBottom: 36 }}>
-            <h2 style={{ marginBottom: 16 }}>Job Search Resources</h2>
-            <div className="resources-grid">
-              {jobSearchResources.map((r) => (
-                <Link to={`/career-center#${r.anchor}`} className="resource-card" key={r.title}>
-                  <span className="resource-tag">{r.tag}</span>
-                  <h3>{r.title}</h3>
-                  <p>{r.body}</p>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {resumeTipsTopic && (
-            <div className="builder-panel" style={{ marginBottom: 36 }}>
-              <h2>Resume Tips</h2>
-              <ul className="preview-bullets">
-                {resumeTipsTopic.tips.slice(0, 4).map((tip, i) => (
-                  <li key={i}>{tip}</li>
                 ))}
-              </ul>
-              <Link to={`/career-center#${resumeTipsTopic.id}`} className="btn btn-ghost" style={{ marginTop: 12 }}>
-                Read the full guide
-              </Link>
-            </div>
+              </tbody>
+            </table>
           )}
+        </div>
+      )}
 
-          <div style={{ marginBottom: 36 }}>
-            <h2 style={{ marginBottom: 16 }}>Career Articles</h2>
-            <div className="resources-grid">
-              {careerArticles.map((topic) => (
-                <Link to={`/career-center#${topic.id}`} className="resource-card" key={topic.id}>
-                  <span className="resource-tag">{topic.title}</span>
-                  <h3>{topic.title}</h3>
-                  <p>{topic.intro}</p>
-                </Link>
-              ))}
-            </div>
+      {showSharedLinks && (
+        <div className="builder-panel" style={{ marginTop: isPremium ? 0 : 36, marginBottom: 36 }}>
+          <h2>Shared Links</h2>
+          {summary.sharedLinks.length === 0 ? (
+            <p className="hero-note">No shared links yet.</p>
+          ) : (
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Resume</th>
+                  <th>Visibility</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {summary.sharedLinks.map((link) => (
+                  <tr key={link.slug}>
+                    <td>{link.title}</td>
+                    <td>
+                      <span className="visibility-tag">{link.visibility}</span>
+                    </td>
+                    <td className="admin-row-actions">
+                      <button className="btn btn-ghost btn-sm" onClick={() => handleCopyLink(link.slug)}>
+                        {copiedSlug === link.slug ? "Copied!" : "Copy link"}
+                      </button>
+                      <a href={`/r/${link.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
+                        Open
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {isPremium && (
+        <div style={{ marginBottom: 36 }}>
+          <h2 style={{ marginBottom: 16 }}>Job Search Resources</h2>
+          <div className="resources-grid">
+            {jobSearchResources.map((r) => (
+              <Link to={`/career-center#${r.anchor}`} className="resource-card" key={r.title}>
+                <span className="resource-tag">{r.tag}</span>
+                <h3>{r.title}</h3>
+                <p>{r.body}</p>
+              </Link>
+            ))}
           </div>
+        </div>
+      )}
 
-          <div style={{ marginBottom: 36 }}>
-            <h2 style={{ marginBottom: 16 }}>Success Stories</h2>
-            <div className="stories-grid">
-              {SUCCESS_STORIES.map((s) => (
-                <div className="story-card" key={s.name}>
-                  <p className="story-quote">"{s.quote}"</p>
-                  <div className="story-person">
-                    <div className="story-avatar">{s.initial}</div>
-                    <div>
-                      <p>{s.name}</p>
-                      <p>{s.role}</p>
-                    </div>
+      {isPremium && resumeTipsTopic && (
+        <div className="builder-panel" style={{ marginBottom: 36 }}>
+          <h2>Resume Tips</h2>
+          <ul className="preview-bullets">
+            {resumeTipsTopic.tips.slice(0, 4).map((tip, i) => (
+              <li key={i}>{tip}</li>
+            ))}
+          </ul>
+          <Link to={`/career-center#${resumeTipsTopic.id}`} className="btn btn-ghost" style={{ marginTop: 12 }}>
+            Read the full guide
+          </Link>
+        </div>
+      )}
+
+      {showCareerArticles && (
+        <div style={{ marginBottom: 36 }}>
+          <h2 style={{ marginBottom: 16 }}>Career Articles</h2>
+          <div className="resources-grid">
+            {careerArticles.map((topic) => (
+              <Link to={`/career-center#${topic.id}`} className="resource-card" key={topic.id}>
+                <span className="resource-tag">{topic.title}</span>
+                <h3>{topic.title}</h3>
+                <p>{topic.intro}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {isPremium && (
+        <div style={{ marginBottom: 36 }}>
+          <h2 style={{ marginBottom: 16 }}>Success Stories</h2>
+          <div className="stories-grid">
+            {SUCCESS_STORIES.map((s) => (
+              <div className="story-card" key={s.name}>
+                <p className="story-quote">"{s.quote}"</p>
+                <div className="story-person">
+                  <div className="story-avatar">{s.initial}</div>
+                  <div>
+                    <p>{s.name}</p>
+                    <p>{s.role}</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ marginBottom: 12 }}>
-            <h2 style={{ marginBottom: 16 }}>Subscription Management</h2>
-            <div className="price-card" style={{ maxWidth: 380 }}>
-              <div className="price-tier">{user.plan.name}</div>
-              <h3>{user.plan.name} plan</h3>
-              <div className="price-amount">
-                {user.plan.priceMonthly === 0 ? "$0" : `$${user.plan.priceMonthly}`}
-                {user.plan.priceMonthly > 0 && <span className="per">/month</span>}
               </div>
-              <p className="price-desc">
-                {summary.subscription.unlimited
-                  ? "Unlimited resumes"
-                  : `${summary.subscription.resumesUsed} of ${summary.subscription.resumeLimit} resumes used`}
-              </p>
-              <ul className="price-list">
-                {user.plan.features.map((f) => (
-                  <li key={f}>{f}</li>
-                ))}
-              </ul>
-              <button className="btn btn-block btn-ghost" onClick={handleManageBilling} disabled={openingPortal}>
-                {openingPortal ? "Opening billing portal…" : "Manage billing"}
-              </button>
-            </div>
+            ))}
           </div>
-        </>
+        </div>
+      )}
+
+      {showSubscriptionManagement && user && (
+        <div style={{ marginBottom: 12 }}>
+          <h2 style={{ marginBottom: 16 }}>Subscription Management</h2>
+          <div className="price-card" style={{ maxWidth: 380 }}>
+            <div className="price-tier">{user.plan.name}</div>
+            <h3>{user.plan.name} plan</h3>
+            <div className="price-amount">
+              {user.plan.priceMonthly === 0 ? "$0" : `$${user.plan.priceMonthly}`}
+              {user.plan.priceMonthly > 0 && <span className="per">/month</span>}
+            </div>
+            <p className="price-desc">
+              {summary.subscription.unlimited
+                ? "Unlimited resumes"
+                : `${summary.subscription.resumesUsed} of ${summary.subscription.resumeLimit} resumes used`}
+            </p>
+            <ul className="price-list">
+              {user.plan.features.map((f) => (
+                <li key={f}>{f}</li>
+              ))}
+            </ul>
+            <button className="btn btn-block btn-ghost" onClick={handleManageBilling} disabled={openingPortal}>
+              {openingPortal ? "Opening billing portal…" : "Manage billing"}
+            </button>
+          </div>
+        </div>
       )}
     </AppShell>
   );
