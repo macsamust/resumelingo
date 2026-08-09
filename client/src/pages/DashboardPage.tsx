@@ -174,11 +174,11 @@ export function DashboardPage() {
         </p>
       )}
       {summary.myResumes.length === 0 ? (
-        <div className="empty-state">
+        <div className="empty-state" style={{ marginBottom: isPremium ? 36 : 0 }}>
           You don't have any resumes yet. <Link to="/resumes/new">Create your first one</Link>.
         </div>
       ) : (
-        <div className="resume-list-grid">
+        <div className="resume-list-grid" style={{ marginBottom: isPremium ? 36 : 0 }}>
           {summary.myResumes.map((r) => (
             <div className="resume-item-card" key={r.id}>
               <div className="resume-item-tags">
