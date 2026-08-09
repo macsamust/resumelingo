@@ -429,25 +429,14 @@ export function ResumeEditPage() {
             )}
           </CollapsibleSection>
 
-          <div id="ats-check-section">
-          <CollapsibleSection title="ATS Check" forceOpen={forceOpen}>
-            <p className="hero-note" style={{ marginBottom: 16 }}>
-              An ATS (Applicant Tracking System) is the software many employers use to scan and rank resumes before a
-              person ever sees them. This check scores your resume's structure and compares it against a job
-              description's keywords, so you can see how it's likely to hold up.
-            </p>
-            {!isPremium ? (
-              <>
-                <p className="hero-note" style={{ marginBottom: 0 }}>
-                  ATS Check is a Premium feature. Upgrade to {TIER_LABEL.premium} to get a resume Health Score and
-                  keyword matching against a job description.
+          {isPremium && (
+            <div id="ats-check-section">
+              <CollapsibleSection title="ATS Check" forceOpen={forceOpen}>
+                <p className="hero-note" style={{ marginBottom: 16 }}>
+                  An ATS (Applicant Tracking System) is the software many employers use to scan and rank resumes
+                  before a person ever sees them. This check scores your resume's structure and compares it against a
+                  job description's keywords, so you can see how it's likely to hold up.
                 </p>
-                <Link to="/#pricing" className="btn btn-ghost" style={{ marginTop: 12 }}>
-                  View plans
-                </Link>
-              </>
-            ) : (
-              <>
                 <div className="ats-score-row">
                   <div className="ats-score-value">{healthCheck.score}%</div>
                   <p className="hero-note" style={{ margin: 0 }}>
@@ -505,10 +494,9 @@ export function ResumeEditPage() {
                     )}
                   </div>
                 )}
-              </>
-            )}
-          </CollapsibleSection>
-          </div>
+              </CollapsibleSection>
+            </div>
+          )}
 
           {coverLetterEnabled && (
             <div id="cover-letter-section">
