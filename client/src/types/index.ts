@@ -154,6 +154,8 @@ export interface RecruiterCard {
   expectedSalary: string;
   remotePreference: string;
   skills: string[];
+  /** Deterministic 3-4 line statement (years of experience, focus area, a quantified achievement, technical expertise, career direction) — see server's utils/candidateSummary.ts. Never fabricated: a clause is simply omitted when the resume doesn't have the underlying data. */
+  candidateSummary: string;
 }
 
 export interface PublicResume {

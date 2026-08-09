@@ -213,6 +213,9 @@ export function PublicResumePage() {
       {resume.recruiterCard && (
         <div className="public-resume-card public-resume-details" style={{ marginBottom: 24 }}>
           <h2 className="public-resume-details-heading">Candidate Summary</h2>
+          {resume.recruiterCard.candidateSummary && (
+            <p className="recruiter-candidate-summary">{resume.recruiterCard.candidateSummary}</p>
+          )}
           <div className="answer-grid">
             {resume.recruiterCard.location && (
               <div>

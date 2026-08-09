@@ -682,6 +682,10 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .public-resume-card { background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 44px; }
 .public-resume-details { padding: 32px 44px; }
 .public-resume-details-heading { font-size: 18px; color: var(--navy); margin-bottom: 4px; }
+/* Deterministic statement under the "Candidate Summary" heading — see
+   server's utils/candidateSummary.ts. Sits above the location/availability
+   answer-grid, same section, same visual weight as .preview-summary. */
+.recruiter-candidate-summary { font-size: 14.5px; color: var(--navy-light); line-height: 1.7; margin-top: 10px; }
 .public-resume-header { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 24px; }
 .public-resume-header h1 { font-size: 30px; margin-bottom: 6px; }
 .public-resume-header p { color: var(--muted); }

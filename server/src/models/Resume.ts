@@ -2,6 +2,7 @@ import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, ResumeRec
 import { getTemplateByKey } from "../config/templates";
 import { getProfessionByKey } from "../config/professions";
 import { extractKeywords } from "../utils/keywords";
+import { buildCandidateSummary } from "../utils/candidateSummary";
 
 /**
  * Domain model for a resume. Handles JSON (de)serialization of the
@@ -115,6 +116,7 @@ export class Resume {
   get recruiterCard() {
     if (!this.recruiterModeEnabled) return null;
     const skillsText = [...this.generatedBullets, ...Object.values(this.answers)].join(" ");
+    const skills = extractKeywords(skillsText, 8);
     return {
       location: this.recruiterLocation,
       availability: this.recruiterAvailability,
@@ -122,7 +124,15 @@ export class Resume {
       workAuthorization: this.recruiterWorkAuthorization,
       expectedSalary: this.recruiterExpectedSalary,
       remotePreference: this.recruiterRemotePreference,
-      skills: extractKeywords(skillsText, 8),
+      skills,
+      candidateSummary: buildCandidateSummary({
+        professionLabel: this.professionLabel,
+        title: this.title,
+        experience: this.experience,
+        achievements: this.achievements,
+        generatedBullets: this.generatedBullets,
+        skills,
+      }),
     };
   }
 
