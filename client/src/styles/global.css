@@ -231,6 +231,13 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .builder-divider { display: flex; align-items: center; gap: 12px; margin: 28px 0 20px; }
 .builder-divider::before, .builder-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 .builder-divider-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--indigo); white-space: nowrap; }
+.back-to-top-fab {
+  position: fixed; right: 28px; bottom: 28px; width: 46px; height: 46px; border-radius: 50%;
+  background: var(--indigo); color: #fff; border: none; font-size: 20px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 24px -8px rgba(79,70,229,.55);
+  z-index: 40; transition: transform .15s ease, background .15s ease;
+}
+.back-to-top-fab:hover { background: var(--indigo-light); transform: translateY(-2px); }
 
 /* Work experience editor (ExperienceEditor.tsx) — one row per job. */
 .experience-editor { margin-bottom: 20px; }

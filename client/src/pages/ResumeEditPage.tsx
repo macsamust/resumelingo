@@ -77,6 +77,15 @@ export function ResumeEditPage() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [forceOpen, setForceOpen] = useState<ForceOpenSignal | undefined>(undefined);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  // Shows the floating "back to top" button once the page's own header has
+  // scrolled out of view, so it's not just sitting on top of it uselessly.
+  useEffect(() => {
+    const onScroll = () => setShowBackToTop(window.scrollY > 400);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // ATS Check is a Premium perk, matching the marketing/pricing copy — see
   // client/src/utils/atsCheck.ts for why this stays entirely client-side
@@ -257,7 +266,7 @@ export function ResumeEditPage() {
   return (
     <AppShell>
       <div className="app-page-head">
-        <h1>Edit Resume</h1>
+        <h1 id="edit-resume-title">Edit Resume</h1>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <a href={`/r/${resume.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost">
             View resume
@@ -677,6 +686,17 @@ export function ResumeEditPage() {
       <p className="form-footnote">
         <Link to="/dashboard">← Back to dashboard</Link>
       </p>
+      {showBackToTop && (
+        <button
+          type="button"
+          className="back-to-top-fab"
+          onClick={() => document.getElementById("edit-resume-title")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          title="Back to Edit Resume"
+          aria-label="Back to Edit Resume"
+        >
+          ↑
+        </button>
+      )}
     </AppShell>
   );
 }
