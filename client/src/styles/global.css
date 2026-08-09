@@ -192,8 +192,8 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .app-sidebar-links a { display: block; padding: 10px 14px; border-radius: 10px; font-size: 14.5px; font-weight: 600; color: var(--navy-light); margin-bottom: 4px; }
 .app-sidebar-links a:hover, .app-sidebar-links a.active { background: #eef2ff; color: var(--indigo); }
 .app-sidebar-user {
-  margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px;
-  border-top: 1px solid var(--border); padding-top: 18px;
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px;
+  margin-bottom: 14px; padding-bottom: 18px; border-bottom: 1px solid var(--border);
 }
 .app-sidebar-user:hover { background: #f8fafc; }
 .app-sidebar-user-avatar {

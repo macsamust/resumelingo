@@ -14,13 +14,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="app-shell">
       <aside className="app-sidebar">
-        <div className="app-sidebar-links">
-          {LINKS.map((link) => (
-            <NavLink key={link.to} to={link.to} className={({ isActive }) => (isActive ? "active" : "")}>
-              {link.label}
-            </NavLink>
-          ))}
-        </div>
         {/* Subtle "who am I logged in as" reference — visible on every
             logged-in page since AppShell wraps all of them. */}
         {user && (
@@ -31,6 +24,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="app-sidebar-user-name">{user.name}</span>
           </Link>
         )}
+        <div className="app-sidebar-links">
+          {LINKS.map((link) => (
+            <NavLink key={link.to} to={link.to} className={({ isActive }) => (isActive ? "active" : "")}>
+              {link.label}
+            </NavLink>
+          ))}
+        </div>
       </aside>
       <div className="app-content">{children}</div>
     </div>
