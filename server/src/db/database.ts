@@ -306,6 +306,28 @@ export async function migrate(): Promise<void> {
       "updatedAt" TEXT NOT NULL,
       UNIQUE ("category")
     );
+
+    -- Defensive backfill: if role_descriptions (or skill_suggestions) was
+    -- ever created by an earlier version of this migration that predates
+    -- its UNIQUE constraint, CREATE TABLE IF NOT EXISTS above is a no-op
+    -- and the constraint never gets added — which then breaks the
+    -- ON CONFLICT seed inserts below with "no unique or exclusion
+    -- constraint matching the ON CONFLICT specification". These DO blocks
+    -- add the constraint if it's missing, and are safe no-ops if it's
+    -- already there (42710 = duplicate_object, i.e. constraint exists).
+    DO $$
+    BEGIN
+      ALTER TABLE role_descriptions ADD CONSTRAINT role_descriptions_category_key UNIQUE ("category");
+    EXCEPTION
+      WHEN duplicate_object THEN NULL;
+    END $$;
+
+    DO $$
+    BEGIN
+      ALTER TABLE skill_suggestions ADD CONSTRAINT skill_suggestions_profession_label_category_key UNIQUE ("professionKey", "label", "category");
+    EXCEPTION
+      WHEN duplicate_object THEN NULL;
+    END $$;
   `);
 
   await seedCatalogDefaults();
