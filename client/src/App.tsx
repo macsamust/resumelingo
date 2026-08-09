@@ -12,6 +12,7 @@ import { ResumeBuilderPage } from "./pages/ResumeBuilderPage";
 import { ResumeEditPage } from "./pages/ResumeEditPage";
 import { PublicResumePage } from "./pages/PublicResumePage";
 import { ThankYouLetterPage } from "./pages/ThankYouLetterPage";
+import { CareerCoachPage } from "./pages/CareerCoachPage";
 import { AdminProtectedRoute } from "./components/layout/AdminProtectedRoute";
 import { AdminLoginPage } from "./pages/admin/AdminLoginPage";
 import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
@@ -69,6 +70,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ThankYouLetterPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/career-coach"
+          element={
+            <ProtectedRoute>
+              <CareerCoachPage />
             </ProtectedRoute>
           }
         />

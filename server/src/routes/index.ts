@@ -8,6 +8,7 @@ import dashboardRoutes from "./dashboard.routes";
 import subscriptionRoutes from "./subscription.routes";
 import adminRoutes from "./admin.routes";
 import thankYouLetterRoutes from "./thankYouLetter.routes";
+import careerCoachRoutes from "./careerCoach.routes";
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use("/public", publicRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/subscriptions", subscriptionRoutes);
 router.use("/thank-you-letters", thankYouLetterRoutes);
+router.use("/career-coach", careerCoachRoutes);
 
 export default router;

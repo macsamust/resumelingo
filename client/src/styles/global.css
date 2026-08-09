@@ -248,6 +248,15 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   z-index: 40; transition: transform .15s ease, background .15s ease;
 }
 .back-to-top-fab:hover { background: var(--indigo-light); transform: translateY(-2px); }
+.coach-quick-questions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+.coach-thread { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
+.coach-exchange { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px 24px; }
+.coach-question { font-weight: 700; font-size: 15px; color: var(--navy); margin-bottom: 10px; }
+.coach-answer p { font-size: 14.5px; line-height: 1.7; color: var(--navy-light); }
+.coach-related-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; }
+.coach-related-links a { font-size: 13px; font-weight: 600; color: var(--indigo); }
+.coach-input-row { display: flex; gap: 10px; }
+.coach-input-row input { flex: 1; }
 
 /* Work experience editor (ExperienceEditor.tsx) — one row per job. */
 .experience-editor { margin-bottom: 20px; }

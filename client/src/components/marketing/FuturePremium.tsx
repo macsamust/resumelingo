@@ -1,10 +1,11 @@
+// AI Career Coach and Recruiter Mode have both shipped (see
+// CareerCoachPage.tsx and ResumeEditPage.tsx's "Recruiter Mode" section) —
+// removed from this "coming soon" list accordingly.
 const FUTURE = [
   { tag: "Portfolio", title: "Career Portfolio", body: "Showcase projects, videos, awards, certifications, patents, publications, recommendations, and volunteer work." },
   { tag: "References", title: "Professional references", body: "Kept private and revealed only when requested." },
   { tag: "Networking", title: "Digital business card", body: "Scan a QR code for instant access to your resume." },
   { tag: "Video", title: "Video introduction", body: "A one-minute video introduction — recruiters love this." },
-  { tag: "AI", title: "AI Career Coach", body: 'Ask "What salary should I ask for?" or "How do I answer this interview question?" and get tailored answers.' },
-  { tag: "Recruiting", title: "Recruiter Mode", body: "Recruiters see a candidate summary — skills, availability, clearance, location, work authorization, expected salary, and remote preferences." },
 ];
 
 export function FuturePremium() {

@@ -3,11 +3,13 @@ import { ResumeApi } from "./ResumeApi";
 import { CatalogApi } from "./CatalogApi";
 import { AdminApi } from "./AdminApi";
 import { ThankYouLetterApi } from "./ThankYouLetterApi";
+import { CareerCoachApi } from "./CareerCoachApi";
 
 export const authApi = new AuthApi();
 export const resumeApi = new ResumeApi();
 export const catalogApi = new CatalogApi();
 export const thankYouLetterApi = new ThankYouLetterApi();
+export const careerCoachApi = new CareerCoachApi();
 // Deliberately not included in setAuthToken below — the admin token lives
 // under its own storage key and is set via AdminAuthContext instead, so a
 // regular user login/logout never touches the admin session.
@@ -19,6 +21,7 @@ export function setAuthToken(token: string | null) {
   resumeApi.setToken(token);
   catalogApi.setToken(token);
   thankYouLetterApi.setToken(token);
+  careerCoachApi.setToken(token);
 }
 
 export * from "./ApiClient";
@@ -27,3 +30,4 @@ export * from "./ResumeApi";
 export * from "./CatalogApi";
 export * from "./AdminApi";
 export * from "./ThankYouLetterApi";
+export * from "./CareerCoachApi";

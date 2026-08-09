@@ -6,6 +6,7 @@ const LINKS = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/resumes/new", label: "New Resume" },
   { to: "/thank-you-letter", label: "Thank-You Letter" },
+  { to: "/career-coach", label: "Career Coach" },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
