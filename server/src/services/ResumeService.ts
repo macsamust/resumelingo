@@ -6,6 +6,7 @@ import { Resume } from "../models/Resume";
 import { User } from "../models/User";
 import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, TemplateCategory, WorkExperienceEntry } from "../types";
 import { CATEGORY_MIN_TIER, canUseTemplate, getTemplateByKey } from "../config/templates";
+import { canUseVisibility, VISIBILITY_LABEL, VISIBILITY_MIN_TIER } from "../config/visibilityAccess";
 import { getPlan } from "../config/subscriptionPlans";
 import { getProfessionByKey } from "../config/professions";
 
@@ -22,6 +23,7 @@ export class ResumeAccessError extends Error {
   }
 }
 export class TemplateAccessError extends Error {}
+export class VisibilityAccessError extends Error {}
 export class PhotoTooLargeError extends Error {}
 
 // ~2MB of base64 text comfortably covers a photo resized/compressed
@@ -46,6 +48,19 @@ function assertTemplateAllowed(tier: User["subscriptionTier"], templateKey: stri
   if (canUseTemplate(tier, template.category)) return;
   const requiredPlan = getPlan(CATEGORY_MIN_TIER[template.category]);
   throw new TemplateAccessError(`The "${template.name}" template requires the ${requiredPlan.name} plan. Upgrade to use it.`);
+}
+
+/**
+ * Throws if `tier` isn't allowed to use `visibility` — see
+ * config/visibilityAccess.ts for the allow-list (Starter: public only;
+ * Professional: public + private; Premium: all three, including password).
+ */
+function assertVisibilityAllowed(tier: User["subscriptionTier"], visibility: LinkVisibility): void {
+  if (canUseVisibility(tier, visibility)) return;
+  const requiredPlan = getPlan(VISIBILITY_MIN_TIER[visibility]);
+  throw new VisibilityAccessError(
+    `${VISIBILITY_LABEL[visibility]} links require the ${requiredPlan.name} plan. Upgrade to use this visibility setting.`
+  );
 }
 
 export interface CreateResumeRequest {
@@ -97,6 +112,7 @@ export class ResumeService {
       );
     }
     assertTemplateAllowed(user.subscriptionTier, input.templateKey);
+    if (input.visibility) assertVisibilityAllowed(user.subscriptionTier, input.visibility);
     assertPhotoSizeOk(input.photoUrl);
 
     const fullName = input.fullName?.trim() || user.name;
@@ -149,9 +165,15 @@ export class ResumeService {
   async update(userId: string, resumeId: string, input: UpdateResumeInput): Promise<Resume> {
     const existing = await this.getOwned(userId, resumeId); // throws if not found/owned
 
-    if (input.templateKey && input.templateKey !== existing.templateKey) {
+    const templateChanging = !!input.templateKey && input.templateKey !== existing.templateKey;
+    const visibilityChanging = !!input.visibility && input.visibility !== existing.visibility;
+    if (templateChanging || visibilityChanging) {
       const userRecord = await this.users.findById(userId);
-      if (userRecord) assertTemplateAllowed(new User(userRecord).subscriptionTier, input.templateKey);
+      if (userRecord) {
+        const tier = new User(userRecord).subscriptionTier;
+        if (templateChanging) assertTemplateAllowed(tier, input.templateKey!);
+        if (visibilityChanging) assertVisibilityAllowed(tier, input.visibility!);
+      }
     }
     assertPhotoSizeOk(input.photoUrl);
 

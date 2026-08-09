@@ -12,6 +12,7 @@ import { ResumePreview } from "../components/builder/ResumePreview";
 import { ApiError, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL } from "../utils/templateAccess";
+import { canUseVisibility, VISIBILITY_LABEL, VISIBILITY_MIN_TIER } from "../utils/visibilityAccess";
 import { getTemplateStyle } from "../config/templateStyles";
 import { buildResumeTextBlob, matchKeywords, runHealthChecks } from "../utils/atsCheck";
 import {
@@ -25,6 +26,9 @@ import {
   TemplateDefinition,
   WorkExperienceEntry,
 } from "../types";
+
+/** Display order for the Link visibility <select> — cheapest/most-available tier first. */
+const VISIBILITY_OPTIONS: LinkVisibility[] = ["public", "private", "password"];
 
 /** "2024-06-01T14:30:00.000Z" -> "2024-06-01T14:30" (local time) for a `<input type="datetime-local">`'s value. Empty string for a missing/invalid input. */
 function isoToDatetimeLocal(iso: string): string {
@@ -350,10 +354,20 @@ export function ResumeEditPage() {
             <div className="field">
               <label>Link visibility</label>
               <select value={visibility} onChange={(e) => setVisibility(e.target.value as LinkVisibility)}>
-                <option value="public">Public — anyone with the link</option>
-                <option value="password">Password-protected</option>
-                <option value="private">Private — owner only</option>
+                {VISIBILITY_OPTIONS.map((v) => {
+                  const locked = !!user && !canUseVisibility(user.subscriptionTier, v);
+                  return (
+                    <option key={v} value={v} disabled={locked}>
+                      {VISIBILITY_LABEL[v]}
+                      {locked ? ` — requires ${TIER_LABEL[VISIBILITY_MIN_TIER[v]]}` : ""}
+                    </option>
+                  );
+                })}
               </select>
+              <p className="hero-note" style={{ marginTop: 6, marginBottom: 0 }}>
+                Starter plans get public links only. Professional adds private links, and Premium adds
+                password-protected links.
+              </p>
             </div>
             {visibility === "password" && (
               <>
