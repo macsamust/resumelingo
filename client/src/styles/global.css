@@ -262,12 +262,6 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .ats-chip { font-size: 12.5px; font-weight: 600; padding: 5px 12px; border-radius: 999px; }
 .ats-chip-matched { background: #dcfce7; color: #15803d; }
 .ats-chip-missing { background: #fee2e2; color: #b91c1c; }
-.ats-sticky-head { position: sticky; top: 73px; z-index: 4; background: var(--bg); padding: 12px 0; margin: -12px 0 12px; }
-.ats-score-badge {
-  display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #15803d;
-  background: #dcfce7; border: none; padding: 8px 14px; border-radius: 999px; cursor: pointer;
-}
-.ats-score-badge:hover { background: #bbf7d0; }
 .preview-col { display: flex; flex-direction: column; gap: 16px; }
 .ats-mini-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; }
 .ats-mini-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }

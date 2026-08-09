@@ -230,14 +230,9 @@ export function ResumeEditPage() {
 
   return (
     <AppShell>
-      <div className="app-page-head ats-sticky-head">
+      <div className="app-page-head">
         <h1>Edit Resume</h1>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {isPremium && (
-            <button type="button" className="ats-score-badge" onClick={scrollToAtsCheck} title="Jump to ATS Check">
-              <span aria-hidden="true">🛡</span> ATS {healthCheck.score}%
-            </button>
-          )}
           <a href={`/r/${resume.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost">
             View resume
           </a>
