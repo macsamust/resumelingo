@@ -1,4 +1,4 @@
-import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, ResumeRecord, WorkExperienceEntry } from "../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, ResumeRecord, SkillOrTool, WorkExperienceEntry } from "../types";
 import { getTemplateByKey } from "../config/templates";
 import { getProfessionByKey } from "../config/professions";
 import { extractKeywords } from "../utils/keywords";
@@ -39,6 +39,7 @@ export class Resume {
   readonly education: EducationEntry[];
   readonly awards: AwardEntry[];
   readonly achievements: AchievementEntry[];
+  readonly skillsAndTools: SkillOrTool[];
   readonly generatedSummary: string;
   readonly generatedBullets: string[];
   readonly viewCount: number;
@@ -75,6 +76,7 @@ export class Resume {
     this.education = JSON.parse(record.education || "[]");
     this.awards = JSON.parse(record.awards || "[]");
     this.achievements = JSON.parse(record.achievements || "[]");
+    this.skillsAndTools = JSON.parse(record.skillsAndTools || "[]");
     this.generatedSummary = record.generatedSummary;
     this.generatedBullets = JSON.parse(record.generatedBullets || "[]");
     this.viewCount = record.viewCount;
@@ -196,6 +198,7 @@ export class Resume {
       education: this.education,
       awards: this.awards,
       achievements: this.achievements,
+      skillsAndTools: this.skillsAndTools,
       generatedSummary: this.generatedSummary,
       generatedBullets: this.generatedBullets,
       viewCount: this.viewCount,
@@ -223,6 +226,7 @@ export class Resume {
       education: this.education,
       awards: this.awards,
       achievements: this.achievements,
+      skillsAndTools: this.skillsAndTools,
       generatedSummary: this.generatedSummary,
       generatedBullets: this.generatedBullets,
       slug: this.slug,

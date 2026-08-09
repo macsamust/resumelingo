@@ -79,6 +79,7 @@ export async function migrate(): Promise<void> {
       "education" TEXT NOT NULL DEFAULT '[]',
       "awards" TEXT NOT NULL DEFAULT '[]',
       "achievements" TEXT NOT NULL DEFAULT '[]',
+      "skillsAndTools" TEXT NOT NULL DEFAULT '[]',
       "generatedSummary" TEXT NOT NULL DEFAULT '',
       "generatedBullets" TEXT NOT NULL DEFAULT '[]',
       "viewCount" INTEGER NOT NULL DEFAULT 0,
@@ -155,6 +156,14 @@ export async function migrate(): Promise<void> {
     -- it's linked to (see AchievementEntry.experienceId) instead of listed
     -- separately in a flat Highlights section. See Resume.combineExperienceFormat.
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "combineExperienceFormat" BOOLEAN NOT NULL DEFAULT false;
+
+    -- "Skills & Tools" section (Edit Resume, Portrait template only — see
+    -- ResumePreview.tsx's photo-banner-sidebar family). Picked by clicking
+    -- suggested keywords rather than typed freehand, so each entry already
+    -- carries its skill-vs-tool category (see types/index.ts SkillOrTool)
+    -- instead of needing to be re-derived at render time. Same JSON-array
+    -- pattern as "achievements" above.
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "skillsAndTools" TEXT NOT NULL DEFAULT '[]';
 
     -- Admins are a deliberately separate table/role from users (see
     -- types/index.ts AdminRecord and services/AdminService.ts) rather than a

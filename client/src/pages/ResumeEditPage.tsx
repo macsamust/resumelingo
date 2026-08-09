@@ -7,6 +7,7 @@ import { ExperienceEditor } from "../components/builder/ExperienceEditor";
 import { EducationEditor } from "../components/builder/EducationEditor";
 import { AwardsEditor } from "../components/builder/AwardsEditor";
 import { AchievementEditor } from "../components/builder/AchievementEditor";
+import { SkillsAndToolsEditor } from "../components/builder/SkillsAndToolsEditor";
 import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { ResumePreview } from "../components/builder/ResumePreview";
 import { ApiError, catalogApi, resumeApi } from "../api";
@@ -25,6 +26,7 @@ import {
   ProfessionDefinition,
   ProfessionSummary,
   Resume,
+  SkillOrTool,
   TemplateDefinition,
   WorkExperienceEntry,
 } from "../types";
@@ -65,6 +67,7 @@ export function ResumeEditPage() {
   const [education, setEducation] = useState<EducationEntry[]>([]);
   const [awards, setAwards] = useState<AwardEntry[]>([]);
   const [achievements, setAchievements] = useState<AchievementEntry[]>([]);
+  const [skillsAndTools, setSkillsAndTools] = useState<SkillOrTool[]>([]);
   const [coverLetterEnabled, setCoverLetterEnabled] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
   const [recruiterModeEnabled, setRecruiterModeEnabled] = useState(false);
@@ -98,6 +101,13 @@ export function ResumeEditPage() {
   // (Portrait, Designer, Monochrome, Showcase) — hidden for every other template.
   const PHOTO_FAMILIES = ["photo-banner-sidebar", "corner-photo-sidebar", "photo-sidebar-underline", "pill-grid-cards"];
   const usesPhoto = PHOTO_FAMILIES.includes(getTemplateStyle(templateKey || "modern").family);
+
+  // "Skills & Tools" is Portrait-only — that's the only template using this
+  // layout family (see config/templateStyles.ts) and the only one with a
+  // sidebar spot for it (see ResumePreview.tsx's photo-banner-sidebar
+  // branch). Selections are kept even if the template is switched away from
+  // Portrait and back, same as every other builder field.
+  const usesPortraitSkills = getTemplateStyle(templateKey || "modern").family === "photo-banner-sidebar";
 
   // "Generate AI cover letter" is only offered for Premium-tier templates —
   // enforced again server-side (see ResumeService), this just keeps the
@@ -135,6 +145,7 @@ export function ResumeEditPage() {
         setEducation(r.education);
         setAwards(r.awards);
         setAchievements(r.achievements);
+        setSkillsAndTools(r.skillsAndTools);
         setTemplates(templatesRes.templates);
         setProfessions(professionsRes.professions);
         setProfessionKey(r.profession);
@@ -243,6 +254,7 @@ export function ResumeEditPage() {
         education,
         awards,
         achievements,
+        skillsAndTools,
       });
       setResume(updated);
     } catch (err) {
@@ -400,6 +412,21 @@ export function ResumeEditPage() {
               </>
             )}
           </CollapsibleSection>
+
+          {usesPortraitSkills && (
+            <CollapsibleSection title="Skills & Tools" forceOpen={forceOpen}>
+              <p className="hero-note" style={{ marginBottom: 16 }}>
+                Only shown on the Portrait template's sidebar. Click a suggested keyword to add it — skills and
+                tools are grouped separately in both the picker and the resume itself.
+              </p>
+              <SkillsAndToolsEditor
+                professionKey={professionKey}
+                professionLabel={professionDetail?.label ?? resume.professionLabel}
+                value={skillsAndTools}
+                onChange={setSkillsAndTools}
+              />
+            </CollapsibleSection>
+          )}
 
           <CollapsibleSection title="Sharing" forceOpen={forceOpen}>
             <div className="field">
@@ -724,6 +751,7 @@ export function ResumeEditPage() {
             awards={awards}
             achievements={achievements}
             combineExperienceFormat={combineExperienceFormat}
+            skillsAndTools={skillsAndTools}
           />
         </div>
       </form>

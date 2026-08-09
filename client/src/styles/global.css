@@ -429,6 +429,36 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .tpl-experience-bullets li { font-size: 13.5px; color: var(--navy-light); padding-left: 16px; position: relative; margin-bottom: 6px; line-height: 1.5; }
 .tpl-experience-bullets li::before { content: "•"; position: absolute; left: 0; color: var(--tpl-accent); font-weight: 800; }
 
+/* "Skills & Tools" section, Portrait template only (see ResumePreview.tsx's
+   skillsAndToolsBlock). Skills and Tools render as two labeled groups with
+   a thin rule between them — the "delineator" — rather than one merged
+   list, even though both live in the same section. */
+.tpl-skills-tools-group-label { display: block; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--tpl-accent); margin-bottom: 4px; }
+.tpl-skills-tools-list { font-size: 13px; color: var(--navy-light); line-height: 1.6; margin: 0; }
+.tpl-skills-tools-divider { height: 1px; background: var(--tpl-accent-soft); margin: 12px 0; }
+
+/* Skills & Tools picker (Edit Resume, Portrait template only — see
+   components/builder/SkillsAndToolsEditor.tsx). Available suggestions are
+   plain outlined pills; clicking one both highlights it in place and
+   copies it into the "Selected" row below as a removable dark chip. */
+.skill-picker-group { margin-bottom: 18px; }
+.skill-picker-group:last-child { margin-bottom: 0; }
+.skill-picker-group-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); margin-bottom: 8px; }
+.skill-picker-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.skill-picker-chip {
+  font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border);
+  background: #fff; color: var(--navy-light); cursor: pointer; font-family: inherit;
+}
+.skill-picker-chip:hover { border-color: var(--indigo); }
+.skill-picker-chip.selected { background: #eef2ff; color: var(--indigo); border-color: #eef2ff; }
+.skill-picker-selected-chip {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600;
+  padding: 6px 10px 6px 12px; border-radius: 999px; background: var(--navy); color: #fff; border: none;
+  cursor: pointer; font-family: inherit;
+}
+.skill-picker-selected-remove { opacity: .6; }
+.skill-picker-selected-chip:hover .skill-picker-selected-remove { opacity: 1; }
+
 /* executive-banner: full-bleed colored header banner, single column below.
    bannerAlign "center" (executive, military-transition) centers the banner
    text; the default (corporate, consulting) stays left-aligned. */

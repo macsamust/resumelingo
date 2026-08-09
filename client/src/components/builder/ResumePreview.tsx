@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { getTemplateStyle } from "../../config/templateStyles";
-import { AchievementEntry, AwardEntry, EducationEntry, WorkExperienceEntry } from "../../types";
+import { AchievementEntry, AwardEntry, EducationEntry, SkillOrTool, WorkExperienceEntry } from "../../types";
 import { groupAchievementsByExperience } from "../../utils/starBullet";
 
 interface Props {
@@ -23,6 +23,8 @@ interface Props {
   achievements?: AchievementEntry[];
   /** "Combine Work Experience with Achievements" toggle — see types/index.ts Resume.combineExperienceFormat. */
   combineExperienceFormat?: boolean;
+  /** "Skills & Tools" section — only rendered by the Portrait template (photo-banner-sidebar family). Ignored by every other template. */
+  skillsAndTools?: SkillOrTool[];
 }
 
 /**
@@ -106,6 +108,7 @@ export function ResumePreview({
   awards = [],
   achievements = [],
   combineExperienceFormat = false,
+  skillsAndTools = [],
 }: Props) {
   const style = getTemplateStyle(templateKey ?? "modern");
   const cssVars = {
@@ -274,6 +277,32 @@ export function ResumePreview({
     </div>
   );
 
+  // Portrait-only (photo-banner-sidebar family) — see Props.skillsAndTools.
+  // Skills and tools render as two separately-labeled groups with a rule
+  // between them (the "delineator") rather than one merged list, so the two
+  // kinds of keyword stay visually distinct even though they're picked from
+  // the same section in the builder.
+  const skills = skillsAndTools.filter((s) => s.category === "skill");
+  const tools = skillsAndTools.filter((s) => s.category === "tool");
+  const skillsAndToolsBlock = skillsAndTools.length > 0 && (
+    <div className="tpl-section">
+      <span className="tpl-section-label">Skills &amp; Tools</span>
+      {skills.length > 0 && (
+        <div className="tpl-skills-tools-group">
+          <span className="tpl-skills-tools-group-label">Skills</span>
+          <p className="tpl-skills-tools-list">{skills.map((s) => s.label).join(", ")}</p>
+        </div>
+      )}
+      {skills.length > 0 && tools.length > 0 && <div className="tpl-skills-tools-divider" />}
+      {tools.length > 0 && (
+        <div className="tpl-skills-tools-group">
+          <span className="tpl-skills-tools-group-label">Tools</span>
+          <p className="tpl-skills-tools-list">{tools.map((s) => s.label).join(", ")}</p>
+        </div>
+      )}
+    </div>
+  );
+
   // Fixed reading order for every template, regardless of a template's
   // "flow" (which now only controls section label tone, not order):
   // Summary always leads, Experience and Education follow in that order,
@@ -423,6 +452,7 @@ export function ResumePreview({
             </div>
             <div className="tpl-photo-side">
               {bulletsBlock}
+              {skillsAndToolsBlock}
               {awardsBlock}
             </div>
           </div>

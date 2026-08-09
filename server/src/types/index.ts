@@ -151,6 +151,19 @@ export interface AchievementEntry {
   experienceId?: string | null;
 }
 
+/**
+ * One entry in the "Skills & Tools" section (Portrait template only — see
+ * ResumePreview.tsx's photo-banner-sidebar family). Picked by clicking a
+ * suggested keyword in the Edit Resume builder (see client's
+ * config/skillsAndTools.ts) rather than typed freehand, so "category" is
+ * always known up front instead of needing to be re-inferred at render
+ * time (which would break if the resume's profession changed later).
+ */
+export interface SkillOrTool {
+  label: string;
+  category: "skill" | "tool";
+}
+
 export interface ResumeRecord {
   id: string;
   userId: string;
@@ -200,6 +213,7 @@ export interface ResumeRecord {
   education: string; // JSON-serialized EducationEntry[]
   awards: string; // JSON-serialized AwardEntry[]
   achievements: string; // JSON-serialized AchievementEntry[]
+  skillsAndTools: string; // JSON-serialized SkillOrTool[]
   generatedSummary: string;
   generatedBullets: string; // JSON-serialized string[]
   viewCount: number;

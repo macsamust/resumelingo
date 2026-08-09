@@ -78,6 +78,18 @@ export interface AchievementEntry {
   experienceId?: string | null;
 }
 
+/**
+ * One entry in the "Skills & Tools" section (Portrait template only — see
+ * ResumePreview.tsx's photo-banner-sidebar family, and
+ * components/builder/SkillsAndToolsEditor.tsx). Picked by clicking a
+ * suggested keyword (config/skillsAndTools.ts) rather than typed freehand,
+ * so "category" is always known up front.
+ */
+export interface SkillOrTool {
+  label: string;
+  category: "skill" | "tool";
+}
+
 export interface SubscriptionPlan {
   tier: SubscriptionTier;
   name: string;
@@ -136,6 +148,8 @@ export interface Resume {
   education: EducationEntry[];
   awards: AwardEntry[];
   achievements: AchievementEntry[];
+  /** "Skills & Tools" section — only rendered by the Portrait template. See types/index.ts SkillOrTool. */
+  skillsAndTools: SkillOrTool[];
   generatedSummary: string;
   generatedBullets: string[];
   viewCount: number;
@@ -177,6 +191,7 @@ export interface PublicResume {
   education: EducationEntry[];
   awards: AwardEntry[];
   achievements: AchievementEntry[];
+  skillsAndTools: SkillOrTool[];
   generatedSummary: string;
   generatedBullets: string[];
   slug: string;

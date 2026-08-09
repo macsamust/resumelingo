@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { BaseRepository } from "./BaseRepository";
-import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, ResumeRecord, WorkExperienceEntry } from "../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, ResumeRecord, SkillOrTool, WorkExperienceEntry } from "../types";
 
 export interface CreateResumeInput {
   userId: string;
@@ -23,6 +23,7 @@ export interface CreateResumeInput {
   education: EducationEntry[];
   awards: AwardEntry[];
   achievements: AchievementEntry[];
+  skillsAndTools?: SkillOrTool[];
   generatedSummary: string;
   generatedBullets: string[];
 }
@@ -54,6 +55,7 @@ export interface UpdateResumeInput {
   education?: EducationEntry[];
   awards?: AwardEntry[];
   achievements?: AchievementEntry[];
+  skillsAndTools?: SkillOrTool[];
   generatedSummary?: string;
   generatedBullets?: string[];
 }
@@ -108,6 +110,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       education: JSON.stringify(input.education),
       awards: JSON.stringify(input.awards),
       achievements: JSON.stringify(input.achievements),
+      skillsAndTools: JSON.stringify(input.skillsAndTools ?? []),
       generatedSummary: input.generatedSummary,
       generatedBullets: JSON.stringify(input.generatedBullets),
       viewCount: 0,
@@ -155,6 +158,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       education: input.education ? JSON.stringify(input.education) : existing.education,
       awards: input.awards ? JSON.stringify(input.awards) : existing.awards,
       achievements: input.achievements ? JSON.stringify(input.achievements) : existing.achievements,
+      skillsAndTools: input.skillsAndTools ? JSON.stringify(input.skillsAndTools) : existing.skillsAndTools,
       generatedSummary: input.generatedSummary ?? existing.generatedSummary,
       generatedBullets: input.generatedBullets ? JSON.stringify(input.generatedBullets) : existing.generatedBullets,
       updatedAt: new Date().toISOString(),

@@ -77,6 +77,17 @@ function resumeToPlainText(resume: PublicResume): string {
     lines.push("");
   }
 
+  // Portrait-only in the on-screen preview, but included here regardless of
+  // template — a text export shouldn't silently drop data the resume has.
+  const skills = resume.skillsAndTools?.filter((s) => s.category === "skill") ?? [];
+  const tools = resume.skillsAndTools?.filter((s) => s.category === "tool") ?? [];
+  if (skills.length > 0 || tools.length > 0) {
+    lines.push("SKILLS & TOOLS");
+    if (skills.length > 0) lines.push(`Skills: ${skills.map((s) => s.label).join(", ")}`);
+    if (tools.length > 0) lines.push(`Tools: ${tools.map((s) => s.label).join(", ")}`);
+    lines.push("");
+  }
+
   const awards = resume.awards?.length ? sortAwards(resume.awards) : [];
   if (awards.length > 0) {
     lines.push("AWARDS");
@@ -290,6 +301,7 @@ export function PublicResumePage() {
         awards={resume.awards}
         achievements={resume.achievements}
         combineExperienceFormat={resume.combineExperienceFormat}
+        skillsAndTools={resume.skillsAndTools}
       />
       {(() => {
         const answerEntries = Object.entries(resume.answers).filter(([, v]) => v && v.trim());

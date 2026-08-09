@@ -1,5 +1,5 @@
 import { ApiClient } from "./ApiClient";
-import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, Resume, WorkExperienceEntry } from "../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, Resume, SkillOrTool, WorkExperienceEntry } from "../types";
 
 export interface CreateResumeInput {
   fullName?: string;
@@ -29,6 +29,8 @@ export interface CreateResumeInput {
   education?: EducationEntry[];
   awards?: AwardEntry[];
   achievements?: AchievementEntry[];
+  /** "Skills & Tools" section — only rendered by the Portrait template. */
+  skillsAndTools?: SkillOrTool[];
 }
 
 export class ResumeApi extends ApiClient {
