@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { CollapsibleSection, ForceOpenSignal } from "../components/builder/CollapsibleSection";
@@ -13,6 +13,7 @@ import { ApiError, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL } from "../utils/templateAccess";
 import { getTemplateStyle } from "../config/templateStyles";
+import { buildResumeTextBlob, matchKeywords, runHealthChecks } from "../utils/atsCheck";
 import {
   AchievementEntry,
   AwardEntry,
@@ -59,10 +60,16 @@ export function ResumeEditPage() {
   const [awards, setAwards] = useState<AwardEntry[]>([]);
   const [achievements, setAchievements] = useState<AchievementEntry[]>([]);
   const [coverLetterEnabled, setCoverLetterEnabled] = useState(false);
+  const [jobDescription, setJobDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [forceOpen, setForceOpen] = useState<ForceOpenSignal | undefined>(undefined);
+
+  // ATS Check is a Premium perk, matching the marketing/pricing copy — see
+  // client/src/utils/atsCheck.ts for why this stays entirely client-side
+  // (no save, no network call, nothing to protect server-side).
+  const isPremium = user?.subscriptionTier === "premium";
 
   // The photo upload only applies to templates that actually render a photo
   // (Portrait, Designer, Monochrome, Showcase) — hidden for every other template.
@@ -122,6 +129,39 @@ export function ResumeEditPage() {
     setAnswers({});
     catalogApi.getProfessionQuestions(key).then((res) => setProfessionDetail(res.profession));
   };
+
+  // Recomputed live from whatever's currently in the form — no save needed
+  // to see an updated score, and nothing here ever leaves the browser.
+  const healthCheck = useMemo(
+    () =>
+      runHealthChecks({
+        contactEmail,
+        contactPhone,
+        templateFamily: getTemplateStyle(templateKey || "modern").family,
+        experience,
+        education,
+        achievements,
+        answers,
+        summary: resume?.generatedSummary ?? "",
+      }),
+    [contactEmail, contactPhone, templateKey, experience, education, achievements, answers, resume?.generatedSummary]
+  );
+
+  const keywordMatch = useMemo(() => {
+    if (!jobDescription.trim()) return null;
+    const resumeText = buildResumeTextBlob({
+      title,
+      professionLabel: professionDetail?.label ?? resume?.professionLabel ?? "",
+      summary: resume?.generatedSummary ?? "",
+      bullets: resume?.generatedBullets ?? [],
+      experience,
+      education,
+      awards,
+      achievements,
+      answers,
+    });
+    return matchKeywords(jobDescription, resumeText);
+  }, [jobDescription, title, professionDetail, resume, experience, education, awards, achievements, answers]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -363,6 +403,80 @@ export function ResumeEditPage() {
                 answers={answers}
                 onChange={(key, value) => setAnswers((prev) => ({ ...prev, [key]: value }))}
               />
+            )}
+          </CollapsibleSection>
+
+          <CollapsibleSection title="ATS Check" forceOpen={forceOpen}>
+            {!isPremium ? (
+              <>
+                <p className="hero-note" style={{ marginBottom: 0 }}>
+                  ATS Check is a Premium feature. Upgrade to {TIER_LABEL.premium} to get a resume Health Score and
+                  keyword matching against a job description.
+                </p>
+                <Link to="/#pricing" className="btn btn-ghost" style={{ marginTop: 12 }}>
+                  View plans
+                </Link>
+              </>
+            ) : (
+              <>
+                <div className="ats-score-row">
+                  <div className="ats-score-value">{healthCheck.score}%</div>
+                  <p className="hero-note" style={{ margin: 0 }}>
+                    Health Score — how well this resume's structure holds up to an ATS parser.
+                  </p>
+                </div>
+                <ul className="ats-checklist">
+                  {healthCheck.items.map((item) => (
+                    <li key={item.id} className={item.passed ? "ats-pass" : "ats-fail"}>
+                      <span aria-hidden="true">{item.passed ? "✓" : "✗"}</span> {item.label}
+                      {!item.passed && <p className="hero-note" style={{ margin: "4px 0 0" }}>{item.hint}</p>}
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="field" style={{ marginTop: 20 }}>
+                  <label>Paste a job description for keyword matching</label>
+                  <textarea
+                    rows={6}
+                    value={jobDescription}
+                    onChange={(e) => setJobDescription(e.target.value)}
+                    placeholder="Paste the job posting text here…"
+                  />
+                </div>
+
+                {keywordMatch && (
+                  <div className="ats-keyword-results">
+                    <p className="hero-note" style={{ marginBottom: 8 }}>
+                      Matched {keywordMatch.matched.length} of {keywordMatch.matched.length + keywordMatch.missing.length}{" "}
+                      top keywords from this job description.
+                    </p>
+                    {keywordMatch.matched.length > 0 && (
+                      <div className="ats-keyword-group">
+                        <div className="ats-keyword-group-label">Found in your resume</div>
+                        <div className="ats-keyword-chips">
+                          {keywordMatch.matched.map((k) => (
+                            <span key={k.word} className="ats-chip ats-chip-matched">
+                              {k.word}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {keywordMatch.missing.length > 0 && (
+                      <div className="ats-keyword-group">
+                        <div className="ats-keyword-group-label">Missing from your resume</div>
+                        <div className="ats-keyword-chips">
+                          {keywordMatch.missing.map((k) => (
+                            <span key={k.word} className="ats-chip ats-chip-missing">
+                              {k.word}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </CollapsibleSection>
 

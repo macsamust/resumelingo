@@ -249,6 +249,19 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   display: inline-block; font-size: 12.5px; font-weight: 600; color: var(--tpl-accent, #4f46e5);
   margin: -10px 0 16px; cursor: pointer;
 }
+.ats-score-row { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+.ats-score-value { font-size: 32px; font-weight: 800; color: var(--indigo); line-height: 1; }
+.ats-checklist { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.ats-checklist li { font-size: 13.5px; font-weight: 600; color: var(--navy-light); }
+.ats-checklist li.ats-pass span { color: #16a34a; }
+.ats-checklist li.ats-fail span { color: #dc2626; }
+.ats-keyword-results { margin-top: 18px; }
+.ats-keyword-group { margin-bottom: 14px; }
+.ats-keyword-group-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; color: var(--muted); margin-bottom: 8px; }
+.ats-keyword-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.ats-chip { font-size: 12.5px; font-weight: 600; padding: 5px 12px; border-radius: 999px; }
+.ats-chip-matched { background: #dcfce7; color: #15803d; }
+.ats-chip-missing { background: #fee2e2; color: #b91c1c; }
 .checkbox-field input { width: auto; }
 .experience-remove { padding: 6px 12px; font-size: 12.5px; }
 
