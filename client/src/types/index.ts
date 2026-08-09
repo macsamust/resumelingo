@@ -220,12 +220,27 @@ export interface AdminTemplate {
   updatedAt: string;
 }
 
+/** Premium-only — see server's DashboardController.buildResumeAnalytics(). Null for Starter/Professional. */
+export interface ResumeAnalytics {
+  strengthDistribution: { strong: number; moderate: number; needsWork: number };
+  sectionGaps: { resumeId: string; title: string; missing: string[] }[];
+  staleResumes: { resumeId: string; title: string; daysSinceUpdate: number }[];
+  viewTrend: { thisWeek: number; lastWeek: number; daily: { date: string; count: number }[] };
+  scoreTrend: { averageDelta: number; improved: { resumeId: string; title: string; delta: number }[] };
+  comparison: {
+    strongest: { resumeId: string; title: string; score: number };
+    weakest: { resumeId: string; title: string; score: number };
+    gapDrivers: string[];
+  } | null;
+}
+
 export interface DashboardSummary {
   myResumes: Resume[];
   sharedLinks: { title: string; slug: string; visibility: LinkVisibility }[];
   resumeViews: number;
   profileStrengthScore: number;
   suggestedImprovements: string[];
+  resumeAnalytics: ResumeAnalytics | null;
   subscription: {
     tier: SubscriptionTier;
     planName: string;

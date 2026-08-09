@@ -203,6 +203,34 @@ export async function migrate(): Promise<void> {
       "features" TEXT NOT NULL DEFAULT '[]',
       "updatedAt" TEXT NOT NULL
     );
+
+    -- One row per public view of a resume, replacing "viewCount" (a single
+    -- running total with no history) as the source for the Premium
+    -- dashboard's Resume Analytics view trend (this week vs. last week,
+    -- day-by-day). "viewCount" itself is left alone — the My Resumes cards
+    -- and the "Total Views" tile keep reading it directly, cheaper than a
+    -- COUNT(*) for a number that's shown everywhere. ON DELETE CASCADE so
+    -- deleting a resume doesn't orphan its view history.
+    CREATE TABLE IF NOT EXISTS resume_views (
+      "id" TEXT PRIMARY KEY,
+      "resumeId" TEXT NOT NULL REFERENCES resumes("id") ON DELETE CASCADE,
+      "viewedAt" TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS resume_views_resume_idx ON resume_views ("resumeId");
+    CREATE INDEX IF NOT EXISTS resume_views_viewed_at_idx ON resume_views ("viewedAt");
+
+    -- One row per Resume.strengthScore snapshot, recorded every time a
+    -- resume is created or updated (see ResumeService), so the Premium
+    -- dashboard's Resume Analytics can show a score trend ("up 12 points
+    -- this month") instead of just the current number. ON DELETE CASCADE
+    -- so deleting a resume doesn't orphan its score history.
+    CREATE TABLE IF NOT EXISTS resume_score_snapshots (
+      "id" TEXT PRIMARY KEY,
+      "resumeId" TEXT NOT NULL REFERENCES resumes("id") ON DELETE CASCADE,
+      "score" INTEGER NOT NULL,
+      "recordedAt" TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS resume_score_snapshots_resume_idx ON resume_score_snapshots ("resumeId");
   `);
 
   await seedCatalogDefaults();

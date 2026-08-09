@@ -1,4 +1,5 @@
 import { ResumeRepository, UpdateResumeInput } from "../repositories/ResumeRepository";
+import { ResumeAnalyticsRepository } from "../repositories/ResumeAnalyticsRepository";
 import { UserRepository } from "../repositories/UserRepository";
 import { IContentGenerator, RuleBasedContentGenerator } from "./ContentGenerator";
 import { ICoverLetterGenerator, pickTopExperience, RuleBasedCoverLetterGenerator } from "./CoverLetterGenerator";
@@ -89,7 +90,8 @@ export class ResumeService {
     private readonly resumes: ResumeRepository = new ResumeRepository(),
     private readonly users: UserRepository = new UserRepository(),
     private readonly generator: IContentGenerator = new RuleBasedContentGenerator(),
-    private readonly coverLetterGenerator: ICoverLetterGenerator = new RuleBasedCoverLetterGenerator()
+    private readonly coverLetterGenerator: ICoverLetterGenerator = new RuleBasedCoverLetterGenerator(),
+    private readonly analytics: ResumeAnalyticsRepository = new ResumeAnalyticsRepository()
   ) {}
 
   async listForUser(userId: string): Promise<Resume[]> {
@@ -159,7 +161,14 @@ export class ResumeService {
       generatedSummary: generated.summary,
       generatedBullets: generated.bullets,
     });
-    return new Resume(record);
+    const resume = new Resume(record);
+    // First snapshot for the Resume Analytics score trend — see
+    // ResumeAnalyticsRepository.scoreTrend. Fire-and-forget-safe (an
+    // analytics write failing shouldn't fail resume creation), but awaited
+    // here since there's no request-scoped background task runner in this
+    // app to hand it off to.
+    await this.analytics.recordScoreSnapshot(resume.id, resume.strengthScore);
+    return resume;
   }
 
   async update(userId: string, resumeId: string, input: UpdateResumeInput): Promise<Resume> {
@@ -255,7 +264,9 @@ export class ResumeService {
       generatedCoverLetter,
       recruiterModeEnabled,
     });
-    return new Resume(updated!);
+    const resume = new Resume(updated!);
+    await this.analytics.recordScoreSnapshot(resume.id, resume.strengthScore);
+    return resume;
   }
 
   async delete(userId: string, resumeId: string): Promise<void> {
@@ -283,6 +294,7 @@ export class ResumeService {
       );
     }
     await this.resumes.incrementViewCount(record.id);
+    await this.analytics.recordView(record.id);
     return resume;
   }
 }

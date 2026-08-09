@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
+import { ResumeAnalyticsPanel } from "../components/dashboard/ResumeAnalyticsPanel";
 import { useAuth } from "../context/AuthContext";
 import { catalogApi, resumeApi } from "../api";
 import { DashboardSummary } from "../types";
@@ -209,6 +210,10 @@ export function DashboardPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {isPremium && summary.resumeAnalytics && (
+        <ResumeAnalyticsPanel analytics={summary.resumeAnalytics} />
       )}
 
       {!isPremium && (
