@@ -134,6 +134,8 @@ export interface PublicResume {
   awards: AwardEntry[];
   generatedSummary: string;
   generatedBullets: string[];
+  /** AI-generated cover letter text, or "" when the resume owner didn't enable it. */
+  generatedCoverLetter: string;
   slug: string;
 }
 

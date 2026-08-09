@@ -148,6 +148,11 @@ export class Resume {
       awards: this.awards,
       generatedSummary: this.generatedSummary,
       generatedBullets: this.generatedBullets,
+      // Empty string whenever coverLetterEnabled is false (see ResumeService,
+      // which clears it on disable) — that alone is what the public page
+      // uses to decide whether to show the Cover Letter tab, so
+      // coverLetterEnabled itself doesn't need to be exposed here too.
+      generatedCoverLetter: this.generatedCoverLetter,
       slug: this.slug,
     };
   }

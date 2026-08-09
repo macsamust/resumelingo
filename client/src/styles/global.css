@@ -547,15 +547,33 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .public-resume-page { max-width: 760px; margin: 0 auto; padding: 60px 24px; }
 .public-resume-page .preview-col { position: static; top: auto; }
 .public-resume-page .preview-panel { position: static; top: auto; margin-bottom: 24px; box-shadow: 0 20px 40px -24px rgba(15, 23, 42, .2); }
-.public-resume-actions { display: flex; gap: 12px; margin-bottom: 24px; }
+.public-resume-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+
+/* Resume/Cover Letter tabs — only rendered when a cover letter exists.
+   On screen, only the active tab's panel is shown (.public-resume-tab-panel-hidden);
+   in print, both panels are always forced visible (see @media print below)
+   so "Print / Save as PDF" offers both documents regardless of which tab
+   was active, and the cover letter starts on its own page. */
+.public-resume-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+.public-resume-tab {
+  padding: 10px 6px; margin-bottom: -1px; background: none; border: none; border-bottom: 2px solid transparent;
+  font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer;
+}
+.public-resume-tab.active { color: var(--navy); border-bottom-color: var(--navy); }
+.public-resume-tab-panel-hidden { display: none; }
+.public-resume-cover-letter-text { white-space: pre-line; font-size: 14px; line-height: 1.8; color: var(--navy-light); }
 
 /* Printing/"Save as PDF" (window.print()) shows the resume itself plus the
    additional-details card below it (skills/tools/experience answers, e.g.
    Languages, Frameworks, Cloud Platforms, Certifications for a Software
-   Engineer resume) — only the action buttons above aren't part of the
-   resume document, so those are hidden here. */
+   Engineer resume) and, when present, the cover letter on its own page —
+   only the action buttons and tab switcher above aren't part of the
+   document(s), so those are hidden here. */
 @media print {
   .public-resume-actions { display: none !important; }
+  .public-resume-tabs { display: none !important; }
+  .public-resume-tab-panel-hidden { display: block; }
+  .public-resume-cover-letter { page-break-before: always; }
   .public-resume-page { max-width: none; margin: 0; padding: 0; }
   .public-resume-page .preview-panel { box-shadow: none; border: none; }
   .public-resume-card { box-shadow: none; border: none; page-break-inside: avoid; }
