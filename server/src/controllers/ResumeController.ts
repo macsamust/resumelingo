@@ -1,9 +1,21 @@
 import { Response } from "express";
 import { ResumeService } from "../services/ResumeService";
+import { ResumeAnalyticsRepository } from "../repositories/ResumeAnalyticsRepository";
 import { AuthenticatedRequest } from "../middleware/authMiddleware";
+import { SubscriptionTier } from "../types";
+
+// Keeps a single pasted job description from flooding resume_keyword_checks
+// — the client only ever sends the top ~20 missing keywords anyway (see
+// utils/atsCheck.ts's matchKeywords `max` default), this is just a
+// server-side backstop against a malformed or hostile request.
+const MAX_KEYWORDS_PER_CHECK = 30;
+const MAX_KEYWORD_LENGTH = 40;
 
 export class ResumeController {
-  constructor(private readonly resumeService: ResumeService = new ResumeService()) {}
+  constructor(
+    private readonly resumeService: ResumeService = new ResumeService(),
+    private readonly analytics: ResumeAnalyticsRepository = new ResumeAnalyticsRepository()
+  ) {}
 
   list = async (req: AuthenticatedRequest, res: Response) => {
     const resumes = await this.resumeService.listForUser(req.user!.id);
@@ -67,6 +79,34 @@ export class ResumeController {
 
   remove = async (req: AuthenticatedRequest, res: Response) => {
     await this.resumeService.delete(req.user!.id, req.params.id);
+    res.status(204).send();
+  };
+
+  /**
+   * Logs the missing-keyword list from one ATS Check job-description paste
+   * (see client's ResumeEditPage debounced effect) so the Premium
+   * dashboard's Resume Analytics can surface which keywords a user keeps
+   * missing. The job description text itself is never sent — only the
+   * resulting words, computed client-side by utils/atsCheck.ts's
+   * matchKeywords. Premium-only (matching where the ATS Check UI that
+   * triggers this is itself gated) and silently a no-op otherwise, rather
+   * than an error — this is a background logging call, not a user action
+   * worth surfacing a failure for.
+   */
+  recordKeywordCheck = async (req: AuthenticatedRequest, res: Response) => {
+    await this.resumeService.getOwned(req.user!.id, req.params.id); // throws if not found/owned
+    if (req.user!.subscriptionTier !== SubscriptionTier.Premium) return res.status(204).send();
+
+    const { missingKeywords } = req.body ?? {};
+    if (!Array.isArray(missingKeywords)) {
+      return res.status(400).json({ error: "missingKeywords must be an array of strings." });
+    }
+    const cleaned = missingKeywords
+      .filter((w): w is string => typeof w === "string" && w.trim().length > 0)
+      .slice(0, MAX_KEYWORDS_PER_CHECK)
+      .map((w) => w.trim().toLowerCase().slice(0, MAX_KEYWORD_LENGTH));
+
+    await this.analytics.recordKeywordCheck(req.params.id, cleaned);
     res.status(204).send();
   };
 }

@@ -14,6 +14,11 @@ export interface ResumeScoreTrend {
   newest: number;
 }
 
+export interface KeywordGapCount {
+  word: string;
+  count: number;
+}
+
 /**
  * Backs the Premium dashboard's "Resume Analytics" section (view trend +
  * strength-score trend). Deliberately a separate repository from
@@ -90,5 +95,28 @@ export class ResumeAnalyticsRepository {
       newest: r.score,
       oldest: oldestByResume.get(r.resumeId) ?? r.score,
     }));
+  }
+
+  /** Logs one ATS Check keyword match's missing-keyword list — see ResumeController.recordKeywordCheck. Caps the list itself is enforced by the caller, not here. */
+  async recordKeywordCheck(resumeId: string, missingKeywords: string[]): Promise<void> {
+    await this.pool.query(
+      `INSERT INTO resume_keyword_checks ("id", "resumeId", "missingKeywords", "checkedAt") VALUES ($1, $2, $3, $4)`,
+      [nanoid(12), resumeId, JSON.stringify(missingKeywords), new Date().toISOString()]
+    );
+  }
+
+  /** Most frequently missing keywords across every logged check for the given resumes, most-common first — "keywords you keep missing" for the Premium dashboard. */
+  async recurringMissingKeywords(resumeIds: string[], limit = 8): Promise<KeywordGapCount[]> {
+    if (resumeIds.length === 0) return [];
+    const { rows } = await this.pool.query(
+      `SELECT keyword, COUNT(*)::int AS count
+       FROM resume_keyword_checks, LATERAL jsonb_array_elements_text("missingKeywords"::jsonb) AS keyword
+       WHERE "resumeId" = ANY($1)
+       GROUP BY keyword
+       ORDER BY count DESC, keyword ASC
+       LIMIT $2`,
+      [resumeIds, limit]
+    );
+    return (rows as { keyword: string; count: number }[]).map((r) => ({ word: r.keyword, count: r.count }));
   }
 }

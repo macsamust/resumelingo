@@ -196,6 +196,20 @@ export function ResumeEditPage() {
     return matchKeywords(jobDescription, resumeText);
   }, [jobDescription, title, professionDetail, resume, experience, education, awards, achievements, answers]);
 
+  // Logs the missing-keyword list (words only — the pasted job description
+  // itself never leaves the browser) so the Premium dashboard's Resume
+  // Analytics can surface which keywords a user keeps missing across job
+  // postings. Debounced so it fires once typing/pasting settles, not on
+  // every keystroke; fire-and-forget — a failed log shouldn't interrupt
+  // editing, so errors are swallowed rather than surfaced.
+  useEffect(() => {
+    if (!id || !isPremium || !keywordMatch || keywordMatch.missing.length === 0) return;
+    const handle = setTimeout(() => {
+      resumeApi.recordKeywordCheck(id, keywordMatch.missing.map((k) => k.word)).catch(() => {});
+    }, 1500);
+    return () => clearTimeout(handle);
+  }, [id, isPremium, keywordMatch]);
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!id) return;

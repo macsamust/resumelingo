@@ -12,5 +12,6 @@ router.post("/", asyncHandler(controller.create));
 router.get("/:id", asyncHandler(controller.get));
 router.put("/:id", asyncHandler(controller.update));
 router.delete("/:id", asyncHandler(controller.remove));
+router.post("/:id/keyword-check", asyncHandler(controller.recordKeywordCheck));
 
 export default router;

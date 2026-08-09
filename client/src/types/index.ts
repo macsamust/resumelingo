@@ -227,6 +227,8 @@ export interface ResumeAnalytics {
   staleResumes: { resumeId: string; title: string; daysSinceUpdate: number }[];
   viewTrend: { thisWeek: number; lastWeek: number; daily: { date: string; count: number }[] };
   scoreTrend: { averageDelta: number; improved: { resumeId: string; title: string; delta: number }[] };
+  /** Most frequently missing job-description keywords across every logged ATS Check on this account — see ResumeApi.recordKeywordCheck. */
+  recurringMissingKeywords: { word: string; count: number }[];
   comparison: {
     strongest: { resumeId: string; title: string; score: number };
     weakest: { resumeId: string; title: string; score: number };

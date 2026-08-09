@@ -5,12 +5,14 @@ import { ResumeAnalytics } from "../../types";
  * Premium-only "Resume Analytics" section (Dashboard) — everything here
  * comes straight from DashboardSummary.resumeAnalytics (see server's
  * DashboardController.buildResumeAnalytics()): strength distribution,
- * section gaps, staleness, a 14-day view trend, a strength-score trend, and
- * a strongest-vs-weakest comparison. Purely a display component — all the
- * math already happened server-side.
+ * section gaps, staleness, a 14-day view trend, a strength-score trend,
+ * recurring missing ATS Check keywords, and a strongest-vs-weakest
+ * comparison. Purely a display component — all the math already happened
+ * server-side.
  */
 export function ResumeAnalyticsPanel({ analytics }: { analytics: ResumeAnalytics }) {
-  const { strengthDistribution, sectionGaps, staleResumes, viewTrend, scoreTrend, comparison } = analytics;
+  const { strengthDistribution, sectionGaps, staleResumes, viewTrend, scoreTrend, recurringMissingKeywords, comparison } =
+    analytics;
   const maxDailyViews = Math.max(1, ...viewTrend.daily.map((d) => d.count));
   const viewDelta = viewTrend.thisWeek - viewTrend.lastWeek;
 
@@ -82,6 +84,22 @@ export function ResumeAnalyticsPanel({ analytics }: { analytics: ResumeAnalytics
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {recurringMissingKeywords.length > 0 && (
+        <div className="analytics-section">
+          <h3 className="analytics-subhead">Keywords you keep missing</h3>
+          <p className="hero-note" style={{ marginBottom: 10 }}>
+            Most-repeated words from job descriptions you've pasted into ATS Check that your resumes don't cover yet.
+          </p>
+          <div className="ats-keyword-chips">
+            {recurringMissingKeywords.map((k) => (
+              <span key={k.word} className="ats-chip ats-chip-missing">
+                {k.word} × {k.count}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 

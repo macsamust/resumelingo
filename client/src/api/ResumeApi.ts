@@ -51,4 +51,9 @@ export class ResumeApi extends ApiClient {
   remove(id: string) {
     return this.del<void>(`/resumes/${id}`);
   }
+
+  /** Logs one ATS Check keyword match's missing-keyword list — see ResumeEditPage's debounced effect and utils/atsCheck.ts's matchKeywords. Fire-and-forget from the caller's perspective; server no-ops (204, no error) for non-Premium accounts. */
+  recordKeywordCheck(id: string, missingKeywords: string[]) {
+    return this.post<void>(`/resumes/${id}/keyword-check`, { missingKeywords });
+  }
 }

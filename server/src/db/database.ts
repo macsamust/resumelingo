@@ -231,6 +231,23 @@ export async function migrate(): Promise<void> {
       "recordedAt" TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS resume_score_snapshots_resume_idx ON resume_score_snapshots ("resumeId");
+
+    -- One row per ATS Check keyword match (Edit Resume, Premium — see
+    -- ResumeController.recordKeywordCheck), logging which of a pasted job
+    -- description's top keywords weren't found in the resume. The keyword
+    -- match itself runs entirely client-side (client/src/utils/atsCheck.ts)
+    -- and the job description text is never sent here — only the resulting
+    -- missing-keyword words are, so the Premium dashboard's Resume Analytics
+    -- can surface which keywords a user keeps missing across job postings
+    -- without ever storing the postings themselves. ON DELETE CASCADE so
+    -- deleting a resume doesn't orphan its keyword-check history.
+    CREATE TABLE IF NOT EXISTS resume_keyword_checks (
+      "id" TEXT PRIMARY KEY,
+      "resumeId" TEXT NOT NULL REFERENCES resumes("id") ON DELETE CASCADE,
+      "missingKeywords" TEXT NOT NULL DEFAULT '[]',
+      "checkedAt" TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS resume_keyword_checks_resume_idx ON resume_keyword_checks ("resumeId");
   `);
 
   await seedCatalogDefaults();

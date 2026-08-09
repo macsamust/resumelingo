@@ -2,7 +2,7 @@ import { Response } from "express";
 import { AuthenticatedRequest } from "../middleware/authMiddleware";
 import { ResumeService } from "../services/ResumeService";
 import { SubscriptionService } from "../services/SubscriptionService";
-import { ResumeAnalyticsRepository } from "../repositories/ResumeAnalyticsRepository";
+import { KeywordGapCount, ResumeAnalyticsRepository } from "../repositories/ResumeAnalyticsRepository";
 import { Resume } from "../models/Resume";
 import { SubscriptionTier } from "../types";
 
@@ -27,6 +27,7 @@ interface ResumeAnalytics {
   staleResumes: StaleResume[];
   viewTrend: { thisWeek: number; lastWeek: number; daily: { date: string; count: number }[] };
   scoreTrend: { averageDelta: number; improved: { resumeId: string; title: string; delta: number }[] };
+  recurringMissingKeywords: KeywordGapCount[];
   comparison: {
     strongest: { resumeId: string; title: string; score: number };
     weakest: { resumeId: string; title: string; score: number };
@@ -99,9 +100,10 @@ export class DashboardController {
     if (resumes.length === 0) return null;
     const resumeIds = resumes.map((r) => r.id);
 
-    const [daily, scoreTrends] = await Promise.all([
+    const [daily, scoreTrends, recurringMissingKeywords] = await Promise.all([
       this.analyticsRepo.dailyViewCounts(resumeIds, 14),
       this.analyticsRepo.scoreTrend(resumeIds, 30),
+      this.analyticsRepo.recurringMissingKeywords(resumeIds, 8),
     ]);
 
     return {
@@ -110,6 +112,7 @@ export class DashboardController {
       staleResumes: this.staleResumes(resumes),
       viewTrend: this.viewTrend(daily),
       scoreTrend: this.scoreTrend(resumes, scoreTrends),
+      recurringMissingKeywords,
       comparison: this.comparison(resumes),
     };
   }
