@@ -314,12 +314,17 @@ export async function migrate(): Promise<void> {
     -- ON CONFLICT seed inserts below with "no unique or exclusion
     -- constraint matching the ON CONFLICT specification". These DO blocks
     -- add the constraint if it's missing, and are safe no-ops if it's
-    -- already there (42710 = duplicate_object, i.e. constraint exists).
+    -- already there. Catches both possible errors depending on exactly
+    -- what state a prior partial run left behind: 42710 (duplicate_object)
+    -- if the constraint itself already exists, or 42P07 (duplicate_table)
+    -- if a same-named backing index exists without being registered as
+    -- the constraint (e.g. a table dropped/recreated by hand mid-migration).
     DO $$
     BEGIN
       ALTER TABLE role_descriptions ADD CONSTRAINT role_descriptions_category_key UNIQUE ("category");
     EXCEPTION
       WHEN duplicate_object THEN NULL;
+      WHEN duplicate_table THEN NULL;
     END $$;
 
     DO $$
@@ -327,6 +332,7 @@ export async function migrate(): Promise<void> {
       ALTER TABLE skill_suggestions ADD CONSTRAINT skill_suggestions_profession_label_category_key UNIQUE ("professionKey", "label", "category");
     EXCEPTION
       WHEN duplicate_object THEN NULL;
+      WHEN duplicate_table THEN NULL;
     END $$;
   `);
 
