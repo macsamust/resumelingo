@@ -159,13 +159,6 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {showViewsAndStrengthTiles && mostViewed && (
-        <p className="hero-note" style={{ marginBottom: 20 }}>
-          "{mostViewed.title}" is your most-viewed resume, with {mostViewed.viewCount} view
-          {mostViewed.viewCount === 1 ? "" : "s"}.
-        </p>
-      )}
-
       {!showSubscriptionManagement && (
         <div style={{ display: "flex", gap: 12, marginBottom: 36 }}>
           <Link to="/#pricing" className="btn btn-ghost">
@@ -185,7 +178,13 @@ export function DashboardPage() {
         </div>
       )}
 
-      <h2 style={{ marginBottom: 16 }}>My Resumes</h2>
+      <h2 style={{ marginBottom: showViewsAndStrengthTiles && mostViewed ? 4 : 16 }}>My Resumes</h2>
+      {showViewsAndStrengthTiles && mostViewed && (
+        <p className="hero-note" style={{ marginBottom: 16 }}>
+          "{mostViewed.title}" is your most-viewed resume, with {mostViewed.viewCount} view
+          {mostViewed.viewCount === 1 ? "" : "s"}.
+        </p>
+      )}
       {summary.myResumes.length === 0 ? (
         <div className="empty-state">
           You don't have any resumes yet. <Link to="/resumes/new">Create your first one</Link>.
