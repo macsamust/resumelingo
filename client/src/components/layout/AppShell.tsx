@@ -23,6 +23,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="app-shell">
       <aside className="app-sidebar">
+        {/* Subscription tier — floats in the sidebar's top-right corner
+            (absolutely positioned) rather than sitting in normal flow, so it
+            doesn't add height above the nav links or push them down. */}
+        {user && <span className="app-sidebar-tier">{TIER_LABEL[user.subscriptionTier]}</span>}
         {/* Subtle "who am I logged in as" reference — visible on every
             logged-in page since AppShell wraps all of them. */}
         {user && (
@@ -30,10 +34,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="app-sidebar-user-avatar" aria-hidden="true">
               {user.name.charAt(0).toUpperCase()}
             </span>
-            <span className="app-sidebar-user-info">
-              <span className="app-sidebar-user-name">{user.name}</span>
-              <span className="app-sidebar-user-tier">{TIER_LABEL[user.subscriptionTier]}</span>
-            </span>
+            <span className="app-sidebar-user-name">{user.name}</span>
           </Link>
         )}
         <div className="app-sidebar-links">

@@ -188,7 +188,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 
 /* APP SHELL (logged-in pages) */
 .app-shell { display: flex; min-height: calc(100vh - 73px); }
-.app-sidebar { width: 220px; flex-shrink: 0; background: #fff; border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; min-height: calc(100vh - 73px); }
+.app-sidebar { position: relative; width: 220px; flex-shrink: 0; background: #fff; border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; min-height: calc(100vh - 73px); }
 .app-sidebar-links a { display: block; padding: 10px 14px; border-radius: 10px; font-size: 14.5px; font-weight: 600; color: var(--navy-light); margin-bottom: 4px; }
 .app-sidebar-links a:hover, .app-sidebar-links a.active { background: #eef2ff; color: var(--indigo); }
 .app-sidebar-user {
@@ -200,12 +200,12 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   width: 28px; height: 28px; border-radius: 50%; background: #eef2ff; color: var(--indigo); flex-shrink: 0;
   display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 700;
 }
-.app-sidebar-user-info { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
-.app-sidebar-user-name { font-size: 13px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-/* Subscription tier next to the name — deliberately quieter than the name
-   itself (smaller, lighter, regular weight) so it reads as ambient context
-   rather than competing for attention. */
-.app-sidebar-user-tier { font-size: 11px; font-weight: 500; color: #94a3b8; white-space: nowrap; flex-shrink: 0; }
+.app-sidebar-user-name { font-size: 13px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Subscription tier — floats in the sidebar's top-right corner rather than
+   sitting in normal document flow, so it never adds height above the nav
+   links (relies on .app-sidebar's position: relative above). Quiet by
+   design: small, uppercase, light — ambient context, not a badge to notice. */
+.app-sidebar-tier { position: absolute; top: 14px; right: 14px; font-size: 10.5px; font-weight: 600; color: #94a3b8; letter-spacing: .02em; text-transform: uppercase; }
 .app-content { flex: 1; padding: 32px 36px; max-width: 1040px; }
 .app-page-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
 .app-page-head h1 { font-size: 26px; }
