@@ -272,14 +272,28 @@ export function ResumeEditPage() {
               })}
             </div>
             {selectedTemplateIsPremium && (
-              <label className="checkbox-field" style={{ marginTop: 12 }}>
-                <input
-                  type="checkbox"
-                  checked={coverLetterEnabled}
-                  onChange={(e) => setCoverLetterEnabled(e.target.checked)}
-                />
-                Generate an AI cover letter for this resume
-              </label>
+              <>
+                <label className="checkbox-field" style={{ marginTop: 12 }}>
+                  <input
+                    type="checkbox"
+                    checked={coverLetterEnabled}
+                    onChange={(e) => setCoverLetterEnabled(e.target.checked)}
+                  />
+                  Generate an AI cover letter for this resume
+                </label>
+                {coverLetterEnabled && (
+                  <a
+                    href="#cover-letter-section"
+                    className="cover-letter-jump-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById("cover-letter-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                  >
+                    See cover letter ↓
+                  </a>
+                )}
+              </>
             )}
           </CollapsibleSection>
 
@@ -352,19 +366,21 @@ export function ResumeEditPage() {
             )}
           </CollapsibleSection>
 
-          {resume.coverLetterEnabled && (
-            <CollapsibleSection title="Cover Letter" forceOpen={forceOpen}>
-              {resume.generatedCoverLetter ? (
-                <p className="hero-note" style={{ whiteSpace: "pre-line", color: "var(--navy-light)" }}>
-                  {resume.generatedCoverLetter}
+          {coverLetterEnabled && (
+            <div id="cover-letter-section">
+              <CollapsibleSection title="Cover Letter" forceOpen={forceOpen}>
+                {resume.coverLetterEnabled && resume.generatedCoverLetter ? (
+                  <p className="hero-note" style={{ whiteSpace: "pre-line", color: "var(--navy-light)" }}>
+                    {resume.generatedCoverLetter}
+                  </p>
+                ) : (
+                  <p className="hero-note">Your AI-generated cover letter will appear here after you save.</p>
+                )}
+                <p className="hero-note" style={{ marginTop: 12, marginBottom: 0 }}>
+                  Regenerates automatically whenever your name, title, profession, work experience, or answers change.
                 </p>
-              ) : (
-                <p className="hero-note">Your AI-generated cover letter will appear here after you save.</p>
-              )}
-              <p className="hero-note" style={{ marginTop: 12, marginBottom: 0 }}>
-                Regenerates automatically whenever your name, title, profession, work experience, or answers change.
-              </p>
-            </CollapsibleSection>
+              </CollapsibleSection>
+            </div>
           )}
 
           <button className="btn btn-primary btn-block" type="submit" disabled={saving}>

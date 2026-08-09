@@ -245,6 +245,10 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--navy-light);
   font-weight: 500; margin: 4px 0 16px; cursor: pointer;
 }
+.cover-letter-jump-link {
+  display: inline-block; font-size: 12.5px; font-weight: 600; color: var(--tpl-accent, #4f46e5);
+  margin: -10px 0 16px; cursor: pointer;
+}
 .checkbox-field input { width: auto; }
 .experience-remove { padding: 6px 12px; font-size: 12.5px; }
 
