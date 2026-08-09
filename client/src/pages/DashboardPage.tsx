@@ -19,7 +19,6 @@ export function DashboardPage() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [openingPortal, setOpeningPortal] = useState(false);
-  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const checkoutStatus = searchParams.get("checkout");
 
@@ -28,10 +27,9 @@ export function DashboardPage() {
   // Total Views and Strength Score are perks of the paid tiers — Starter's
   // dashboard only gets the resume count and plan tiles.
   const showViewsAndStrengthTiles = isProfessional || isPremium;
-  // Shared Links, Career Articles, and Subscription Management are shared
-  // between the Professional and Premium dashboards — Job Search Resources,
-  // Resume Tips, and Success Stories stay Premium-only.
-  const showSharedLinks = isProfessional || isPremium;
+  // Career Articles and Subscription Management are shared between the
+  // Professional and Premium dashboards — Job Search Resources, Resume
+  // Tips, and Success Stories stay Premium-only.
   const showCareerArticles = isProfessional || isPremium;
   const showSubscriptionManagement = isProfessional || isPremium;
 
@@ -59,16 +57,6 @@ export function DashboardPage() {
     } catch (err) {
       alert(err instanceof Error ? err.message : "Couldn't open the billing portal.");
       setOpeningPortal(false);
-    }
-  };
-
-  const handleCopyLink = async (slug: string) => {
-    try {
-      await navigator.clipboard.writeText(`${window.location.origin}/r/${slug}`);
-      setCopiedSlug(slug);
-      setTimeout(() => setCopiedSlug((cur) => (cur === slug ? null : cur)), 2000);
-    } catch {
-      alert("Couldn't copy the link — you can still open it directly.");
     }
   };
 
@@ -229,48 +217,11 @@ export function DashboardPage() {
           <p className="hero-note" style={{ marginBottom: 16 }}>
             {isProfessional
               ? "Premium adds curated job search resources, resume tips, and subscriber success stories."
-              : "Professional adds view/strength tracking, a shared-links overview, career articles, and in-dashboard subscription management. Premium adds curated job search resources, resume tips, and subscriber success stories on top of that."}
+              : "Professional adds view/strength tracking, career articles, and in-dashboard subscription management. Premium adds curated job search resources, resume tips, and subscriber success stories on top of that."}
           </p>
           <Link to="/#pricing" className="btn btn-primary">
             See plans
           </Link>
-        </div>
-      )}
-
-      {showSharedLinks && (
-        <div className="builder-panel" style={{ marginTop: 36, marginBottom: 36 }}>
-          <h2>Shared Links</h2>
-          {summary.sharedLinks.length === 0 ? (
-            <p className="hero-note">No shared links yet.</p>
-          ) : (
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Resume</th>
-                  <th>Visibility</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {summary.sharedLinks.map((link) => (
-                  <tr key={link.slug}>
-                    <td>{link.title}</td>
-                    <td>
-                      <span className="visibility-tag">{link.visibility}</span>
-                    </td>
-                    <td className="admin-row-actions">
-                      <button className="btn btn-ghost btn-sm" onClick={() => handleCopyLink(link.slug)}>
-                        {copiedSlug === link.slug ? "Copied!" : "Copy link"}
-                      </button>
-                      <a href={`/r/${link.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
-                        Open
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
         </div>
       )}
 
