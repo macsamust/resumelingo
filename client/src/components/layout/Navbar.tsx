@@ -8,9 +8,12 @@ export function Navbar() {
   return (
     <header>
       <nav>
-        <Link to="/" className="logo">
-          <span className="dot">R</span>ResumeLingo
-        </Link>
+        <div className="logo-block">
+          <Link to="/" className="logo">
+            <span className="dot">R</span>ResumeLingo
+          </Link>
+          <span className="logo-tagline">We Speak Resume.</span>
+        </div>
         <div className="nav-links">
           <Link to="/#how">How it works</Link>
           <Link to="/#features">Features</Link>
