@@ -1,6 +1,6 @@
-# Websume — Full-Stack Scaffold
+# ResumeLingo — Full-Stack Scaffold
 
-A starter implementation of the Websume product: a React + TypeScript client,
+A starter implementation of the ResumeLingo product: a React + TypeScript client,
 plus **two interchangeable backends** built with the same object-oriented
 layered architecture (models → repositories → services → controllers →
 routes):
@@ -25,7 +25,7 @@ you have real code to extend rather than a blank project.
 ## Architecture
 
 ```
-websume-app/
+resumelingo-app/
   client/   React + TypeScript app (Vite) — same for both backends
   server/   Node + Express + TypeScript API (Postgres via `pg`)
   worker/   Cloudflare Worker + Hono + TypeScript API (D1)
@@ -83,7 +83,7 @@ verified here** — run it yourself and fix up any dependency version hiccups
 if they come up.
 
 ```bash
-# from the websume-app/ folder
+# from the resumelingo-app/ folder
 npm run install:all
 
 # copy env files and adjust if needed
@@ -104,7 +104,7 @@ npm run dev:server
 # terminal 2 — app on http://localhost:5173
 npm run dev:client
 
-# optional: seed a demo account (demo@websume.app / password123) + one resume
+# optional: seed a demo account (demo@resumelingo.app / password123) + one resume
 npm run seed
 ```
 
@@ -208,7 +208,7 @@ npm run deploy
 
 Wrangler uploads your Worker code, binds D1, and uploads `client/dist` as
 static assets, then prints your live URL — something like
-`https://websume.<your-subdomain>.workers.dev`. Open it: the frontend and
+`https://resumelingo.<your-subdomain>.workers.dev`. Open it: the frontend and
 `/api/*` are both served from that one origin, so `VITE_API_URL` doesn't
 need to be set at all for this deployment (the client defaults to the
 relative path `/api`).
@@ -218,7 +218,7 @@ relative path `/api`).
 Cloudflare can rebuild and redeploy automatically whenever you push to
 GitHub, instead of you running `npm run deploy` by hand:
 
-1. Cloudflare dashboard → **Workers & Pages** → your `websume` Worker →
+1. Cloudflare dashboard → **Workers & Pages** → your `resumelingo` Worker →
    **Settings → Builds → Connect**.
 2. Point it at your GitHub repo.
 3. Set **root directory** to `worker`, and a **build command** that builds

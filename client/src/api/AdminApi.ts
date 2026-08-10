@@ -9,7 +9,7 @@ export interface AdminAuthResponse {
 /** Admin-only API surface — every call sends the separate admin token (see ApiClient's storageKey), never the regular user token. */
 export class AdminApi extends ApiClient {
   constructor() {
-    super(undefined, "websume_admin_token");
+    super(undefined, "resumelingo_admin_token");
   }
 
   login(input: { email: string; password: string }) {

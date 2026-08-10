@@ -29,7 +29,7 @@ export function LoginPage() {
     <div className="auth-page">
       <div className="auth-card">
         <h1>Welcome back</h1>
-        <p className="sub">Log in to access your Websume dashboard.</p>
+        <p className="sub">Log in to access your ResumeLingo dashboard.</p>
         {error && <div className="form-error">{error}</div>}
         <form onSubmit={onSubmit}>
           <div className="field">
@@ -45,7 +45,7 @@ export function LoginPage() {
           </button>
         </form>
         <p className="form-footnote">
-          New here? <Link to="/signup">Create a Websume</Link>
+          New here? <Link to="/signup">Create a ResumeLingo</Link>
         </p>
       </div>
     </div>

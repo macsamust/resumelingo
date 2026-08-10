@@ -30,7 +30,7 @@ export function createApp() {
   // real ~2MB cap on the photo field itself.
   app.use(express.json({ limit: "5mb" }));
 
-  app.get("/health", (_req, res) => res.json({ status: "ok", service: "websume-server" }));
+  app.get("/health", (_req, res) => res.json({ status: "ok", service: "resumelingo-server" }));
   app.use("/api", routes);
 
   app.use(notFoundHandler);

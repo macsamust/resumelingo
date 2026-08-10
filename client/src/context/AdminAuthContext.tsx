@@ -17,7 +17,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("websume_admin_token");
+    const token = localStorage.getItem("resumelingo_admin_token");
     if (!token) {
       setLoading(false);
       return;

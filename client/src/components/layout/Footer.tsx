@@ -7,7 +7,7 @@ export function Footer() {
         <div className="footer-grid">
           <div className="footer-brand">
             <Link to="/" className="logo">
-              <span className="dot">W</span>Websume
+              <span className="dot">R</span>ResumeLingo
             </Link>
             <p>A web-based resume, hosted in the cloud, shareable with one link — public or private, always yours to update.</p>
           </div>
@@ -31,7 +31,7 @@ export function Footer() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© {new Date().getFullYear()} Websume. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} ResumeLingo. All rights reserved.</p>
           <p>Made for people who'd rather share a link than an attachment.</p>
         </div>
       </div>

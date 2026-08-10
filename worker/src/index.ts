@@ -29,7 +29,7 @@ app.use(
 );
 app.use("/api/*", withServices);
 
-app.get("/api/health", (c) => c.json({ status: "ok", service: "websume-worker" }));
+app.get("/api/health", (c) => c.json({ status: "ok", service: "resumelingo-worker" }));
 app.route("/api/auth", authRoutes);
 app.route("/api/resumes", resumeRoutes);
 app.route("/api/professions", professionRoutes);

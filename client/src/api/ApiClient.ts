@@ -20,10 +20,10 @@ export class ApiClient {
   protected token: string | null = null;
 
   // storageKey defaults to the regular-user token key; AdminApi passes a
-  // distinct key ("websume_admin_token") so an admin session and a regular
+  // distinct key ("resumelingo_admin_token") so an admin session and a regular
   // user session can coexist in the same browser without clobbering each
   // other's token.
-  constructor(private readonly baseUrl: string = API_URL, private readonly storageKey: string = "websume_token") {
+  constructor(private readonly baseUrl: string = API_URL, private readonly storageKey: string = "resumelingo_token") {
     this.token = localStorage.getItem(this.storageKey);
   }
 

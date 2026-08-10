@@ -7,9 +7,9 @@ export function MissionVision() {
             <div>
               <h3>Our mission</h3>
               <p>
-                Websume empowers professionals to build, manage, and share dynamic cloud-based resumes that
+                ResumeLingo empowers professionals to build, manage, and share dynamic cloud-based resumes that
                 evolve with their careers. Through intelligent resume creation, industry-specific guidance,
-                and personalized career resources, Websume helps every subscriber present their professional
+                and personalized career resources, ResumeLingo helps every subscriber present their professional
                 story with confidence.
               </p>
             </div>

@@ -7,7 +7,7 @@ const STEPS = [
   {
     title: "Let AI write the resume",
     body:
-      'Instead of "Managed team," Websume\'s AI generates "Led a cross-functional engineering team of twelve professionals delivering secure cloud modernization initiatives supporting Department of Defense customers" — plus your summary, skills, and achievements.',
+      'Instead of "Managed team," ResumeLingo\'s AI generates "Led a cross-functional engineering team of twelve professionals delivering secure cloud modernization initiatives supporting Department of Defense customers" — plus your summary, skills, and achievements.',
   },
   {
     title: "Preview, publish, share",
@@ -23,7 +23,7 @@ export function HowItWorks() {
         <div className="section-head">
           <span className="section-tag">How it works</span>
           <h2>The system interviews you — you don't write a thing</h2>
-          <p>Instead of asking you to type an entire resume from scratch, Websume asks smart, profession-aware questions, then builds and hosts your resume for you.</p>
+          <p>Instead of asking you to type an entire resume from scratch, ResumeLingo asks smart, profession-aware questions, then builds and hosts your resume for you.</p>
         </div>
         <div className="steps">
           {STEPS.map((step, i) => (

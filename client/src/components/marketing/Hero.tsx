@@ -10,13 +10,13 @@ export function Hero() {
             Your resume, reimagined as a <span>living, cloud-hosted professional identity</span>.
           </h1>
           <p className="lead">
-            Websume interviews you about your profession, uses AI to turn your answers into polished,
+            ResumeLingo interviews you about your profession, uses AI to turn your answers into polished,
             achievement-driven bullets, and publishes it all to one link that's always current — no more
             emailing five different PDFs.
           </p>
           <div className="hero-actions">
             <Link to="/signup" className="btn btn-primary">
-              Create your Websume
+              Create your ResumeLingo
             </Link>
             <a href="#how" className="btn btn-ghost">
               See how it works
@@ -29,7 +29,7 @@ export function Hero() {
             <span style={{ background: "#f87171" }}></span>
             <span style={{ background: "#fbbf24" }}></span>
             <span style={{ background: "#34d399" }}></span>
-            <div className="browser-url">websume.com/r/jordan-lee</div>
+            <div className="browser-url">resumelingo.com/r/jordan-lee</div>
           </div>
           <div className="resume-card">
             <div className="resume-head">

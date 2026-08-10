@@ -37,7 +37,7 @@ async function seed() {
   const authService = new AuthService();
   const resumeService = new ResumeService();
 
-  const demoEmail = "demo@websume.app";
+  const demoEmail = "demo@resumelingo.app";
   const demoPassword = "password123";
 
   const user = await getOrCreateDemoUser(authService, demoEmail, demoPassword);

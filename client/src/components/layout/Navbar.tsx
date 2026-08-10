@@ -9,7 +9,7 @@ export function Navbar() {
     <header>
       <nav>
         <Link to="/" className="logo">
-          <span className="dot">W</span>Websume
+          <span className="dot">R</span>ResumeLingo
         </Link>
         <div className="nav-links">
           <Link to="/#how">How it works</Link>

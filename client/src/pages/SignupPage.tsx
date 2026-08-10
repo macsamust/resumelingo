@@ -36,7 +36,7 @@ export function SignupPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h1>Create your Websume</h1>
+        <h1>Create your ResumeLingo</h1>
         <p className="sub">Start free with one resume — upgrade anytime.</p>
         {error && <div className="form-error">{error}</div>}
         <form onSubmit={onSubmit}>
@@ -64,7 +64,7 @@ export function SignupPage() {
             </select>
           </div>
           <button className="btn btn-primary btn-block" type="submit" disabled={submitting}>
-            {submitting ? "Creating account…" : "Create my Websume"}
+            {submitting ? "Creating account…" : "Create my ResumeLingo"}
           </button>
         </form>
         <p className="form-footnote">

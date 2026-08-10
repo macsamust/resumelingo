@@ -27,7 +27,7 @@ async function start() {
 
   const app = createApp();
   app.listen(PORT, () => {
-    console.log(`Websume API listening on http://localhost:${PORT}`);
+    console.log(`ResumeLingo API listening on http://localhost:${PORT}`);
   });
 }
 

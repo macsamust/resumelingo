@@ -147,7 +147,7 @@ export class RuleBasedContentGenerator implements IContentGenerator {
 
   /**
    * Fallback used only when no achievements are provided (e.g. a resume
-   * created before this field existed, or left blank). Instead of Websume's
+   * created before this field existed, or left blank). Instead of ResumeLingo's
    * original AI-backed generator, this is intentionally simple template
    * logic restating the raw profession Q&A answers.
    */

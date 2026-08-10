@@ -1,7 +1,7 @@
 {
-  "name": "websume-server",
+  "name": "resumelingo-server",
   "version": "1.0.0",
-  "description": "Websume backend API — Express + TypeScript, object-oriented (models/repositories/services/controllers), Postgres via `pg`",
+  "description": "ResumeLingo backend API — Express + TypeScript, object-oriented (models/repositories/services/controllers), Postgres via `pg`",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",

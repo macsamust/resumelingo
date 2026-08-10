@@ -20,7 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refresh = async () => {
-    const token = localStorage.getItem("websume_token");
+    const token = localStorage.getItem("resumelingo_token");
     if (!token) {
       setUser(null);
       setLoading(false);

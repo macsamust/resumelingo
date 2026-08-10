@@ -34,7 +34,7 @@ export function AdminLoginPage() {
         <form onSubmit={onSubmit}>
           <div className="field">
             <label>Email</label>
-            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@websume.app" />
+            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@resumelingo.app" />
           </div>
           <div className="field">
             <label>Password</label>

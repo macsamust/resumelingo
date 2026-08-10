@@ -1,8 +1,8 @@
 {
-  "name": "websume-app",
+  "name": "resumelingo-app",
   "private": true,
   "version": "1.0.0",
-  "description": "Websume — full-stack scaffold. client/ (React+Vite) pairs with either server/ (Node+Express+SQLite, local dev) or worker/ (Cloudflare Workers+Hono+D1, production on Cloudflare).",
+  "description": "ResumeLingo — full-stack scaffold. client/ (React+Vite) pairs with either server/ (Node+Express+SQLite, local dev) or worker/ (Cloudflare Workers+Hono+D1, production on Cloudflare).",
   "scripts": {
     "install:all": "npm install --prefix server && npm install --prefix client",
     "dev:server": "npm run dev --prefix server",

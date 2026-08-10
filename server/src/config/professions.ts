@@ -2,7 +2,7 @@ import { ProfessionDefinition } from "../types";
 
 /**
  * Selecting a profession changes the questions the Resume Builder asks.
- * This mirrors the "system interviews you" flow described in the Websume
+ * This mirrors the "system interviews you" flow described in the ResumeLingo
  * product overview: each field gets a tailored question set instead of a
  * blank text box.
  */

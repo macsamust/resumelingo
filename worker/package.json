@@ -1,5 +1,5 @@
 {
-  "name": "websume-worker",
+  "name": "resumelingo-worker",
   "version": "1.0.0",
   "private": true,
   "scripts": {
