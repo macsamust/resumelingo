@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { ParrotMascot } from "../brand/ParrotMascot";
 
 export function Footer() {
   return (
@@ -8,7 +7,6 @@ export function Footer() {
         <div className="footer-grid">
           <div className="footer-brand">
             <Link to="/" className="logo">
-              <ParrotMascot size={28} />
               ResumeLingo
             </Link>
             <p>A web-based resume, hosted in the cloud, shareable with one link — public or private, always yours to update.</p>

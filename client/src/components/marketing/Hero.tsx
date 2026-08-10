@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { ParrotMascot } from "../brand/ParrotMascot";
 
 export function Hero() {
   return (
@@ -26,9 +25,6 @@ export function Hero() {
           <p className="hero-note">No design skills needed · Free tier available · Cancel anytime</p>
         </div>
         <div className="hero-visual">
-          <div className="hero-mascot">
-            <ParrotMascot size={110} />
-          </div>
           <div className="browser-bar">
             <span style={{ background: "#f87171" }}></span>
             <span style={{ background: "#fbbf24" }}></span>
