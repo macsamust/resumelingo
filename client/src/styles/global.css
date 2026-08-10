@@ -735,6 +735,8 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 /* Admin console — reuses .app-shell/.app-sidebar/.app-content/.field/.btn/.form-error from the rest of the app. */
 .btn-sm { padding: 6px 10px; font-size: 13px; border-radius: 8px; }
 .admin-sidebar-head { margin-bottom: 18px; }
+.app-sidebar-group { margin-bottom: 18px; }
+.app-sidebar-group-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 0 14px; margin-bottom: 6px; }
 .admin-badge { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 4px 10px; border-radius: 999px; background: #0f172a; color: #fff; margin-bottom: 8px; }
 .admin-sidebar-email { font-size: 12.5px; color: var(--muted); word-break: break-all; }
 .admin-logout { width: 100%; margin-top: 18px; }

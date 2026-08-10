@@ -2,12 +2,28 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { ReactNode } from "react";
 import { useAdminAuth } from "../../context/AdminAuthContext";
 
-const LINKS = [
-  { to: "/admin/users", label: "Users" },
-  { to: "/admin/plans", label: "Plans & Pricing" },
-  { to: "/admin/templates", label: "Templates" },
-  { to: "/admin/skill-suggestions", label: "Skills & Tools" },
-  { to: "/admin/role-descriptions", label: "Role Descriptions" },
+/**
+ * Grouped by what the section manages — Subscriber (accounts/billing) vs.
+ * Resume (content that shapes resumes themselves) — rather than one flat
+ * list, now that there are enough admin sections for the grouping to
+ * actually help with scanning.
+ */
+const LINK_GROUPS = [
+  {
+    label: "Subscribers",
+    links: [
+      { to: "/admin/users", label: "Users" },
+      { to: "/admin/plans", label: "Plans & Pricing" },
+    ],
+  },
+  {
+    label: "Resumes",
+    links: [
+      { to: "/admin/templates", label: "Templates" },
+      { to: "/admin/skill-suggestions", label: "Skills & Tools" },
+      { to: "/admin/role-descriptions", label: "Role Descriptions" },
+    ],
+  },
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {
@@ -26,13 +42,18 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <span className="admin-badge">Admin</span>
           {admin && <p className="admin-sidebar-email">{admin.email}</p>}
         </div>
-        <div className="app-sidebar-links">
-          {LINKS.map((link) => (
-            <NavLink key={link.to} to={link.to} className={({ isActive }) => (isActive ? "active" : "")}>
-              {link.label}
-            </NavLink>
-          ))}
-        </div>
+        {LINK_GROUPS.map((group) => (
+          <div className="app-sidebar-group" key={group.label}>
+            <span className="app-sidebar-group-label">{group.label}</span>
+            <div className="app-sidebar-links">
+              {group.links.map((link) => (
+                <NavLink key={link.to} to={link.to} className={({ isActive }) => (isActive ? "active" : "")}>
+                  {link.label}
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        ))}
         <button className="btn btn-ghost admin-logout" onClick={onLogout} type="button">
           Log out
         </button>
