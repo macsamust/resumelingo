@@ -176,6 +176,13 @@ export async function migrate(): Promise<void> {
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "referencesEnabled" BOOLEAN NOT NULL DEFAULT false;
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "references" TEXT NOT NULL DEFAULT '[]';
 
+    -- When true, references are only shown inside the Recruiter Mode
+    -- candidate summary card's printout (see Resume.recruiterCard) instead
+    -- of as their own standalone section on the public resume link. Only
+    -- meaningful alongside referencesEnabled; see Resume.publicReferences/
+    -- recruiterCard for how the two flags combine.
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "referencesRecruiterModeOnly" BOOLEAN NOT NULL DEFAULT false;
+
     -- Admins are a deliberately separate table/role from users (see
     -- types/index.ts AdminRecord and services/AdminService.ts) rather than a
     -- flag on the users table, so admin auth is fully isolated from user auth.

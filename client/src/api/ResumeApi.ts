@@ -34,6 +34,8 @@ export interface CreateResumeInput {
   /** "References" section toggle — only takes effect server-side for Premium subscribers (see ResumeService.update), same gate as recruiterModeEnabled. */
   referencesEnabled?: boolean;
   references?: ReferenceEntry[];
+  /** "Only add references to Recruiter Mode printout section when selecting 'View resume'" checkbox — see types/index.ts Resume.referencesRecruiterModeOnly. */
+  referencesRecruiterModeOnly?: boolean;
 }
 
 export class ResumeApi extends ApiClient {

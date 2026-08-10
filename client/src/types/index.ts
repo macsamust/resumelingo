@@ -171,6 +171,8 @@ export interface Resume {
   /** "References" section toggle — Premium subscribers only, off by default. See ReferenceEntry. */
   referencesEnabled: boolean;
   references: ReferenceEntry[];
+  /** When true, references only appear inside the Recruiter Mode candidate summary card's printout, not as their own section. Only meaningful alongside referencesEnabled. */
+  referencesRecruiterModeOnly: boolean;
   generatedSummary: string;
   generatedBullets: string[];
   viewCount: number;
@@ -191,6 +193,8 @@ export interface RecruiterCard {
   skills: string[];
   /** Deterministic 3-4 line statement (years of experience, focus area, a quantified achievement, technical expertise, career direction) — see server's utils/candidateSummary.ts. Never fabricated: a clause is simply omitted when the resume doesn't have the underlying data. */
   candidateSummary: string;
+  /** Populated only when the owner checked both "Add references" and "only in Recruiter Mode printout" — see PublicResume.references for the standalone-section alternative. */
+  references: ReferenceEntry[];
 }
 
 export interface PublicResume {

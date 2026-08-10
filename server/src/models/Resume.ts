@@ -42,6 +42,7 @@ export class Resume {
   readonly skillsAndTools: SkillOrTool[];
   readonly referencesEnabled: boolean;
   readonly references: ReferenceEntry[];
+  readonly referencesRecruiterModeOnly: boolean;
   readonly generatedSummary: string;
   readonly generatedBullets: string[];
   readonly viewCount: number;
@@ -81,6 +82,7 @@ export class Resume {
     this.skillsAndTools = JSON.parse(record.skillsAndTools || "[]");
     this.referencesEnabled = record.referencesEnabled;
     this.references = JSON.parse(record.references || "[]");
+    this.referencesRecruiterModeOnly = record.referencesRecruiterModeOnly;
     this.generatedSummary = record.generatedSummary;
     this.generatedBullets = JSON.parse(record.generatedBullets || "[]");
     this.viewCount = record.viewCount;
@@ -144,19 +146,30 @@ export class Resume {
         generatedBullets: this.generatedBullets,
         skills,
       }),
+      // Only populated when the owner has both "Add references" and "only
+      // in Recruiter Mode printout" checked — see publicReferences below
+      // for the other half of this split (the standalone section, used
+      // when the second checkbox is off).
+      references: this.referencesEnabled && this.referencesRecruiterModeOnly ? this.references : [],
     };
   }
 
   /**
-   * References list actually exposed on the public resume link — empty
-   * when referencesEnabled is off, regardless of what's saved in
-   * `references`, so a disabled section never leaks reference contact info
-   * (names, emails, phone numbers) through the public API. Mirrors
-   * recruiterCard's "null when off" pattern above, just as an array instead
-   * of a nullable object since there's no single-object shape to null out.
+   * References list shown as the resume's own standalone section — empty
+   * whenever referencesEnabled is off (so a disabled section never leaks
+   * reference contact info — names, emails, phone numbers — through the
+   * public API), and also empty when referencesRecruiterModeOnly is on,
+   * since in that case the same data is exposed via recruiterCard.references
+   * instead (only inside the Recruiter Mode printout, and only when
+   * Recruiter Mode itself is actually on — see recruiterCard above). The
+   * two flags are mutually exclusive by design: referencesRecruiterModeOnly
+   * being true never leaves references showing in both places at once, nor
+   * silently dropped if the owner forgets to also enable Recruiter Mode —
+   * it simply doesn't show anywhere until they do.
    */
   get publicReferences(): ReferenceEntry[] {
-    return this.referencesEnabled ? this.references : [];
+    if (!this.referencesEnabled || this.referencesRecruiterModeOnly) return [];
+    return this.references;
   }
 
   /**
@@ -222,6 +235,7 @@ export class Resume {
       skillsAndTools: this.skillsAndTools,
       referencesEnabled: this.referencesEnabled,
       references: this.references,
+      referencesRecruiterModeOnly: this.referencesRecruiterModeOnly,
       generatedSummary: this.generatedSummary,
       generatedBullets: this.generatedBullets,
       viewCount: this.viewCount,

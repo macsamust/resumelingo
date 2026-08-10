@@ -81,6 +81,7 @@ export function ResumeEditPage() {
   const [recruiterRemotePreference, setRecruiterRemotePreference] = useState("");
   const [referencesEnabled, setReferencesEnabled] = useState(false);
   const [references, setReferences] = useState<ReferenceEntry[]>([]);
+  const [referencesRecruiterModeOnly, setReferencesRecruiterModeOnly] = useState(false);
   const [combineExperienceFormat, setCombineExperienceFormat] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -144,6 +145,7 @@ export function ResumeEditPage() {
         setRecruiterRemotePreference(r.recruiterRemotePreference);
         setReferencesEnabled(r.referencesEnabled);
         setReferences(r.references);
+        setReferencesRecruiterModeOnly(r.referencesRecruiterModeOnly);
         setCombineExperienceFormat(r.combineExperienceFormat);
         setAnswers(r.answers);
         // Backfill a stable id onto any job saved before WorkExperienceEntry.id
@@ -264,6 +266,7 @@ export function ResumeEditPage() {
         skillsAndTools,
         referencesEnabled,
         references,
+        referencesRecruiterModeOnly,
       });
       setResume(updated);
     } catch (err) {
@@ -700,7 +703,24 @@ export function ResumeEditPage() {
                 />
                 Add a References section to this resume
               </label>
-              {referencesEnabled && <ReferencesEditor references={references} onChange={setReferences} />}
+              {referencesEnabled && (
+                <>
+                  <label className="checkbox-field">
+                    <input
+                      type="checkbox"
+                      checked={referencesRecruiterModeOnly}
+                      onChange={(e) => setReferencesRecruiterModeOnly(e.target.checked)}
+                    />
+                    Only add references to Recruiter Mode printout section when selecting "View resume"
+                  </label>
+                  {referencesRecruiterModeOnly && !recruiterModeEnabled && (
+                    <p className="hero-note" style={{ marginTop: -8, marginBottom: 16, color: "var(--muted)" }}>
+                      References won't appear anywhere until Recruiter Mode is also turned on above.
+                    </p>
+                  )}
+                  <ReferencesEditor references={references} onChange={setReferences} />
+                </>
+              )}
             </CollapsibleSection>
           )}
 

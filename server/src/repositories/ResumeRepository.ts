@@ -58,6 +58,7 @@ export interface UpdateResumeInput {
   skillsAndTools?: SkillOrTool[];
   referencesEnabled?: boolean;
   references?: ReferenceEntry[];
+  referencesRecruiterModeOnly?: boolean;
   generatedSummary?: string;
   generatedBullets?: string[];
 }
@@ -117,6 +118,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       // Resume, never at creation time.
       referencesEnabled: false,
       references: JSON.stringify([]),
+      referencesRecruiterModeOnly: false,
       generatedSummary: input.generatedSummary,
       generatedBullets: JSON.stringify(input.generatedBullets),
       viewCount: 0,
@@ -167,6 +169,8 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       skillsAndTools: input.skillsAndTools ? JSON.stringify(input.skillsAndTools) : existing.skillsAndTools,
       referencesEnabled: input.referencesEnabled !== undefined ? input.referencesEnabled : existing.referencesEnabled,
       references: input.references ? JSON.stringify(input.references) : existing.references,
+      referencesRecruiterModeOnly:
+        input.referencesRecruiterModeOnly !== undefined ? input.referencesRecruiterModeOnly : existing.referencesRecruiterModeOnly,
       generatedSummary: input.generatedSummary ?? existing.generatedSummary,
       generatedBullets: input.generatedBullets ? JSON.stringify(input.generatedBullets) : existing.generatedBullets,
       updatedAt: new Date().toISOString(),

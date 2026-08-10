@@ -283,6 +283,8 @@ export interface ResumeRecord {
    */
   referencesEnabled: boolean;
   references: string; // JSON-serialized ReferenceEntry[]
+  /** When true, references only appear inside the Recruiter Mode candidate summary card's printout, not as their own section — see Resume.publicReferences/recruiterCard. Only meaningful alongside referencesEnabled. */
+  referencesRecruiterModeOnly: boolean;
   generatedSummary: string;
   generatedBullets: string; // JSON-serialized string[]
   viewCount: number;

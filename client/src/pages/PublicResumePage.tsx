@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, catalogApi } from "../api";
-import { PublicResume } from "../types";
+import { PublicResume, ReferenceEntry } from "../types";
 import { formatMonth, ResumePreview, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
 import { CLEARANCE_OPTIONS, recruiterOptionLabel, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
 import { groupAchievementsByExperience } from "../utils/starBullet";
@@ -112,12 +112,16 @@ function resumeToPlainText(resume: PublicResume): string {
     lines.push("");
   }
 
-  // Already gated server-side (resume.references is empty whenever the
-  // owner has referencesEnabled off — see server's Resume.publicReferences)
-  // — Premium subscribers only.
-  if (resume.references?.length > 0) {
+  // Already gated server-side — Premium subscribers only. Sourced from
+  // whichever of the two mutually-exclusive spots actually has the data:
+  // the standalone section (resume.references) normally, or the Recruiter
+  // Mode card (resume.recruiterCard.references) when the owner checked
+  // "only in Recruiter Mode printout" — see server's
+  // Resume.publicReferences/recruiterCard.
+  const referencesForExport = resume.references?.length ? resume.references : resume.recruiterCard?.references ?? [];
+  if (referencesForExport.length > 0) {
     lines.push("REFERENCES");
-    for (const ref of resume.references) {
+    for (const ref of referencesForExport) {
       const roleLine = [ref.companyPosition, ref.company].filter(Boolean).join(", ");
       lines.push(`${ref.name || "Untitled reference"}${roleLine ? `, ${roleLine}` : ""}`);
       const contactLine = [ref.email, ref.phone].filter(Boolean).join("  |  ");
@@ -129,6 +133,33 @@ function resumeToPlainText(resume: PublicResume): string {
   }
 
   return lines.join("\n").trim() + "\n";
+}
+
+/**
+ * Shared card grid for a references list — used both for the resume's own
+ * standalone "References" section and, when the owner checked "only in
+ * Recruiter Mode printout", inside the Candidate Summary card instead. The
+ * two are mutually exclusive (see server's Resume.publicReferences/
+ * recruiterCard), so this only ever renders in one place per resume.
+ */
+function ReferencesGrid({ references }: { references: ReferenceEntry[] }) {
+  return (
+    <div className="references-grid">
+      {references.map((ref, i) => (
+        <div className="reference-card" key={i}>
+          <div className="reference-name">{ref.name || "Untitled reference"}</div>
+          {(ref.companyPosition || ref.company) && (
+            <div className="reference-role">{[ref.companyPosition, ref.company].filter(Boolean).join(", ")}</div>
+          )}
+          {ref.affiliation && <div className="reference-affiliation">{ref.affiliation}</div>}
+          {(ref.email || ref.phone) && (
+            <div className="reference-contact">{[ref.email, ref.phone].filter(Boolean).join("  ·  ")}</div>
+          )}
+          {ref.dateObserved && <div className="reference-date">{formatMonth(ref.dateObserved)}</div>}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function downloadTextFile(filename: string, contents: string): void {
@@ -300,6 +331,14 @@ export function PublicResumePage() {
               </div>
             </div>
           )}
+          {resume.recruiterCard.references.length > 0 && (
+            <div style={{ marginTop: 24 }}>
+              <div className="answer-key" style={{ marginBottom: 10 }}>
+                References
+              </div>
+              <ReferencesGrid references={resume.recruiterCard.references} />
+            </div>
+          )}
         </div>
       )}
       <ResumePreview
@@ -341,21 +380,7 @@ export function PublicResumePage() {
       {resume.references?.length > 0 && (
         <div className="public-resume-card public-resume-details">
           <h2 className="public-resume-details-heading">References</h2>
-          <div className="references-grid">
-            {resume.references.map((ref, i) => (
-              <div className="reference-card" key={i}>
-                <div className="reference-name">{ref.name || "Untitled reference"}</div>
-                {(ref.companyPosition || ref.company) && (
-                  <div className="reference-role">{[ref.companyPosition, ref.company].filter(Boolean).join(", ")}</div>
-                )}
-                {ref.affiliation && <div className="reference-affiliation">{ref.affiliation}</div>}
-                {(ref.email || ref.phone) && (
-                  <div className="reference-contact">{[ref.email, ref.phone].filter(Boolean).join("  ·  ")}</div>
-                )}
-                {ref.dateObserved && <div className="reference-date">{formatMonth(ref.dateObserved)}</div>}
-              </div>
-            ))}
-          </div>
+          <ReferencesGrid references={resume.references} />
         </div>
       )}
     </div>
