@@ -40,7 +40,6 @@ button { font-family: inherit; }
 header { position: sticky; top: 0; z-index: 50; background: rgba(248,250,252,.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
 nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; max-width: 1120px; margin: 0 auto; }
 .logo { display: flex; align-items: center; gap: 9px; font-weight: 800; font-size: 20px; color: var(--navy); }
-.logo .dot { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--indigo), var(--teal)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; font-weight: 800; }
 /* Navbar-only wrapper so the tagline can sit under the wordmark without
    touching .logo itself (Footer reuses .logo alone, no tagline there). */
 .logo-block { display: flex; flex-direction: column; gap: 1px; }
