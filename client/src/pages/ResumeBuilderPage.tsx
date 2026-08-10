@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { DynamicQuestionForm } from "../components/builder/DynamicQuestionForm";
 import { ExperienceEditor } from "../components/builder/ExperienceEditor";
@@ -44,6 +44,23 @@ export function ResumeBuilderPage() {
   const [coverLetterEnabled, setCoverLetterEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Checked up front, before the form renders at all — the server also
+  // rejects a create() past the plan's resume limit (see ResumeService),
+  // but that only surfaces as an error after someone has already filled out
+  // the entire form and hit "Create my Websume". Blocking here instead
+  // means they never start filling it out only to be turned away at Save.
+  const [limitStatus, setLimitStatus] = useState<{ reached: boolean; planName: string; resumeLimit: number } | null>(null);
+
+  useEffect(() => {
+    catalogApi
+      .dashboardSummary()
+      .then((res) => {
+        const { unlimited, remaining, planName, resumeLimit } = res.subscription;
+        setLimitStatus({ reached: !unlimited && remaining !== null && remaining <= 0, planName, resumeLimit });
+      })
+      .catch(() => setLimitStatus({ reached: false, planName: "", resumeLimit: 0 }));
+  }, []);
 
   // The photo upload only applies to templates that actually render a photo
   // (Portrait, Designer, Monochrome, Showcase) — hidden for every other template.
@@ -103,6 +120,38 @@ export function ResumeBuilderPage() {
       setSubmitting(false);
     }
   };
+
+  if (!limitStatus) {
+    return (
+      <AppShell>
+        <div className="spinner-page">Loading…</div>
+      </AppShell>
+    );
+  }
+
+  if (limitStatus.reached) {
+    return (
+      <AppShell>
+        <div className="app-page-head">
+          <h1>New Resume</h1>
+        </div>
+        <div className="empty-state">
+          <p>
+            Your {limitStatus.planName} plan is limited to {limitStatus.resumeLimit} resume(s), and you've reached
+            that limit. Upgrade your plan to create another, or delete an existing resume to free up a slot.
+          </p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 16 }}>
+            <Link to="/#pricing" className="btn btn-primary">
+              Upgrade plan
+            </Link>
+            <Link to="/dashboard" className="btn btn-ghost">
+              Back to dashboard
+            </Link>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
