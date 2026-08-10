@@ -94,9 +94,9 @@ export interface SkillOrTool {
 /**
  * One professional reference (Edit Resume, Premium subscribers only — see
  * Resume.referencesEnabled and components/builder/ReferencesEditor.tsx).
- * "dateObserved" is when this reference worked with/observed the
- * candidate — "YYYY-MM", same shape every other date field in this app
- * uses (see MonthYearField.tsx).
+ * "dateObservedStart"/"dateObservedEnd" are the range this reference worked
+ * with/observed the candidate — each "YYYY-MM", same shape every other date
+ * field in this app uses (see MonthYearField.tsx). Either may be "" if unset.
  */
 export interface ReferenceEntry {
   name: string;
@@ -105,7 +105,8 @@ export interface ReferenceEntry {
   email: string;
   phone: string;
   affiliation: string;
-  dateObserved: string;
+  dateObservedStart: string;
+  dateObservedEnd: string;
 }
 
 export interface SubscriptionPlan {

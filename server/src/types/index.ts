@@ -209,9 +209,10 @@ export interface RoleDescriptionRecord {
 
 /**
  * One professional reference (Edit Resume, Premium subscribers only — see
- * ResumeRecord.referencesEnabled). "dateObserved" is when this reference
- * worked with/observed the candidate, "YYYY-MM" like every other date field
- * in this app (see client's MonthYearField.tsx).
+ * ResumeRecord.referencesEnabled). "dateObservedStart"/"dateObservedEnd" are
+ * the range this reference worked with/observed the candidate, each
+ * "YYYY-MM" like every other date field in this app (see client's
+ * MonthYearField.tsx). Either may be "" if unset.
  */
 export interface ReferenceEntry {
   name: string;
@@ -220,7 +221,8 @@ export interface ReferenceEntry {
   email: string;
   phone: string;
   affiliation: string;
-  dateObserved: string;
+  dateObservedStart: string;
+  dateObservedEnd: string;
 }
 
 export interface ResumeRecord {

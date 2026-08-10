@@ -172,7 +172,7 @@ export async function migrate(): Promise<void> {
     -- template is selected). Off by default; the checkbox is what actually
     -- shows the section on the public resume link. Each entry has name,
     -- companyPosition, company, email, phone, affiliation, and
-    -- dateObserved — same JSON-array pattern as "achievements" above.
+    -- dateObservedStart/dateObservedEnd — same JSON-array pattern as "achievements" above.
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "referencesEnabled" BOOLEAN NOT NULL DEFAULT false;
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "references" TEXT NOT NULL DEFAULT '[]';
 

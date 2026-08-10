@@ -313,6 +313,10 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 }
 .experience-location { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .experience-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+/* Sits above a Start/End MonthYearField pair (e.g. References' "Date
+   observed" range) when there's no <label> naturally grouping the two —
+   same type treatment as .field label. */
+.field-group-label { font-size: 13px; font-weight: 600; color: var(--navy-light); margin-bottom: 6px; }
 .experience-current {
   display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--navy-light);
   font-weight: 500; margin-bottom: 12px; cursor: pointer;

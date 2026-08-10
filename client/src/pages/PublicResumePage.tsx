@@ -126,7 +126,7 @@ function resumeToPlainText(resume: PublicResume): string {
       lines.push(`${ref.name || "Untitled reference"}${roleLine ? `, ${roleLine}` : ""}`);
       const contactLine = [ref.email, ref.phone].filter(Boolean).join("  |  ");
       if (contactLine) lines.push(contactLine);
-      const detailLine = [ref.affiliation, ref.dateObserved ? formatMonth(ref.dateObserved) : ""].filter(Boolean).join(" — ");
+      const detailLine = [ref.affiliation, formatReferenceDateRange(ref)].filter(Boolean).join(" — ");
       if (detailLine) lines.push(detailLine);
       lines.push("");
     }
@@ -142,6 +142,18 @@ function resumeToPlainText(resume: PublicResume): string {
  * two are mutually exclusive (see server's Resume.publicReferences/
  * recruiterCard), so this only ever renders in one place per resume.
  */
+/** "Start – End", "Start" (no end given), "End" (no start given, e.g. an
+ *  ongoing relationship with no fixed start on record), or "" when neither
+ *  is set — mirrors the Work Experience/Education "Start – Present" pattern
+ *  minus the "current" concept, since a reference's date range doesn't have
+ *  an open-ended "Present" state. */
+function formatReferenceDateRange(ref: ReferenceEntry): string {
+  const start = ref.dateObservedStart ? formatMonth(ref.dateObservedStart) : "";
+  const end = ref.dateObservedEnd ? formatMonth(ref.dateObservedEnd) : "";
+  if (start && end) return `${start} – ${end}`;
+  return start || end;
+}
+
 function ReferencesGrid({ references }: { references: ReferenceEntry[] }) {
   return (
     <div className="references-grid">
@@ -155,7 +167,9 @@ function ReferencesGrid({ references }: { references: ReferenceEntry[] }) {
           {(ref.email || ref.phone) && (
             <div className="reference-contact">{[ref.email, ref.phone].filter(Boolean).join("  ·  ")}</div>
           )}
-          {ref.dateObserved && <div className="reference-date">{formatMonth(ref.dateObserved)}</div>}
+          {(ref.dateObservedStart || ref.dateObservedEnd) && (
+            <div className="reference-date">{formatReferenceDateRange(ref)}</div>
+          )}
         </div>
       ))}
     </div>
