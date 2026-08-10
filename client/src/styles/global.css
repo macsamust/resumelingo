@@ -50,6 +50,9 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .hero::before { content: ""; position: absolute; top: -220px; right: -160px; width: 560px; height: 560px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(79,70,229,.18), transparent 70%); }
 .hero::after { content: ""; position: absolute; bottom: -260px; left: -200px; width: 560px; height: 560px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(20,184,166,.15), transparent 70%); }
 .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 56px; align-items: center; position: relative; z-index: 1; }
+/* Brand tagline, sits above the .eyebrow positioning pill — the one line
+   of copy that's just the brand's voice, not a claim about the product. */
+.hero-tagline { font-size: 15px; font-weight: 700; color: var(--teal); letter-spacing: .01em; margin-bottom: 10px; }
 .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--indigo); background: #eef2ff; border: 1px solid #e0e7ff; padding: 6px 14px; border-radius: 999px; margin-bottom: 20px; }
 h1 { font-size: 48px; line-height: 1.12; letter-spacing: -0.02em; font-weight: 800; color: var(--navy); margin-bottom: 20px; }
 h1 span { color: var(--indigo); }

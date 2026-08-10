@@ -5,6 +5,7 @@ export function Hero() {
     <section className="hero">
       <div className="wrap hero-grid">
         <div>
+          <p className="hero-tagline">We Speak Resume.</p>
           <span className="eyebrow">Not a resume builder. A living career profile.</span>
           <h1>
             Your resume, reimagined as a <span>living, cloud-hosted professional identity</span>.
