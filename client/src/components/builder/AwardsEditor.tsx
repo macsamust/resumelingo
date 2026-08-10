@@ -1,4 +1,5 @@
 import { AwardEntry } from "../../types";
+import { MonthYearField } from "./MonthYearField";
 
 interface Props {
   awards: AwardEntry[];
@@ -47,10 +48,7 @@ export function AwardsEditor({ awards, onChange }: Props) {
               placeholder="e.g. Acme Corp"
             />
           </div>
-          <div className="field">
-            <label>Date received</label>
-            <input type="month" value={entry.date} onChange={(e) => updateEntry(index, { date: e.target.value })} />
-          </div>
+          <MonthYearField label="Date received" value={entry.date} onChange={(v) => updateEntry(index, { date: v })} />
           <div className="field">
             <label>Description (optional)</label>
             <input

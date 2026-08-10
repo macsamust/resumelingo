@@ -1,5 +1,6 @@
 import { WorkExperienceEntry } from "../../types";
 import { generateId } from "../../utils/id";
+import { MonthYearField } from "./MonthYearField";
 
 interface Props {
   experience: WorkExperienceEntry[];
@@ -73,23 +74,13 @@ export function ExperienceEditor({ experience, onChange }: Props) {
             </div>
           </div>
           <div className="experience-dates">
-            <div className="field">
-              <label>Start date</label>
-              <input
-                type="month"
-                value={entry.startDate}
-                onChange={(e) => updateEntry(index, { startDate: e.target.value })}
-              />
-            </div>
-            <div className="field">
-              <label>End date</label>
-              <input
-                type="month"
-                value={entry.endDate ?? ""}
-                disabled={entry.current}
-                onChange={(e) => updateEntry(index, { endDate: e.target.value })}
-              />
-            </div>
+            <MonthYearField label="Start date" value={entry.startDate} onChange={(v) => updateEntry(index, { startDate: v })} />
+            <MonthYearField
+              label="End date"
+              value={entry.endDate ?? ""}
+              disabled={entry.current}
+              onChange={(v) => updateEntry(index, { endDate: v })}
+            />
           </div>
           <label className="experience-current">
             <input

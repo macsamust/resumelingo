@@ -173,6 +173,30 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .field textarea { resize: vertical; min-height: 70px; }
 .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--indigo); }
 
+/* MonthYearField — replaces <input type="month"> (unreliable cross-browser,
+   e.g. Firefox falls back to free text) with a calendar-icon trigger that
+   opens a constrained Month + Year dropdown pair. Used by
+   ExperienceEditor/EducationEditor/AwardsEditor, so every template shares
+   the exact same date-entry control. */
+.month-year-picker { position: relative; }
+.month-year-trigger {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 11px 14px; border-radius: 10px;
+  border: 1.5px solid var(--border); font-size: 14px; font-family: inherit; cursor: pointer; list-style: none;
+  color: var(--navy-light); background: #fff;
+}
+.month-year-trigger::-webkit-details-marker { display: none; }
+.month-year-trigger.disabled { cursor: not-allowed; background: #f8fafc; color: var(--muted); }
+.month-year-picker[open] .month-year-trigger { border-color: var(--indigo); }
+.month-year-icon { flex-shrink: 0; color: var(--muted); }
+.month-year-value { color: var(--navy-light); }
+.month-year-placeholder { color: var(--muted); }
+.month-year-panel {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 5; display: flex; gap: 8px; padding: 10px;
+  background: #fff; border: 1.5px solid var(--border); border-radius: 10px; box-shadow: 0 12px 28px -12px rgba(15, 23, 42, .25);
+}
+.month-year-panel select { padding: 8px 10px; border-radius: 8px; border: 1.5px solid var(--border); font-size: 13.5px; font-family: inherit; }
+.month-year-panel select:focus { outline: none; border-color: var(--indigo); }
+
 .photo-uploader { display: flex; align-items: center; gap: 14px; }
 .photo-uploader-preview { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--border); flex-shrink: 0; }
 .photo-uploader-placeholder {
