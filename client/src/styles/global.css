@@ -43,7 +43,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 /* Navbar-only wrapper so the tagline can sit under the wordmark without
    touching .logo itself (Footer reuses .logo alone, no tagline there). */
 .logo-block { display: flex; flex-direction: column; gap: 1px; }
-.logo-tagline { font-size: 11px; font-weight: 600; font-style: italic; color: var(--muted); letter-spacing: .02em; }
+.logo-tagline { font-size: 11px; font-weight: 600; font-style: italic; color: var(--muted); letter-spacing: .02em; margin-left: 39px; }
 .nav-links { display: flex; gap: 32px; align-items: center; }
 .nav-links a { font-size: 15px; font-weight: 500; color: var(--navy-light); }
 .nav-links a:hover { color: var(--indigo); }
@@ -60,6 +60,7 @@ h1 span { color: var(--indigo); }
 .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 28px; }
 .hero-note { font-size: 13px; color: var(--muted); }
 .hero-visual { background: linear-gradient(160deg, var(--navy), #111827); border-radius: 22px; padding: 22px; box-shadow: 0 30px 60px -20px rgba(15,23,42,.45); }
+.hero-mascot { display: flex; justify-content: center; margin-bottom: 18px; }
 .browser-bar { display: flex; align-items: center; gap: 6px; margin-bottom: 16px; }
 .browser-bar span { width: 10px; height: 10px; border-radius: 50%; background: #475569; }
 .browser-url { margin-left: 10px; flex: 1; background: #1e293b; color: #94a3b8; font-size: 12px; padding: 6px 12px; border-radius: 8px; }

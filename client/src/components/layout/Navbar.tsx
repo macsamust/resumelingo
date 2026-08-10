@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { ParrotLogo } from "../brand/ParrotLogo";
 
 export function Navbar() {
   const { user, logout } = useAuth();
@@ -10,6 +11,7 @@ export function Navbar() {
       <nav>
         <div className="logo-block">
           <Link to="/" className="logo">
+            <ParrotLogo size={30} />
             ResumeLingo
           </Link>
           <span className="logo-tagline">&ldquo;We Speak Resume.&rdquo;</span>
