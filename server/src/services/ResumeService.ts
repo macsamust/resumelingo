@@ -183,15 +183,24 @@ export class ResumeService {
     // touch the toggle again.
     const recruiterModeRequested = input.recruiterModeEnabled ?? existing.recruiterModeEnabled;
     let recruiterModeEnabled = recruiterModeRequested;
-    if (templateChanging || visibilityChanging || recruiterModeRequested) {
+    // "References" is the same Premium-subscriber-tier gate as Recruiter
+    // Mode above (not tied to which template is selected) — re-checked
+    // alongside it so a downgraded subscriber's public link stops showing
+    // the section on their very next save even if they never touch the
+    // toggle again.
+    const referencesRequested = input.referencesEnabled ?? existing.referencesEnabled;
+    let referencesEnabled = referencesRequested;
+    if (templateChanging || visibilityChanging || recruiterModeRequested || referencesRequested) {
       const userRecord = await this.users.findById(userId);
       if (userRecord) {
         const tier = new User(userRecord).subscriptionTier;
         if (templateChanging) assertTemplateAllowed(tier, input.templateKey!);
         if (visibilityChanging) assertVisibilityAllowed(tier, input.visibility!);
         recruiterModeEnabled = recruiterModeRequested && tier === SubscriptionTier.Premium;
+        referencesEnabled = referencesRequested && tier === SubscriptionTier.Premium;
       } else {
         recruiterModeEnabled = false;
+        referencesEnabled = false;
       }
     }
     assertPhotoSizeOk(input.photoUrl);
@@ -263,6 +272,7 @@ export class ResumeService {
       coverLetterEnabled,
       generatedCoverLetter,
       recruiterModeEnabled,
+      referencesEnabled,
     });
     const resume = new Resume(updated!);
     await this.analytics.recordScoreSnapshot(resume.id, resume.strengthScore);

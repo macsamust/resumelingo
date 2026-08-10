@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { BaseRepository } from "./BaseRepository";
-import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, ResumeRecord, SkillOrTool, WorkExperienceEntry } from "../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, ReferenceEntry, ResumeRecord, SkillOrTool, WorkExperienceEntry } from "../types";
 
 export interface CreateResumeInput {
   userId: string;
@@ -56,6 +56,8 @@ export interface UpdateResumeInput {
   awards?: AwardEntry[];
   achievements?: AchievementEntry[];
   skillsAndTools?: SkillOrTool[];
+  referencesEnabled?: boolean;
+  references?: ReferenceEntry[];
   generatedSummary?: string;
   generatedBullets?: string[];
 }
@@ -111,6 +113,10 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       awards: JSON.stringify(input.awards),
       achievements: JSON.stringify(input.achievements),
       skillsAndTools: JSON.stringify(input.skillsAndTools ?? []),
+      // References, like Recruiter Mode, is only ever turned on from Edit
+      // Resume, never at creation time.
+      referencesEnabled: false,
+      references: JSON.stringify([]),
       generatedSummary: input.generatedSummary,
       generatedBullets: JSON.stringify(input.generatedBullets),
       viewCount: 0,
@@ -159,6 +165,8 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       awards: input.awards ? JSON.stringify(input.awards) : existing.awards,
       achievements: input.achievements ? JSON.stringify(input.achievements) : existing.achievements,
       skillsAndTools: input.skillsAndTools ? JSON.stringify(input.skillsAndTools) : existing.skillsAndTools,
+      referencesEnabled: input.referencesEnabled !== undefined ? input.referencesEnabled : existing.referencesEnabled,
+      references: input.references ? JSON.stringify(input.references) : existing.references,
       generatedSummary: input.generatedSummary ?? existing.generatedSummary,
       generatedBullets: input.generatedBullets ? JSON.stringify(input.generatedBullets) : existing.generatedBullets,
       updatedAt: new Date().toISOString(),

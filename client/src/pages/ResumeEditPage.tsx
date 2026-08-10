@@ -8,6 +8,7 @@ import { EducationEditor } from "../components/builder/EducationEditor";
 import { AwardsEditor } from "../components/builder/AwardsEditor";
 import { AchievementEditor } from "../components/builder/AchievementEditor";
 import { SkillsAndToolsEditor } from "../components/builder/SkillsAndToolsEditor";
+import { ReferencesEditor } from "../components/builder/ReferencesEditor";
 import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { ResumePreview } from "../components/builder/ResumePreview";
 import { ApiError, catalogApi, resumeApi } from "../api";
@@ -25,6 +26,7 @@ import {
   LinkVisibility,
   ProfessionDefinition,
   ProfessionSummary,
+  ReferenceEntry,
   Resume,
   SkillOrTool,
   TemplateDefinition,
@@ -77,6 +79,8 @@ export function ResumeEditPage() {
   const [recruiterWorkAuthorization, setRecruiterWorkAuthorization] = useState("");
   const [recruiterExpectedSalary, setRecruiterExpectedSalary] = useState("");
   const [recruiterRemotePreference, setRecruiterRemotePreference] = useState("");
+  const [referencesEnabled, setReferencesEnabled] = useState(false);
+  const [references, setReferences] = useState<ReferenceEntry[]>([]);
   const [combineExperienceFormat, setCombineExperienceFormat] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -138,6 +142,8 @@ export function ResumeEditPage() {
         setRecruiterWorkAuthorization(r.recruiterWorkAuthorization);
         setRecruiterExpectedSalary(r.recruiterExpectedSalary);
         setRecruiterRemotePreference(r.recruiterRemotePreference);
+        setReferencesEnabled(r.referencesEnabled);
+        setReferences(r.references);
         setCombineExperienceFormat(r.combineExperienceFormat);
         setAnswers(r.answers);
         // Backfill a stable id onto any job saved before WorkExperienceEntry.id
@@ -256,6 +262,8 @@ export function ResumeEditPage() {
         awards,
         achievements,
         skillsAndTools,
+        referencesEnabled,
+        references,
       });
       setResume(updated);
     } catch (err) {
@@ -675,6 +683,24 @@ export function ResumeEditPage() {
                   </div>
                 </>
               )}
+            </CollapsibleSection>
+          )}
+
+          {isPremium && (
+            <CollapsibleSection title="References" forceOpen={forceOpen}>
+              <p className="hero-note" style={{ marginBottom: 16 }}>
+                Adds a References section to your public resume link. Off by default — nothing appears until you
+                turn this on and add at least one reference.
+              </p>
+              <label className="checkbox-field">
+                <input
+                  type="checkbox"
+                  checked={referencesEnabled}
+                  onChange={(e) => setReferencesEnabled(e.target.checked)}
+                />
+                Add a References section to this resume
+              </label>
+              {referencesEnabled && <ReferencesEditor references={references} onChange={setReferences} />}
             </CollapsibleSection>
           )}
 

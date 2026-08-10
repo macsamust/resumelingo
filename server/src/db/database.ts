@@ -166,6 +166,16 @@ export async function migrate(): Promise<void> {
     -- pattern as "achievements" above.
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "skillsAndTools" TEXT NOT NULL DEFAULT '[]';
 
+    -- "References" section (Edit Resume, Premium subscribers only — same
+    -- subscriber-tier gate as Recruiter Mode, re-checked and silently
+    -- coerced off on every update in ResumeService, not tied to which
+    -- template is selected). Off by default; the checkbox is what actually
+    -- shows the section on the public resume link. Each entry has name,
+    -- companyPosition, company, email, phone, affiliation, and
+    -- dateObserved — same JSON-array pattern as "achievements" above.
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "referencesEnabled" BOOLEAN NOT NULL DEFAULT false;
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "references" TEXT NOT NULL DEFAULT '[]';
+
     -- Admins are a deliberately separate table/role from users (see
     -- types/index.ts AdminRecord and services/AdminService.ts) rather than a
     -- flag on the users table, so admin auth is fully isolated from user auth.

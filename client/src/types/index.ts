@@ -91,6 +91,23 @@ export interface SkillOrTool {
   category: "skill" | "tool";
 }
 
+/**
+ * One professional reference (Edit Resume, Premium subscribers only — see
+ * Resume.referencesEnabled and components/builder/ReferencesEditor.tsx).
+ * "dateObserved" is when this reference worked with/observed the
+ * candidate — "YYYY-MM", same shape every other date field in this app
+ * uses (see MonthYearField.tsx).
+ */
+export interface ReferenceEntry {
+  name: string;
+  companyPosition: string;
+  company: string;
+  email: string;
+  phone: string;
+  affiliation: string;
+  dateObserved: string;
+}
+
 export interface SubscriptionPlan {
   tier: SubscriptionTier;
   name: string;
@@ -151,6 +168,9 @@ export interface Resume {
   achievements: AchievementEntry[];
   /** "Skills & Tools" section — only rendered by the Portrait template. See types/index.ts SkillOrTool. */
   skillsAndTools: SkillOrTool[];
+  /** "References" section toggle — Premium subscribers only, off by default. See ReferenceEntry. */
+  referencesEnabled: boolean;
+  references: ReferenceEntry[];
   generatedSummary: string;
   generatedBullets: string[];
   viewCount: number;
@@ -193,6 +213,8 @@ export interface PublicResume {
   awards: AwardEntry[];
   achievements: AchievementEntry[];
   skillsAndTools: SkillOrTool[];
+  /** Already gated server-side (see server's Resume.publicReferences) — empty whenever referencesEnabled is off, so there's no separate flag to check here. */
+  references: ReferenceEntry[];
   generatedSummary: string;
   generatedBullets: string[];
   slug: string;

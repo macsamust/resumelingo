@@ -1,4 +1,4 @@
-import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, ResumeRecord, SkillOrTool, WorkExperienceEntry } from "../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, ReferenceEntry, ResumeRecord, SkillOrTool, WorkExperienceEntry } from "../types";
 import { getTemplateByKey } from "../config/templates";
 import { getProfessionByKey } from "../config/professions";
 import { extractKeywords } from "../utils/keywords";
@@ -40,6 +40,8 @@ export class Resume {
   readonly awards: AwardEntry[];
   readonly achievements: AchievementEntry[];
   readonly skillsAndTools: SkillOrTool[];
+  readonly referencesEnabled: boolean;
+  readonly references: ReferenceEntry[];
   readonly generatedSummary: string;
   readonly generatedBullets: string[];
   readonly viewCount: number;
@@ -77,6 +79,8 @@ export class Resume {
     this.awards = JSON.parse(record.awards || "[]");
     this.achievements = JSON.parse(record.achievements || "[]");
     this.skillsAndTools = JSON.parse(record.skillsAndTools || "[]");
+    this.referencesEnabled = record.referencesEnabled;
+    this.references = JSON.parse(record.references || "[]");
     this.generatedSummary = record.generatedSummary;
     this.generatedBullets = JSON.parse(record.generatedBullets || "[]");
     this.viewCount = record.viewCount;
@@ -144,6 +148,18 @@ export class Resume {
   }
 
   /**
+   * References list actually exposed on the public resume link — empty
+   * when referencesEnabled is off, regardless of what's saved in
+   * `references`, so a disabled section never leaks reference contact info
+   * (names, emails, phone numbers) through the public API. Mirrors
+   * recruiterCard's "null when off" pattern above, just as an array instead
+   * of a nullable object since there's no single-object shape to null out.
+   */
+  get publicReferences(): ReferenceEntry[] {
+    return this.referencesEnabled ? this.references : [];
+  }
+
+  /**
    * Per-resume Profile Strength Score (0-100) — same formula
    * DashboardController.averageStrengthScore() averages across a user's
    * resumes for the dashboard tile, now exposed per-resume too (Premium
@@ -204,6 +220,8 @@ export class Resume {
       awards: this.awards,
       achievements: this.achievements,
       skillsAndTools: this.skillsAndTools,
+      referencesEnabled: this.referencesEnabled,
+      references: this.references,
       generatedSummary: this.generatedSummary,
       generatedBullets: this.generatedBullets,
       viewCount: this.viewCount,
@@ -232,6 +250,7 @@ export class Resume {
       awards: this.awards,
       achievements: this.achievements,
       skillsAndTools: this.skillsAndTools,
+      references: this.publicReferences,
       generatedSummary: this.generatedSummary,
       generatedBullets: this.generatedBullets,
       slug: this.slug,

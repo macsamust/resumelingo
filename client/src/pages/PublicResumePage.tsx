@@ -112,6 +112,22 @@ function resumeToPlainText(resume: PublicResume): string {
     lines.push("");
   }
 
+  // Already gated server-side (resume.references is empty whenever the
+  // owner has referencesEnabled off — see server's Resume.publicReferences)
+  // — Premium subscribers only.
+  if (resume.references?.length > 0) {
+    lines.push("REFERENCES");
+    for (const ref of resume.references) {
+      const roleLine = [ref.companyPosition, ref.company].filter(Boolean).join(", ");
+      lines.push(`${ref.name || "Untitled reference"}${roleLine ? `, ${roleLine}` : ""}`);
+      const contactLine = [ref.email, ref.phone].filter(Boolean).join("  |  ");
+      if (contactLine) lines.push(contactLine);
+      const detailLine = [ref.affiliation, ref.dateObserved ? formatMonth(ref.dateObserved) : ""].filter(Boolean).join(" — ");
+      if (detailLine) lines.push(detailLine);
+      lines.push("");
+    }
+  }
+
   return lines.join("\n").trim() + "\n";
 }
 
@@ -322,6 +338,26 @@ export function PublicResumePage() {
           </div>
         );
       })()}
+      {resume.references?.length > 0 && (
+        <div className="public-resume-card public-resume-details">
+          <h2 className="public-resume-details-heading">References</h2>
+          <div className="references-grid">
+            {resume.references.map((ref, i) => (
+              <div className="reference-card" key={i}>
+                <div className="reference-name">{ref.name || "Untitled reference"}</div>
+                {(ref.companyPosition || ref.company) && (
+                  <div className="reference-role">{[ref.companyPosition, ref.company].filter(Boolean).join(", ")}</div>
+                )}
+                {ref.affiliation && <div className="reference-affiliation">{ref.affiliation}</div>}
+                {(ref.email || ref.phone) && (
+                  <div className="reference-contact">{[ref.email, ref.phone].filter(Boolean).join("  ·  ")}</div>
+                )}
+                {ref.dateObserved && <div className="reference-date">{formatMonth(ref.dateObserved)}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

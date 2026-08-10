@@ -207,6 +207,22 @@ export interface RoleDescriptionRecord {
   updatedAt: string;
 }
 
+/**
+ * One professional reference (Edit Resume, Premium subscribers only — see
+ * ResumeRecord.referencesEnabled). "dateObserved" is when this reference
+ * worked with/observed the candidate, "YYYY-MM" like every other date field
+ * in this app (see client's MonthYearField.tsx).
+ */
+export interface ReferenceEntry {
+  name: string;
+  companyPosition: string;
+  company: string;
+  email: string;
+  phone: string;
+  affiliation: string;
+  dateObserved: string;
+}
+
 export interface ResumeRecord {
   id: string;
   userId: string;
@@ -257,6 +273,16 @@ export interface ResumeRecord {
   awards: string; // JSON-serialized AwardEntry[]
   achievements: string; // JSON-serialized AchievementEntry[]
   skillsAndTools: string; // JSON-serialized SkillOrTool[]
+  /**
+   * "References" section (Edit Resume, Premium subscribers only —
+   * re-checked and silently coerced off on every update in
+   * ResumeService.update, same subscriber-tier gate as
+   * recruiterModeEnabled, not tied to which template is selected). Off by
+   * default — see Resume.toPublicJSON, which only exposes `references`
+   * when this is true.
+   */
+  referencesEnabled: boolean;
+  references: string; // JSON-serialized ReferenceEntry[]
   generatedSummary: string;
   generatedBullets: string; // JSON-serialized string[]
   viewCount: number;
