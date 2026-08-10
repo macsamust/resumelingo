@@ -509,43 +509,45 @@ export function ResumeEditPage() {
           </CollapsibleSection>
 
           {isPremium && (
-            <div className="builder-divider">
-              <span className="builder-divider-label">Premium Tools</span>
-            </div>
-          )}
-
-          {isPremium && selectedTemplateIsPremium && (
-            <CollapsibleSection title="Cover Letter" forceOpen={forceOpen}>
+            <CollapsibleSection title="References" forceOpen={forceOpen}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
-                Generates a tailored AI cover letter alongside this resume. Off by default — turn this on to have one
-                written and kept in sync automatically.
+                Adds a References section to your public resume link. Off by default — nothing appears until you
+                turn this on and add at least one reference.
               </p>
               <label className="checkbox-field">
                 <input
                   type="checkbox"
-                  checked={coverLetterEnabled}
-                  onChange={(e) => setCoverLetterEnabled(e.target.checked)}
+                  checked={referencesEnabled}
+                  onChange={(e) => setReferencesEnabled(e.target.checked)}
                 />
-                Generate an AI cover letter for this resume
+                Add a References section to this resume
               </label>
-              {coverLetterEnabled && (
+              {referencesEnabled && (
                 <>
-                  {resume.coverLetterEnabled && resume.generatedCoverLetter ? (
-                    <p className="hero-note" style={{ marginTop: 16, whiteSpace: "pre-line", color: "var(--navy-light)" }}>
-                      {resume.generatedCoverLetter}
-                    </p>
-                  ) : (
-                    <p className="hero-note" style={{ marginTop: 16 }}>
-                      Your AI-generated cover letter will appear here after you save.
+                  <label className="checkbox-field">
+                    <input
+                      type="checkbox"
+                      checked={referencesRecruiterModeOnly}
+                      onChange={(e) => setReferencesRecruiterModeOnly(e.target.checked)}
+                    />
+                    Only add references to Recruiter Mode printout section when selecting "View resume"
+                  </label>
+                  {referencesRecruiterModeOnly && !recruiterModeEnabled && (
+                    <p className="hero-note" style={{ marginTop: -8, marginBottom: 16, color: "var(--muted)" }}>
+                      References won't appear anywhere until Recruiter Mode is also turned on, further down in
+                      Premium Tools.
                     </p>
                   )}
-                  <p className="hero-note" style={{ marginTop: 12, marginBottom: 0 }}>
-                    Regenerates automatically whenever your name, title, profession, work experience, or answers
-                    change.
-                  </p>
+                  <ReferencesEditor references={references} onChange={setReferences} />
                 </>
               )}
             </CollapsibleSection>
+          )}
+
+          {isPremium && (
+            <div className="builder-divider">
+              <span className="builder-divider-label">Premium Tools</span>
+            </div>
           )}
 
           {isPremium && (
@@ -699,36 +701,35 @@ export function ResumeEditPage() {
             </CollapsibleSection>
           )}
 
-          {isPremium && (
-            <CollapsibleSection title="References" forceOpen={forceOpen}>
+          {isPremium && selectedTemplateIsPremium && (
+            <CollapsibleSection title="Cover Letter" forceOpen={forceOpen}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
-                Adds a References section to your public resume link. Off by default — nothing appears until you
-                turn this on and add at least one reference.
+                Generates a tailored AI cover letter alongside this resume. Off by default — turn this on to have one
+                written and kept in sync automatically.
               </p>
               <label className="checkbox-field">
                 <input
                   type="checkbox"
-                  checked={referencesEnabled}
-                  onChange={(e) => setReferencesEnabled(e.target.checked)}
+                  checked={coverLetterEnabled}
+                  onChange={(e) => setCoverLetterEnabled(e.target.checked)}
                 />
-                Add a References section to this resume
+                Generate an AI cover letter for this resume
               </label>
-              {referencesEnabled && (
+              {coverLetterEnabled && (
                 <>
-                  <label className="checkbox-field">
-                    <input
-                      type="checkbox"
-                      checked={referencesRecruiterModeOnly}
-                      onChange={(e) => setReferencesRecruiterModeOnly(e.target.checked)}
-                    />
-                    Only add references to Recruiter Mode printout section when selecting "View resume"
-                  </label>
-                  {referencesRecruiterModeOnly && !recruiterModeEnabled && (
-                    <p className="hero-note" style={{ marginTop: -8, marginBottom: 16, color: "var(--muted)" }}>
-                      References won't appear anywhere until Recruiter Mode is also turned on above.
+                  {resume.coverLetterEnabled && resume.generatedCoverLetter ? (
+                    <p className="hero-note" style={{ marginTop: 16, whiteSpace: "pre-line", color: "var(--navy-light)" }}>
+                      {resume.generatedCoverLetter}
+                    </p>
+                  ) : (
+                    <p className="hero-note" style={{ marginTop: 16 }}>
+                      Your AI-generated cover letter will appear here after you save.
                     </p>
                   )}
-                  <ReferencesEditor references={references} onChange={setReferences} />
+                  <p className="hero-note" style={{ marginTop: 12, marginBottom: 0 }}>
+                    Regenerates automatically whenever your name, title, profession, work experience, or answers
+                    change.
+                  </p>
                 </>
               )}
             </CollapsibleSection>
