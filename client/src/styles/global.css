@@ -61,6 +61,7 @@ h1 span { color: var(--indigo); }
 .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 28px; }
 .hero-note { font-size: 13px; color: var(--muted); }
 .hero-visual { background: linear-gradient(160deg, var(--navy), #111827); border-radius: 22px; padding: 22px; box-shadow: 0 30px 60px -20px rgba(15,23,42,.45); }
+.hero-mascot { display: flex; justify-content: center; margin-bottom: 18px; }
 .browser-bar { display: flex; align-items: center; gap: 6px; margin-bottom: 16px; }
 .browser-bar span { width: 10px; height: 10px; border-radius: 50%; background: #475569; }
 .browser-url { margin-left: 10px; flex: 1; background: #1e293b; color: #94a3b8; font-size: 12px; padding: 6px 12px; border-radius: 8px; }

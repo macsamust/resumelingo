@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ParrotMark } from "../brand/ParrotMark";
 
 export function Footer() {
   return (
@@ -7,7 +8,10 @@ export function Footer() {
         <div className="footer-grid">
           <div className="footer-brand">
             <Link to="/" className="logo">
-              <span className="dot">R</span>ResumeLingo
+              <span className="dot">
+                <ParrotMark size={17} />
+              </span>
+              ResumeLingo
             </Link>
             <p>A web-based resume, hosted in the cloud, shareable with one link — public or private, always yours to update.</p>
           </div>
