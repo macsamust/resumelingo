@@ -1,5 +1,5 @@
 import { getProfessionByKey } from "../config/professions";
-import { findRoleDescription } from "../config/roleDescriptions";
+import { findRoleDescription, findRoleDescriptionForProfession } from "../config/roleDescriptions";
 import { AchievementEntry } from "../types";
 
 export interface GeneratedContent {
@@ -39,7 +39,7 @@ export class RuleBasedContentGenerator implements IContentGenerator {
     // instead of the standard "Results-driven {label} with..." shape, build
     // a generic professional description of the role pulled from the
     // Resume title (e.g. "Comedian Resume" -> "Comedian").
-    const summary = profession === "other" ? this.buildOtherSummary(title) : this.buildSummary(label, answers);
+    const summary = profession === "other" ? this.buildOtherSummary(title) : this.buildSummary(profession, label, answers);
     // Challenge/Action/Result entries produce genuinely impact-focused
     // bullets (the STAR/CAR method) and take priority when present, since
     // they're the person's own account of what changed because of their
@@ -51,11 +51,29 @@ export class RuleBasedContentGenerator implements IContentGenerator {
     return { summary, bullets };
   }
 
-  private buildSummary(professionLabel: string, answers: Record<string, string>): string {
+  /**
+   * Builds the About statement for every profession except "Other" (see
+   * buildOtherSummary below for that one). Prefers the profession's own
+   * curated row (see config/roleDescriptions.ts's findRoleDescriptionForProfession
+   * — admin-editable via /admin/role-descriptions) for the descriptor/traits/
+   * outcome/keyTraits clauses, so each profession reads in its own voice
+   * instead of one shared generic sentence. Falls back to the old plain
+   * sentence when a profession has no curated row yet (defensive — every
+   * named profession is seeded with one, but a custom profession an admin
+   * might add later wouldn't have a match).
+   */
+  private buildSummary(profession: string, professionLabel: string, answers: Record<string, string>): string {
     const years = answers.yearsExperience ? `${answers.yearsExperience}+ years of experience` : "experienced professional";
     const topSkill = this.firstListValue(answers);
     const skillClause = topSkill ? ` specializing in ${topSkill}` : "";
-    return `Results-driven ${professionLabel} with ${years}${skillClause}, known for translating requirements into measurable outcomes and consistently exceeding expectations.`;
+
+    const description = findRoleDescriptionForProfession(profession);
+    if (!description) {
+      return `Results-driven ${professionLabel} with ${years}${skillClause}, known for translating requirements into measurable outcomes and consistently exceeding expectations.`;
+    }
+
+    const { descriptor, traits, outcome, keyTraits } = description;
+    return `Results-driven ${professionLabel} with ${years}${skillClause}, ${descriptor} who combines ${traits[0]}, ${traits[1]}, and ${traits[2]} to ${outcome}. Known for ${keyTraits[0]}, ${keyTraits[1]}, and ${keyTraits[2]}.`;
   }
 
   /**

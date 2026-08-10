@@ -27,7 +27,7 @@
  * round-trip without slowing that path down.
  */
 export interface RoleDescription {
-  /** Matched against the role text (case-insensitive, substring match). Empty for the fallback row. */
+  /** Matched against the role text (case-insensitive, substring match). Empty for professionKey-matched and fallback rows. */
   keywords: string[];
   /** Broad field noun, e.g. "entertainer". Spliced into "A successful {category}, ...". Also this row's unique key. */
   category: string;
@@ -41,6 +41,16 @@ export interface RoleDescription {
   keyTraits: [string, string, string];
   /** True for the single row used when no keyword matches — see GENERIC_ROLE_DESCRIPTION below. */
   isFallback?: boolean;
+  /**
+   * Matches this row directly to one of the named professions (see
+   * config/professions.ts), e.g. "software-engineer", instead of via
+   * keyword substring — see findRoleDescriptionForProfession below.
+   * Undefined/null for the "Other" sub-category rows (keyword-matched) and
+   * the generic fallback row. Typed to also allow null (rather than just
+   * undefined) so the DB-backed RoleDescriptionRecord — which stores this
+   * as a nullable column — is directly assignable here for the cache.
+   */
+  professionKey?: string | null;
 }
 
 /**
@@ -138,6 +148,101 @@ export const DEFAULT_ROLE_DESCRIPTIONS: RoleDescription[] = [
     keyTraits: ["adaptability", "attention to detail", "a strong work ethic"],
     isFallback: true,
   },
+
+  // One row per named profession (see config/professions.ts) — matched by
+  // professionKey rather than a keyword, and used by ContentGenerator's
+  // buildSummary (not buildOtherSummary) to give each profession its own
+  // voice instead of one shared generic sentence.
+  {
+    keywords: [],
+    professionKey: "software-engineer",
+    category: "software-engineer",
+    descriptor: "resourceful problem-solver",
+    traits: ["clean, maintainable code", "systems-level thinking", "close collaboration with cross-functional teams"],
+    outcome: "ship reliable software faster",
+    keyTraits: ["clear technical communication", "ownership", "a habit of continuous learning"],
+  },
+  {
+    keywords: [],
+    professionKey: "nurse",
+    category: "nurse",
+    descriptor: "compassionate, detail-driven clinician",
+    traits: ["thorough patient assessment", "calm decision-making under pressure", "close coordination with care teams"],
+    outcome: "deliver safe, high-quality patient care",
+    keyTraits: ["empathy", "clinical precision", "steady composure in high-stakes moments"],
+  },
+  {
+    keywords: [],
+    professionKey: "teacher",
+    category: "teacher",
+    descriptor: "engaging, student-focused educator",
+    traits: ["clear lesson design", "differentiated instruction", "consistent classroom management"],
+    outcome: "help every student reach their potential",
+    keyTraits: ["patience", "creativity", "genuine investment in student growth"],
+  },
+  {
+    keywords: [],
+    professionKey: "executive",
+    category: "executive",
+    descriptor: "strategic, results-driven leader",
+    traits: ["long-range strategic planning", "cross-functional leadership", "disciplined financial stewardship"],
+    outcome: "drive sustainable organizational growth",
+    keyTraits: ["decisiveness", "clear executive communication", "a track record of accountability"],
+  },
+  {
+    keywords: [],
+    professionKey: "project-manager",
+    category: "project-manager",
+    descriptor: "organized, delivery-focused coordinator",
+    traits: ["disciplined scope and timeline management", "proactive risk mitigation", "clear stakeholder communication"],
+    outcome: "keep complex projects on time and on budget",
+    keyTraits: ["organization", "adaptability", "steady follow-through under shifting priorities"],
+  },
+  {
+    keywords: [],
+    professionKey: "government-contractor",
+    category: "government-contractor-profession",
+    descriptor: "compliance-minded program professional",
+    traits: ["rigorous regulatory compliance", "disciplined program execution", "close coordination with government stakeholders"],
+    outcome: "deliver on contract commitments with full accountability",
+    keyTraits: ["attention to detail", "integrity", "dependable follow-through"],
+  },
+  {
+    keywords: [],
+    professionKey: "military",
+    category: "military-profession",
+    descriptor: "disciplined, mission-focused leader",
+    traits: ["operational planning under pressure", "team leadership and training", "sound judgment in high-stakes situations"],
+    outcome: "accomplish the mission and bring the team along",
+    keyTraits: ["discipline", "resilience", "unwavering reliability"],
+  },
+  {
+    keywords: [],
+    professionKey: "sales",
+    category: "sales",
+    descriptor: "relationship-driven closer",
+    traits: ["consultative needs discovery", "persistent pipeline management", "skilled objection handling"],
+    outcome: "consistently exceed revenue targets",
+    keyTraits: ["persistence", "active listening", "a competitive drive"],
+  },
+  {
+    keywords: [],
+    professionKey: "marketing",
+    category: "marketing",
+    descriptor: "data-informed brand storyteller",
+    traits: ["compelling campaign strategy", "rigorous performance analysis", "creative, audience-first messaging"],
+    outcome: "grow brand awareness and measurable engagement",
+    keyTraits: ["creativity", "analytical rigor", "a strong sense of audience"],
+  },
+  {
+    keywords: [],
+    professionKey: "construction",
+    category: "construction",
+    descriptor: "safety-focused site leader",
+    traits: ["hands-on crew supervision", "rigorous site safety standards", "precise project scheduling"],
+    outcome: "deliver projects safely, on time, and to spec",
+    keyTraits: ["reliability", "attention to detail", "steady leadership under deadline pressure"],
+  },
 ];
 
 /**
@@ -164,7 +269,20 @@ export function setRoleDescriptionCache(descriptions: RoleDescription[]): void {
 export function findRoleDescription(role: string): RoleDescription {
   const lower = role.toLowerCase();
   const pool = cache.length > 0 ? cache : DEFAULT_ROLE_DESCRIPTIONS;
-  const matched = pool.find((r) => !r.isFallback && r.keywords.some((k) => lower.includes(k)));
+  const matched = pool.find((r) => !r.isFallback && !r.professionKey && r.keywords.some((k) => lower.includes(k)));
   if (matched) return matched;
   return pool.find((r) => r.isFallback) ?? GENERIC_ROLE_DESCRIPTION;
+}
+
+/**
+ * Looks up the row matched directly to a named profession (e.g.
+ * "software-engineer"), used by ContentGenerator.buildSummary for every
+ * profession except "Other". Returns undefined (rather than falling back to
+ * the generic row) so the caller can fall back to its own older sentence
+ * template — the generic fallback's voice was written for "Other", not as a
+ * stand-in for a named profession with no curated row yet.
+ */
+export function findRoleDescriptionForProfession(professionKey: string): RoleDescription | undefined {
+  const pool = cache.length > 0 ? cache : DEFAULT_ROLE_DESCRIPTIONS;
+  return pool.find((r) => r.professionKey === professionKey);
 }

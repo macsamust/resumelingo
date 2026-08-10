@@ -307,6 +307,16 @@ export async function migrate(): Promise<void> {
       UNIQUE ("category")
     );
 
+    -- Lets a row be matched directly to one of the named professions (see
+    -- config/professions.ts) — e.g. "software-engineer" — instead of only
+    -- via keyword substring match against a free-typed resume title (which
+    -- is how the "Other" profession's sub-categories, e.g. comedian/actor,
+    -- still work). NULL for those keyword-matched rows and for the generic
+    -- fallback row. See ContentGenerator.buildSummary, which now prefers a
+    -- professionKey match over its old hardcoded sentence template.
+    ALTER TABLE role_descriptions ADD COLUMN IF NOT EXISTS "professionKey" TEXT;
+    CREATE INDEX IF NOT EXISTS role_descriptions_profession_idx ON role_descriptions ("professionKey");
+
     -- Defensive backfill: if role_descriptions (or skill_suggestions) was
     -- ever created by an earlier version of this migration that predates
     -- its UNIQUE constraint, CREATE TABLE IF NOT EXISTS above is a no-op
@@ -407,8 +417,8 @@ async function seedCatalogDefaults(): Promise<void> {
     const r = DEFAULT_ROLE_DESCRIPTIONS[i];
     await pool.query(
       `INSERT INTO role_descriptions
-         ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "sortOrder", "createdAt", "updatedAt")
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10)
+         ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11)
        ON CONFLICT ("category") DO NOTHING`,
       [
         nanoid(12),
@@ -419,6 +429,7 @@ async function seedCatalogDefaults(): Promise<void> {
         r.outcome,
         JSON.stringify(r.keyTraits),
         r.isFallback ?? false,
+        r.professionKey ?? null,
         i,
         now,
       ]

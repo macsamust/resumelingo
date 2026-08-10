@@ -96,6 +96,7 @@ export class AdminApi extends ApiClient {
     outcome: string;
     keyTraits: [string, string, string];
     isFallback?: boolean;
+    professionKey?: string | null;
     sortOrder?: number;
   }) {
     return this.post<{ roleDescription: AdminRoleDescription }>("/admin/role-descriptions", input);
@@ -111,6 +112,7 @@ export class AdminApi extends ApiClient {
       outcome: string;
       keyTraits: [string, string, string];
       isFallback: boolean;
+      professionKey: string | null;
       sortOrder: number;
     }>
   ) {

@@ -254,8 +254,10 @@ export interface AdminSkillSuggestion extends SkillSuggestion {
 }
 
 /**
- * Admin CRUD shape for a role description — the "Other" profession's About
- * statement voice (see server's ContentGenerator.ts). Reads as
+ * Admin CRUD shape for a role description — the About statement voice for
+ * either one named profession (professionKey set) or, when professionKey is
+ * null, one of the "Other" profession's keyword-matched sub-categories or
+ * the generic fallback row (see server's ContentGenerator.ts). Reads as
  * "AI-generated" but is a curated, admin-editable list — see
  * pages/admin/AdminRoleDescriptionsPage.tsx.
  */
@@ -268,6 +270,8 @@ export interface AdminRoleDescription {
   outcome: string;
   keyTraits: [string, string, string];
   isFallback: boolean;
+  /** Matches this row to one of config/professions.ts's keys directly, instead of via keyword. Null for keyword-matched and fallback rows. */
+  professionKey: string | null;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;

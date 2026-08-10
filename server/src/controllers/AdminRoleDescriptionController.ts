@@ -19,7 +19,7 @@ export class AdminRoleDescriptionController {
   };
 
   create = async (req: AdminAuthenticatedRequest, res: Response) => {
-    const { keywords, category, descriptor, traits, outcome, keyTraits, isFallback, sortOrder } = req.body ?? {};
+    const { keywords, category, descriptor, traits, outcome, keyTraits, isFallback, professionKey, sortOrder } = req.body ?? {};
     if (!category || typeof category !== "string" || !category.trim()) {
       return res.status(400).json({ error: "category is required." });
     }
@@ -34,6 +34,9 @@ export class AdminRoleDescriptionController {
     if (keywords !== undefined && !isStringArray(keywords)) {
       return res.status(400).json({ error: "keywords must be an array of strings." });
     }
+    if (professionKey !== undefined && professionKey !== null && typeof professionKey !== "string") {
+      return res.status(400).json({ error: "professionKey must be a string or null." });
+    }
     const created = await this.roleDescriptions.create({
       keywords: isStringArray(keywords) ? keywords : [],
       category: category.trim(),
@@ -42,13 +45,14 @@ export class AdminRoleDescriptionController {
       outcome: outcome.trim(),
       keyTraits,
       isFallback: typeof isFallback === "boolean" ? isFallback : false,
+      professionKey: typeof professionKey === "string" ? professionKey.trim() || null : null,
       sortOrder: typeof sortOrder === "number" ? sortOrder : 0,
     });
     res.status(201).json({ roleDescription: created });
   };
 
   update = async (req: AdminAuthenticatedRequest, res: Response) => {
-    const { keywords, category, descriptor, traits, outcome, keyTraits, isFallback, sortOrder } = req.body ?? {};
+    const { keywords, category, descriptor, traits, outcome, keyTraits, isFallback, professionKey, sortOrder } = req.body ?? {};
     if (traits !== undefined && !isTraitTriple(traits)) {
       return res.status(400).json({ error: "traits must be an array of exactly 3 strings." });
     }
@@ -58,6 +62,9 @@ export class AdminRoleDescriptionController {
     if (keywords !== undefined && !isStringArray(keywords)) {
       return res.status(400).json({ error: "keywords must be an array of strings." });
     }
+    if (professionKey !== undefined && professionKey !== null && typeof professionKey !== "string") {
+      return res.status(400).json({ error: "professionKey must be a string or null." });
+    }
     const updated = await this.roleDescriptions.update(req.params.id, {
       keywords: isStringArray(keywords) ? keywords : undefined,
       category: typeof category === "string" ? category.trim() : undefined,
@@ -66,6 +73,7 @@ export class AdminRoleDescriptionController {
       outcome: typeof outcome === "string" ? outcome.trim() : undefined,
       keyTraits: isTraitTriple(keyTraits) ? keyTraits : undefined,
       isFallback: typeof isFallback === "boolean" ? isFallback : undefined,
+      professionKey: professionKey === undefined ? undefined : typeof professionKey === "string" ? professionKey.trim() || null : null,
       sortOrder: typeof sortOrder === "number" ? sortOrder : undefined,
     });
     if (!updated) return res.status(404).json({ error: "Role description not found." });

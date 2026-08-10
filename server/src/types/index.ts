@@ -182,8 +182,11 @@ export interface SkillSuggestionRecord {
 
 /**
  * DB-backed row (see repositories/RoleDescriptionRepository.ts) feeding
- * ContentGenerator's "Other" profession About-statement voice. Reads as
- * "AI-generated" but is a curated, admin-editable list — same pattern as
+ * ContentGenerator's About-statement voice — either for one named
+ * profession (professionKey set, e.g. "software-engineer") or, when
+ * professionKey is unset, one of the "Other" profession's keyword-matched
+ * sub-categories (e.g. comedian/actor) or the generic fallback row. Reads
+ * as "AI-generated" but is a curated, admin-editable list — same pattern as
  * SkillSuggestionRecord above, except this one is also cached in-memory
  * (see config/roleDescriptions.ts) since it's read on the hot resume-save
  * path.
@@ -197,6 +200,8 @@ export interface RoleDescriptionRecord {
   outcome: string;
   keyTraits: [string, string, string];
   isFallback: boolean;
+  /** Matches this row to one of config/professions.ts's keys directly, instead of via keyword. Null for keyword-matched and fallback rows. */
+  professionKey: string | null;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
