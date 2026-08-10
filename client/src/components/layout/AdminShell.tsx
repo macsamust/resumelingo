@@ -37,7 +37,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="app-shell">
-      <aside className="app-sidebar">
+      <aside className="app-sidebar admin-sidebar">
         <div className="admin-sidebar-head">
           <span className="admin-badge">Admin</span>
           {admin && <p className="admin-sidebar-email">{admin.email}</p>}
