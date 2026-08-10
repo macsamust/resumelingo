@@ -26,11 +26,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <span className="admin-badge">Admin</span>
           {admin && <p className="admin-sidebar-email">{admin.email}</p>}
         </div>
-        {LINKS.map((link) => (
-          <NavLink key={link.to} to={link.to} className={({ isActive }) => (isActive ? "active" : "")}>
-            {link.label}
-          </NavLink>
-        ))}
+        <div className="app-sidebar-links">
+          {LINKS.map((link) => (
+            <NavLink key={link.to} to={link.to} className={({ isActive }) => (isActive ? "active" : "")}>
+              {link.label}
+            </NavLink>
+          ))}
+        </div>
         <button className="btn btn-ghost admin-logout" onClick={onLogout} type="button">
           Log out
         </button>
