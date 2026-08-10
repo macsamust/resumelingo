@@ -509,42 +509,6 @@ export function ResumeEditPage() {
           </CollapsibleSection>
 
           {isPremium && (
-            <CollapsibleSection title="References" forceOpen={forceOpen}>
-              <p className="hero-note" style={{ marginBottom: 16 }}>
-                Adds a References section to your public resume link. Off by default — nothing appears until you
-                turn this on and add at least one reference.
-              </p>
-              <label className="checkbox-field">
-                <input
-                  type="checkbox"
-                  checked={referencesEnabled}
-                  onChange={(e) => setReferencesEnabled(e.target.checked)}
-                />
-                Add a References section to this resume
-              </label>
-              {referencesEnabled && (
-                <>
-                  <label className="checkbox-field">
-                    <input
-                      type="checkbox"
-                      checked={referencesRecruiterModeOnly}
-                      onChange={(e) => setReferencesRecruiterModeOnly(e.target.checked)}
-                    />
-                    Only add references to Recruiter Mode printout section when selecting "View resume"
-                  </label>
-                  {referencesRecruiterModeOnly && !recruiterModeEnabled && (
-                    <p className="hero-note" style={{ marginTop: -8, marginBottom: 16, color: "var(--muted)" }}>
-                      References won't appear anywhere until Recruiter Mode is also turned on, further down in
-                      Premium Tools.
-                    </p>
-                  )}
-                  <ReferencesEditor references={references} onChange={setReferences} />
-                </>
-              )}
-            </CollapsibleSection>
-          )}
-
-          {isPremium && (
             <div className="builder-divider">
               <span className="builder-divider-label">Premium Tools</span>
             </div>
@@ -696,6 +660,41 @@ export function ResumeEditPage() {
                       ))}
                     </select>
                   </div>
+                </>
+              )}
+            </CollapsibleSection>
+          )}
+
+          {isPremium && (
+            <CollapsibleSection title="References" forceOpen={forceOpen}>
+              <p className="hero-note" style={{ marginBottom: 16 }}>
+                Adds a References section to your public resume link. Off by default — nothing appears until you
+                turn this on and add at least one reference.
+              </p>
+              <label className="checkbox-field">
+                <input
+                  type="checkbox"
+                  checked={referencesEnabled}
+                  onChange={(e) => setReferencesEnabled(e.target.checked)}
+                />
+                Add a References section to this resume
+              </label>
+              {referencesEnabled && (
+                <>
+                  <label className="checkbox-field">
+                    <input
+                      type="checkbox"
+                      checked={referencesRecruiterModeOnly}
+                      onChange={(e) => setReferencesRecruiterModeOnly(e.target.checked)}
+                    />
+                    Only add references to Recruiter Mode printout section when selecting "View resume"
+                  </label>
+                  {referencesRecruiterModeOnly && !recruiterModeEnabled && (
+                    <p className="hero-note" style={{ marginTop: -8, marginBottom: 16, color: "var(--muted)" }}>
+                      References won't appear anywhere until Recruiter Mode is also turned on above.
+                    </p>
+                  )}
+                  <ReferencesEditor references={references} onChange={setReferences} />
                 </>
               )}
             </CollapsibleSection>
