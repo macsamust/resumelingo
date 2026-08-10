@@ -640,11 +640,11 @@ export function ResumePreview({
               {contactCard}
               {skillsCard}
               {skillsAndToolsCard}
+              {educationCard}
               {awardsCard}
             </div>
             <div className="tpl-pill-col">
               {experienceCard}
-              {educationCard}
             </div>
           </div>
         </div>
