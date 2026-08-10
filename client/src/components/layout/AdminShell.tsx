@@ -10,14 +10,14 @@ import { useAdminAuth } from "../../context/AdminAuthContext";
  */
 const LINK_GROUPS = [
   {
-    label: "Subscribers",
+    label: "Subscribe",
     links: [
       { to: "/admin/users", label: "Users" },
       { to: "/admin/plans", label: "Plans & Pricing" },
     ],
   },
   {
-    label: "Resumes",
+    label: "Resume",
     links: [
       { to: "/admin/templates", label: "Templates" },
       { to: "/admin/skill-suggestions", label: "Skills & Tools" },
