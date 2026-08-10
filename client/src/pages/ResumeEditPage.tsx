@@ -399,30 +399,6 @@ export function ResumeEditPage() {
                 );
               })}
             </div>
-            {selectedTemplateIsPremium && (
-              <>
-                <label className="checkbox-field" style={{ marginTop: 12 }}>
-                  <input
-                    type="checkbox"
-                    checked={coverLetterEnabled}
-                    onChange={(e) => setCoverLetterEnabled(e.target.checked)}
-                  />
-                  Generate an AI cover letter for this resume
-                </label>
-                {coverLetterEnabled && (
-                  <a
-                    href="#cover-letter-section"
-                    className="cover-letter-jump-link"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      document.getElementById("cover-letter-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }}
-                  >
-                    See cover letter ↓
-                  </a>
-                )}
-              </>
-            )}
           </CollapsibleSection>
 
           {usesSkillsAndTools && (
@@ -536,6 +512,40 @@ export function ResumeEditPage() {
             <div className="builder-divider">
               <span className="builder-divider-label">Premium Tools</span>
             </div>
+          )}
+
+          {isPremium && selectedTemplateIsPremium && (
+            <CollapsibleSection title="Cover Letter" forceOpen={forceOpen}>
+              <p className="hero-note" style={{ marginBottom: 16 }}>
+                Generates a tailored AI cover letter alongside this resume. Off by default — turn this on to have one
+                written and kept in sync automatically.
+              </p>
+              <label className="checkbox-field">
+                <input
+                  type="checkbox"
+                  checked={coverLetterEnabled}
+                  onChange={(e) => setCoverLetterEnabled(e.target.checked)}
+                />
+                Generate an AI cover letter for this resume
+              </label>
+              {coverLetterEnabled && (
+                <>
+                  {resume.coverLetterEnabled && resume.generatedCoverLetter ? (
+                    <p className="hero-note" style={{ marginTop: 16, whiteSpace: "pre-line", color: "var(--navy-light)" }}>
+                      {resume.generatedCoverLetter}
+                    </p>
+                  ) : (
+                    <p className="hero-note" style={{ marginTop: 16 }}>
+                      Your AI-generated cover letter will appear here after you save.
+                    </p>
+                  )}
+                  <p className="hero-note" style={{ marginTop: 12, marginBottom: 0 }}>
+                    Regenerates automatically whenever your name, title, profession, work experience, or answers
+                    change.
+                  </p>
+                </>
+              )}
+            </CollapsibleSection>
           )}
 
           {isPremium && (
@@ -722,23 +732,6 @@ export function ResumeEditPage() {
                 </>
               )}
             </CollapsibleSection>
-          )}
-
-          {coverLetterEnabled && (
-            <div id="cover-letter-section">
-              <CollapsibleSection title="Cover Letter" forceOpen={forceOpen}>
-                {resume.coverLetterEnabled && resume.generatedCoverLetter ? (
-                  <p className="hero-note" style={{ whiteSpace: "pre-line", color: "var(--navy-light)" }}>
-                    {resume.generatedCoverLetter}
-                  </p>
-                ) : (
-                  <p className="hero-note">Your AI-generated cover letter will appear here after you save.</p>
-                )}
-                <p className="hero-note" style={{ marginTop: 12, marginBottom: 0 }}>
-                  Regenerates automatically whenever your name, title, profession, work experience, or answers change.
-                </p>
-              </CollapsibleSection>
-            </div>
           )}
 
           <button className="btn btn-primary btn-block" type="submit" disabled={saving} style={{ marginTop: 28 }}>
