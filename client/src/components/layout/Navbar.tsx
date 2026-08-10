@@ -12,7 +12,7 @@ export function Navbar() {
           <Link to="/" className="logo">
             <span className="dot">R</span>ResumeLingo
           </Link>
-          <span className="logo-tagline">We Speak Resume.</span>
+          <span className="logo-tagline">&ldquo;We Speak Resume.&rdquo;</span>
         </div>
         <div className="nav-links">
           <Link to="/#how">How it works</Link>
