@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "websume",
+  "name": "resumelingo",
   "main": "src/index.ts",
   "compatibility_date": "2026-01-01",
   "compatibility_flags": ["nodejs_compat"],
@@ -21,8 +21,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "websume-db",
-      "database_id": "31f92c39-c4d5-42a0-8a75-ff9bd95cdbc7",
+      "database_name": "resumelingo-db",
+      "database_id": "3de7d879-30be-4dbb-a593-74dc3d7291de",
       "migrations_dir": "migrations"
     }
   ],
@@ -30,6 +30,6 @@
   // Non-secret config. JWT_SECRET is intentionally NOT here — set it with
   // `npm run secret:jwt` so it's encrypted rather than committed to git.
   "vars": {
-    "CLIENT_ORIGIN": "https://websume-app.legumes-postage-9k.workers.dev/"
+    "CLIENT_ORIGIN": "https://resumelingo-app.legumes-postage-9k.workers.dev/"
   }
 }
