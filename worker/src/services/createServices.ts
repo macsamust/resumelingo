@@ -1,15 +1,31 @@
-import { Env } from "../types";
+import { AdminTokenPayload, AuthTokenPayload, Env } from "../types";
 import { UserRepository } from "../repositories/UserRepository";
 import { ResumeRepository } from "../repositories/ResumeRepository";
+import { AdminRepository } from "../repositories/AdminRepository";
+import { TemplateRepository } from "../repositories/TemplateRepository";
+import { PlanRepository } from "../repositories/PlanRepository";
+import { SkillSuggestionRepository } from "../repositories/SkillSuggestionRepository";
+import { RoleDescriptionRepository } from "../repositories/RoleDescriptionRepository";
 import { TokenService } from "./TokenService";
 import { AuthService } from "./AuthService";
 import { ResumeService } from "./ResumeService";
 import { SubscriptionService } from "./SubscriptionService";
+import { AdminService } from "./AdminService";
+import { RuleBasedContentGenerator } from "./ContentGenerator";
 
 export interface Services {
   authService: AuthService;
   resumeService: ResumeService;
   subscriptionService: SubscriptionService;
+  adminService: AdminService;
+  templateRepository: TemplateRepository;
+  planRepository: PlanRepository;
+  skillSuggestionRepository: SkillSuggestionRepository;
+  roleDescriptionRepository: RoleDescriptionRepository;
+  /** Exposed directly (not just via authService) for the admin console's user-management screens — see AdminUserController. */
+  userRepository: UserRepository;
+  /** Exposed directly for the admin console's "view a user's resumes" drill-down and cascade-delete — see AdminUserController. */
+  resumeRepository: ResumeRepository;
 }
 
 /**
@@ -23,11 +39,32 @@ export interface Services {
 export function createServices(env: Env): Services {
   const userRepo = new UserRepository(env.DB);
   const resumeRepo = new ResumeRepository(env.DB);
-  const tokenService = new TokenService(env.JWT_SECRET);
+  const adminRepo = new AdminRepository(env.DB);
+  const templateRepository = new TemplateRepository(env.DB);
+  const planRepository = new PlanRepository(env.DB);
+  const skillSuggestionRepository = new SkillSuggestionRepository(env.DB);
+  const roleDescriptionRepository = new RoleDescriptionRepository(env.DB);
+
+  const tokenService = new TokenService<AuthTokenPayload>(env.JWT_SECRET);
+  const adminTokenService = new TokenService<AdminTokenPayload>(env.ADMIN_JWT_SECRET || env.JWT_SECRET);
+
+  const contentGenerator = new RuleBasedContentGenerator(roleDescriptionRepository);
 
   const authService = new AuthService(userRepo, tokenService);
-  const resumeService = new ResumeService(resumeRepo, userRepo);
+  const resumeService = new ResumeService(resumeRepo, userRepo, contentGenerator);
   const subscriptionService = new SubscriptionService(userRepo);
+  const adminService = new AdminService(adminRepo, adminTokenService, env.ADMIN_EMAIL, env.ADMIN_PASSWORD);
 
-  return { authService, resumeService, subscriptionService };
+  return {
+    authService,
+    resumeService,
+    subscriptionService,
+    adminService,
+    templateRepository,
+    planRepository,
+    skillSuggestionRepository,
+    roleDescriptionRepository,
+    userRepository: userRepo,
+    resumeRepository: resumeRepo,
+  };
 }

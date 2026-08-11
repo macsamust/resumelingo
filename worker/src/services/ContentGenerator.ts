@@ -1,5 +1,5 @@
 import { getProfessionByKey } from "../config/professions";
-import { findRoleDescription, findRoleDescriptionForProfession } from "../config/roleDescriptions";
+import { RoleDescriptionRepository } from "../repositories/RoleDescriptionRepository";
 import { AchievementEntry } from "../types";
 
 export interface GeneratedContent {
@@ -10,8 +10,17 @@ export interface GeneratedContent {
 /**
  * Contract for anything that can turn structured interview answers into
  * resume prose. RuleBasedContentGenerator (below) is the default,
- * dependency-free implementation. Identical to the Node/Express version —
- * no I/O, so no Workers-specific changes needed.
+ * dependency-free implementation.
+ *
+ * UNLIKE the Node/Express version (where generate() is synchronous, backed
+ * by an in-memory role-description cache), this is now async: Role
+ * Descriptions moved from a static config array to a D1-backed table (see
+ * migrations/0004_admin_catalog.sql), and a Worker has no cross-isolate
+ * in-memory cache to read synchronously the way a long-lived Node process
+ * does — see RoleDescriptionRepository's doc comment for the fuller
+ * rationale. Every call site (ResumeService.create/update) already runs
+ * inside an async method, so awaiting this adds one D1 round-trip per
+ * resume save without requiring any caller restructuring.
  */
 export interface IContentGenerator {
   generate(
@@ -20,17 +29,19 @@ export interface IContentGenerator {
     achievements?: AchievementEntry[],
     fullName?: string,
     title?: string
-  ): GeneratedContent;
+  ): Promise<GeneratedContent>;
 }
 
 export class RuleBasedContentGenerator implements IContentGenerator {
-  generate(
+  constructor(private readonly roleDescriptions: RoleDescriptionRepository) {}
+
+  async generate(
     profession: string,
     answers: Record<string, string>,
     achievements: AchievementEntry[] = [],
     fullName?: string,
     title?: string
-  ): GeneratedContent {
+  ): Promise<GeneratedContent> {
     const definition = getProfessionByKey(profession);
     const label = definition?.label ?? profession;
 
@@ -38,7 +49,8 @@ export class RuleBasedContentGenerator implements IContentGenerator {
     // instead of the standard "Results-driven {label} with..." shape, build
     // a generic professional description of the role pulled from the
     // Resume title (e.g. "Comedian Resume" -> "Comedian").
-    const summary = profession === "other" ? this.buildOtherSummary(title) : this.buildSummary(profession, label, answers);
+    const summary =
+      profession === "other" ? await this.buildOtherSummary(title) : await this.buildSummary(profession, label, answers);
     // Challenge/Action/Result entries produce genuinely impact-focused
     // bullets (the STAR/CAR method) and take priority when present, since
     // they're the person's own account of what changed because of their
@@ -53,17 +65,17 @@ export class RuleBasedContentGenerator implements IContentGenerator {
   /**
    * Builds the About statement for every profession except "Other" (see
    * buildOtherSummary below for that one). Prefers the profession's own
-   * curated row (see config/roleDescriptions.ts's findRoleDescriptionForProfession)
-   * for the descriptor/traits/outcome/keyTraits clauses, so each profession
-   * reads in its own voice instead of one shared generic sentence. Falls
-   * back to the old plain sentence when a profession has no curated row yet.
+   * curated row (see RoleDescriptionRepository.findByProfessionKey) for the
+   * descriptor/traits/outcome/keyTraits clauses, so each profession reads
+   * in its own voice instead of one shared generic sentence. Falls back to
+   * the old plain sentence when a profession has no curated row yet.
    */
-  private buildSummary(profession: string, professionLabel: string, answers: Record<string, string>): string {
+  private async buildSummary(profession: string, professionLabel: string, answers: Record<string, string>): Promise<string> {
     const years = answers.yearsExperience ? `${answers.yearsExperience}+ years of experience` : "experienced professional";
     const topSkill = this.firstListValue(answers);
     const skillClause = topSkill ? ` specializing in ${topSkill}` : "";
 
-    const description = findRoleDescriptionForProfession(profession);
+    const description = await this.roleDescriptions.findByProfessionKey(profession);
     if (!description) {
       return `Results-driven ${professionLabel} with ${years}${skillClause}, known for translating requirements into measurable outcomes and consistently exceeding expectations.`;
     }
@@ -81,9 +93,9 @@ export class RuleBasedContentGenerator implements IContentGenerator {
    * resilience under pressure." Falls back to a generic "professional"
    * description when no usable role can be pulled from the title.
    */
-  private buildOtherSummary(title: string | undefined): string {
+  private async buildOtherSummary(title: string | undefined): Promise<string> {
     const role = this.roleFromTitle(title) ?? "professional";
-    const { category, descriptor, traits, outcome, keyTraits } = findRoleDescription(role);
+    const { category, descriptor, traits, outcome, keyTraits } = await this.roleDescriptions.findByRole(role);
     return `A successful ${category}, ${descriptor} who combines ${traits[0]}, ${traits[1]}, and ${traits[2]} to ${outcome}. Key traits include ${keyTraits[0]}, ${keyTraits[1]}, and ${keyTraits[2]}.`;
   }
 

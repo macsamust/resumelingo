@@ -1,6 +1,6 @@
 import { ResumeRepository, UpdateResumeInput } from "../repositories/ResumeRepository";
 import { UserRepository } from "../repositories/UserRepository";
-import { IContentGenerator, RuleBasedContentGenerator } from "./ContentGenerator";
+import { IContentGenerator } from "./ContentGenerator";
 import { ICoverLetterGenerator, pickTopExperience, RuleBasedCoverLetterGenerator } from "./CoverLetterGenerator";
 import { Resume } from "../models/Resume";
 import { User } from "../models/User";
@@ -9,6 +9,30 @@ import { CATEGORY_MIN_TIER, canUseTemplate, getTemplateByKey } from "../config/t
 import { canUseVisibility, VISIBILITY_LABEL, VISIBILITY_MIN_TIER } from "../config/visibilityAccess";
 import { getPlan } from "../config/subscriptionPlans";
 import { getProfessionByKey } from "../config/professions";
+
+/**
+ * SCOPE NOTE (Phase 3 admin console port): the template-tier gate below
+ * (isPremiumTemplate/assertTemplateAllowed) and the plan-limit checks
+ * elsewhere in this file deliberately keep reading the static
+ * config/templates.ts and config/subscriptionPlans.ts arrays rather than
+ * the new D1-backed TemplateRepository/PlanRepository. Those repositories
+ * now back the *public listing* endpoints (TemplateController,
+ * SubscriptionController.plans) and the admin CRUD screens, so an admin's
+ * name/description/price/feature edits show up immediately — but a
+ * template's *category* (which tier can use it) and a plan's
+ * *resumeLimit* are also load-bearing security/business-rule inputs read
+ * synchronously in several places (Resume.ts's `template` getter, User.ts's
+ * `plan` getter, both called in tight loops when serializing many
+ * resumes). Fully threading D1 reads through those getters would ripple
+ * into every list/serialize call site across this codebase. Given that
+ * risk, this pass intentionally leaves policy/gating reads on the static
+ * config (so behavior stays deterministic and low-risk) while moving only
+ * the *displayed* catalog data to D1. If an admin adds a brand-new
+ * template key (not in the static array) or changes a template's category
+ * via the admin console, that specific edit won't be reflected in this
+ * gating logic until a follow-up pass migrates these call sites to async
+ * D1 reads too — flagged here rather than silently glossed over.
+ */
 
 /** Whether templateKey resolves to a Premium-category template — the gate for the "Generate AI cover letter" checkbox. */
 function isPremiumTemplate(templateKey: string): boolean {
@@ -97,7 +121,7 @@ export class ResumeService {
   constructor(
     private readonly resumes: ResumeRepository,
     private readonly users: UserRepository,
-    private readonly generator: IContentGenerator = new RuleBasedContentGenerator(),
+    private readonly generator: IContentGenerator,
     private readonly coverLetterGenerator: ICoverLetterGenerator = new RuleBasedCoverLetterGenerator()
   ) {}
 
@@ -125,7 +149,7 @@ export class ResumeService {
     assertPhotoSizeOk(input.photoUrl);
 
     const fullName = input.fullName?.trim() || user.name;
-    const generated = this.generator.generate(input.profession, input.answers, input.achievements ?? [], fullName, input.title);
+    const generated = await this.generator.generate(input.profession, input.answers, input.achievements ?? [], fullName, input.title);
 
     // Silently coerced rather than throwing: the checkbox itself is only
     // shown client-side for Premium-tier templates, but this keeps the
@@ -218,7 +242,7 @@ export class ResumeService {
       const achievements = input.achievements ?? existing.achievements;
       const fullName = input.fullName ?? existing.fullName;
       const title = input.title ?? existing.title;
-      const generated = this.generator.generate(profession, answers, achievements, fullName, title);
+      const generated = await this.generator.generate(profession, answers, achievements, fullName, title);
       generatedSummary = generated.summary;
       generatedBullets = generated.bullets;
     }

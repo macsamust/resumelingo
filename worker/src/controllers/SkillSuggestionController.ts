@@ -1,18 +1,21 @@
 import { Context } from "hono";
-import { listSkillSuggestions } from "../config/skillSuggestions";
+import { AppEnv } from "../middleware/servicesMiddleware";
 
 /**
  * Public (read-only) endpoint feeding the Edit Resume "Skills & Tools"
  * picker (Portrait template). `?profession=<key>` scopes to one
- * profession's suggestions; omitted returns everything. Unlike server/'s
- * version (DB-backed via SkillSuggestionRepository, admin-editable), this
- * reads directly from the static config/skillSuggestions.ts list — the
- * admin console is out of scope for this port.
+ * profession's suggestions; omitted returns everything. Now D1-backed via
+ * SkillSuggestionRepository (see migrations/0004_admin_catalog.sql)
+ * instead of the static config/skillSuggestions.ts list, so admin edits
+ * (see AdminSkillSuggestionController) show up immediately.
  */
 export class SkillSuggestionController {
-  list = async (c: Context) => {
+  list = async (c: Context<AppEnv>) => {
+    const { skillSuggestionRepository } = c.get("services");
     const professionKey = c.req.query("profession");
-    const suggestions = listSkillSuggestions(professionKey);
+    const suggestions = professionKey
+      ? await skillSuggestionRepository.findByProfession(professionKey)
+      : await skillSuggestionRepository.findAll();
     return c.json({ skillSuggestions: suggestions });
   };
 }

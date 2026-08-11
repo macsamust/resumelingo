@@ -2,21 +2,20 @@ import bcrypt from "bcryptjs";
 import { UserRepository } from "../repositories/UserRepository";
 import { TokenService } from "./TokenService";
 import { User } from "../models/User";
+import { AuthTokenPayload } from "../types";
 
 export class AuthError extends Error {}
 
 /**
- * Same responsibilities as the Node/Express AuthService, minus the
+ * Same responsibilities as the Node/Express AuthService, including the
  * `suspended` account check in login() — that column backs the admin
- * console's "disable a user's login" action, which is out of scope for
- * this port (see worker/src/types/index.ts's UserRecord). Every other
- * profile-management behavior (updateProfile, changePassword) is ported
- * faithfully since those are core Auth features, not admin-only.
+ * console's "disable a user's login" action (see AdminUserController /
+ * migrations/0004_admin_catalog.sql), ported in Phase 3.
  */
 export class AuthService {
   constructor(
     private readonly users: UserRepository,
-    private readonly tokens: TokenService
+    private readonly tokens: TokenService<AuthTokenPayload>
   ) {}
 
   async register(input: { name: string; email: string; password: string; profession?: string }) {
@@ -41,6 +40,8 @@ export class AuthService {
 
     const matches = await bcrypt.compare(password, record.passwordHash);
     if (!matches) throw new AuthError("Invalid email or password.");
+
+    if (record.suspended) throw new AuthError("This account has been suspended. Contact support for help.");
 
     const user = new User(record);
     const token = await this.tokens.sign({ userId: user.id, email: user.email });

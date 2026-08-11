@@ -50,9 +50,11 @@ export interface SubscriptionPlanDefinition {
 }
 
 /**
- * Deliberately does NOT include server/'s stripeCustomerId,
- * stripeSubscriptionId, or suspended columns — Stripe billing and the admin
- * console are out of scope for this port (see worker/migrations/0002_full_parity.sql).
+ * Deliberately does NOT include server/'s stripeCustomerId or
+ * stripeSubscriptionId columns — Stripe billing is out of scope for this
+ * port (Phase 4; see worker/migrations/0002_full_parity.sql). "suspended"
+ * WAS added in migrations/0004_admin_catalog.sql to back the admin
+ * console's suspend/reinstate action (Phase 3).
  */
 export interface UserRecord {
   id: string;
@@ -61,7 +63,86 @@ export interface UserRecord {
   passwordHash: string;
   profession: string | null;
   subscriptionTier: SubscriptionTier;
+  suspended: boolean;
   createdAt: string;
+}
+
+/**
+ * Admin accounts are a deliberately separate role/auth system from regular
+ * users (see services/AdminService.ts) — their own table, own JWT secret,
+ * own token payload — rather than an isAdmin flag on the users table, so a
+ * compromised user token can never be replayed as an admin token.
+ */
+export interface AdminRecord {
+  id: string;
+  name: string;
+  email: string;
+  passwordHash: string;
+  createdAt: string;
+}
+
+/** DB-backed template row (see repositories/TemplateRepository.ts). `enabled` controls whether it's offered to users; disabled templates stay selectable by resumes that already used them. */
+export interface TemplateRecord {
+  key: string;
+  name: string;
+  description: string;
+  category: TemplateCategory;
+  enabled: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * DB-backed subscription plan row (see repositories/PlanRepository.ts).
+ * Deliberately does NOT store stripePriceId, same reasoning as server/'s
+ * PlanRecord — editing a plan's price here changes what's *displayed*, not
+ * what Stripe actually charges (out of scope, Phase 4).
+ */
+export interface PlanRecord {
+  tier: SubscriptionTier;
+  name: string;
+  priceMonthly: number;
+  resumeLimit: number;
+  features: string; // JSON-serialized string[]
+  updatedAt: string;
+}
+
+/**
+ * DB-backed suggestion row (see repositories/SkillSuggestionRepository.ts)
+ * feeding the Skills & Tools picker's keyword chips for a given profession.
+ */
+export interface SkillSuggestionRecord {
+  id: string;
+  professionKey: string;
+  label: string;
+  category: "skill" | "tool";
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * DB-backed row (see repositories/RoleDescriptionRepository.ts) feeding
+ * ContentGenerator's About-statement voice — either for one named
+ * profession (professionKey set) or, when professionKey is unset, one of
+ * the "Other" profession's keyword-matched sub-categories or the generic
+ * fallback row.
+ */
+export interface RoleDescriptionRecord {
+  id: string;
+  keywords: string[];
+  category: string;
+  descriptor: string;
+  traits: [string, string, string];
+  outcome: string;
+  keyTraits: [string, string, string];
+  isFallback: boolean;
+  /** Matches this row to one of config/professions.ts's keys directly, instead of via keyword. Null for keyword-matched and fallback rows. */
+  professionKey: string | null;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /** One job in a resume's work history. Dates are "YYYY-MM" (from an <input type="month">). */
@@ -206,10 +287,20 @@ export interface AuthTokenPayload {
   email: string;
 }
 
+export interface AdminTokenPayload {
+  adminId: string;
+  email: string;
+}
+
 /** Cloudflare bindings available on every request (see wrangler.jsonc). */
 export interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
   JWT_SECRET: string;
   CLIENT_ORIGIN: string;
+  /** Falls back to JWT_SECRET if unset — see services/AdminService.ts. */
+  ADMIN_JWT_SECRET?: string;
+  /** Optional bootstrap-admin credentials — see AdminService.ensureBootstrapAdmin. */
+  ADMIN_EMAIL?: string;
+  ADMIN_PASSWORD?: string;
 }

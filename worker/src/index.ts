@@ -10,7 +10,9 @@ import publicRoutes from "./routes/public.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
 import subscriptionRoutes from "./routes/subscription.routes";
 import skillSuggestionRoutes from "./routes/skillSuggestion.routes";
+import adminRoutes from "./routes/admin.routes";
 import { AuthError } from "./services/AuthService";
+import { AdminAuthError } from "./services/AdminService";
 import {
   PhotoTooLargeError,
   ResumeAccessError,
@@ -46,10 +48,13 @@ app.route("/api/public", publicRoutes);
 app.route("/api/dashboard", dashboardRoutes);
 app.route("/api/subscriptions", subscriptionRoutes);
 app.route("/api/skill-suggestions", skillSuggestionRoutes);
+app.route("/api/admin", adminRoutes);
 
 app.onError((err, c) => {
   const status =
     err instanceof AuthError
+      ? 401
+      : err instanceof AdminAuthError
       ? 401
       : err instanceof ResumeNotFoundError
       ? 404

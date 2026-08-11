@@ -13,6 +13,7 @@ export class User {
   readonly passwordHash: string;
   readonly profession: string | null;
   readonly subscriptionTier: SubscriptionTier;
+  readonly suspended: boolean;
   readonly createdAt: string;
 
   constructor(record: UserRecord) {
@@ -22,6 +23,7 @@ export class User {
     this.passwordHash = record.passwordHash;
     this.profession = record.profession;
     this.subscriptionTier = record.subscriptionTier;
+    this.suspended = record.suspended;
     this.createdAt = record.createdAt;
   }
 

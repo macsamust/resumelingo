@@ -1,0 +1,296 @@
+-- Phase 3: admin console parity. Adds the "admins"-adjacent catalog tables
+-- (templates, plans, skill_suggestions, role_descriptions) so Templates,
+-- Plans, Skill Suggestions, and Role Descriptions move from
+-- worker/src/config/*.ts static arrays to D1-backed tables an admin can
+-- edit at runtime, matching server/'s Postgres schema (see
+-- server/src/db/database.ts) column-for-column. Also adds "suspended" to
+-- users, matching server/'s users table, so the admin console's
+-- suspend/reinstate action has somewhere to persist.
+--
+-- No `IF NOT EXISTS` on CREATE/ALTER (unlike server/'s migrate(), which
+-- re-runs on every boot) — D1 tracks which migrations have already been
+-- applied, so this file only ever runs once per database, same convention
+-- as 0002_full_parity.sql and 0003_admins_table.sql.
+
+ALTER TABLE users ADD COLUMN "suspended" INTEGER NOT NULL DEFAULT 0;
+
+-- Templates move from a static config array to a DB-backed table here so
+-- an admin can add, edit, disable, or delete them at runtime. Unlike
+-- server/ (which keeps a synchronous in-memory cache refreshed on every
+-- admin write — see server/src/config/templates.ts — because Node's
+-- long-lived process can share that cache across every request), worker/
+-- reads through to D1 on every call: a Worker is stateless per-request and
+-- has no shared module-level state across isolates, so an in-memory cache
+-- here would be either wrong (stale across isolates) or pointless (never
+-- actually shared). Template/plan/role-description reads are not hot
+-- high-QPS paths, so a direct D1 query per call is simple and correct
+-- rather than a premature optimization that doesn't fit the runtime.
+CREATE TABLE templates (
+  "key" TEXT PRIMARY KEY,
+  "name" TEXT NOT NULL,
+  "description" TEXT NOT NULL DEFAULT '',
+  "category" TEXT NOT NULL DEFAULT 'basic',
+  "enabled" INTEGER NOT NULL DEFAULT 1,
+  "sortOrder" INTEGER NOT NULL DEFAULT 0,
+  "createdAt" TEXT NOT NULL,
+  "updatedAt" TEXT NOT NULL
+);
+
+-- Subscription plans move from a static config array to a DB-backed table
+-- here so an admin can edit displayed name/price/resume limit/features.
+-- Deliberately has no stripePriceId column, same as server/'s PlanRecord —
+-- Stripe billing is out of scope for this port (Phase 4).
+CREATE TABLE plans (
+  "tier" TEXT PRIMARY KEY,
+  "name" TEXT NOT NULL,
+  "priceMonthly" REAL NOT NULL,
+  "resumeLimit" INTEGER NOT NULL,
+  "features" TEXT NOT NULL DEFAULT '[]',
+  "updatedAt" TEXT NOT NULL
+);
+
+-- "Skills & Tools" suggestion keywords (Edit Resume, Portrait template's
+-- picker) move from a static per-profession config array to a DB-backed
+-- table here, same reasoning as "templates" above.
+CREATE TABLE skill_suggestions (
+  "id" TEXT PRIMARY KEY,
+  "professionKey" TEXT NOT NULL,
+  "label" TEXT NOT NULL,
+  "category" TEXT NOT NULL DEFAULT 'skill',
+  "sortOrder" INTEGER NOT NULL DEFAULT 0,
+  "createdAt" TEXT NOT NULL,
+  "updatedAt" TEXT NOT NULL,
+  UNIQUE ("professionKey", "label", "category")
+);
+CREATE INDEX skill_suggestions_profession_idx ON skill_suggestions ("professionKey");
+
+-- Role descriptions (the "Other" profession's About-statement voice, plus
+-- one curated row per named profession) move from a static config array to
+-- a DB-backed table here, same reasoning as templates and skill_suggestions
+-- above. "isFallback" marks the single generic row used when no keyword
+-- matches. "professionKey" matches a row directly to one of
+-- config/professions.ts's keys instead of via keyword; NULL for
+-- keyword-matched "Other" sub-category rows and the generic fallback row.
+--
+-- UNLIKE server/ (which keeps an in-memory cache here specifically because
+-- findRoleDescription() is called synchronously on every resume save, and
+-- an in-process Node cache makes that free), worker/'s ContentGenerator is
+-- now async and reads through to D1 on every call — see
+-- src/services/ContentGenerator.ts and src/services/RoleDescriptionRepository.ts.
+-- This adds one D1 round-trip to every resume create/update, which is an
+-- acceptable, correctness-first tradeoff for a stateless Worker: there's no
+-- way to share an in-memory cache across isolates the way a long-lived
+-- Node process can, so attempting to replicate that optimization here would
+-- only produce a cache that's either always cold or silently stale.
+CREATE TABLE role_descriptions (
+  "id" TEXT PRIMARY KEY,
+  "keywords" TEXT NOT NULL DEFAULT '[]',
+  "category" TEXT NOT NULL,
+  "descriptor" TEXT NOT NULL,
+  "traits" TEXT NOT NULL DEFAULT '[]',
+  "outcome" TEXT NOT NULL,
+  "keyTraits" TEXT NOT NULL DEFAULT '[]',
+  "isFallback" INTEGER NOT NULL DEFAULT 0,
+  "professionKey" TEXT,
+  "sortOrder" INTEGER NOT NULL DEFAULT 0,
+  "createdAt" TEXT NOT NULL,
+  "updatedAt" TEXT NOT NULL,
+  UNIQUE ("category")
+);
+CREATE INDEX role_descriptions_profession_idx ON role_descriptions ("professionKey");
+
+-- Seed rows (generated by scripts/generate-admin-catalog-seed.mjs — see that
+-- file's header comment for provenance). INSERT OR IGNORE so re-running this
+-- file is harmless.
+
+-- Seed rows for templates, generated from the previously-static
+-- worker/src/config/templates.ts TEMPLATES array (same 20 rows).
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('executive', 'Executive', 'Polished layout for senior leadership roles.', 'upgrade', 1, 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('modern', 'Modern', 'Clean, contemporary layout with accent color.', 'basic', 1, 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('classic', 'Classic', 'Traditional, conservative resume format.', 'basic', 1, 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('government', 'Government', 'Formatted for public-sector applications.', 'upgrade', 1, 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('federal', 'Federal', 'Detailed federal resume format (USAJobs-ready).', 'premium', 1, 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('technical', 'Technical', 'Skills-forward layout for engineering roles.', 'upgrade', 1, 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('creative', 'Creative', 'Expressive layout for design and creative fields.', 'premium', 1, 6, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('minimalist', 'Minimalist', 'Distraction-free, whitespace-forward layout.', 'basic', 1, 7, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('consulting', 'Consulting', 'Achievement-and-metrics-driven format.', 'upgrade', 1, 8, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('military-transition', 'Military Transition', 'Translates military experience to civilian roles.', 'premium', 1, 9, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('corporate', 'Corporate', 'Formal layout suited to large organizations.', 'basic', 1, 10, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('startup', 'Startup', 'Fast-paced, impact-driven layout.', 'basic', 1, 11, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('healthcare', 'Healthcare', 'Clinical experience and licensure forward.', 'upgrade', 1, 12, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('academic', 'Academic', 'CV-style layout for education and research.', 'premium', 1, 13, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('government-contractor', 'Government Contractor', 'Highlights clearance and contract vehicles.', 'premium', 1, 14, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('timeline', 'Timeline', 'Full-width name banner over a contact-and-skills sidebar, with an icon-marker career timeline.', 'upgrade', 1, 15, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('portrait', 'Portrait', 'Colored photo banner over badge-marked work history, with a skills-and-volunteer-work sidebar.', 'premium', 1, 16, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('designer', 'Designer', 'Bold circular photo with an accent-color corner block, a contact-and-expertise sidebar, and bar-style section headers.', 'premium', 1, 17, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('monochrome', 'Monochrome', 'Grayscale photo beside a light gray sidebar for contact, education, and skills, with clean underlined section headers.', 'premium', 1, 18, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO templates ("key", "name", "description", "category", "enabled", "sortOrder", "createdAt", "updatedAt") VALUES ('showcase', 'Showcase', 'Photo header over a grid of bordered cards, each tagged with a colorful pill-style section label.', 'premium', 1, 19, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+
+-- Seed rows for plans, generated from the previously-static
+-- worker/src/config/subscriptionPlans.ts SUBSCRIPTION_PLANS array.
+INSERT OR IGNORE INTO plans ("tier", "name", "priceMonthly", "resumeLimit", "features", "updatedAt") VALUES ('starter', 'Starter', 0, 1, '["One resume","Basic template","PDF download","Public link","Limited edits","Basic tips"]', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO plans ("tier", "name", "priceMonthly", "resumeLimit", "features", "updatedAt") VALUES ('professional', 'Professional', 9.99, 3, '["Three resumes","Unlimited edits","Template library","Private sharing","Analytics","Resume scoring","Career Center","AI assistance"]', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO plans ("tier", "name", "priceMonthly", "resumeLimit", "features", "updatedAt") VALUES ('premium', 'Premium', 19.99, -1, '["Everything in Professional","Unlimited resumes","Premium templates","Custom domain","Resume analytics","Interview preparation","Career coaching resources","ATS optimization","AI cover letters & thank-you letters","Portfolio pages & personal branding tools"]', '2026-08-11T00:00:00.000Z');
+
+-- Seed rows for skill_suggestions, generated from the previously-static
+-- worker/src/config/skillSuggestions.ts SEED_LISTS.
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-001', 'software-engineer', 'Problem solving', 'skill', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-002', 'software-engineer', 'System design', 'skill', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-003', 'software-engineer', 'Code review', 'skill', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-004', 'software-engineer', 'Debugging', 'skill', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-005', 'software-engineer', 'Mentoring', 'skill', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-006', 'software-engineer', 'Technical writing', 'skill', 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-007', 'software-engineer', 'Cross-team collaboration', 'skill', 6, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-008', 'software-engineer', 'Performance tuning', 'skill', 7, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-009', 'software-engineer', 'TypeScript', 'tool', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-010', 'software-engineer', 'Python', 'tool', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-011', 'software-engineer', 'React', 'tool', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-012', 'software-engineer', 'Node.js', 'tool', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-013', 'software-engineer', 'Docker', 'tool', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-014', 'software-engineer', 'Kubernetes', 'tool', 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-015', 'software-engineer', 'AWS', 'tool', 6, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-016', 'software-engineer', 'PostgreSQL', 'tool', 7, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-017', 'software-engineer', 'Git', 'tool', 8, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-018', 'software-engineer', 'CI/CD', 'tool', 9, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-019', 'nurse', 'Patient assessment', 'skill', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-020', 'nurse', 'Care coordination', 'skill', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-021', 'nurse', 'Critical thinking', 'skill', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-022', 'nurse', 'Bedside manner', 'skill', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-023', 'nurse', 'Triage', 'skill', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-024', 'nurse', 'Patient education', 'skill', 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-025', 'nurse', 'Team leadership', 'skill', 6, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-026', 'nurse', 'Crisis response', 'skill', 7, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-027', 'nurse', 'Epic', 'tool', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-028', 'nurse', 'Cerner', 'tool', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-029', 'nurse', 'IV therapy', 'tool', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-030', 'nurse', 'EKG monitoring', 'tool', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-031', 'nurse', 'BLS', 'tool', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-032', 'nurse', 'ACLS', 'tool', 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-033', 'nurse', 'Medication administration', 'tool', 6, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-034', 'teacher', 'Lesson planning', 'skill', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-035', 'teacher', 'Classroom management', 'skill', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-036', 'teacher', 'Differentiated instruction', 'skill', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-037', 'teacher', 'Student assessment', 'skill', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-038', 'teacher', 'Parent communication', 'skill', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-039', 'teacher', 'Curriculum design', 'skill', 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-040', 'teacher', 'Behavior management', 'skill', 6, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-041', 'teacher', 'Google Classroom', 'tool', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-042', 'teacher', 'Canvas', 'tool', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-043', 'teacher', 'Smartboards', 'tool', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-044', 'teacher', 'IEP compliance', 'tool', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-045', 'teacher', 'Standardized testing', 'tool', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-046', 'teacher', 'Zoom', 'tool', 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-047', 'executive', 'Strategic planning', 'skill', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-048', 'executive', 'P&L ownership', 'skill', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-049', 'executive', 'Change management', 'skill', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-050', 'executive', 'Board reporting', 'skill', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-051', 'executive', 'Cross-functional leadership', 'skill', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-052', 'executive', 'M&A', 'skill', 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-053', 'executive', 'Stakeholder management', 'skill', 6, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-054', 'executive', 'Budget forecasting', 'tool', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-055', 'executive', 'OKRs', 'tool', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-056', 'executive', 'Salesforce', 'tool', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-057', 'executive', 'Tableau', 'tool', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-058', 'executive', 'Workday', 'tool', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-059', 'project-manager', 'Stakeholder management', 'skill', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-060', 'project-manager', 'Risk management', 'skill', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-061', 'project-manager', 'Resource planning', 'skill', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-062', 'project-manager', 'Budget management', 'skill', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-063', 'project-manager', 'Cross-functional coordination', 'skill', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-064', 'project-manager', 'Status reporting', 'skill', 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-065', 'project-manager', 'Jira', 'tool', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-066', 'project-manager', 'Asana', 'tool', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-067', 'project-manager', 'MS Project', 'tool', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-068', 'project-manager', 'Confluence', 'tool', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-069', 'project-manager', 'Agile', 'tool', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-070', 'project-manager', 'Scrum', 'tool', 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-071', 'project-manager', 'PMP', 'tool', 6, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-072', 'project-manager', 'Waterfall', 'tool', 7, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-073', 'government-contractor', 'Compliance management', 'skill', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-074', 'government-contractor', 'Proposal writing', 'skill', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-075', 'government-contractor', 'Contract negotiation', 'skill', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-076', 'government-contractor', 'Program management', 'skill', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-077', 'government-contractor', 'Stakeholder coordination', 'skill', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-078', 'government-contractor', 'FAR/DFAR', 'tool', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-079', 'government-contractor', 'Security clearance', 'tool', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-080', 'government-contractor', 'SharePoint', 'tool', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-081', 'government-contractor', 'Deltek Costpoint', 'tool', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-082', 'government-contractor', 'Earned value management', 'tool', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-083', 'military', 'Leadership', 'skill', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-084', 'military', 'Operations planning', 'skill', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-085', 'military', 'Team training', 'skill', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-086', 'military', 'Crisis management', 'skill', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-087', 'military', 'Logistics coordination', 'skill', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-088', 'military', 'Discipline under pressure', 'skill', 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-089', 'military', 'Security clearance', 'tool', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-090', 'military', 'Tactical planning software', 'tool', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-091', 'military', 'Risk assessment', 'tool', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-092', 'military', 'Equipment maintenance', 'tool', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-093', 'sales', 'Relationship building', 'skill', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-094', 'sales', 'Negotiation', 'skill', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-095', 'sales', 'Pipeline management', 'skill', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-096', 'sales', 'Consultative selling', 'skill', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-097', 'sales', 'Account growth', 'skill', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-098', 'sales', 'Objection handling', 'skill', 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-099', 'sales', 'Salesforce', 'tool', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-100', 'sales', 'HubSpot', 'tool', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-101', 'sales', 'Outreach', 'tool', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-102', 'sales', 'LinkedIn Sales Navigator', 'tool', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-103', 'sales', 'ZoomInfo', 'tool', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-104', 'marketing', 'Campaign strategy', 'skill', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-105', 'marketing', 'Brand positioning', 'skill', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-106', 'marketing', 'Content strategy', 'skill', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-107', 'marketing', 'A/B testing', 'skill', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-108', 'marketing', 'Audience segmentation', 'skill', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-109', 'marketing', 'Copywriting', 'skill', 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-110', 'marketing', 'HubSpot', 'tool', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-111', 'marketing', 'Google Analytics', 'tool', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-112', 'marketing', 'SEO', 'tool', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-113', 'marketing', 'Meta Ads', 'tool', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-114', 'marketing', 'Mailchimp', 'tool', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-115', 'marketing', 'Figma', 'tool', 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-116', 'construction', 'Site safety', 'skill', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-117', 'construction', 'Crew supervision', 'skill', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-118', 'construction', 'Blueprint reading', 'skill', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-119', 'construction', 'Quality control', 'skill', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-120', 'construction', 'Scheduling', 'skill', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-121', 'construction', 'Vendor coordination', 'skill', 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-122', 'construction', 'OSHA 30', 'tool', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-123', 'construction', 'AutoCAD', 'tool', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-124', 'construction', 'Procore', 'tool', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-125', 'construction', 'Heavy equipment operation', 'tool', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-126', 'construction', 'Building codes', 'tool', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-127', 'other', 'Problem solving', 'skill', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-128', 'other', 'Communication', 'skill', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-129', 'other', 'Time management', 'skill', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-130', 'other', 'Adaptability', 'skill', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-131', 'other', 'Collaboration', 'skill', 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-132', 'other', 'Attention to detail', 'skill', 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-133', 'other', 'Microsoft Office', 'tool', 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-134', 'other', 'Google Workspace', 'tool', 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-135', 'other', 'Slack', 'tool', 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO skill_suggestions ("id", "professionKey", "label", "category", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-skill-136', 'other', 'Excel', 'tool', 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+
+-- Seed rows for role_descriptions, generated from the previously-static
+-- worker/src/config/roleDescriptions.ts DEFAULT_ROLE_DESCRIPTIONS array.
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-001', '["comedian","comedy"]', 'entertainer', 'versatile public performer', '["sharp writing","deep audience connection","precise timing"]', 'evoke laughter', '["originality","an authentic stage persona","strong resilience under pressure"]', 0, NULL, 0, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-002', '["actor","actress","performer"]', 'performer', 'versatile performing artist', '["emotional range","disciplined preparation","commanding stage presence"]', 'bring a character to life', '["adaptability","collaborative instincts","resilience through rejection"]', 0, NULL, 1, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-003', '["musician","singer","vocalist","songwriter","band"]', 'musician', 'dedicated performing artist', '["technical musicianship","creative expression","consistent stage energy"]', 'move an audience', '["discipline","originality","collaborative chemistry"]', 0, NULL, 2, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-004', '["writer","author","novelist","journalist","blogger","copywriter"]', 'writer', 'disciplined storyteller', '["a distinct voice","rigorous research","careful revision"]', 'communicate ideas clearly', '["curiosity","persistence","meticulous attention to detail"]', 0, NULL, 3, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-005', '["chef","cook","culinary","baker"]', 'chef', 'skilled culinary professional', '["technical precision","creative flavor pairing","composure under pressure"]', 'deliver a memorable dining experience', '["consistency","kitchen discipline","leadership in a fast-paced environment"]', 0, NULL, 4, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-006', '["photographer","photography","videographer","filmmaker"]', 'photographer', 'detail-oriented visual storyteller', '["a strong creative eye","technical mastery of light and composition","clear client communication"]', 'capture lasting images', '["patience","adaptability","a distinctive creative style"]', 0, NULL, 5, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-007', '["artist","painter","illustrator","sculptor","designer"]', 'artist', 'versatile creative professional', '["a distinct visual style","technical craftsmanship","openness to feedback"]', 'bring ideas to life visually', '["originality","discipline","resilience through iteration"]', 0, NULL, 6, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-008', '["coach","trainer","instructor","tutor"]', 'coach', 'motivating and knowledgeable mentor', '["clear instruction","individualized guidance","consistent encouragement"]', 'help others reach their goals', '["patience","adaptability","genuine investment in others'' success"]', 0, NULL, 7, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-009', '["consultant","advisor","freelance","entrepreneur","founder"]', 'consultant', 'resourceful independent professional', '["strategic thinking","clear communication","hands-on problem-solving"]', 'deliver results clients can rely on', '["adaptability","initiative","strong follow-through"]', 0, NULL, 8, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-010', '["athlete","player"]', 'athlete', 'highly disciplined competitor', '["rigorous training","mental toughness","teamwork under pressure"]', 'perform at a consistently high level', '["discipline","resilience","a competitive drive"]', 0, NULL, 9, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-011', '[]', 'professional', 'dedicated, results-oriented individual', '["clear communication","sound judgment","steady follow-through"]', 'consistently deliver strong results', '["adaptability","attention to detail","a strong work ethic"]', 1, NULL, 10, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-012', '[]', 'software-engineer', 'resourceful problem-solver', '["clean, maintainable code","systems-level thinking","close collaboration with cross-functional teams"]', 'ship reliable software faster', '["clear technical communication","ownership","a habit of continuous learning"]', 0, 'software-engineer', 11, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-013', '[]', 'nurse', 'compassionate, detail-driven clinician', '["thorough patient assessment","calm decision-making under pressure","close coordination with care teams"]', 'deliver safe, high-quality patient care', '["empathy","clinical precision","steady composure in high-stakes moments"]', 0, 'nurse', 12, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-014', '[]', 'teacher', 'engaging, student-focused educator', '["clear lesson design","differentiated instruction","consistent classroom management"]', 'help every student reach their potential', '["patience","creativity","genuine investment in student growth"]', 0, 'teacher', 13, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-015', '[]', 'executive', 'strategic, results-driven leader', '["long-range strategic planning","cross-functional leadership","disciplined financial stewardship"]', 'drive sustainable organizational growth', '["decisiveness","clear executive communication","a track record of accountability"]', 0, 'executive', 14, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-016', '[]', 'project-manager', 'organized, delivery-focused coordinator', '["disciplined scope and timeline management","proactive risk mitigation","clear stakeholder communication"]', 'keep complex projects on time and on budget', '["organization","adaptability","steady follow-through under shifting priorities"]', 0, 'project-manager', 15, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-017', '[]', 'government-contractor-profession', 'compliance-minded program professional', '["rigorous regulatory compliance","disciplined program execution","close coordination with government stakeholders"]', 'deliver on contract commitments with full accountability', '["attention to detail","integrity","dependable follow-through"]', 0, 'government-contractor', 16, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-018', '[]', 'military-profession', 'disciplined, mission-focused leader', '["operational planning under pressure","team leadership and training","sound judgment in high-stakes situations"]', 'accomplish the mission and bring the team along', '["discipline","resilience","unwavering reliability"]', 0, 'military', 17, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-019', '[]', 'sales', 'relationship-driven closer', '["consultative needs discovery","persistent pipeline management","skilled objection handling"]', 'consistently exceed revenue targets', '["persistence","active listening","a competitive drive"]', 0, 'sales', 18, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-020', '[]', 'marketing', 'data-informed brand storyteller', '["compelling campaign strategy","rigorous performance analysis","creative, audience-first messaging"]', 'grow brand awareness and measurable engagement', '["creativity","analytical rigor","a strong sense of audience"]', 0, 'marketing', 19, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');
+INSERT OR IGNORE INTO role_descriptions ("id", "keywords", "category", "descriptor", "traits", "outcome", "keyTraits", "isFallback", "professionKey", "sortOrder", "createdAt", "updatedAt") VALUES ('seed-role-021', '[]', 'construction', 'safety-focused site leader', '["hands-on crew supervision","rigorous site safety standards","precise project scheduling"]', 'deliver projects safely, on time, and to spec', '["reliability","attention to detail","steady leadership under deadline pressure"]', 0, 'construction', 20, '2026-08-11T00:00:00.000Z', '2026-08-11T00:00:00.000Z');

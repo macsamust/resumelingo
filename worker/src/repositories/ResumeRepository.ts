@@ -213,6 +213,11 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
   async incrementViewCount(id: string): Promise<void> {
     await this.db.prepare(`UPDATE resumes SET viewCount = viewCount + 1 WHERE id = ?`).bind(id).run();
   }
+
+  /** Admin action — deletes every resume owned by a user, e.g. right before deleting the account itself. */
+  async deleteAllForUser(userId: string): Promise<void> {
+    await this.db.prepare(`DELETE FROM resumes WHERE userId = ?`).bind(userId).run();
+  }
 }
 
 function slugify(title: string): string {
