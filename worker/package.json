@@ -5,9 +5,9 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "db:create": "wrangler d1 create websume-db",
-    "db:migrate:local": "wrangler d1 migrations apply websume-db --local",
-    "db:migrate:remote": "wrangler d1 migrations apply websume-db --remote",
+    "db:create": "wrangler d1 create resumelingo-db",
+    "db:migrate:local": "wrangler d1 migrations apply resumelingo-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply resumelingo-db --remote",
     "secret:jwt": "wrangler secret put JWT_SECRET",
     "typecheck": "tsc --noEmit"
   },
