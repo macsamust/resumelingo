@@ -14,6 +14,8 @@ export class User {
   readonly profession: string | null;
   readonly subscriptionTier: SubscriptionTier;
   readonly suspended: boolean;
+  readonly stripeCustomerId: string | null;
+  readonly stripeSubscriptionId: string | null;
   readonly createdAt: string;
 
   constructor(record: UserRecord) {
@@ -24,6 +26,8 @@ export class User {
     this.profession = record.profession;
     this.subscriptionTier = record.subscriptionTier;
     this.suspended = record.suspended;
+    this.stripeCustomerId = record.stripeCustomerId;
+    this.stripeSubscriptionId = record.stripeSubscriptionId;
     this.createdAt = record.createdAt;
   }
 

@@ -13,6 +13,7 @@ import skillSuggestionRoutes from "./routes/skillSuggestion.routes";
 import adminRoutes from "./routes/admin.routes";
 import careerCoachRoutes from "./routes/careerCoach.routes";
 import thankYouLetterRoutes from "./routes/thankYouLetter.routes";
+import webhookRoutes from "./routes/webhooks.routes";
 import { AuthError } from "./services/AuthService";
 import { AdminAuthError } from "./services/AdminService";
 import {
@@ -53,6 +54,7 @@ app.route("/api/skill-suggestions", skillSuggestionRoutes);
 app.route("/api/admin", adminRoutes);
 app.route("/api/career-coach", careerCoachRoutes);
 app.route("/api/thank-you-letters", thankYouLetterRoutes);
+app.route("/api/webhooks", webhookRoutes);
 
 app.onError((err, c) => {
   const status =

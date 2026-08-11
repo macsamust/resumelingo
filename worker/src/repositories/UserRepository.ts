@@ -39,6 +39,8 @@ export class UserRepository extends BaseRepository<UserRecord> {
       profession: input.profession,
       subscriptionTier: SubscriptionTier.Starter,
       suspended: false,
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
       createdAt: new Date().toISOString(),
     };
     await this.insertRow(record as unknown as Record<string, unknown>);
@@ -79,5 +81,25 @@ export class UserRepository extends BaseRepository<UserRecord> {
       .bind(userId)
       .first<{ count: number }>();
     return row?.count ?? 0;
+  }
+
+  async findByStripeCustomerId(customerId: string): Promise<UserRecord | undefined> {
+    const row = await this.db
+      .prepare(`SELECT * FROM users WHERE stripeCustomerId = ?`)
+      .bind(customerId)
+      .first<UserRecord>();
+    return row ? normalizeBooleans(row) : undefined;
+  }
+
+  async setStripeCustomerId(userId: string, customerId: string): Promise<void> {
+    await this.db.prepare(`UPDATE users SET stripeCustomerId = ? WHERE id = ?`).bind(customerId, userId).run();
+  }
+
+  /** Applied only from the Stripe webhook (see SubscriptionService.handleWebhookEvent) — the single source of truth for paid tiers. */
+  async applyStripeSubscription(userId: string, tier: SubscriptionTier, subscriptionId: string | null): Promise<void> {
+    await this.db
+      .prepare(`UPDATE users SET subscriptionTier = ?, stripeSubscriptionId = ? WHERE id = ?`)
+      .bind(tier, subscriptionId, userId)
+      .run();
   }
 }

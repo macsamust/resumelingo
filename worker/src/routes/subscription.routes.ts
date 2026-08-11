@@ -9,5 +9,7 @@ const controller = new SubscriptionController();
 subscriptions.get("/plans", controller.plans);
 subscriptions.get("/usage", requireAuth, controller.usage);
 subscriptions.post("/change-tier", requireAuth, controller.changeTier);
+subscriptions.post("/checkout", requireAuth, controller.checkout);
+subscriptions.post("/portal", requireAuth, controller.portal);
 
 export default subscriptions;

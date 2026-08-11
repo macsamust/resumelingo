@@ -12,12 +12,16 @@ import { ResumeService } from "./ResumeService";
 import { SubscriptionService } from "./SubscriptionService";
 import { AdminService } from "./AdminService";
 import { RuleBasedContentGenerator } from "./ContentGenerator";
+import { StripeService } from "./StripeService";
 
 export interface Services {
   authService: AuthService;
   resumeService: ResumeService;
   subscriptionService: SubscriptionService;
   adminService: AdminService;
+  stripeService: StripeService;
+  /** Passed through directly for the webhook route, which needs it before it can even attempt signature verification — see SubscriptionController.webhook. */
+  stripeWebhookSecret: string | undefined;
   templateRepository: TemplateRepository;
   planRepository: PlanRepository;
   skillSuggestionRepository: SkillSuggestionRepository;
@@ -52,7 +56,13 @@ export function createServices(env: Env): Services {
 
   const authService = new AuthService(userRepo, tokenService);
   const resumeService = new ResumeService(resumeRepo, userRepo, contentGenerator);
-  const subscriptionService = new SubscriptionService(userRepo);
+  const stripeService = new StripeService(env.STRIPE_SECRET_KEY);
+  const subscriptionService = new SubscriptionService(
+    userRepo,
+    stripeService,
+    env.STRIPE_PRICE_PROFESSIONAL,
+    env.STRIPE_PRICE_PREMIUM
+  );
   const adminService = new AdminService(adminRepo, adminTokenService, env.ADMIN_EMAIL, env.ADMIN_PASSWORD);
 
   return {
@@ -60,6 +70,8 @@ export function createServices(env: Env): Services {
     resumeService,
     subscriptionService,
     adminService,
+    stripeService,
+    stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET,
     templateRepository,
     planRepository,
     skillSuggestionRepository,

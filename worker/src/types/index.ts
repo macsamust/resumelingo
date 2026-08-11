@@ -47,14 +47,14 @@ export interface SubscriptionPlanDefinition {
   priceMonthly: number;
   resumeLimit: number; // -1 = unlimited
   features: string[];
+  stripePriceId?: string; // undefined for the free Starter tier
 }
 
 /**
- * Deliberately does NOT include server/'s stripeCustomerId or
- * stripeSubscriptionId columns — Stripe billing is out of scope for this
- * port (Phase 4; see worker/migrations/0002_full_parity.sql). "suspended"
- * WAS added in migrations/0004_admin_catalog.sql to back the admin
- * console's suspend/reinstate action (Phase 3).
+ * "suspended" was added in migrations/0004_admin_catalog.sql (Phase 3, to
+ * back the admin console's suspend/reinstate action); stripeCustomerId/
+ * stripeSubscriptionId were added in migrations/0005_stripe_billing.sql
+ * (Phase 4) — see services/SubscriptionService.ts.
  */
 export interface UserRecord {
   id: string;
@@ -64,6 +64,8 @@ export interface UserRecord {
   profession: string | null;
   subscriptionTier: SubscriptionTier;
   suspended: boolean;
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
   createdAt: string;
 }
 
@@ -303,4 +305,9 @@ export interface Env {
   /** Optional bootstrap-admin credentials — see AdminService.ensureBootstrapAdmin. */
   ADMIN_EMAIL?: string;
   ADMIN_PASSWORD?: string;
+  /** Stripe billing (Phase 4) — see services/StripeService.ts and SubscriptionService.ts. All optional so the app still runs without billing configured. */
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  STRIPE_PRICE_PROFESSIONAL?: string;
+  STRIPE_PRICE_PREMIUM?: string;
 }
