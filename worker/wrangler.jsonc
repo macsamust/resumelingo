@@ -30,6 +30,6 @@
   // Non-secret config. JWT_SECRET is intentionally NOT here — set it with
   // `npm run secret:jwt` so it's encrypted rather than committed to git.
   "vars": {
-    "CLIENT_ORIGIN": "https://resumelingo-app.legumes-postage-9k.workers.dev/"
+    "CLIENT_ORIGIN": "https://resumelingo.legumes-postage-9k.workers.dev/"
   }
 }
