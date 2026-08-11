@@ -11,6 +11,8 @@ import dashboardRoutes from "./routes/dashboard.routes";
 import subscriptionRoutes from "./routes/subscription.routes";
 import skillSuggestionRoutes from "./routes/skillSuggestion.routes";
 import adminRoutes from "./routes/admin.routes";
+import careerCoachRoutes from "./routes/careerCoach.routes";
+import thankYouLetterRoutes from "./routes/thankYouLetter.routes";
 import { AuthError } from "./services/AuthService";
 import { AdminAuthError } from "./services/AdminService";
 import {
@@ -49,6 +51,8 @@ app.route("/api/dashboard", dashboardRoutes);
 app.route("/api/subscriptions", subscriptionRoutes);
 app.route("/api/skill-suggestions", skillSuggestionRoutes);
 app.route("/api/admin", adminRoutes);
+app.route("/api/career-coach", careerCoachRoutes);
+app.route("/api/thank-you-letters", thankYouLetterRoutes);
 
 app.onError((err, c) => {
   const status =
