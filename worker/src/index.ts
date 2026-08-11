@@ -9,8 +9,16 @@ import templateRoutes from "./routes/template.routes";
 import publicRoutes from "./routes/public.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
 import subscriptionRoutes from "./routes/subscription.routes";
+import skillSuggestionRoutes from "./routes/skillSuggestion.routes";
 import { AuthError } from "./services/AuthService";
-import { ResumeAccessError, ResumeLimitError, ResumeNotFoundError, TemplateAccessError } from "./services/ResumeService";
+import {
+  PhotoTooLargeError,
+  ResumeAccessError,
+  ResumeLimitError,
+  ResumeNotFoundError,
+  TemplateAccessError,
+  VisibilityAccessError,
+} from "./services/ResumeService";
 
 /**
  * Entry point for the whole Worker. wrangler.jsonc's `assets` config with
@@ -37,6 +45,7 @@ app.route("/api/templates", templateRoutes);
 app.route("/api/public", publicRoutes);
 app.route("/api/dashboard", dashboardRoutes);
 app.route("/api/subscriptions", subscriptionRoutes);
+app.route("/api/skill-suggestions", skillSuggestionRoutes);
 
 app.onError((err, c) => {
   const status =
@@ -50,6 +59,10 @@ app.onError((err, c) => {
       ? 402
       : err instanceof TemplateAccessError
       ? 402
+      : err instanceof VisibilityAccessError
+      ? 402
+      : err instanceof PhotoTooLargeError
+      ? 400
       : 500;
   if (status === 500) console.error(err);
   const reason = err instanceof ResumeAccessError ? err.reason : undefined;

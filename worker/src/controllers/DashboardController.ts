@@ -2,6 +2,19 @@ import { Context } from "hono";
 import { AppEnv } from "../middleware/servicesMiddleware";
 import { Resume } from "../models/Resume";
 
+/**
+ * Same responsibilities as the Node/Express DashboardController's
+ * myResumes/sharedLinks/resumeViews/profileStrengthScore/
+ * suggestedImprovements/subscription fields. `resumeAnalytics` is always
+ * null here — server/'s Premium-only "Resume Analytics" section
+ * (strengthDistribution, sectionGaps, staleResumes, viewTrend, scoreTrend,
+ * recurringMissingKeywords, comparison) is built from three analytics-only
+ * tables (resume_views, resume_score_snapshots, resume_keyword_checks) that
+ * are a bigger scope item than this pass — see the note in
+ * worker/src/services/ResumeService.ts. The key is still included so the
+ * client (which reads it defensively) doesn't need special-casing for
+ * Premium accounts on the Worker deployment.
+ */
 export class DashboardController {
   summary = async (c: Context<AppEnv>) => {
     const { resumeService, subscriptionService } = c.get("services");
@@ -15,23 +28,16 @@ export class DashboardController {
       resumeViews: resumes.reduce((sum, r) => sum + r.viewCount, 0),
       profileStrengthScore: averageStrengthScore(resumes),
       suggestedImprovements: suggestImprovements(resumes),
+      resumeAnalytics: null,
       subscription: usage,
     });
   };
 }
 
-function strengthScore(resume: Resume): number {
-  let score = 40;
-  const answerCount = Object.values(resume.answers).filter((v) => v && v.trim()).length;
-  score += Math.min(answerCount * 6, 40);
-  if (resume.generatedBullets.length >= 3) score += 10;
-  if (resume.generatedSummary.length > 80) score += 10;
-  return Math.min(score, 100);
-}
-
+// Per-resume score lives on the model (Resume.strengthScore); this just averages it.
 function averageStrengthScore(resumes: Resume[]): number {
   if (resumes.length === 0) return 0;
-  const total = resumes.reduce((sum, r) => sum + strengthScore(r), 0);
+  const total = resumes.reduce((sum, r) => sum + r.strengthScore, 0);
   return Math.round(total / resumes.length);
 }
 

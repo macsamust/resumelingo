@@ -119,6 +119,23 @@ export const PROFESSIONS: ProfessionDefinition[] = [
       { key: "equipmentOperated", label: "Equipment Operated", type: "list" },
     ],
   },
+  {
+    // Catch-all for professions not covered above. Work Experience, Education,
+    // Awards, and Key Achievements are already universal sections on every
+    // resume regardless of profession, so this question set only adds the
+    // fields that are otherwise profession-specific: Certifications, Skills,
+    // Years of Experience, Interests, and Additional Notes — all of which
+    // show up under the "Answers" section like any other profession.
+    key: "other",
+    label: "Other",
+    questions: [
+      { key: "certifications", label: "Certifications", type: "list", placeholder: "e.g. PMP, Six Sigma" },
+      { key: "skills", label: "Skills", type: "list", placeholder: "e.g. Data Analysis, Public Speaking" },
+      { key: "yearsExperience", label: "Years of Experience", type: "number" },
+      { key: "interests", label: "Interests", type: "list", placeholder: "e.g. Photography, Volunteering, Chess" },
+      { key: "additionalNotes", label: "Additional Notes", type: "textarea" },
+    ],
+  },
 ];
 
 export function getProfessionByKey(key: string): ProfessionDefinition | undefined {

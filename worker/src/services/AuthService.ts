@@ -6,11 +6,12 @@ import { User } from "../models/User";
 export class AuthError extends Error {}
 
 /**
- * Same responsibilities as the Node/Express AuthService. The only real
- * change: no default constructor params. In Express, `new UserRepository()`
- * could open its own module-level SQLite connection; in a Worker, the D1
- * binding only exists inside a request, so every dependency is passed in
- * explicitly by `createServices()` per request.
+ * Same responsibilities as the Node/Express AuthService, minus the
+ * `suspended` account check in login() — that column backs the admin
+ * console's "disable a user's login" action, which is out of scope for
+ * this port (see worker/src/types/index.ts's UserRecord). Every other
+ * profile-management behavior (updateProfile, changePassword) is ported
+ * faithfully since those are core Auth features, not admin-only.
  */
 export class AuthService {
   constructor(
@@ -53,5 +54,33 @@ export class AuthService {
 
   verifyToken(token: string) {
     return this.tokens.verify(token);
+  }
+
+  /** Updates name/email/profession. Rejects an email change if another account already uses it. */
+  async updateProfile(
+    userId: string,
+    input: { name?: string; email?: string; profession?: string | null }
+  ): Promise<User> {
+    if (input.email) {
+      const existing = await this.users.findByEmail(input.email);
+      if (existing && existing.id !== userId) {
+        throw new AuthError("An account with that email already exists.");
+      }
+    }
+    await this.users.update(userId, input);
+    const record = await this.users.findById(userId);
+    return new User(record!);
+  }
+
+  /** Requires the current password to confirm identity before setting a new one. */
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const record = await this.users.findById(userId);
+    if (!record) throw new AuthError("User not found.");
+
+    const matches = await bcrypt.compare(currentPassword, record.passwordHash);
+    if (!matches) throw new AuthError("Current password is incorrect.");
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.users.updatePasswordHash(userId, passwordHash);
   }
 }

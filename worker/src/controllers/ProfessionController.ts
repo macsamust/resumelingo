@@ -7,7 +7,7 @@ export class ProfessionController {
   };
 
   questions = async (c: Context) => {
-    const profession = getProfessionByKey(c.req.param("key"));
+    const profession = getProfessionByKey(c.req.param("key")!);
     if (!profession) return c.json({ error: "Unknown profession." }, 404);
     return c.json({ profession });
   };

@@ -24,6 +24,25 @@ export class UserRepository extends BaseRepository<UserRecord> {
     return record;
   }
 
+  /** Profile fields only — name/email/profession. Password changes go through updatePasswordHash. */
+  async update(userId: string, input: { name?: string; email?: string; profession?: string | null }): Promise<void> {
+    const record = await this.findById(userId);
+    if (!record) return;
+    const merged = {
+      name: input.name ?? record.name,
+      email: input.email ?? record.email,
+      profession: input.profession !== undefined ? input.profession : record.profession,
+    };
+    await this.db
+      .prepare(`UPDATE users SET name = ?, email = ?, profession = ? WHERE id = ?`)
+      .bind(merged.name, merged.email, merged.profession, userId)
+      .run();
+  }
+
+  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+    await this.db.prepare(`UPDATE users SET passwordHash = ? WHERE id = ?`).bind(passwordHash, userId).run();
+  }
+
   async updateSubscriptionTier(userId: string, tier: SubscriptionTier): Promise<void> {
     await this.db.prepare(`UPDATE users SET subscriptionTier = ? WHERE id = ?`).bind(tier, userId).run();
   }

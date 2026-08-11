@@ -6,7 +6,7 @@ export class PublicController {
     const { resumeService } = c.get("services");
     const password = c.req.query("password");
     const user = c.get("user");
-    const resume = await resumeService.getPublicBySlug(c.req.param("slug"), password, user?.id);
+    const resume = await resumeService.getPublicBySlug(c.req.param("slug")!, password, user?.id);
     return c.json({ resume: resume.toPublicJSON() });
   };
 }

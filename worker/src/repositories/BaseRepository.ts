@@ -31,17 +31,43 @@ export abstract class BaseRepository<TRecord extends { id: string }> {
     const columns = Object.keys(record);
     const placeholders = columns.map(() => "?").join(", ");
     await this.db
-      .prepare(`INSERT INTO ${this.table} (${columns.join(", ")}) VALUES (${placeholders})`)
-      .bind(...columns.map((c) => record[c]))
+      .prepare(`INSERT INTO ${this.table} (${columns.map(quoteColumn).join(", ")}) VALUES (${placeholders})`)
+      .bind(...columns.map((c) => toBindValue(record[c])))
       .run();
   }
 
   protected async updateRow(id: string, record: Record<string, unknown>): Promise<void> {
     const columns = Object.keys(record);
-    const assignments = columns.map((c) => `${c} = ?`).join(", ");
+    const assignments = columns.map((c) => `${quoteColumn(c)} = ?`).join(", ");
     await this.db
       .prepare(`UPDATE ${this.table} SET ${assignments} WHERE id = ?`)
-      .bind(...columns.map((c) => record[c]), id)
+      .bind(...columns.map((c) => toBindValue(record[c])), id)
       .run();
   }
+}
+
+/**
+ * Double-quotes a column name so it's always parsed as an identifier, never
+ * a keyword — needed for e.g. resumes."references", which would otherwise
+ * collide with SQL's REFERENCES keyword. Safe (and a no-op in effect) for
+ * every other column too, and D1/SQLite preserves case regardless of
+ * quoting, so this never affects the camelCase names used everywhere else
+ * in this codebase.
+ */
+function quoteColumn(column: string): string {
+  return `"${column}"`;
+}
+
+/**
+ * D1's `.bind()` expects primitives it can map onto SQLite's storage
+ * classes (TEXT/INTEGER/REAL/BLOB/NULL) — SQLite has no native boolean
+ * type, so a raw JS `true`/`false` isn't guaranteed to round-trip the same
+ * way across every D1/Workers runtime version. Converting defensively here,
+ * in one place, means every repository's create()/update() can keep
+ * building plain boolean fields without each one having to remember to do
+ * this conversion itself.
+ */
+function toBindValue(value: unknown): unknown {
+  if (typeof value === "boolean") return value ? 1 : 0;
+  return value;
 }
