@@ -27,5 +27,12 @@
     "@types/bcryptjs": "^2.4.6",
     "typescript": "^5.5.4",
     "wrangler": "^3.78.12"
+  },
+  "lavamoat": {
+    "allowScripts": {
+      "wrangler>esbuild": true,
+      "wrangler>sharp": true,
+      "wrangler>workerd": true
+    }
   }
 }
