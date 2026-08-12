@@ -15,6 +15,25 @@ import { TOPICS as CAREER_TOPICS } from "./CareerCenterPage";
 const JOB_SEARCH_RESOURCE_ANCHORS = ["interview-tips", "salary-negotiation", "networking"];
 const CAREER_ARTICLE_IDS = ["career-advice", "promotion-advice", "career-planning", "industry-news"];
 
+// "My Resumes" card last-updated timestamp — relative phrasing (e.g. "3
+// days ago") for anything within the last month, falling back to an
+// absolute date beyond that so very old resumes don't show something vague
+// like "8 months ago".
+const formatUpdatedDate = (iso: string): string =>
+  new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+
+const formatRelativeTime = (iso: string): string => {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
+  return formatUpdatedDate(iso);
+};
+
 export function DashboardPage() {
   const { user } = useAuth();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -196,6 +215,7 @@ export function DashboardPage() {
                 {r.professionLabel}
                 {showViewsAndStrengthTiles && ` · ${r.viewCount} view${r.viewCount === 1 ? "" : "s"}`}
               </p>
+              <p className="meta" style={{ opacity: 0.75 }}>Last updated {formatRelativeTime(r.updatedAt)}</p>
               <div className="resume-item-actions">
                 <Link to={`/resumes/${r.id}/edit`} className="btn btn-ghost">
                   Edit
