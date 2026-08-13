@@ -244,10 +244,21 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .resume-item-card h3 { font-size: 16px; margin-bottom: 4px; }
 .resume-item-card p.meta { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
 .resume-item-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-/* Sized so all four actions (Edit/View link/Clone/Delete) fit on one line
-   within the card's minimum width (see .resume-list-grid's 260px minmax)
-   instead of wrapping to a second line. */
-.resume-item-actions .btn { padding: 6px 10px; font-size: 12px; border-radius: 8px; white-space: nowrap; }
+.resume-item-actions .btn { padding: 6px 14px; font-size: 12px; border-radius: 8px; white-space: nowrap; }
+
+/* Title + "more actions" menu, side by side — the menu holds Clone/Delete
+   (see .resume-menu-dropdown) so only Edit/View link stay as visible
+   buttons below (see .resume-item-actions above). */
+.resume-item-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.resume-menu { position: relative; flex-shrink: 0; }
+.resume-menu-trigger { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; font-size: 18px; line-height: 1; border-radius: 8px; border: 1.5px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
+.resume-menu-trigger:hover { border-color: var(--indigo); color: var(--indigo); }
+.resume-menu-dropdown { position: absolute; top: calc(100% + 6px); right: 0; min-width: 140px; background: #fff; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 20px -6px rgba(15,23,42,.15); overflow: hidden; z-index: 5; }
+.resume-menu-dropdown button { display: block; width: 100%; text-align: left; padding: 9px 14px; font-size: 13px; font-weight: 500; background: transparent; border: none; color: var(--navy); cursor: pointer; }
+.resume-menu-dropdown button:hover { background: var(--bg); }
+.resume-menu-dropdown button + button { border-top: 1px solid var(--border); }
+.resume-menu-dropdown button.danger { color: #b91c1c; }
+.resume-menu-dropdown button.danger:hover { background: #fee2e2; }
 
 /* Activate/Deactivate row — a sliding switch + status text pinned to the
    bottom of a "My Resumes" card (Professional/Premium only, see

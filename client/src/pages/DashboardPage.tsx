@@ -39,6 +39,7 @@ export function DashboardPage() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [openingPortal, setOpeningPortal] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const checkoutStatus = searchParams.get("checkout");
 
@@ -62,6 +63,16 @@ export function DashboardPage() {
   };
 
   useEffect(load, []);
+
+  // Closes a resume card's "more actions" menu on any click outside it — the
+  // trigger/menu themselves stop propagation (see below) so the same click
+  // that opens a menu doesn't immediately close it again.
+  useEffect(() => {
+    if (!openMenuId) return;
+    const close = () => setOpenMenuId(null);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [openMenuId]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this resume? This cannot be undone.")) return;
@@ -233,27 +244,57 @@ export function DashboardPage() {
                   </span>
                 )}
               </div>
-              <h3>{r.title}</h3>
+              <div className="resume-item-header-row">
+                <h3>{r.title}</h3>
+                <div className="resume-menu">
+                  <button
+                    className="resume-menu-trigger"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenMenuId((cur) => (cur === r.id ? null : r.id));
+                    }}
+                    aria-label="More actions"
+                    aria-expanded={openMenuId === r.id}
+                  >
+                    &#8942;
+                  </button>
+                  {openMenuId === r.id && (
+                    <div className="resume-menu-dropdown" onClick={(e) => e.stopPropagation()}>
+                      {(isProfessional || isPremium) && (
+                        <button
+                          onClick={() => {
+                            setOpenMenuId(null);
+                            handleClone(r.id, r.title);
+                          }}
+                        >
+                          Clone
+                        </button>
+                      )}
+                      <button
+                        className="danger"
+                        onClick={() => {
+                          setOpenMenuId(null);
+                          handleDelete(r.id);
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
               <p className="meta">
                 {r.professionLabel}
                 {showViewsAndStrengthTiles && ` · ${r.viewCount} view${r.viewCount === 1 ? "" : "s"}`}
               </p>
               <p className="meta" style={{ opacity: 0.75 }}>Last updated {formatRelativeTime(r.updatedAt)}</p>
               <div className="resume-item-actions">
-                <Link to={`/resumes/${r.id}/edit`} className="btn btn-ghost">
+                <Link to={`/resumes/${r.id}/edit`} className="btn btn-primary">
                   Edit
                 </Link>
                 <a href={`/r/${r.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost">
                   View link
                 </a>
-                {(isProfessional || isPremium) && (
-                  <button className="btn btn-ghost" onClick={() => handleClone(r.id, r.title)}>
-                    Clone
-                  </button>
-                )}
-                <button className="btn btn-ghost" onClick={() => handleDelete(r.id)}>
-                  Delete
-                </button>
               </div>
               {(isProfessional || isPremium) && (
                 <div className="resume-active-toggle-row">
