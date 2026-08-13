@@ -248,6 +248,22 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
    within the card's minimum width (see .resume-list-grid's 260px minmax)
    instead of wrapping to a second line. */
 .resume-item-actions .btn { padding: 6px 10px; font-size: 12px; border-radius: 8px; white-space: nowrap; }
+
+/* Activate/Deactivate row — a sliding switch + status text pinned to the
+   bottom of a "My Resumes" card (Professional/Premium only, see
+   DashboardPage.tsx). Separated from .resume-item-actions above by a
+   divider since it's a toggle rather than a one-off action. */
+.resume-active-toggle-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.toggle-switch { position: relative; display: inline-block; width: 38px; height: 21px; flex-shrink: 0; }
+.toggle-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.toggle-slider { position: absolute; inset: 0; background: #d1d5db; border-radius: 999px; transition: background .15s ease; pointer-events: none; }
+.toggle-slider::before { content: ""; position: absolute; height: 15px; width: 15px; left: 3px; top: 3px; background: #fff; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .15s ease; }
+.toggle-switch input:checked + .toggle-slider { background: linear-gradient(135deg, var(--indigo), var(--indigo-light)); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(17px); }
+.toggle-switch input:focus-visible + .toggle-slider { outline: 2px solid var(--indigo); outline-offset: 2px; }
+.toggle-status-label { font-size: 13px; font-weight: 700; }
+.toggle-status-label.active { color: #166534; }
+.toggle-status-label.inactive { color: #b91c1c; }
 .visibility-tag { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: #eef2ff; color: var(--indigo); }
 .resume-item-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .resume-template-tag { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--bg); color: var(--muted); border: 1px solid var(--border); }

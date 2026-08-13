@@ -225,7 +225,6 @@ export function DashboardPage() {
           {summary.myResumes.map((r) => (
             <div className="resume-item-card" key={r.id}>
               <div className="resume-item-tags">
-                {!r.active && <span className="admin-status-tag suspended">Inactive</span>}
                 <span className="visibility-tag">{r.visibility}</span>
                 <span className="resume-template-tag">Template: {r.template?.name ?? r.templateKey}</span>
                 {showViewsAndStrengthTiles && (
@@ -252,13 +251,26 @@ export function DashboardPage() {
                     Clone
                   </button>
                 )}
-                <button className="btn btn-ghost" onClick={() => handleToggleActive(r.id, r.active)}>
-                  {r.active ? "Deactivate" : "Activate"}
-                </button>
                 <button className="btn btn-ghost" onClick={() => handleDelete(r.id)}>
                   Delete
                 </button>
               </div>
+              {(isProfessional || isPremium) && (
+                <div className="resume-active-toggle-row">
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={r.active}
+                      onChange={() => handleToggleActive(r.id, r.active)}
+                      aria-label={r.active ? "Deactivate this resume link" : "Activate this resume link"}
+                    />
+                    <span className="toggle-slider" />
+                  </label>
+                  <span className={r.active ? "toggle-status-label active" : "toggle-status-label inactive"}>
+                    {r.active ? "Active" : "Inactive"}
+                  </span>
+                </div>
+              )}
             </div>
           ))}
         </div>

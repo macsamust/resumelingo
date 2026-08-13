@@ -17,6 +17,7 @@ import webhookRoutes from "./routes/webhooks.routes";
 import { AuthError } from "./services/AuthService";
 import { AdminAuthError } from "./services/AdminService";
 import {
+  ActiveToggleAccessError,
   CloneAccessError,
   PhotoTooLargeError,
   ResumeAccessError,
@@ -82,6 +83,8 @@ app.onError((err, c) => {
       : err instanceof VisibilityAccessError
       ? 402
       : err instanceof CloneAccessError
+      ? 402
+      : err instanceof ActiveToggleAccessError
       ? 402
       : err instanceof PhotoTooLargeError
       ? 400

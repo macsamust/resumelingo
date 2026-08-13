@@ -27,6 +27,7 @@ export class TemplateAccessError extends Error {}
 export class VisibilityAccessError extends Error {}
 export class PhotoTooLargeError extends Error {}
 export class CloneAccessError extends Error {}
+export class ActiveToggleAccessError extends Error {}
 
 // ~2MB of base64 text comfortably covers a photo resized/compressed
 // client-side (see client/src/utils/image.ts) before upload; this is a
@@ -62,6 +63,14 @@ function assertVisibilityAllowed(tier: User["subscriptionTier"], visibility: Lin
   const requiredPlan = getPlan(VISIBILITY_MIN_TIER[visibility]);
   throw new VisibilityAccessError(
     `${VISIBILITY_LABEL[visibility]} links require the ${requiredPlan.name} plan. Upgrade to use this visibility setting.`
+  );
+}
+
+/** Throws unless `tier` is Professional or Premium — Starter accounts can't pause/resume a resume's public link. */
+function assertActiveToggleAllowed(tier: User["subscriptionTier"]): void {
+  if (tier === SubscriptionTier.Professional || tier === SubscriptionTier.Premium) return;
+  throw new ActiveToggleAccessError(
+    "Activating/deactivating a resume link requires the Professional or Premium plan. Upgrade to use this feature."
   );
 }
 
@@ -191,12 +200,18 @@ export class ResumeService {
     // toggle again.
     const referencesRequested = input.referencesEnabled ?? existing.referencesEnabled;
     let referencesEnabled = referencesRequested;
-    if (templateChanging || visibilityChanging || recruiterModeRequested || referencesRequested) {
+    // Activate/Deactivate is a Professional/Premium perk — unlike Recruiter
+    // Mode/References above, this one throws (via assertActiveToggleAllowed)
+    // rather than silently coercing, since it's an explicit action the user
+    // just clicked, not a background re-check on every save.
+    const activeChangeRequested = input.active !== undefined && input.active !== existing.active;
+    if (templateChanging || visibilityChanging || recruiterModeRequested || referencesRequested || activeChangeRequested) {
       const userRecord = await this.users.findById(userId);
       if (userRecord) {
         const tier = new User(userRecord).subscriptionTier;
         if (templateChanging) assertTemplateAllowed(tier, input.templateKey!);
         if (visibilityChanging) assertVisibilityAllowed(tier, input.visibility!);
+        if (activeChangeRequested) assertActiveToggleAllowed(tier);
         recruiterModeEnabled = recruiterModeRequested && tier === SubscriptionTier.Premium;
         referencesEnabled = referencesRequested && tier === SubscriptionTier.Premium;
       } else {
