@@ -77,6 +77,22 @@ export class ResumeController {
     return c.json({ resume: resume.toJSON() }, 201);
   };
 
+  /** POST /api/resumes/:id/clone — duplicates a resume the user owns under a new, required title (which also becomes the new public link's slug). */
+  clone = async (c: Context<AppEnv>) => {
+    const { resumeService } = c.get("services");
+    const user = c.get("user")!;
+    const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+    const { title, templateKey } = body;
+    if (!title || typeof title !== "string" || !title.trim()) {
+      return c.json({ error: "A unique title is required to clone a resume." }, 400);
+    }
+    const resume = await resumeService.clone(user, c.req.param("id")!, {
+      title: title.trim(),
+      templateKey: templateKey as string | undefined,
+    });
+    return c.json({ resume: resume.toJSON() }, 201);
+  };
+
   update = async (c: Context<AppEnv>) => {
     const { resumeService } = c.get("services");
     const user = c.get("user")!;

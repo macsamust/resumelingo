@@ -59,6 +59,11 @@ export class ResumeApi extends ApiClient {
     return this.del<void>(`/resumes/${id}`);
   }
 
+  /** Duplicates a resume under a new, required title (which also becomes the new public link's slug) and, optionally, a different template. Everything else carries over as-is. */
+  clone(id: string, input: { title: string; templateKey?: string }) {
+    return this.post<{ resume: Resume }>(`/resumes/${id}/clone`, input);
+  }
+
   /** Logs one ATS Check keyword match's missing-keyword list — see ResumeEditPage's debounced effect and utils/atsCheck.ts's matchKeywords. Fire-and-forget from the caller's perspective; server no-ops (204, no error) for non-Premium accounts. */
   recordKeywordCheck(id: string, missingKeywords: string[]) {
     return this.post<void>(`/resumes/${id}/keyword-check`, { missingKeywords });

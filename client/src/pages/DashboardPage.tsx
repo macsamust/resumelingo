@@ -69,6 +69,20 @@ export function DashboardPage() {
     load();
   };
 
+  const handleClone = async (id: string, currentTitle: string) => {
+    const title = window.prompt(
+      "Give the cloned resume a unique title — this also becomes its public link.",
+      `${currentTitle} (Copy)`
+    );
+    if (!title || !title.trim()) return;
+    try {
+      await resumeApi.clone(id, { title: title.trim() });
+      load();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Couldn't clone this resume.");
+    }
+  };
+
   const handleManageBilling = async () => {
     setOpeningPortal(true);
     try {
@@ -223,6 +237,9 @@ export function DashboardPage() {
                 <a href={`/r/${r.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost">
                   View link
                 </a>
+                <button className="btn btn-ghost" onClick={() => handleClone(r.id, r.title)}>
+                  Clone
+                </button>
                 <button className="btn btn-ghost" onClick={() => handleDelete(r.id)}>
                   Delete
                 </button>

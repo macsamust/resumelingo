@@ -218,6 +218,35 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
   async deleteAllForUser(userId: string): Promise<void> {
     await this.db.prepare(`DELETE FROM resumes WHERE userId = ?`).bind(userId).run();
   }
+
+  /**
+   * Duplicates an existing resume record wholesale (experience, education,
+   * achievements, Recruiter Mode, References, cover letter, etc.) rather
+   * than going through create()'s narrow CreateResumeInput, which
+   * deliberately zeroes those fields out for a brand-new resume — the whole
+   * point of a clone is carrying them over. Only id/slug/title/templateKey
+   * are regenerated; visibility/accessPassword/viewCount are reset so a
+   * clone always starts as a private, unshared, unviewed draft rather than
+   * silently inheriting a live public link.
+   */
+  async clone(source: ResumeRecord, overrides: { title: string; templateKey: string }): Promise<ResumeRecord> {
+    const now = new Date().toISOString();
+    const record: ResumeRecord = {
+      ...source,
+      id: nanoid(12),
+      slug: `${slugify(overrides.title)}-${nanoid(6)}`,
+      title: overrides.title,
+      templateKey: overrides.templateKey,
+      visibility: LinkVisibility.Private,
+      accessPassword: null,
+      accessPasswordExpiresAt: null,
+      viewCount: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+    await this.insertRow(record as unknown as Record<string, unknown>);
+    return record;
+  }
 }
 
 function slugify(title: string): string {

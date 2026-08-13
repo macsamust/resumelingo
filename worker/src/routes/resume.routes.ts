@@ -10,6 +10,7 @@ resumes.use("*", requireAuth);
 resumes.get("/", controller.list);
 resumes.post("/", controller.create);
 resumes.get("/:id", controller.get);
+resumes.post("/:id/clone", controller.clone);
 resumes.put("/:id", controller.update);
 resumes.delete("/:id", controller.remove);
 

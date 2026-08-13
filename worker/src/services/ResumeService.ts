@@ -299,6 +299,34 @@ export class ResumeService {
     return new Resume(updated!);
   }
 
+  /**
+   * Duplicates a resume the user owns into a new one with a required, unique
+   * title (which also seeds the new public slug — see ResumeRepository.clone)
+   * and an optional different template. Everything else — experience,
+   * education, achievements, Recruiter Mode, References, cover letter — is
+   * carried over as-is. Subject to the same resume-limit and template-tier
+   * gates as create(), and the clone always starts as a private link
+   * regardless of the source's visibility (see ResumeRepository.clone).
+   */
+  async clone(user: User, resumeId: string, input: { title: string; templateKey?: string }): Promise<Resume> {
+    const record = await this.resumes.findById(resumeId);
+    if (!record) throw new ResumeNotFoundError("Resume not found.");
+    if (record.userId !== user.id) throw new ResumeAccessError("You do not have access to this resume.");
+
+    const currentCount = await this.users.countResumesForUser(user.id);
+    if (!user.canCreateAdditionalResume(currentCount)) {
+      throw new ResumeLimitError(
+        `Your ${user.plan.name} plan is limited to ${user.plan.resumeLimit} resume(s). Upgrade to add more.`
+      );
+    }
+
+    const templateKey = input.templateKey ?? record.templateKey;
+    assertTemplateAllowed(user.subscriptionTier, templateKey);
+
+    const cloned = await this.resumes.clone(record, { title: input.title, templateKey });
+    return new Resume(cloned);
+  }
+
   async delete(userId: string, resumeId: string): Promise<void> {
     await this.getOwned(userId, resumeId); // throws if not found/owned
     await this.resumes.delete(resumeId);
