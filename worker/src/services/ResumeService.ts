@@ -49,6 +49,7 @@ export class ResumeAccessError extends Error {
 export class TemplateAccessError extends Error {}
 export class VisibilityAccessError extends Error {}
 export class PhotoTooLargeError extends Error {}
+export class CloneAccessError extends Error {}
 
 // ~2MB of base64 text comfortably covers a photo resized/compressed
 // client-side before upload; this is a server-side backstop in case that
@@ -312,6 +313,14 @@ export class ResumeService {
     const record = await this.resumes.findById(resumeId);
     if (!record) throw new ResumeNotFoundError("Resume not found.");
     if (record.userId !== user.id) throw new ResumeAccessError("You do not have access to this resume.");
+
+    // Cloning is a Professional/Premium perk — Starter accounts are capped
+    // at one resume total (see subscriptionPlans.ts), so cloning would
+    // either be pointless (they're already at the limit) or, if the limit
+    // is ever raised, would let a free account bypass paying for it.
+    if (user.subscriptionTier === SubscriptionTier.Starter) {
+      throw new CloneAccessError("Cloning resumes requires the Professional or Premium plan. Upgrade to use this feature.");
+    }
 
     const currentCount = await this.users.countResumesForUser(user.id);
     if (!user.canCreateAdditionalResume(currentCount)) {

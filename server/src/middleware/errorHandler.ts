@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { AuthError } from "../services/AuthService";
 import { AdminAuthError } from "../services/AdminService";
 import {
+  CloneAccessError,
   PhotoTooLargeError,
   ResumeAccessError,
   ResumeLimitError,
@@ -18,6 +19,7 @@ const STATUS_BY_ERROR = [
   { type: ResumeLimitError, status: 402 },
   { type: TemplateAccessError, status: 402 },
   { type: VisibilityAccessError, status: 402 },
+  { type: CloneAccessError, status: 402 },
   { type: PhotoTooLargeError, status: 400 },
 ];
 

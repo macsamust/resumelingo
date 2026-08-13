@@ -237,9 +237,11 @@ export function DashboardPage() {
                 <a href={`/r/${r.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost">
                   View link
                 </a>
-                <button className="btn btn-ghost" onClick={() => handleClone(r.id, r.title)}>
-                  Clone
-                </button>
+                {(isProfessional || isPremium) && (
+                  <button className="btn btn-ghost" onClick={() => handleClone(r.id, r.title)}>
+                    Clone
+                  </button>
+                )}
                 <button className="btn btn-ghost" onClick={() => handleDelete(r.id)}>
                   Delete
                 </button>

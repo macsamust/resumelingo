@@ -17,6 +17,7 @@ import webhookRoutes from "./routes/webhooks.routes";
 import { AuthError } from "./services/AuthService";
 import { AdminAuthError } from "./services/AdminService";
 import {
+  CloneAccessError,
   PhotoTooLargeError,
   ResumeAccessError,
   ResumeLimitError,
@@ -79,6 +80,8 @@ app.onError((err, c) => {
       : err instanceof TemplateAccessError
       ? 402
       : err instanceof VisibilityAccessError
+      ? 402
+      : err instanceof CloneAccessError
       ? 402
       : err instanceof PhotoTooLargeError
       ? 400
