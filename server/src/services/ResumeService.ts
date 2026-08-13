@@ -66,6 +66,16 @@ function assertVisibilityAllowed(tier: User["subscriptionTier"], visibility: Lin
   );
 }
 
+/**
+ * Fields that describe how a resume's link behaves (who can see it, and
+ * whether it's on at all) rather than the resume's actual content. An
+ * update() request made up of only these keys — e.g. the My Resumes
+ * Activate/Deactivate toggle, which sends exactly `{ active }` — doesn't
+ * bump "Last updated" (see ResumeRepository.update's bumpUpdatedAt), so
+ * that timestamp only ever reflects a real content edit.
+ */
+const LINK_ONLY_UPDATE_KEYS = new Set(["active", "visibility", "accessPassword", "accessPasswordExpiresAt"]);
+
 /** Throws unless `tier` is Professional or Premium — Starter accounts can't pause/resume a resume's public link. */
 function assertActiveToggleAllowed(tier: User["subscriptionTier"]): void {
   if (tier === SubscriptionTier.Professional || tier === SubscriptionTier.Premium) return;
@@ -184,6 +194,10 @@ export class ResumeService {
   async update(userId: string, resumeId: string, input: UpdateResumeInput): Promise<Resume> {
     const existing = await this.getOwned(userId, resumeId); // throws if not found/owned
 
+    // Computed from the raw request keys before any of the fields below get
+    // filled in with computed defaults — see LINK_ONLY_UPDATE_KEYS.
+    const isLinkOnlyChange = Object.keys(input).every((key) => LINK_ONLY_UPDATE_KEYS.has(key));
+
     const templateChanging = !!input.templateKey && input.templateKey !== existing.templateKey;
     const visibilityChanging = !!input.visibility && input.visibility !== existing.visibility;
     // Recruiter Mode is Premium-only — re-checked (and silently coerced off,
@@ -281,15 +295,19 @@ export class ResumeService {
       }
     }
 
-    const updated = await this.resumes.update(resumeId, {
-      ...input,
-      generatedSummary,
-      generatedBullets,
-      coverLetterEnabled,
-      generatedCoverLetter,
-      recruiterModeEnabled,
-      referencesEnabled,
-    });
+    const updated = await this.resumes.update(
+      resumeId,
+      {
+        ...input,
+        generatedSummary,
+        generatedBullets,
+        coverLetterEnabled,
+        generatedCoverLetter,
+        recruiterModeEnabled,
+        referencesEnabled,
+      },
+      { bumpUpdatedAt: !isLinkOnlyChange }
+    );
     const resume = new Resume(updated!);
     await this.analytics.recordScoreSnapshot(resume.id, resume.strengthScore);
     return resume;

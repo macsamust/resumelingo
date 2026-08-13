@@ -131,9 +131,17 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
     return record;
   }
 
-  async update(id: string, input: UpdateResumeInput): Promise<ResumeRecord | undefined> {
+  /**
+   * `bumpUpdatedAt` (default true) lets a caller update a resume without
+   * touching "Last updated" — used by ResumeService.update for link-only
+   * changes (Activate/Deactivate) that aren't a content edit, so the My
+   * Resumes card's timestamp only ever reflects actual resume changes
+   * (title, answers, experience, etc.), not flipping a toggle.
+   */
+  async update(id: string, input: UpdateResumeInput, options?: { bumpUpdatedAt?: boolean }): Promise<ResumeRecord | undefined> {
     const existing = await this.findById(id);
     if (!existing) return undefined;
+    const bumpUpdatedAt = options?.bumpUpdatedAt ?? true;
 
     const merged: ResumeRecord = {
       ...existing,
@@ -176,7 +184,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
         input.referencesRecruiterModeOnly !== undefined ? input.referencesRecruiterModeOnly : existing.referencesRecruiterModeOnly,
       generatedSummary: input.generatedSummary ?? existing.generatedSummary,
       generatedBullets: input.generatedBullets ? JSON.stringify(input.generatedBullets) : existing.generatedBullets,
-      updatedAt: new Date().toISOString(),
+      updatedAt: bumpUpdatedAt ? new Date().toISOString() : existing.updatedAt,
     };
     await this.updateRow(id, merged as unknown as Record<string, unknown>);
     return merged;
