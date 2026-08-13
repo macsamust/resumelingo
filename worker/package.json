@@ -23,10 +23,10 @@
     "stripe": "^17.4.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240925.0",
+    "@cloudflare/workers-types": "^5.20260811.0",
     "@types/bcryptjs": "^2.4.6",
     "typescript": "^5.5.4",
-    "wrangler": "^3.78.12"
+    "wrangler": "^4.123.0"
   },
   "lavamoat": {
     "allowScripts": {

@@ -5,6 +5,15 @@ import { ParrotLogo } from "../brand/ParrotLogo";
 export function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  // Logged-out visitors still see Career Center (it's public marketing
+  // content, same articles used to attract new signups — see
+  // CareerCenterPage.tsx). Once someone's logged in, though, it's a
+  // Professional/Premium perk, same gate as the dashboard's Career Articles
+  // section (DashboardPage.tsx's showCareerArticles) and the Career Coach/
+  // Thank-You Letter links in AppShell.
+  const isProfessional = user?.subscriptionTier === "professional";
+  const isPremium = user?.subscriptionTier === "premium";
+  const showCareerCenterLink = !user || isProfessional || isPremium;
 
   return (
     <header>
@@ -20,7 +29,7 @@ export function Navbar() {
           <Link to="/#how">How it works</Link>
           <Link to="/#features">Features</Link>
           <Link to="/#pricing">Pricing</Link>
-          <Link to="/career-center">Career Center</Link>
+          {showCareerCenterLink && <Link to="/career-center">Career Center</Link>}
         </div>
         <div className="nav-actions">
           {user ? (
