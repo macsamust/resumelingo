@@ -30,6 +30,7 @@ export class Resume {
   readonly visibility: LinkVisibility;
   readonly accessPassword: string | null;
   readonly accessPasswordExpiresAt: string | null;
+  readonly active: boolean;
   readonly coverLetterEnabled: boolean;
   readonly generatedCoverLetter: string;
   readonly recruiterModeEnabled: boolean;
@@ -70,6 +71,7 @@ export class Resume {
     this.visibility = record.visibility;
     this.accessPassword = record.accessPassword;
     this.accessPasswordExpiresAt = record.accessPasswordExpiresAt;
+    this.active = !!record.active;
     this.coverLetterEnabled = !!record.coverLetterEnabled;
     this.generatedCoverLetter = record.generatedCoverLetter;
     this.recruiterModeEnabled = !!record.recruiterModeEnabled;
@@ -211,6 +213,7 @@ export class Resume {
       visibility: this.visibility,
       hasPassword: !!this.accessPassword,
       accessPasswordExpiresAt: this.accessPasswordExpiresAt,
+      active: this.active,
       coverLetterEnabled: this.coverLetterEnabled,
       generatedCoverLetter: this.generatedCoverLetter,
       recruiterModeEnabled: this.recruiterModeEnabled,

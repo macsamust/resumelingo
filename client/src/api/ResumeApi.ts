@@ -13,6 +13,8 @@ export interface CreateResumeInput {
   visibility?: LinkVisibility;
   accessPassword?: string | null;
   accessPasswordExpiresAt?: string | null;
+  /** Separate on/off switch for the public link — independent of visibility/password, so pausing a link never loses that setup. */
+  active?: boolean;
   coverLetterEnabled?: boolean;
   /** "Recruiter Mode" toggle — only takes effect server-side for Premium subscribers (see ResumeService.update). */
   recruiterModeEnabled?: boolean;

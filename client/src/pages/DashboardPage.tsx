@@ -69,6 +69,15 @@ export function DashboardPage() {
     load();
   };
 
+  const handleToggleActive = async (id: string, currentlyActive: boolean) => {
+    try {
+      await resumeApi.update(id, { active: !currentlyActive });
+      load();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Couldn't update this resume's link.");
+    }
+  };
+
   const handleClone = async (id: string, currentTitle: string) => {
     const title = window.prompt(
       "Give the cloned resume a unique title — this also becomes its public link.",
@@ -216,6 +225,7 @@ export function DashboardPage() {
           {summary.myResumes.map((r) => (
             <div className="resume-item-card" key={r.id}>
               <div className="resume-item-tags">
+                {!r.active && <span className="admin-status-tag suspended">Inactive</span>}
                 <span className="visibility-tag">{r.visibility}</span>
                 <span className="resume-template-tag">Template: {r.template?.name ?? r.templateKey}</span>
                 {showViewsAndStrengthTiles && (
@@ -242,6 +252,9 @@ export function DashboardPage() {
                     Clone
                   </button>
                 )}
+                <button className="btn btn-ghost" onClick={() => handleToggleActive(r.id, r.active)}>
+                  {r.active ? "Deactivate" : "Activate"}
+                </button>
                 <button className="btn btn-ghost" onClick={() => handleDelete(r.id)}>
                   Delete
                 </button>

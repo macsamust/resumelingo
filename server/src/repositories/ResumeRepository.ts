@@ -40,6 +40,7 @@ export interface UpdateResumeInput {
   visibility?: LinkVisibility;
   accessPassword?: string | null;
   accessPasswordExpiresAt?: string | null;
+  active?: boolean;
   coverLetterEnabled?: boolean;
   generatedCoverLetter?: string;
   recruiterModeEnabled?: boolean;
@@ -96,6 +97,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       visibility: input.visibility,
       accessPassword: input.accessPassword,
       accessPasswordExpiresAt: input.accessPasswordExpiresAt ?? null,
+      active: true,
       coverLetterEnabled: input.coverLetterEnabled ?? false,
       generatedCoverLetter: input.generatedCoverLetter ?? "",
       // Recruiter Mode is only ever turned on from Edit Resume, never at
@@ -147,6 +149,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       accessPassword: input.accessPassword !== undefined ? input.accessPassword : existing.accessPassword,
       accessPasswordExpiresAt:
         input.accessPasswordExpiresAt !== undefined ? input.accessPasswordExpiresAt : existing.accessPasswordExpiresAt,
+      active: input.active !== undefined ? input.active : existing.active,
       coverLetterEnabled: input.coverLetterEnabled !== undefined ? input.coverLetterEnabled : existing.coverLetterEnabled,
       generatedCoverLetter: input.generatedCoverLetter !== undefined ? input.generatedCoverLetter : existing.generatedCoverLetter,
       recruiterModeEnabled: input.recruiterModeEnabled !== undefined ? input.recruiterModeEnabled : existing.recruiterModeEnabled,
@@ -209,6 +212,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       visibility: LinkVisibility.Private,
       accessPassword: null,
       accessPasswordExpiresAt: null,
+      active: true,
       viewCount: 0,
       createdAt: now,
       updatedAt: now,

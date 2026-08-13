@@ -183,6 +183,14 @@ export async function migrate(): Promise<void> {
     -- recruiterCard for how the two flags combine.
     ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "referencesRecruiterModeOnly" BOOLEAN NOT NULL DEFAULT false;
 
+    -- A dedicated on/off switch for the public link, separate from
+    -- "visibility"/"accessPassword" — lets the owner pause a link (e.g.
+    -- between job searches) without losing or reconfiguring whatever
+    -- visibility/password setup it already had. Defaults to true so every
+    -- existing resume keeps working exactly as it does today. See
+    -- ResumeService.getPublicBySlug and models/Resume.ts.
+    ALTER TABLE resumes ADD COLUMN IF NOT EXISTS "active" BOOLEAN NOT NULL DEFAULT true;
+
     -- Admins are a deliberately separate table/role from users (see
     -- types/index.ts AdminRecord and services/AdminService.ts) rather than a
     -- flag on the users table, so admin auth is fully isolated from user auth.

@@ -215,6 +215,10 @@ export function PublicResumePage() {
           // Expired password-protected links are deactivated outright — no
           // password prompt, since no password would work at this point.
           setError("This resume link has expired and is no longer accessible.");
+        } else if (err instanceof ApiError && err.status === 403 && err.reason === "inactive") {
+          // Deliberately paused by the owner (see the Deactivate toggle on
+          // My Resumes) — no password would work here either, so no prompt.
+          setError("This resume link has been deactivated by its owner.");
         } else if (err instanceof ApiError && err.status === 403) {
           setPasswordRequired(true);
         } else if (err instanceof ApiError && err.status === 404) {

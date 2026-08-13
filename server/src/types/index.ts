@@ -248,6 +248,15 @@ export interface ResumeRecord {
   accessPassword: string | null;
   /** ISO timestamp. Once past, a password-protected link is deactivated even with the correct password (see Resume.isPasswordExpired). NULL means no expiration. */
   accessPasswordExpiresAt: string | null;
+  /**
+   * A separate on/off switch for the public link, independent of
+   * visibility/accessPassword — lets the owner pause a link (e.g. between
+   * job searches) without losing or reconfiguring whatever
+   * visibility/password setup it already had. Always true for a
+   * newly-created or cloned resume. See Resume.isAccessibleBy /
+   * ResumeService.getPublicBySlug.
+   */
+  active: boolean;
   /** "Generate AI cover letter" checkbox — only meaningful (and only ever true) for a resume on a Premium-tier template; see ResumeService. */
   coverLetterEnabled: boolean;
   /** Rule-based generator output (see CoverLetterGenerator.ts) — empty string when coverLetterEnabled is false. */

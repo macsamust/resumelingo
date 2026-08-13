@@ -145,6 +145,8 @@ export interface Resume {
   hasPassword: boolean;
   /** ISO timestamp. Once past, a password-protected link is deactivated even with the correct password. Null means no expiration. */
   accessPasswordExpiresAt: string | null;
+  /** Separate on/off switch for the public link — independent of visibility/password, so pausing a link never loses that setup. */
+  active: boolean;
   /** "Generate AI cover letter" checkbox — only ever true for a resume on a Premium-tier template. */
   coverLetterEnabled: boolean;
   /** Generated cover letter text, or "" when coverLetterEnabled is false. */

@@ -19,7 +19,7 @@ function isPremiumTemplate(templateKey: string): boolean {
 export class ResumeLimitError extends Error {}
 export class ResumeNotFoundError extends Error {}
 export class ResumeAccessError extends Error {
-  constructor(message: string, public readonly reason: "password" | "private" | "forbidden" | "expired" = "forbidden") {
+  constructor(message: string, public readonly reason: "password" | "private" | "forbidden" | "expired" | "inactive" = "forbidden") {
     super(message);
   }
 }
@@ -328,6 +328,14 @@ export class ResumeService {
     if (!record) throw new ResumeNotFoundError("Resume not found.");
     const resume = new Resume(record);
     const isOwner = !!requestingUserId && requestingUserId === resume.userId;
+    // Checked first (and, like isPasswordExpired below, before the general
+    // isAccessibleBy() check) so a deliberately-paused link reports its own
+    // distinct reason ("inactive") instead of looking like a visibility/
+    // password problem — the owner can still always open their own resume,
+    // active or not, e.g. to preview it before reactivating.
+    if (!isOwner && !resume.active) {
+      throw new ResumeAccessError("This resume link has been deactivated by its owner.", "inactive");
+    }
     // Checked ahead of the general isAccessibleBy() below so an expired link
     // reports a distinct reason ("expired") instead of just looking like a
     // wrong password — the owner can still always open their own resume.
