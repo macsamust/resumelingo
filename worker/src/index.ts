@@ -26,11 +26,19 @@ import {
 } from "./services/ResumeService";
 
 /**
- * Entry point for the whole Worker. wrangler.jsonc's `assets` config with
- * `run_worker_first: ["/api/*"]` guarantees every request under /api/*
- * reaches this fetch handler; everything else is served as a static file
- * from client/dist (or falls back to index.html for client-side routes),
- * without ever invoking this code — see wrangler.jsonc for details.
+ * Entry point for the whole Worker. wrangler.jsonc's `run_worker_first` is
+ * `false` (the installed Wrangler version's schema only supports a plain
+ * boolean here, not a per-route array), which means Cloudflare tries a
+ * static-asset match first for every request, but still invokes this fetch
+ * handler whenever nothing under client/dist matches — including
+ * client-side-only routes like /r/:slug (the public resume link) on a
+ * fresh page load rather than in-app navigation. Hono's own 404 (below)
+ * used to short-circuit those with a hardcoded JSON error instead of
+ * letting them reach the real page; the notFound handler now falls back to
+ * the ASSETS binding for anything outside /api/*, which serves the actual
+ * static file if one exists, or index.html (via `not_found_handling:
+ * "single-page-application"` in wrangler.jsonc) so React Router can take
+ * over client-side. Only /api/* misses still return the JSON 404.
  */
 const app = new Hono<{ Bindings: Env }>();
 
@@ -80,6 +88,11 @@ app.onError((err, c) => {
   return c.json({ error: err.message || "Unexpected server error.", ...(reason ? { reason } : {}) }, status);
 });
 
-app.notFound((c) => c.json({ error: "Route not found." }, 404));
+app.notFound((c) => {
+  if (c.req.path.startsWith("/api/")) {
+    return c.json({ error: "Route not found." }, 404);
+  }
+  return c.env.ASSETS.fetch(c.req.raw);
+});
 
 export default app;
