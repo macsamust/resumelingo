@@ -573,12 +573,12 @@ export function ResumePreview({
             <div className="tpl-mono-side">
               {sidebarContact}
               {educationBlock}
-              {bulletsBlock}
               {skillsAndToolsBlock}
             </div>
             <div className="tpl-mono-main">
               {summaryBlock}
               {experienceBlock}
+              {bulletsBlock}
               {awardsBlock}
             </div>
           </div>
