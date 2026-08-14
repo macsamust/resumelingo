@@ -338,7 +338,7 @@ export function ResumeEditPage() {
             </button>
           </div>
 
-          <CollapsibleSection title="Details" forceOpen={forceOpen}>
+          <CollapsibleSection title="Info" forceOpen={forceOpen}>
             <div className="field">
               <label>Your full name</label>
               <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
