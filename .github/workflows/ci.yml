@@ -1,0 +1,77 @@
+name: CI
+
+# Runs on every push to main and every PR targeting main. The "deploy" job
+# only fires on a push to main (not PRs) and only after "typecheck" passes.
+#
+# No automated tests exist yet in this repo (server/, worker/, and client/
+# all lack a "test" script) — this workflow only catches type errors and
+# build failures. Add a "test" step per project once real tests exist.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            worker/package-lock.json
+            client/package-lock.json
+
+      # Both server/ and worker/ depend on this via a `file:../shared`
+      # reference (see shared/package.json) — has to be built before either
+      # of them can resolve it. server's/worker's own npm scripts also have
+      # prebuild/predeploy/pretypecheck hooks that redo this, so this step
+      # is really just making the first, explicit build fast and visible in
+      # the log; the per-project hooks below are what make it actually safe
+      # even if someone reorders these steps later.
+      - name: Build shared types package
+        run: npm install --prefix shared && npm run build --prefix shared
+
+      - name: server — install & build
+        run: npm ci --prefix server && npm run build --prefix server
+
+      - name: worker — install & typecheck
+        run: npm ci --prefix worker && npm run typecheck --prefix worker
+
+      - name: client — install, typecheck & build
+        run: |
+          npm ci --prefix client
+          npm run typecheck --prefix client
+          npm run build --prefix client
+
+  deploy:
+    needs: typecheck
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            worker/package-lock.json
+            client/package-lock.json
+
+      - name: Build shared types package
+        run: npm install --prefix shared && npm run build --prefix shared
+
+      - name: Build client
+        run: npm ci --prefix client && npm run build --prefix client
+
+      - name: Deploy worker
+        run: npm ci --prefix worker && npm run deploy --prefix worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
