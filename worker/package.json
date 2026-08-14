@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "predev": "npm install --prefix ../shared && npm run build --prefix ../shared",
     "dev": "wrangler dev",
+    "predeploy": "npm install --prefix ../shared && npm run build --prefix ../shared",
     "deploy": "wrangler deploy",
     "db:create": "wrangler d1 create resumelingo-db",
     "db:migrate:local": "wrangler d1 migrations apply resumelingo-db --local",
@@ -13,9 +15,11 @@
     "secret:stripe-webhook": "wrangler secret put STRIPE_WEBHOOK_SECRET",
     "secret:stripe-price-professional": "wrangler secret put STRIPE_PRICE_PROFESSIONAL",
     "secret:stripe-price-premium": "wrangler secret put STRIPE_PRICE_PREMIUM",
+    "pretypecheck": "npm install --prefix ../shared && npm run build --prefix ../shared",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@resumelingo/shared": "file:../shared",
     "hono": "^4.6.3",
     "jose": "^5.9.3",
     "bcryptjs": "^2.4.3",

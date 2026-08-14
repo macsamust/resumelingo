@@ -4,13 +4,16 @@
   "description": "ResumeLingo backend API — Express + TypeScript, object-oriented (models/repositories/services/controllers), Postgres via `pg`",
   "main": "dist/index.js",
   "scripts": {
+    "predev": "npm install --prefix ../shared && npm run build --prefix ../shared",
     "dev": "tsx watch src/index.ts",
+    "prebuild": "npm install --prefix ../shared && npm run build --prefix ../shared",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "seed": "tsx src/db/seed.ts",
     "export:accounts": "tsx scripts/exportAccountsToD1.ts"
   },
   "dependencies": {
+    "@resumelingo/shared": "file:../shared",
     "pg": "^8.13.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
