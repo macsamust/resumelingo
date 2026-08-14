@@ -189,7 +189,7 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
   monochrome: {
     family: "photo-sidebar-underline",
     accent: "#1f2937", accentSoft: "#f2f3f4", font: SANS_MODERN,
-    flow: "summary-first", summaryLabel: "Summary", bulletsLabel: "Accomplishments",
+    flow: "summary-first", summaryLabel: "Summary", bulletsLabel: "Achievements",
   },
 
   // Photo + name header over an intro paragraph, then a two-column grid of
