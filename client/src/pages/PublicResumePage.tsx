@@ -6,6 +6,7 @@ import { formatMonth, ResumePreview, sortAwards, sortByDateRange } from "../comp
 import { CLEARANCE_OPTIONS, recruiterOptionLabel, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
 import { groupAchievementsByExperience } from "../utils/starBullet";
 import { PublicResumeSkeleton } from "../components/common/PublicResumeSkeleton";
+import { getTemplateStyle } from "../config/templateStyles";
 
 /**
  * Turns a camelCase profession-question key (e.g. "cloudPlatforms",
@@ -39,7 +40,8 @@ function resumeToPlainText(resume: PublicResume): string {
 
   // Combined-format mode nests each achievement's bullet under the job it's
   // linked to, matching the on-screen preview (see ResumePreview.tsx). The
-  // default path below is unchanged: a flat "HIGHLIGHTS" section.
+  // default path below is unchanged: a flat bulletsLabel-headed section.
+  const bulletsLabel = getTemplateStyle(resume.templateKey).bulletsLabel.toUpperCase();
   const grouped = resume.combineExperienceFormat
     ? groupAchievementsByExperience(resume.achievements ?? [], resume.experience ?? [])
     : null;
@@ -73,7 +75,7 @@ function resumeToPlainText(resume: PublicResume): string {
 
   const highlightBullets = grouped ? grouped.unlinked : resume.generatedBullets ?? [];
   if (highlightBullets.length > 0) {
-    lines.push("HIGHLIGHTS");
+    lines.push(bulletsLabel);
     for (const bullet of highlightBullets) lines.push(`- ${bullet}`);
     lines.push("");
   }
