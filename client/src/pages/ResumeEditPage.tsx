@@ -499,7 +499,7 @@ export function ResumeEditPage() {
             />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Answers" forceOpen={forceOpen}>
+          <CollapsibleSection title="Additional Details" forceOpen={forceOpen}>
             {professionDetail && (
               <DynamicQuestionForm
                 questions={professionDetail.questions}
