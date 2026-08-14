@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { ResumeAnalyticsPanel } from "../components/dashboard/ResumeAnalyticsPanel";
+import { DashboardSkeleton } from "../components/dashboard/DashboardSkeleton";
 import { useAuth } from "../context/AuthContext";
 import { catalogApi, resumeApi } from "../api";
 import { DashboardSummary } from "../types";
@@ -117,7 +118,7 @@ export function DashboardPage() {
   if (loading) {
     return (
       <AppShell>
-        <div className="spinner-page">Loading your dashboard…</div>
+        <DashboardSkeleton />
       </AppShell>
     );
   }

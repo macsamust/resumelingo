@@ -806,6 +806,15 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .spinner-page { display: flex; align-items: center; justify-content: center; min-height: 50vh; color: var(--muted); }
 .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
 
+/* Shimmering placeholder block — see components/common/Skeleton.tsx. Used
+   to build page-specific skeleton screens (DashboardSkeleton.tsx is the
+   first) instead of a plain "Loading…" spinner. */
+.skeleton { background: linear-gradient(90deg, #eef0f4 25%, #e4e7ec 37%, #eef0f4 63%); background-size: 400% 100%; animation: skeleton-shimmer 1.4s ease infinite; }
+@keyframes skeleton-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; background: #eef0f4; }
+}
+
 /* Admin console — reuses .app-shell/.app-sidebar/.app-content/.field/.btn/.form-error from the rest of the app. */
 .btn-sm { padding: 6px 10px; font-size: 13px; border-radius: 8px; }
 .admin-sidebar-head { margin-bottom: 18px; }
