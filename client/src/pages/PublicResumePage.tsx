@@ -5,6 +5,7 @@ import { PublicResume, ReferenceEntry } from "../types";
 import { formatMonth, ResumePreview, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
 import { CLEARANCE_OPTIONS, recruiterOptionLabel, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
 import { groupAchievementsByExperience } from "../utils/starBullet";
+import { PublicResumeSkeleton } from "../components/common/PublicResumeSkeleton";
 
 /**
  * Turns a camelCase profession-question key (e.g. "cloudPlatforms",
@@ -237,7 +238,7 @@ export function PublicResumePage() {
     load(password);
   };
 
-  if (loading) return <div className="spinner-page">Loading resume…</div>;
+  if (loading) return <PublicResumeSkeleton />;
 
   if (passwordRequired) {
     return (

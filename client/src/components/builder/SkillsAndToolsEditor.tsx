@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { catalogApi } from "../../api";
 import { SkillOrTool } from "../../types";
+import { Skeleton } from "../common/Skeleton";
 
 interface Props {
   professionKey: string;
@@ -90,7 +91,11 @@ export function SkillsAndToolsEditor({ professionKey, professionLabel, value, on
         Suggested for <strong>{professionLabel}</strong> — click a keyword to add it.
       </p>
       {loading ? (
-        <p className="hero-note">Loading suggestions…</p>
+        <div className="skill-picker-chips">
+          {[70, 55, 90, 65, 80, 50].map((w, i) => (
+            <Skeleton key={i} width={w} height={30} radius={999} />
+          ))}
+        </div>
       ) : (
         <>
           {renderGroup("Skills", "skill", skills)}

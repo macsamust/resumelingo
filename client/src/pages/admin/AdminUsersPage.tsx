@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import { AdminShell } from "../../components/layout/AdminShell";
 import { nextSortState, SortableHeader, SortState } from "../../components/admin/SortableHeader";
 import { AdminTableSkeleton } from "../../components/admin/AdminTableSkeleton";
+import { Skeleton } from "../../components/common/Skeleton";
 import { adminApi, ApiError } from "../../api";
 import { AdminUserSummary, Resume, SubscriptionTier } from "../../types";
 
@@ -209,7 +210,14 @@ export function AdminUsersPage() {
                   <tr className="admin-expanded-row" key={`${user.id}-detail`}>
                     <td colSpan={7}>
                       {!resumesById[user.id] ? (
-                        <p className="hero-note">Loading resumes…</p>
+                        <ul className="admin-resume-list">
+                          {[0, 1].map((i) => (
+                            <li key={i}>
+                              <Skeleton width={180} height={13} radius={4} />
+                              <Skeleton width={220} height={12} radius={4} />
+                            </li>
+                          ))}
+                        </ul>
                       ) : resumesById[user.id].length === 0 ? (
                         <p className="hero-note">No resumes yet.</p>
                       ) : (

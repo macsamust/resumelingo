@@ -8,6 +8,7 @@ import { AwardsEditor } from "../components/builder/AwardsEditor";
 import { AchievementEditor } from "../components/builder/AchievementEditor";
 import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { ResumePreview } from "../components/builder/ResumePreview";
+import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
 import { ApiError, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL } from "../utils/templateAccess";
@@ -124,7 +125,7 @@ export function ResumeBuilderPage() {
   if (!limitStatus) {
     return (
       <AppShell>
-        <div className="spinner-page">Loading…</div>
+        <ResumeEditSkeleton />
       </AppShell>
     );
   }
