@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AdminShell } from "../../components/layout/AdminShell";
 import { nextSortState, SortableHeader, SortState } from "../../components/admin/SortableHeader";
+import { AdminTableSkeleton } from "../../components/admin/AdminTableSkeleton";
 import { adminApi, catalogApi, ApiError } from "../../api";
 import { AdminSkillSuggestion, ProfessionSummary } from "../../types";
 
@@ -188,7 +189,7 @@ export function AdminSkillSuggestionsPage() {
       </form>
 
       {loading ? (
-        <div className="spinner-page">Loading skill suggestions…</div>
+        <AdminTableSkeleton columns={5} />
       ) : (
         <>
           <div className="admin-save-all-row">

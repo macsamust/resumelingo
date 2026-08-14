@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { AdminShell } from "../../components/layout/AdminShell";
 import { nextSortState, SortableHeader, SortState } from "../../components/admin/SortableHeader";
+import { AdminTableSkeleton } from "../../components/admin/AdminTableSkeleton";
 import { adminApi, ApiError } from "../../api";
 import { AdminUserSummary, Resume, SubscriptionTier } from "../../types";
 
@@ -148,7 +149,7 @@ export function AdminUsersPage() {
       </div>
       {error && <div className="form-error">{error}</div>}
       {loading ? (
-        <div className="spinner-page">Loading users…</div>
+        <AdminTableSkeleton columns={7} />
       ) : (
         <table className="admin-table">
           <thead>

@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { AdminShell } from "../../components/layout/AdminShell";
 import { adminApi, ApiError } from "../../api";
+import { AdminPlanGridSkeleton } from "../../components/admin/AdminPlanGridSkeleton";
 import { AdminPlan } from "../../types";
 
 interface DraftPlan {
@@ -79,7 +80,7 @@ export function AdminPlansPage() {
       </p>
       {error && <div className="form-error">{error}</div>}
       {loading ? (
-        <div className="spinner-page">Loading plans…</div>
+        <AdminPlanGridSkeleton />
       ) : (
         <div className="admin-plan-grid">
           {plans.map((plan) => {

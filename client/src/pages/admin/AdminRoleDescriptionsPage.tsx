@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { AdminShell } from "../../components/layout/AdminShell";
 import { adminApi, catalogApi, ApiError } from "../../api";
+import { AdminListSkeleton } from "../../components/admin/AdminListSkeleton";
 import { AdminRoleDescription, ProfessionSummary } from "../../types";
 
 interface Draft {
@@ -290,7 +291,7 @@ export function AdminRoleDescriptionsPage() {
       </form>
 
       {loading ? (
-        <div className="spinner-page">Loading role descriptions…</div>
+        <AdminListSkeleton rows={5} />
       ) : (
         <>
           <h2 style={{ marginTop: 32 }}>Named professions</h2>

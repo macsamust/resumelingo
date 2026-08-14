@@ -11,6 +11,7 @@ import { SkillsAndToolsEditor } from "../components/builder/SkillsAndToolsEditor
 import { ReferencesEditor } from "../components/builder/ReferencesEditor";
 import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { ResumePreview } from "../components/builder/ResumePreview";
+import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
 import { ApiError, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL } from "../utils/templateAccess";
@@ -285,7 +286,7 @@ export function ResumeEditPage() {
   if (loading) {
     return (
       <AppShell>
-        <div className="spinner-page">Loading resume…</div>
+        <ResumeEditSkeleton />
       </AppShell>
     );
   }

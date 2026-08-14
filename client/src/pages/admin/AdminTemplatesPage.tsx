@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AdminShell } from "../../components/layout/AdminShell";
 import { nextSortState, SortableHeader, SortState } from "../../components/admin/SortableHeader";
+import { AdminTableSkeleton } from "../../components/admin/AdminTableSkeleton";
 import { adminApi, ApiError } from "../../api";
 import { AdminTemplate, TemplateCategory } from "../../types";
 
@@ -213,7 +214,7 @@ export function AdminTemplatesPage() {
       </form>
 
       {loading ? (
-        <div className="spinner-page">Loading templates…</div>
+        <AdminTableSkeleton columns={7} />
       ) : (
         <>
           <div className="admin-save-all-row">
