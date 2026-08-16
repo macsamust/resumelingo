@@ -24,6 +24,8 @@ import {
   ResumeLimitError,
   ResumeNotFoundError,
   TemplateAccessError,
+  VersionHistoryAccessError,
+  VersionNotFoundError,
   VisibilityAccessError,
 } from "./services/ResumeService";
 
@@ -86,6 +88,10 @@ app.onError((err, c) => {
       ? 402
       : err instanceof ActiveToggleAccessError
       ? 402
+      : err instanceof VersionHistoryAccessError
+      ? 402
+      : err instanceof VersionNotFoundError
+      ? 404
       : err instanceof PhotoTooLargeError
       ? 400
       : 500;

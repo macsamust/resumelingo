@@ -9,6 +9,8 @@ import {
   ResumeLimitError,
   ResumeNotFoundError,
   TemplateAccessError,
+  VersionHistoryAccessError,
+  VersionNotFoundError,
   VisibilityAccessError,
 } from "../services/ResumeService";
 
@@ -22,6 +24,8 @@ const STATUS_BY_ERROR = [
   { type: VisibilityAccessError, status: 402 },
   { type: CloneAccessError, status: 402 },
   { type: ActiveToggleAccessError, status: 402 },
+  { type: VersionHistoryAccessError, status: 402 },
+  { type: VersionNotFoundError, status: 404 },
   { type: PhotoTooLargeError, status: 400 },
 ];
 

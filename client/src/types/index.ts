@@ -322,6 +322,13 @@ export interface ResumeAnalytics {
   } | null;
 }
 
+/** One entry in a resume's version history — see ResumeApi.listVersions/restoreVersion. Professional/Premium only. Only the title is used for display; the rest of the snapshot's content isn't needed until the version is actually restored (server-side). */
+export interface ResumeVersion {
+  id: string;
+  createdAt: string;
+  snapshot: { title: string };
+}
+
 export interface DashboardSummary {
   myResumes: Resume[];
   sharedLinks: { title: string; slug: string; visibility: LinkVisibility }[];
@@ -329,6 +336,8 @@ export interface DashboardSummary {
   profileStrengthScore: number;
   suggestedImprovements: string[];
   resumeAnalytics: ResumeAnalytics | null;
+  /** Recent public views of Recruiter-Mode-enabled resumes only, newest first — see NotificationBell.tsx. Always [] for accounts with no Recruiter Mode resumes or no recent views. */
+  recentViews: { resumeId: string; title: string; viewedAt: string }[];
   subscription: {
     tier: SubscriptionTier;
     planName: string;

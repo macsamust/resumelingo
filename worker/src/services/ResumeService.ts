@@ -1,6 +1,7 @@
 import { ResumeRepository, UpdateResumeInput } from "../repositories/ResumeRepository";
 import { UserRepository } from "../repositories/UserRepository";
 import { ResumeAnalyticsRepository } from "../repositories/ResumeAnalyticsRepository";
+import { ResumeVersionRecord, ResumeVersionRepository } from "../repositories/ResumeVersionRepository";
 import { IContentGenerator } from "./ContentGenerator";
 import { ICoverLetterGenerator, pickTopExperience, RuleBasedCoverLetterGenerator } from "./CoverLetterGenerator";
 import { Resume } from "../models/Resume";
@@ -52,6 +53,8 @@ export class VisibilityAccessError extends Error {}
 export class PhotoTooLargeError extends Error {}
 export class CloneAccessError extends Error {}
 export class ActiveToggleAccessError extends Error {}
+export class VersionHistoryAccessError extends Error {}
+export class VersionNotFoundError extends Error {}
 
 // ~2MB of base64 text comfortably covers a photo resized/compressed
 // client-side before upload; this is a server-side backstop in case that
@@ -108,6 +111,14 @@ function assertActiveToggleAllowed(tier: User["subscriptionTier"]): void {
   );
 }
 
+/** Throws unless `tier` is Professional or Premium — same gate as Clone, the closest existing "extra copy of your work" perk. */
+function assertVersionHistoryAllowed(tier: User["subscriptionTier"]): void {
+  if (tier === SubscriptionTier.Professional || tier === SubscriptionTier.Premium) return;
+  throw new VersionHistoryAccessError(
+    "Version history requires the Professional or Premium plan. Upgrade to use this feature."
+  );
+}
+
 export interface CreateResumeRequest {
   fullName?: string;
   contactEmail?: string;
@@ -143,6 +154,7 @@ export class ResumeService {
     private readonly users: UserRepository,
     private readonly generator: IContentGenerator,
     private readonly analytics: ResumeAnalyticsRepository,
+    private readonly versions: ResumeVersionRepository,
     private readonly coverLetterGenerator: ICoverLetterGenerator = new RuleBasedCoverLetterGenerator()
   ) {}
 
@@ -226,6 +238,14 @@ export class ResumeService {
     // Computed from the raw request keys before any of the fields below get
     // filled in with computed defaults — see LINK_ONLY_UPDATE_KEYS.
     const isLinkOnlyChange = Object.keys(input).every((key) => LINK_ONLY_UPDATE_KEYS.has(key));
+
+    // Version history snapshots the *pre-update* content — same "link-only
+    // changes don't count" filter as bumpUpdatedAt below, so toggling
+    // Activate/Deactivate doesn't spend one of the 20 kept versions on a
+    // change that has nothing to do with the resume's actual content.
+    if (!isLinkOnlyChange) {
+      await this.versions.snapshot(existing);
+    }
 
     const templateChanging = !!input.templateKey && input.templateKey !== existing.templateKey;
     const visibilityChanging = !!input.visibility && input.visibility !== existing.visibility;
@@ -375,6 +395,65 @@ export class ResumeService {
 
     const cloned = await this.resumes.clone(record, { title: input.title, templateKey });
     const resume = new Resume(cloned);
+    await this.analytics.recordScoreSnapshot(resume.id, resume.strengthScore);
+    return resume;
+  }
+
+  /** Newest first — see ResumeVersionRepository.listForResume. Professional/Premium-gated, matching Clone's tier. */
+  async listVersions(user: User, resumeId: string): Promise<ResumeVersionRecord[]> {
+    await this.getOwned(user.id, resumeId); // throws if not found/owned
+    assertVersionHistoryAllowed(user.subscriptionTier);
+    return this.versions.listForResume(resumeId);
+  }
+
+  /**
+   * Restores a resume's content to how it looked in a past version.
+   * Snapshots the *current* state first — same as update()'s "snapshot
+   * before changing" pattern — so a restore is itself always undoable, not
+   * a dead end. Only content fields change; visibility/accessPassword/active
+   * are untouched (see ResumeVersionSnapshot's field list).
+   */
+  async restoreVersion(user: User, resumeId: string, versionId: string): Promise<Resume> {
+    const current = await this.getOwned(user.id, resumeId); // throws if not found/owned
+    assertVersionHistoryAllowed(user.subscriptionTier);
+
+    const version = await this.versions.findById(resumeId, versionId);
+    if (!version) throw new VersionNotFoundError("That version could not be found.");
+
+    await this.versions.snapshot(current);
+
+    const s = version.snapshot;
+    const updated = await this.resumes.update(resumeId, {
+      fullName: s.fullName,
+      contactEmail: s.contactEmail,
+      contactPhone: s.contactPhone,
+      contactLinkedIn: s.contactLinkedIn,
+      photoUrl: s.photoUrl,
+      title: s.title,
+      profession: s.profession,
+      templateKey: s.templateKey,
+      coverLetterEnabled: s.coverLetterEnabled,
+      generatedCoverLetter: s.generatedCoverLetter,
+      recruiterLocation: s.recruiterLocation,
+      recruiterAvailability: s.recruiterAvailability,
+      recruiterClearance: s.recruiterClearance,
+      recruiterWorkAuthorization: s.recruiterWorkAuthorization,
+      recruiterExpectedSalary: s.recruiterExpectedSalary,
+      recruiterRemotePreference: s.recruiterRemotePreference,
+      combineExperienceFormat: s.combineExperienceFormat,
+      answers: s.answers,
+      experience: s.experience,
+      education: s.education,
+      awards: s.awards,
+      achievements: s.achievements,
+      skillsAndTools: s.skillsAndTools,
+      referencesEnabled: s.referencesEnabled,
+      references: s.references,
+      referencesRecruiterModeOnly: s.referencesRecruiterModeOnly,
+      generatedSummary: s.generatedSummary,
+      generatedBullets: s.generatedBullets,
+    });
+    const resume = new Resume(updated!);
     await this.analytics.recordScoreSnapshot(resume.id, resume.strengthScore);
     return resume;
   }

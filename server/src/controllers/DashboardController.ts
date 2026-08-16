@@ -53,6 +53,7 @@ export class DashboardController {
     // only, same tiering as the rest of the Premium-only dashboard content.
     const resumeAnalytics =
       user.subscriptionTier === SubscriptionTier.Premium ? await this.buildResumeAnalytics(resumes) : null;
+    const recentViews = await this.buildRecentViews(resumes);
 
     res.json({
       myResumes: resumes.map((r) => r.toJSON()),
@@ -61,9 +62,29 @@ export class DashboardController {
       profileStrengthScore: this.averageStrengthScore(resumes),
       suggestedImprovements: this.suggestImprovements(resumes),
       resumeAnalytics,
+      recentViews,
       subscription: usage,
     });
   };
+
+  /**
+   * Recent public views of this user's Recruiter-Mode-enabled resumes only —
+   * feeds the Dashboard's NotificationBell. Not tied to the Premium-only
+   * resumeAnalytics gate above: Recruiter Mode itself is already Premium-only
+   * (see ResumeService.update), so this is automatically scoped to Premium
+   * accounts without a second tier check — a Starter/Professional account
+   * simply has no Recruiter-Mode resumes to match here.
+   */
+  private async buildRecentViews(resumes: Resume[]): Promise<{ resumeId: string; title: string; viewedAt: string }[]> {
+    const recruiterModeResumes = resumes.filter((r) => r.recruiterModeEnabled);
+    if (recruiterModeResumes.length === 0) return [];
+    const titleById = new Map(recruiterModeResumes.map((r) => [r.id, r.title]));
+    const rows = await this.analyticsRepo.recentViews(
+      recruiterModeResumes.map((r) => r.id),
+      10
+    );
+    return rows.map((row) => ({ resumeId: row.resumeId, title: titleById.get(row.resumeId) ?? "", viewedAt: row.viewedAt }));
+  }
 
   // Per-resume score now lives on the model (Resume.strengthScore) so it's
   // computed in one place and exposed on every resume's toJSON() too (see

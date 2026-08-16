@@ -12,6 +12,7 @@ import { ReferencesEditor } from "../components/builder/ReferencesEditor";
 import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { ResumePreview } from "../components/builder/ResumePreview";
 import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
+import { VersionHistoryPanel } from "../components/common/VersionHistoryPanel";
 import { ApiError, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL } from "../utils/templateAccess";
@@ -102,6 +103,12 @@ export function ResumeEditPage() {
   // client/src/utils/atsCheck.ts for why this stays entirely client-side
   // (no save, no network call, nothing to protect server-side).
   const isPremium = user?.subscriptionTier === "premium";
+
+  // Version History is a Professional/Premium perk — same tier as Clone,
+  // the closest existing "extra copy of your work" feature. Enforced again
+  // server-side (see ResumeService.assertVersionHistoryAllowed); this just
+  // keeps the section from appearing for an account that can't use it.
+  const canUseVersionHistory = user?.subscriptionTier === "professional" || isPremium;
 
   // The photo upload only applies to templates that actually render a photo
   // (Portrait, Designer, Monochrome, Showcase) — hidden for every other template.
@@ -732,6 +739,16 @@ export function ResumeEditPage() {
                   </p>
                 </>
               )}
+            </CollapsibleSection>
+          )}
+
+          {canUseVersionHistory && (
+            <CollapsibleSection title="Version History" forceOpen={forceOpen}>
+              <p className="hero-note" style={{ marginBottom: 16 }}>
+                A version is saved automatically every time you edit and save this resume — restore any of the last
+                20 to undo changes.
+              </p>
+              {id && <VersionHistoryPanel resumeId={id} />}
             </CollapsibleSection>
           )}
 

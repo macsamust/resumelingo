@@ -141,4 +141,20 @@ export class ResumeController {
     await resumeAnalyticsRepository.recordKeywordCheck(c.req.param("id")!, cleaned);
     return c.body(null, 204);
   };
+
+  /** GET /api/resumes/:id/versions — newest first. Professional/Premium-gated (see ResumeService.listVersions). */
+  listVersions = async (c: Context<AppEnv>) => {
+    const { resumeService } = c.get("services");
+    const user = c.get("user")!;
+    const versions = await resumeService.listVersions(user, c.req.param("id")!);
+    return c.json({ versions });
+  };
+
+  /** POST /api/resumes/:id/versions/:versionId/restore — reverts this resume's content to a past version, itself creating a new version first so the restore is undoable. */
+  restoreVersion = async (c: Context<AppEnv>) => {
+    const { resumeService } = c.get("services");
+    const user = c.get("user")!;
+    const resume = await resumeService.restoreVersion(user, c.req.param("id")!, c.req.param("versionId")!);
+    return c.json({ resume: resume.toJSON() });
+  };
 }

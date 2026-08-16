@@ -14,5 +14,7 @@ resumes.post("/:id/clone", controller.clone);
 resumes.put("/:id", controller.update);
 resumes.delete("/:id", controller.remove);
 resumes.post("/:id/keyword-check", controller.recordKeywordCheck);
+resumes.get("/:id/versions", controller.listVersions);
+resumes.post("/:id/versions/:versionId/restore", controller.restoreVersion);
 
 export default resumes;

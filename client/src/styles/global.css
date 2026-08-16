@@ -260,6 +260,60 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .resume-menu-dropdown button.danger { color: #b91c1c; }
 .resume-menu-dropdown button.danger:hover { background: #fee2e2; }
 
+/* Dashboard header bell — recent Recruiter Mode views (see
+   components/dashboard/NotificationBell.tsx). Reuses the same
+   trigger/dropdown/outside-click pattern as .resume-menu above. */
+.notification-bell { position: relative; }
+.notification-bell-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+}
+.notification-bell-trigger:hover { border-color: var(--indigo); }
+.notification-bell-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--indigo);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.notification-bell-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 300px;
+  max-height: 340px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px -8px rgba(15,23,42,.18);
+  z-index: 10;
+}
+.notification-bell-header { padding: 12px 16px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); border-bottom: 1px solid var(--border); }
+.notification-bell-list { list-style: none; margin: 0; padding: 0; }
+.notification-bell-list li { display: flex; flex-direction: column; gap: 2px; padding: 10px 16px; font-size: 13.5px; color: var(--navy); }
+.notification-bell-list li + li { border-top: 1px solid var(--border); }
+
 /* Activate/Deactivate row — a sliding switch + status text pinned to the
    bottom of a "My Resumes" card (Professional/Premium only, see
    DashboardPage.tsx). Separated from .resume-item-actions above by a
@@ -867,6 +921,13 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .admin-expanded-row td { background: #f8fafc; }
 .admin-resume-list { display: flex; flex-direction: column; gap: 8px; }
 .admin-resume-list li { display: flex; justify-content: space-between; gap: 16px; font-size: 14px; }
+/* Edit Resume's "Version History" section — see components/common/VersionHistoryPanel.tsx. */
+.version-history-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.version-history-list li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 0; }
+.version-history-list li + li { border-top: 1px solid var(--border); }
+.version-history-list li > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.version-history-title { font-size: 14px; font-weight: 600; color: var(--navy); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .admin-plan-warning { margin-bottom: 20px; max-width: 720px; }
 .admin-plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .admin-plan-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; }

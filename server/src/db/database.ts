@@ -284,6 +284,27 @@ export async function migrate(): Promise<void> {
     );
     CREATE INDEX IF NOT EXISTS resume_keyword_checks_resume_idx ON resume_keyword_checks ("resumeId");
 
+    -- Resume version history — a lighter, automatic companion to Clone's
+    -- manual "save a copy" (see ResumeRepository.clone). "snapshot" is a
+    -- JSON-serialized ResumeVersionSnapshot (content fields only —
+    -- fullName, title, profession, templateKey, answers, experience,
+    -- education, awards, achievements, skillsAndTools, generatedSummary/
+    -- Bullets/CoverLetter, coverLetterEnabled, combineExperienceFormat,
+    -- references, referencesEnabled, referencesRecruiterModeOnly —
+    -- deliberately NOT visibility/accessPassword/active, since a version is
+    -- about what the resume says, not how its link is currently shared).
+    -- See ResumeVersionRepository.snapshot, which also caps history at the
+    -- most recent 20 rows per resume, pruning older ones on write.
+    -- ON DELETE CASCADE so deleting a resume doesn't orphan its history.
+    CREATE TABLE IF NOT EXISTS resume_versions (
+      "id" TEXT PRIMARY KEY,
+      "resumeId" TEXT NOT NULL REFERENCES resumes("id") ON DELETE CASCADE,
+      "snapshot" TEXT NOT NULL,
+      "createdAt" TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS resume_versions_resume_idx ON resume_versions ("resumeId");
+    CREATE INDEX IF NOT EXISTS resume_versions_created_at_idx ON resume_versions ("resumeId", "createdAt");
+
     -- "Skills & Tools" suggestion keywords (Edit Resume, Portrait template's
     -- picker — see components/builder/SkillsAndToolsEditor.tsx) move from a
     -- static per-profession config array to a DB-backed table here, same

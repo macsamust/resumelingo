@@ -2,6 +2,7 @@ import { AdminTokenPayload, AuthTokenPayload, Env } from "../types";
 import { UserRepository } from "../repositories/UserRepository";
 import { ResumeRepository } from "../repositories/ResumeRepository";
 import { ResumeAnalyticsRepository } from "../repositories/ResumeAnalyticsRepository";
+import { ResumeVersionRepository } from "../repositories/ResumeVersionRepository";
 import { AdminRepository } from "../repositories/AdminRepository";
 import { TemplateRepository } from "../repositories/TemplateRepository";
 import { PlanRepository } from "../repositories/PlanRepository";
@@ -52,6 +53,7 @@ export function createServices(env: Env): Services {
   const skillSuggestionRepository = new SkillSuggestionRepository(env.DB);
   const roleDescriptionRepository = new RoleDescriptionRepository(env.DB);
   const resumeAnalyticsRepository = new ResumeAnalyticsRepository(env.DB);
+  const resumeVersionRepository = new ResumeVersionRepository(env.DB);
 
   const tokenService = new TokenService<AuthTokenPayload>(env.JWT_SECRET);
   const adminTokenService = new TokenService<AdminTokenPayload>(env.ADMIN_JWT_SECRET || env.JWT_SECRET);
@@ -59,7 +61,7 @@ export function createServices(env: Env): Services {
   const contentGenerator = new RuleBasedContentGenerator(roleDescriptionRepository);
 
   const authService = new AuthService(userRepo, tokenService);
-  const resumeService = new ResumeService(resumeRepo, userRepo, contentGenerator, resumeAnalyticsRepository);
+  const resumeService = new ResumeService(resumeRepo, userRepo, contentGenerator, resumeAnalyticsRepository, resumeVersionRepository);
   const stripeService = new StripeService(env.STRIPE_SECRET_KEY);
   const subscriptionService = new SubscriptionService(
     userRepo,

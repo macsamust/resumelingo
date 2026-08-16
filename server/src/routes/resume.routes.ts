@@ -14,5 +14,7 @@ router.post("/:id/clone", asyncHandler(controller.clone));
 router.put("/:id", asyncHandler(controller.update));
 router.delete("/:id", asyncHandler(controller.remove));
 router.post("/:id/keyword-check", asyncHandler(controller.recordKeywordCheck));
+router.get("/:id/versions", asyncHandler(controller.listVersions));
+router.post("/:id/versions/:versionId/restore", asyncHandler(controller.restoreVersion));
 
 export default router;

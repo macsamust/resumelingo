@@ -119,4 +119,16 @@ export class ResumeController {
     await this.analytics.recordKeywordCheck(req.params.id, cleaned);
     res.status(204).send();
   };
+
+  /** GET /api/resumes/:id/versions — newest first. Professional/Premium-gated (see ResumeService.listVersions). */
+  listVersions = async (req: AuthenticatedRequest, res: Response) => {
+    const versions = await this.resumeService.listVersions(req.user!, req.params.id);
+    res.json({ versions });
+  };
+
+  /** POST /api/resumes/:id/versions/:versionId/restore — reverts this resume's content to a past version, itself creating a new version first so the restore is undoable. */
+  restoreVersion = async (req: AuthenticatedRequest, res: Response) => {
+    const resume = await this.resumeService.restoreVersion(req.user!, req.params.id, req.params.versionId);
+    res.json({ resume: resume.toJSON() });
+  };
 }

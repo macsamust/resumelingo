@@ -18,6 +18,11 @@ export interface KeywordGapCount {
   count: number;
 }
 
+export interface RecentViewRow {
+  resumeId: string;
+  viewedAt: string;
+}
+
 /**
  * D1 port of server/'s ResumeAnalyticsRepository (see
  * server/src/repositories/ResumeAnalyticsRepository.ts) — same two purposes
@@ -124,6 +129,28 @@ export class ResumeAnalyticsRepository {
       newest: r.score,
       oldest: oldestByResume.get(r.resumeId) ?? r.score,
     }));
+  }
+
+  /**
+   * Most recent view events across the given resumes, newest first — feeds
+   * NotificationBell's "Someone viewed [Resume Title] 10 minutes ago" list
+   * (see DashboardController, which pre-filters resumeIds down to just
+   * Recruiter-Mode-enabled resumes before calling this). Deliberately
+   * unfiltered by date/read-state here — no "recent" cutoff or "seen"
+   * tracking exists yet, so the caller's `limit` is the only bound.
+   */
+  async recentViews(resumeIds: string[], limit = 10): Promise<RecentViewRow[]> {
+    if (resumeIds.length === 0) return [];
+    const { results } = await this.db
+      .prepare(
+        `SELECT "resumeId", "viewedAt" FROM resume_views
+         WHERE "resumeId" IN (${this.placeholders(resumeIds)})
+         ORDER BY "viewedAt" DESC
+         LIMIT ?`
+      )
+      .bind(...resumeIds, limit)
+      .all<RecentViewRow>();
+    return results;
   }
 
   /** Logs one ATS Check keyword match's missing-keyword list — see ResumeController.recordKeywordCheck. Caps the list itself is enforced by the caller, not here. */

@@ -19,6 +19,11 @@ export interface KeywordGapCount {
   count: number;
 }
 
+export interface RecentViewRow {
+  resumeId: string;
+  viewedAt: string;
+}
+
 /**
  * Backs the Premium dashboard's "Resume Analytics" section (view trend +
  * strength-score trend). Deliberately a separate repository from
@@ -95,6 +100,21 @@ export class ResumeAnalyticsRepository {
       newest: r.score,
       oldest: oldestByResume.get(r.resumeId) ?? r.score,
     }));
+  }
+
+  /**
+   * Most recent view events across the given resumes, newest first — feeds
+   * NotificationBell's "Someone viewed [Resume Title] 10 minutes ago" list
+   * (see DashboardController, which pre-filters resumeIds down to just
+   * Recruiter-Mode-enabled resumes before calling this).
+   */
+  async recentViews(resumeIds: string[], limit = 10): Promise<RecentViewRow[]> {
+    if (resumeIds.length === 0) return [];
+    const { rows } = await this.pool.query(
+      `SELECT "resumeId", "viewedAt" FROM resume_views WHERE "resumeId" = ANY($1) ORDER BY "viewedAt" DESC LIMIT $2`,
+      [resumeIds, limit]
+    );
+    return rows as RecentViewRow[];
   }
 
   /** Logs one ATS Check keyword match's missing-keyword list — see ResumeController.recordKeywordCheck. Caps the list itself is enforced by the caller, not here. */

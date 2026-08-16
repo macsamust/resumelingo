@@ -9,31 +9,14 @@ import { DashboardSummary } from "../types";
 import { RESOURCES as CAREER_RESOURCES } from "../components/marketing/CareerCenter";
 import { STORIES as SUCCESS_STORIES } from "../components/marketing/SuccessStories";
 import { TOPICS as CAREER_TOPICS } from "./CareerCenterPage";
+import { NotificationBell } from "../components/dashboard/NotificationBell";
+import { formatRelativeTime } from "../utils/time";
 
 // "Job Search Resources" pulls the topics not already covered by the
 // dedicated Resume Tips / Career Articles sections below, so the three
 // sections don't just repeat each other.
 const JOB_SEARCH_RESOURCE_ANCHORS = ["interview-tips", "salary-negotiation", "networking"];
 const CAREER_ARTICLE_IDS = ["career-advice", "promotion-advice", "career-planning", "industry-news"];
-
-// "My Resumes" card last-updated timestamp — relative phrasing (e.g. "3
-// days ago") for anything within the last month, falling back to an
-// absolute date beyond that so very old resumes don't show something vague
-// like "8 months ago".
-const formatUpdatedDate = (iso: string): string =>
-  new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-
-const formatRelativeTime = (iso: string): string => {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
-  return formatUpdatedDate(iso);
-};
 
 export function DashboardPage() {
   const { user } = useAuth();
@@ -160,9 +143,12 @@ export function DashboardPage() {
             <Link to="/profile">View profile</Link>
           </p>
         </div>
-        <Link to="/resumes/new" className="btn btn-primary">
-          + New Resume
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          {summary && <NotificationBell recentViews={summary.recentViews} />}
+          <Link to="/resumes/new" className="btn btn-primary">
+            + New Resume
+          </Link>
+        </div>
       </div>
 
       {checkoutStatus === "success" && (

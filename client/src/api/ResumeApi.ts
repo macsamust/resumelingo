@@ -1,5 +1,5 @@
 import { ApiClient } from "./ApiClient";
-import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, ReferenceEntry, Resume, SkillOrTool, WorkExperienceEntry } from "../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, ReferenceEntry, Resume, ResumeVersion, SkillOrTool, WorkExperienceEntry } from "../types";
 
 export interface CreateResumeInput {
   fullName?: string;
@@ -69,5 +69,15 @@ export class ResumeApi extends ApiClient {
   /** Logs one ATS Check keyword match's missing-keyword list — see ResumeEditPage's debounced effect and utils/atsCheck.ts's matchKeywords. Fire-and-forget from the caller's perspective; server no-ops (204, no error) for non-Premium accounts. */
   recordKeywordCheck(id: string, missingKeywords: string[]) {
     return this.post<void>(`/resumes/${id}/keyword-check`, { missingKeywords });
+  }
+
+  /** Newest first. Professional/Premium-gated — see components/common/VersionHistoryPanel.tsx. */
+  listVersions(id: string) {
+    return this.get<{ versions: ResumeVersion[] }>(`/resumes/${id}/versions`);
+  }
+
+  /** Reverts this resume's content to a past version — itself creates a new version first, so the restore is undoable. */
+  restoreVersion(id: string, versionId: string) {
+    return this.post<{ resume: Resume }>(`/resumes/${id}/versions/${versionId}/restore`, {});
   }
 }
