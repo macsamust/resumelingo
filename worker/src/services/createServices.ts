@@ -1,6 +1,7 @@
 import { AdminTokenPayload, AuthTokenPayload, Env } from "../types";
 import { UserRepository } from "../repositories/UserRepository";
 import { ResumeRepository } from "../repositories/ResumeRepository";
+import { ResumeAnalyticsRepository } from "../repositories/ResumeAnalyticsRepository";
 import { AdminRepository } from "../repositories/AdminRepository";
 import { TemplateRepository } from "../repositories/TemplateRepository";
 import { PlanRepository } from "../repositories/PlanRepository";
@@ -30,6 +31,8 @@ export interface Services {
   userRepository: UserRepository;
   /** Exposed directly for the admin console's "view a user's resumes" drill-down and cascade-delete — see AdminUserController. */
   resumeRepository: ResumeRepository;
+  /** Exposed directly for DashboardController's Resume Analytics aggregation and ResumeController.recordKeywordCheck. */
+  resumeAnalyticsRepository: ResumeAnalyticsRepository;
 }
 
 /**
@@ -48,6 +51,7 @@ export function createServices(env: Env): Services {
   const planRepository = new PlanRepository(env.DB);
   const skillSuggestionRepository = new SkillSuggestionRepository(env.DB);
   const roleDescriptionRepository = new RoleDescriptionRepository(env.DB);
+  const resumeAnalyticsRepository = new ResumeAnalyticsRepository(env.DB);
 
   const tokenService = new TokenService<AuthTokenPayload>(env.JWT_SECRET);
   const adminTokenService = new TokenService<AdminTokenPayload>(env.ADMIN_JWT_SECRET || env.JWT_SECRET);
@@ -55,7 +59,7 @@ export function createServices(env: Env): Services {
   const contentGenerator = new RuleBasedContentGenerator(roleDescriptionRepository);
 
   const authService = new AuthService(userRepo, tokenService);
-  const resumeService = new ResumeService(resumeRepo, userRepo, contentGenerator);
+  const resumeService = new ResumeService(resumeRepo, userRepo, contentGenerator, resumeAnalyticsRepository);
   const stripeService = new StripeService(env.STRIPE_SECRET_KEY);
   const subscriptionService = new SubscriptionService(
     userRepo,
@@ -78,5 +82,6 @@ export function createServices(env: Env): Services {
     roleDescriptionRepository,
     userRepository: userRepo,
     resumeRepository: resumeRepo,
+    resumeAnalyticsRepository,
   };
 }

@@ -1,5 +1,6 @@
 import { ResumeRepository, UpdateResumeInput } from "../repositories/ResumeRepository";
 import { UserRepository } from "../repositories/UserRepository";
+import { ResumeAnalyticsRepository } from "../repositories/ResumeAnalyticsRepository";
 import { IContentGenerator } from "./ContentGenerator";
 import { ICoverLetterGenerator, pickTopExperience, RuleBasedCoverLetterGenerator } from "./CoverLetterGenerator";
 import { Resume } from "../models/Resume";
@@ -129,19 +130,19 @@ export interface CreateResumeRequest {
 }
 
 /**
- * Same responsibilities as the Node/Express ResumeService, minus the
- * Resume Analytics event logging (resume_views/resume_score_snapshots/
- * resume_keyword_checks tables) — those are analytics-only tables out of
- * scope for this port (see ResumeController.recordKeywordCheck and
- * DashboardController, which are skipped/simplified for the same reason).
- * All the Premium-tier gating (Recruiter Mode, References, template
- * category, link visibility, cover letter) is preserved exactly.
+ * Same responsibilities as the Node/Express ResumeService, including the
+ * Resume Analytics event logging (resume_views/resume_score_snapshots
+ * tables, see ResumeAnalyticsRepository) that DashboardController's
+ * Premium-only "Resume Analytics" section is built from. All the
+ * Premium-tier gating (Recruiter Mode, References, template category, link
+ * visibility, cover letter) is preserved exactly.
  */
 export class ResumeService {
   constructor(
     private readonly resumes: ResumeRepository,
     private readonly users: UserRepository,
     private readonly generator: IContentGenerator,
+    private readonly analytics: ResumeAnalyticsRepository,
     private readonly coverLetterGenerator: ICoverLetterGenerator = new RuleBasedCoverLetterGenerator()
   ) {}
 
@@ -211,7 +212,12 @@ export class ResumeService {
       generatedSummary: generated.summary,
       generatedBullets: generated.bullets,
     });
-    return new Resume(record);
+    const resume = new Resume(record);
+    // First snapshot for the Resume Analytics score trend — see
+    // ResumeAnalyticsRepository.scoreTrend. Awaited (not fire-and-forget)
+    // since Workers has no background-task runner to hand this off to.
+    await this.analytics.recordScoreSnapshot(resume.id, resume.strengthScore);
+    return resume;
   }
 
   async update(userId: string, resumeId: string, input: UpdateResumeInput): Promise<Resume> {
@@ -330,7 +336,9 @@ export class ResumeService {
       },
       { bumpUpdatedAt: !isLinkOnlyChange }
     );
-    return new Resume(updated!);
+    const resume = new Resume(updated!);
+    await this.analytics.recordScoreSnapshot(resume.id, resume.strengthScore);
+    return resume;
   }
 
   /**
@@ -366,7 +374,9 @@ export class ResumeService {
     assertTemplateAllowed(user.subscriptionTier, templateKey);
 
     const cloned = await this.resumes.clone(record, { title: input.title, templateKey });
-    return new Resume(cloned);
+    const resume = new Resume(cloned);
+    await this.analytics.recordScoreSnapshot(resume.id, resume.strengthScore);
+    return resume;
   }
 
   async delete(userId: string, resumeId: string): Promise<void> {
@@ -402,6 +412,7 @@ export class ResumeService {
       );
     }
     await this.resumes.incrementViewCount(record.id);
+    await this.analytics.recordView(record.id);
     return resume;
   }
 }

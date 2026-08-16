@@ -13,5 +13,6 @@ resumes.get("/:id", controller.get);
 resumes.post("/:id/clone", controller.clone);
 resumes.put("/:id", controller.update);
 resumes.delete("/:id", controller.remove);
+resumes.post("/:id/keyword-check", controller.recordKeywordCheck);
 
 export default resumes;
