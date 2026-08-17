@@ -297,15 +297,15 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   justify-content: center;
 }
 .notification-bell-dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  /* Fixed 300px overflowed off-screen on narrow phones in portrait (the
-     dropdown opens leftward from the bell, which sits near the right edge
-     of the header) — capped to the viewport width, minus a little
-     breathing room on each side, so it always fits regardless of
-     orientation instead of just working once the screen is wide enough. */
-  width: min(300px, calc(100vw - 32px));
+  /* position: fixed, with top/left/width all computed in JS from the
+     trigger's actual bounding box (see NotificationBell.tsx) — a pure-CSS
+     anchor (e.g. "right: 0" relative to the bell) assumes the bell sits
+     flush against the viewport's right edge, but it doesn't: the "+ New
+     Resume" button sits to its right in the header, so the bell can be
+     100px+ inboard of the true edge. A fixed width capped to 100vw still
+     overflowed off the left in that case. Measuring the real position
+     fixes it regardless of header layout, screen size, or orientation. */
+  position: fixed;
   max-height: 340px;
   overflow-y: auto;
   background: #fff;
