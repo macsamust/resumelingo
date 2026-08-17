@@ -300,7 +300,12 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 300px;
+  /* Fixed 300px overflowed off-screen on narrow phones in portrait (the
+     dropdown opens leftward from the bell, which sits near the right edge
+     of the header) — capped to the viewport width, minus a little
+     breathing room on each side, so it always fits regardless of
+     orientation instead of just working once the screen is wide enough. */
+  width: min(300px, calc(100vw - 32px));
   max-height: 340px;
   overflow-y: auto;
   background: #fff;
