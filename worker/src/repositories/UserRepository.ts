@@ -42,6 +42,8 @@ export class UserRepository extends BaseRepository<UserRecord> {
       stripeCustomerId: null,
       stripeSubscriptionId: null,
       createdAt: new Date().toISOString(),
+      resetTokenHash: null,
+      resetTokenExpiresAt: null,
     };
     await this.insertRow(record as unknown as Record<string, unknown>);
     return record;
@@ -64,6 +66,27 @@ export class UserRepository extends BaseRepository<UserRecord> {
 
   async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
     await this.db.prepare(`UPDATE users SET passwordHash = ? WHERE id = ?`).bind(passwordHash, userId).run();
+  }
+
+  /** Stores a new reset request, overwriting any earlier one (a fresh request invalidates the previous link). */
+  async setResetToken(userId: string, tokenHash: string, expiresAt: string): Promise<void> {
+    await this.db
+      .prepare(`UPDATE users SET resetTokenHash = ?, resetTokenExpiresAt = ? WHERE id = ?`)
+      .bind(tokenHash, expiresAt, userId)
+      .run();
+  }
+
+  async findByResetTokenHash(tokenHash: string): Promise<UserRecord | undefined> {
+    const row = await this.db.prepare(`SELECT * FROM users WHERE resetTokenHash = ?`).bind(tokenHash).first<UserRecord>();
+    return row ? normalizeBooleans(row) : undefined;
+  }
+
+  /** Sets the new password and clears the reset token in one step — a used or superseded token can never be replayed. */
+  async resetPassword(userId: string, passwordHash: string): Promise<void> {
+    await this.db
+      .prepare(`UPDATE users SET passwordHash = ?, resetTokenHash = NULL, resetTokenExpiresAt = NULL WHERE id = ?`)
+      .bind(passwordHash, userId)
+      .run();
   }
 
   async updateSubscriptionTier(userId: string, tier: SubscriptionTier): Promise<void> {

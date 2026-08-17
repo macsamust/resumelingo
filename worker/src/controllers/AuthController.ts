@@ -53,4 +53,27 @@ export class AuthController {
     await authService.changePassword(user.id, currentPassword as string, newPassword as string);
     return c.json({ success: true });
   };
+
+  forgotPassword = async (c: Context<AppEnv>) => {
+    const { authService } = c.get("services");
+    const body = await c.req.json().catch(() => ({}));
+    const { email } = body as Record<string, string>;
+    if (!email) {
+      return c.json({ error: "email is required." }, 400);
+    }
+    await authService.requestPasswordReset(email);
+    // Always the same response, whether or not the email matched an account.
+    return c.json({ success: true });
+  };
+
+  resetPassword = async (c: Context<AppEnv>) => {
+    const { authService } = c.get("services");
+    const body = await c.req.json().catch(() => ({}));
+    const { token, newPassword } = body as Record<string, string>;
+    if (!token || !newPassword) {
+      return c.json({ error: "token and newPassword are required." }, 400);
+    }
+    await authService.resetPassword(token, newPassword);
+    return c.json({ success: true });
+  };
 }

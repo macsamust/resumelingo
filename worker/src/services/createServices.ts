@@ -15,6 +15,7 @@ import { SubscriptionService } from "./SubscriptionService";
 import { AdminService } from "./AdminService";
 import { RuleBasedContentGenerator } from "./ContentGenerator";
 import { StripeService } from "./StripeService";
+import { EmailService } from "./EmailService";
 
 export interface Services {
   authService: AuthService;
@@ -60,7 +61,8 @@ export function createServices(env: Env): Services {
 
   const contentGenerator = new RuleBasedContentGenerator(roleDescriptionRepository);
 
-  const authService = new AuthService(userRepo, tokenService);
+  const emailService = new EmailService(env.RESEND_API_KEY, env.RESEND_FROM_EMAIL);
+  const authService = new AuthService(userRepo, tokenService, emailService, env.CLIENT_ORIGIN);
   const resumeService = new ResumeService(resumeRepo, userRepo, contentGenerator, resumeAnalyticsRepository, resumeVersionRepository);
   const stripeService = new StripeService(env.STRIPE_SECRET_KEY);
   const subscriptionService = new SubscriptionService(

@@ -40,6 +40,9 @@ export function LoginPage() {
             <label>Password</label>
             <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
           </div>
+          <p className="form-footnote" style={{ textAlign: "right", marginTop: -8 }}>
+            <Link to="/forgot-password">Forgot password?</Link>
+          </p>
           <button className="btn btn-primary btn-block" type="submit" disabled={submitting}>
             {submitting ? "Logging in…" : "Log in"}
           </button>

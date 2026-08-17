@@ -1,14 +1,44 @@
 import bcrypt from "bcryptjs";
 import { UserRepository } from "../repositories/UserRepository";
 import { TokenService } from "./TokenService";
+import { EmailService } from "./EmailService";
 import { User } from "../models/User";
 
 export class AuthError extends Error {}
 
+/** Thrown when a password-reset token is missing, doesn't match any user, or has expired — mapped to 400 in middleware/errorHandler.ts. */
+export class InvalidResetTokenError extends Error {}
+
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+/**
+ * Uses the global Web Crypto API (crypto.getRandomValues/crypto.subtle,
+ * available in Node 19+) rather than Node's crypto module, so this logic
+ * stays identical to worker/'s AuthService.ts instead of drifting into two
+ * different implementations of the same thing.
+ */
+function generateResetToken(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/** Only this hash is ever stored — same principle as password hashing, except SHA-256 is fine here since the input is already high-entropy. */
+async function sha256Hex(value: string): Promise<string> {
+  const data = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 export class AuthService {
   constructor(
     private readonly users: UserRepository = new UserRepository(),
-    private readonly tokens: TokenService = new TokenService()
+    private readonly tokens: TokenService = new TokenService(),
+    private readonly emailService: EmailService = new EmailService(),
+    private readonly clientOrigin: string = process.env.CLIENT_ORIGIN || "http://localhost:5173"
   ) {}
 
   async register(input: { name: string; email: string; password: string; profession?: string }) {
@@ -76,5 +106,36 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await this.users.updatePasswordHash(userId, passwordHash);
+  }
+
+  /**
+   * Always resolves silently, whether or not the email belongs to an
+   * account — the response can't reveal which emails are registered, or
+   * this becomes an account-enumeration oracle. If the email does match a
+   * user, stores a fresh reset token (overwriting any earlier one) and
+   * emails a reset link via Resend.
+   */
+  async requestPasswordReset(email: string): Promise<void> {
+    const record = await this.users.findByEmail(email);
+    if (!record) return;
+
+    const token = generateResetToken();
+    const tokenHash = await sha256Hex(token);
+    const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS).toISOString();
+    await this.users.setResetToken(record.id, tokenHash, expiresAt);
+
+    const resetUrl = `${this.clientOrigin.replace(/\/$/, "")}/reset-password?token=${token}`;
+    await this.emailService.sendPasswordResetEmail(record.email, resetUrl);
+  }
+
+  /** Consumes a reset token — one-time use, since resetPassword() clears it on the same write that sets the new password. */
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const tokenHash = await sha256Hex(token);
+    const record = await this.users.findByResetTokenHash(tokenHash);
+    if (!record || !record.resetTokenExpiresAt || new Date(record.resetTokenExpiresAt).getTime() < Date.now()) {
+      throw new InvalidResetTokenError("This reset link is invalid or has expired.");
+    }
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.users.resetPassword(record.id, passwordHash);
   }
 }

@@ -41,4 +41,23 @@ export class AuthController {
     await this.authService.changePassword(req.user!.id, currentPassword, newPassword);
     res.json({ success: true });
   };
+
+  forgotPassword = async (req: Request, res: Response) => {
+    const { email } = req.body ?? {};
+    if (!email) {
+      return res.status(400).json({ error: "email is required." });
+    }
+    await this.authService.requestPasswordReset(email);
+    // Always the same response, whether or not the email matched an account.
+    res.json({ success: true });
+  };
+
+  resetPassword = async (req: Request, res: Response) => {
+    const { token, newPassword } = req.body ?? {};
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: "token and newPassword are required." });
+    }
+    await this.authService.resetPassword(token, newPassword);
+    res.json({ success: true });
+  };
 }

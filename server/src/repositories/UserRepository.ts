@@ -22,6 +22,8 @@ export class UserRepository extends BaseRepository<UserRecord> {
       stripeSubscriptionId: null,
       suspended: false,
       createdAt: new Date().toISOString(),
+      resetTokenHash: null,
+      resetTokenExpiresAt: null,
     };
     await this.insertRow(record as unknown as Record<string, unknown>);
     return record;
@@ -44,6 +46,27 @@ export class UserRepository extends BaseRepository<UserRecord> {
 
   async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
     await this.pool.query(`UPDATE users SET "passwordHash" = $1 WHERE "id" = $2`, [passwordHash, userId]);
+  }
+
+  /** Stores a new reset request, overwriting any earlier one (a fresh request invalidates the previous link). */
+  async setResetToken(userId: string, tokenHash: string, expiresAt: string): Promise<void> {
+    await this.pool.query(
+      `UPDATE users SET "resetTokenHash" = $1, "resetTokenExpiresAt" = $2 WHERE "id" = $3`,
+      [tokenHash, expiresAt, userId]
+    );
+  }
+
+  async findByResetTokenHash(tokenHash: string): Promise<UserRecord | undefined> {
+    const { rows } = await this.pool.query(`SELECT * FROM users WHERE "resetTokenHash" = $1`, [tokenHash]);
+    return rows[0] as UserRecord | undefined;
+  }
+
+  /** Sets the new password and clears the reset token in one step — a used or superseded token can never be replayed. */
+  async resetPassword(userId: string, passwordHash: string): Promise<void> {
+    await this.pool.query(
+      `UPDATE users SET "passwordHash" = $1, "resetTokenHash" = NULL, "resetTokenExpiresAt" = NULL WHERE "id" = $2`,
+      [passwordHash, userId]
+    );
   }
 
   /**

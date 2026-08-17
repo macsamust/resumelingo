@@ -14,7 +14,7 @@ import adminRoutes from "./routes/admin.routes";
 import careerCoachRoutes from "./routes/careerCoach.routes";
 import thankYouLetterRoutes from "./routes/thankYouLetter.routes";
 import webhookRoutes from "./routes/webhooks.routes";
-import { AuthError } from "./services/AuthService";
+import { AuthError, InvalidResetTokenError } from "./services/AuthService";
 import { AdminAuthError } from "./services/AdminService";
 import {
   ActiveToggleAccessError,
@@ -93,6 +93,8 @@ app.onError((err, c) => {
       : err instanceof VersionNotFoundError
       ? 404
       : err instanceof PhotoTooLargeError
+      ? 400
+      : err instanceof InvalidResetTokenError
       ? 400
       : 500;
   if (status === 500) console.error(err);

@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { AuthError } from "../services/AuthService";
+import { AuthError, InvalidResetTokenError } from "../services/AuthService";
 import { AdminAuthError } from "../services/AdminService";
 import {
   ActiveToggleAccessError,
@@ -27,6 +27,7 @@ const STATUS_BY_ERROR = [
   { type: VersionHistoryAccessError, status: 402 },
   { type: VersionNotFoundError, status: 404 },
   { type: PhotoTooLargeError, status: 400 },
+  { type: InvalidResetTokenError, status: 400 },
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

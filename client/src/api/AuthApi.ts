@@ -26,4 +26,13 @@ export class AuthApi extends ApiClient {
   changePassword(input: { currentPassword: string; newPassword: string }) {
     return this.put<{ success: true }>("/auth/me/password", input);
   }
+
+  /** Always resolves the same way whether or not the email matches an account — see AuthService.requestPasswordReset. */
+  forgotPassword(email: string) {
+    return this.post<{ success: true }>("/auth/forgot-password", { email });
+  }
+
+  resetPassword(input: { token: string; newPassword: string }) {
+    return this.post<{ success: true }>("/auth/reset-password", input);
+  }
 }

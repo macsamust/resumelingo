@@ -86,6 +86,9 @@ export interface UserRecord {
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
   createdAt: string;
+  /** Self-service password reset — only the SHA-256 hash is stored, never the raw token. Both null when no reset is in flight. */
+  resetTokenHash: string | null;
+  resetTokenExpiresAt: string | null;
 }
 
 /**

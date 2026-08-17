@@ -6,6 +6,8 @@ import { LandingPage } from "./pages/LandingPage";
 import { CareerCenterPage } from "./pages/CareerCenterPage";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ResumeBuilderPage } from "./pages/ResumeBuilderPage";
@@ -34,6 +36,8 @@ export default function App() {
         <Route path="/career-center" element={<CareerCenterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/r/:slug" element={<PublicResumePage />} />
         <Route
           path="/dashboard"

@@ -22,4 +22,7 @@ export interface Env {
   STRIPE_WEBHOOK_SECRET?: string;
   STRIPE_PRICE_PROFESSIONAL?: string;
   STRIPE_PRICE_PREMIUM?: string;
+  /** Resend (email) — see services/EmailService.ts. Optional so the app still runs without it configured; password reset requests will just fail until it's set. */
+  RESEND_API_KEY?: string;
+  RESEND_FROM_EMAIL?: string;
 }

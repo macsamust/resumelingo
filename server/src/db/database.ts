@@ -50,6 +50,12 @@ export async function migrate(): Promise<void> {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS "stripeCustomerId" TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS "stripeSubscriptionId" TEXT;
 
+    -- Self-service password reset. Single active token per user, same as
+    -- worker/'s D1 counterpart (migrations/0009_password_reset.sql) — only
+    -- the SHA-256 hash is stored, never the raw token.
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS "resetTokenHash" TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS "resetTokenExpiresAt" TEXT;
+
     CREATE TABLE IF NOT EXISTS resumes (
       "id" TEXT PRIMARY KEY,
       "userId" TEXT NOT NULL REFERENCES users("id"),

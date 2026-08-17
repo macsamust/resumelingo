@@ -27,9 +27,14 @@
     }
   ],
 
-  // Non-secret config. JWT_SECRET is intentionally NOT here — set it with
-  // `npm run secret:jwt` so it's encrypted rather than committed to git.
+  // Non-secret config. JWT_SECRET and RESEND_API_KEY are intentionally NOT
+  // here — set them with `npm run secret:jwt` / `npm run secret:resend-key`
+  // so they're encrypted rather than committed to git.
   "vars": {
-    "CLIENT_ORIGIN": "https://resumelingo.legumes-postage-9k.workers.dev/"
+    "CLIENT_ORIGIN": "https://resumelingo.legumes-postage-9k.workers.dev/",
+    // The "from" address for password-reset emails (Resend requires this to
+    // be on a domain you've verified in the Resend dashboard). Not secret —
+    // update this directly once you've verified your sending domain.
+    "RESEND_FROM_EMAIL": "ResumeLingo <onboarding@resend.dev>"
   }
 }

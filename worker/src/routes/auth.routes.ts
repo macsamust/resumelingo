@@ -8,6 +8,8 @@ const controller = new AuthController();
 
 auth.post("/register", controller.register);
 auth.post("/login", controller.login);
+auth.post("/forgot-password", controller.forgotPassword);
+auth.post("/reset-password", controller.resetPassword);
 auth.get("/me", requireAuth, controller.me);
 auth.put("/me", requireAuth, controller.updateProfile);
 auth.put("/me/password", requireAuth, controller.changePassword);
