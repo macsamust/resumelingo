@@ -20,8 +20,9 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 let nextId = 0;
 
 /**
- * App-wide toast notifications — a styled alert() replacement. Mount
- * <ToastProvider> once near the root of a section (see AdminShell) and call
+ * App-wide toast notifications — a styled alert() replacement. Mounted once
+ * at the app root (see main.tsx), above both AuthProvider and
+ * AdminAuthProvider, so every page — regular or admin — can call
  * useToast()'s showToast from anywhere beneath it. Each toast auto-dismisses
  * after 4s but can also be dismissed manually; several can stack at once.
  */

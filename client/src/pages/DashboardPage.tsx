@@ -3,6 +3,9 @@ import { Link, useSearchParams } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { ResumeAnalyticsPanel } from "../components/dashboard/ResumeAnalyticsPanel";
 import { DashboardSkeleton } from "../components/dashboard/DashboardSkeleton";
+import { ConfirmDialog } from "../components/common/ConfirmDialog";
+import { TextPromptDialog } from "../components/common/TextPromptDialog";
+import { useToast } from "../components/common/Toast";
 import { useAuth } from "../context/AuthContext";
 import { catalogApi, resumeApi } from "../api";
 import { DashboardSummary } from "../types";
@@ -20,12 +23,18 @@ const CAREER_ARTICLE_IDS = ["career-advice", "promotion-advice", "career-plannin
 
 export function DashboardPage() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [openingPortal, setOpeningPortal] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const checkoutStatus = searchParams.get("checkout");
+  // Which resume (if any) is the subject of a confirm/prompt-style dialog —
+  // replaces window.confirm()/window.prompt() with the app's own styled
+  // Modal-based dialogs, same pattern as AdminUsersPage.
+  const [confirmDeleteResume, setConfirmDeleteResume] = useState<{ id: string; title: string } | null>(null);
+  const [cloneSourceResume, setCloneSourceResume] = useState<{ id: string; title: string } | null>(null);
 
   const isPremium = user?.subscriptionTier === "premium";
   const isProfessional = user?.subscriptionTier === "professional";
@@ -58,10 +67,16 @@ export function DashboardPage() {
     return () => document.removeEventListener("click", close);
   }, [openMenuId]);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this resume? This cannot be undone.")) return;
-    await resumeApi.remove(id);
-    load();
+  const handleDelete = async () => {
+    if (!confirmDeleteResume) return;
+    try {
+      await resumeApi.remove(confirmDeleteResume.id);
+      showToast("success", `"${confirmDeleteResume.title}" was deleted.`);
+      setConfirmDeleteResume(null);
+      load();
+    } catch (err) {
+      showToast("error", err instanceof Error ? err.message : "Couldn't delete this resume.");
+    }
   };
 
   const handleToggleActive = async (id: string, currentlyActive: boolean) => {
@@ -69,21 +84,19 @@ export function DashboardPage() {
       await resumeApi.update(id, { active: !currentlyActive });
       load();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Couldn't update this resume's link.");
+      showToast("error", err instanceof Error ? err.message : "Couldn't update this resume's link.");
     }
   };
 
-  const handleClone = async (id: string, currentTitle: string) => {
-    const title = window.prompt(
-      "Give the cloned resume a unique title — this also becomes its public link.",
-      `${currentTitle} (Copy)`
-    );
-    if (!title || !title.trim()) return;
+  const handleClone = async (title: string) => {
+    if (!cloneSourceResume) return;
     try {
-      await resumeApi.clone(id, { title: title.trim() });
+      await resumeApi.clone(cloneSourceResume.id, { title });
+      showToast("success", `Cloned as "${title}".`);
+      setCloneSourceResume(null);
       load();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Couldn't clone this resume.");
+      showToast("error", err instanceof Error ? err.message : "Couldn't clone this resume.");
     }
   };
 
@@ -93,7 +106,7 @@ export function DashboardPage() {
       const { url } = await catalogApi.billingPortal();
       window.location.href = url;
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Couldn't open the billing portal.");
+      showToast("error", err instanceof Error ? err.message : "Couldn't open the billing portal.");
       setOpeningPortal(false);
     }
   };
@@ -251,7 +264,7 @@ export function DashboardPage() {
                         <button
                           onClick={() => {
                             setOpenMenuId(null);
-                            handleClone(r.id, r.title);
+                            setCloneSourceResume({ id: r.id, title: r.title });
                           }}
                         >
                           Clone
@@ -261,7 +274,7 @@ export function DashboardPage() {
                         className="danger"
                         onClick={() => {
                           setOpenMenuId(null);
-                          handleDelete(r.id);
+                          setConfirmDeleteResume({ id: r.id, title: r.title });
                         }}
                       >
                         Delete
@@ -411,6 +424,27 @@ export function DashboardPage() {
             </button>
           </div>
         </div>
+      )}
+      {cloneSourceResume && (
+        <TextPromptDialog
+          title="Clone resume"
+          message="Give the cloned resume a unique title — this also becomes its public link."
+          label="Title"
+          defaultValue={`${cloneSourceResume.title} (Copy)`}
+          confirmLabel="Clone"
+          onSubmit={handleClone}
+          onCancel={() => setCloneSourceResume(null)}
+        />
+      )}
+      {confirmDeleteResume && (
+        <ConfirmDialog
+          title="Delete resume"
+          message={`Delete "${confirmDeleteResume.title}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          danger
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmDeleteResume(null)}
+        />
       )}
     </AppShell>
   );
