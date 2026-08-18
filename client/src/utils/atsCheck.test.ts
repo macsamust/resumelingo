@@ -36,8 +36,12 @@ describe("extractKeywords", () => {
   });
 
   it("respects the max count", () => {
-    const text = Array.from({ length: 30 }, (_, i) => `keyword${i}`).join(" ");
-    expect(extractKeywords(text, 5)).toHaveLength(5);
+    // Distinct alphabetic words, not numbered suffixes — extractKeywords'
+    // tokenizer regex (/[a-z][a-z+.#-]{2,}/g) doesn't include digits, so
+    // "keyword0".."keyword29" would all truncate to the same word "keyword"
+    // and collapse into a single entry instead of 30 distinct ones.
+    const words = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel", "india", "juliet"];
+    expect(extractKeywords(words.join(" "), 5)).toHaveLength(5);
   });
 });
 
@@ -54,9 +58,13 @@ describe("matchKeywords", () => {
   });
 
   it("is case-insensitive", () => {
+    // "developer" and "needed" are real (non-stopword) keywords in the JD
+    // that genuinely aren't in the resume text, so they're expected to show
+    // up as missing — the point of this test is only that "REACT" vs.
+    // "react" doesn't cause a case-mismatch false negative.
     const result = matchKeywords("REACT developer needed", "I have built apps with react for years");
     expect(result.matched.map((k) => k.word)).toContain("react");
-    expect(result.missing).toHaveLength(0);
+    expect(result.missing.map((k) => k.word)).not.toContain("react");
   });
 });
 
