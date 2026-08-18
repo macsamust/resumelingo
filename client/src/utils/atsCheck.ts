@@ -162,6 +162,8 @@ export function buildResumeTextBlob(input: {
   awards: AwardEntry[];
   achievements: AchievementEntry[];
   answers: Record<string, string>;
+  /** Optional — omitted entirely for non-Premium templates, which don't have this section (see ResumeEditPage's usesSkillsAndTools). */
+  skillsAndTools?: { label: string }[];
 }): string {
   const parts: string[] = [input.title, input.professionLabel, input.summary, ...input.bullets];
   for (const job of input.experience) parts.push(job.title, job.company);
@@ -169,5 +171,6 @@ export function buildResumeTextBlob(input: {
   for (const award of input.awards) parts.push(award.title, award.issuer, award.description ?? "");
   for (const a of input.achievements) parts.push(a.challenge, a.action, a.result);
   for (const value of Object.values(input.answers)) parts.push(value);
+  for (const item of input.skillsAndTools ?? []) parts.push(item.label);
   return parts.filter(Boolean).join(" \n ");
 }

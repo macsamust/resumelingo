@@ -220,9 +220,40 @@ export function ResumeEditPage() {
       awards,
       achievements,
       answers,
+      // Was missing entirely — a skill already added here still showed up as
+      // "missing" from a pasted job description, which undermined the whole
+      // point of the check. Only relevant for templates that have this
+      // section at all (see usesSkillsAndTools below).
+      skillsAndTools: usesSkillsAndTools ? skillsAndTools : undefined,
     });
     return matchKeywords(jobDescription, resumeText);
-  }, [jobDescription, title, professionDetail, resume, experience, education, awards, achievements, answers]);
+  }, [
+    jobDescription,
+    title,
+    professionDetail,
+    resume,
+    experience,
+    education,
+    awards,
+    achievements,
+    answers,
+    usesSkillsAndTools,
+    skillsAndTools,
+  ]);
+
+  /**
+   * Turns a "missing from your resume" keyword into an actual tweak instead
+   * of just a fact — adds it straight to Skills & Tools, same click-to-add
+   * interaction SkillsAndToolsEditor already uses for its own suggestions.
+   * Only offered when the current template has a Skills & Tools section at
+   * all (usesSkillsAndTools) — otherwise there's nowhere for this to go.
+   */
+  const addKeywordToSkills = (word: string) => {
+    const label = word.charAt(0).toUpperCase() + word.slice(1);
+    setSkillsAndTools((prev) =>
+      prev.some((s) => s.label.toLowerCase() === word.toLowerCase()) ? prev : [...prev, { label, category: "skill" }]
+    );
+  };
 
   // Logs the missing-keyword list (words only — the pasted job description
   // itself never leaves the browser) so the Premium dashboard's Resume
@@ -557,10 +588,20 @@ export function ResumeEditPage() {
 
                 {keywordMatch && (
                   <div className="ats-keyword-results">
-                    <p className="hero-note" style={{ marginBottom: 8 }}>
-                      Matched {keywordMatch.matched.length} of {keywordMatch.matched.length + keywordMatch.missing.length}{" "}
-                      top keywords from this job description.
-                    </p>
+                    <div className="ats-score-row" style={{ marginTop: 0, marginBottom: 12 }}>
+                      <div className="ats-score-value">
+                        {Math.round(
+                          (keywordMatch.matched.length / Math.max(1, keywordMatch.matched.length + keywordMatch.missing.length)) *
+                            100
+                        )}
+                        %
+                      </div>
+                      <p className="hero-note" style={{ margin: 0 }}>
+                        Job Match — matched {keywordMatch.matched.length} of{" "}
+                        {keywordMatch.matched.length + keywordMatch.missing.length} top keywords from this job
+                        description.
+                      </p>
+                    </div>
                     {keywordMatch.matched.length > 0 && (
                       <div className="ats-keyword-group">
                         <div className="ats-keyword-group-label">Found in your resume</div>
@@ -575,13 +616,27 @@ export function ResumeEditPage() {
                     )}
                     {keywordMatch.missing.length > 0 && (
                       <div className="ats-keyword-group">
-                        <div className="ats-keyword-group-label">Missing from your resume</div>
+                        <div className="ats-keyword-group-label">
+                          Missing from your resume
+                          {usesSkillsAndTools && <span className="hero-note"> — click one to add it to Skills & Tools</span>}
+                        </div>
                         <div className="ats-keyword-chips">
-                          {keywordMatch.missing.map((k) => (
-                            <span key={k.word} className="ats-chip ats-chip-missing">
-                              {k.word}
-                            </span>
-                          ))}
+                          {keywordMatch.missing.map((k) =>
+                            usesSkillsAndTools ? (
+                              <button
+                                type="button"
+                                key={k.word}
+                                className="ats-chip ats-chip-missing ats-chip-actionable"
+                                onClick={() => addKeywordToSkills(k.word)}
+                              >
+                                {k.word} <span aria-hidden="true">+</span>
+                              </button>
+                            ) : (
+                              <span key={k.word} className="ats-chip ats-chip-missing">
+                                {k.word}
+                              </span>
+                            )
+                          )}
                         </div>
                       </div>
                     )}

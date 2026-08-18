@@ -436,6 +436,13 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .ats-chip { font-size: 12.5px; font-weight: 600; padding: 5px 12px; border-radius: 999px; }
 .ats-chip-matched { background: #dcfce7; color: #15803d; }
 .ats-chip-missing { background: #fee2e2; color: #b91c1c; }
+/* Missing keywords are clickable when the template has a Skills & Tools
+   section to add them to (see ResumeEditPage's addKeywordToSkills) — a
+   <button> underneath, so it needs its own reset plus a hover/active state
+   to read as actionable rather than just another status chip. */
+.ats-chip-actionable { border: none; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 4px; transition: background .15s ease; }
+.ats-chip-actionable:hover { background: #fecaca; }
+.ats-chip-actionable:active { background: #fca5a5; }
 .preview-col { display: flex; flex-direction: column; gap: 16px; }
 .ats-mini-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; }
 .ats-mini-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
