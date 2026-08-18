@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { SubscriptionTier, LinkVisibility } from "../types";
+import { DEFAULT_TEMPLATES, setTemplateCache } from "../config/templates";
 import {
   assertActiveToggleAllowed,
   assertPhotoSizeOk,
@@ -12,6 +13,15 @@ import {
   VersionHistoryAccessError,
   VisibilityAccessError,
 } from "./ResumeService";
+
+// Unlike worker/'s templates.ts (a plain static array), server's
+// getTemplateByKey reads from an in-memory cache that starts empty and is
+// normally populated at boot from the DB (see config/templates.ts's
+// setTemplateCache and index.ts) — so assertTemplateAllowed silently no-ops
+// against every key until the cache is seeded here.
+beforeAll(() => {
+  setTemplateCache(DEFAULT_TEMPLATES.map((t) => ({ ...t, enabled: true, sortOrder: 0, createdAt: "", updatedAt: "" })));
+});
 
 /**
  * Unit tests for ResumeService's tier-gating rules — deliberately testing
