@@ -7,6 +7,7 @@ import { CLEARANCE_OPTIONS, recruiterOptionLabel, REMOTE_PREFERENCE_OPTIONS, WOR
 import { groupAchievementsByExperience } from "../utils/starBullet";
 import { PublicResumeSkeleton } from "../components/common/PublicResumeSkeleton";
 import { getTemplateStyle } from "../config/templateStyles";
+import { downloadResumePdf } from "../utils/pdfExport";
 
 /**
  * Turns a camelCase profession-question key (e.g. "cloudPlatforms",
@@ -283,7 +284,10 @@ export function PublicResumePage() {
   return (
     <div className="public-resume-page">
       <div className="public-resume-actions">
-        <button className="btn btn-primary" onClick={() => window.print()} type="button">
+        <button className="btn btn-primary" onClick={() => downloadResumePdf(resume)} type="button">
+          Download PDF
+        </button>
+        <button className="btn btn-ghost" onClick={() => window.print()} type="button">
           Print / Save as PDF
         </button>
         <button className="btn btn-ghost" onClick={onDownloadText} type="button">
