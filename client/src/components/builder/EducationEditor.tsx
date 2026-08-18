@@ -1,4 +1,6 @@
+import { KeyboardEvent } from "react";
 import { EducationEntry } from "../../types";
+import { duplicateItem, moveItem } from "../../utils/listEditing";
 import { MonthYearField } from "./MonthYearField";
 
 interface Props {
@@ -28,11 +30,22 @@ export function EducationEditor({ education, onChange }: Props) {
 
   const addEntry = () => onChange([...education, { ...BLANK_ENTRY }]);
   const removeEntry = (index: number) => onChange(education.filter((_, i) => i !== index));
+  const duplicateEntry = (index: number) => onChange(duplicateItem(education, index));
+
+  // See ExperienceEditor's identical handler for the full explanation —
+  // Enter in a plain text field of the last row adds a new blank row.
+  const handleRowKeyDown = (e: KeyboardEvent<HTMLDivElement>, index: number) => {
+    const target = e.target;
+    if (e.key !== "Enter" || index !== education.length - 1) return;
+    if (!(target instanceof HTMLInputElement) || target.type === "checkbox") return;
+    e.preventDefault();
+    addEntry();
+  };
 
   return (
     <div className="experience-editor">
       {education.map((entry, index) => (
-        <div className="experience-row" key={index}>
+        <div className="experience-row" key={index} onKeyDown={(e) => handleRowKeyDown(e, index)}>
           <div className="field">
             <label>School</label>
             <input
@@ -79,9 +92,34 @@ export function EducationEditor({ education, onChange }: Props) {
             />
             I'm currently enrolled here
           </label>
-          <button type="button" className="btn btn-ghost experience-remove" onClick={() => removeEntry(index)}>
-            Remove
-          </button>
+          <div className="experience-row-actions">
+            <button
+              type="button"
+              className="btn btn-ghost experience-row-move"
+              onClick={() => onChange(moveItem(education, index, "up"))}
+              disabled={index === 0}
+              aria-label="Move up"
+              title="Move up"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost experience-row-move"
+              onClick={() => onChange(moveItem(education, index, "down"))}
+              disabled={index === education.length - 1}
+              aria-label="Move down"
+              title="Move down"
+            >
+              ↓
+            </button>
+            <button type="button" className="btn btn-ghost experience-remove" onClick={() => duplicateEntry(index)}>
+              Duplicate
+            </button>
+            <button type="button" className="btn btn-ghost experience-remove" onClick={() => removeEntry(index)}>
+              Remove
+            </button>
+          </div>
         </div>
       ))}
       <button type="button" className="btn btn-ghost btn-block" onClick={addEntry}>

@@ -1,4 +1,5 @@
 import { AchievementEntry, WorkExperienceEntry } from "../../types";
+import { duplicateItem, moveItem } from "../../utils/listEditing";
 
 interface Props {
   achievements: AchievementEntry[];
@@ -23,6 +24,16 @@ function experienceLabel(entry: WorkExperienceEntry): string {
 }
 
 /**
+ * A quantified Result ("cut onboarding time by 25%", "saved $40k annually")
+ * reads as far stronger than a vague one ("improved onboarding") — this is
+ * a simple, deliberately-narrow check for any digit, same rule-based spirit
+ * as utils/atsCheck.ts, not an attempt to actually judge the writing.
+ */
+function hasNumber(text: string): boolean {
+  return /\d/.test(text);
+}
+
+/**
  * Lets a user describe achievements using the STAR/CAR method — Challenge
  * (what problem existed), Action (what they did), Result (what changed
  * because of it). Each entry becomes one impact-focused resume bullet (see
@@ -38,6 +49,7 @@ export function AchievementEditor({ achievements, onChange, experience, showJobL
 
   const addEntry = () => onChange([...achievements, { ...BLANK_ENTRY }]);
   const removeEntry = (index: number) => onChange(achievements.filter((_, i) => i !== index));
+  const duplicateEntry = (index: number) => onChange(duplicateItem(achievements, index));
 
   return (
     <div className="experience-editor">
@@ -82,10 +94,40 @@ export function AchievementEditor({ achievements, onChange, experience, showJobL
               onChange={(e) => updateEntry(index, { result: e.target.value })}
               placeholder="e.g. A 25% increase in completed signups within one quarter"
             />
+            {entry.result.trim() !== "" && !hasNumber(entry.result) && (
+              <p className="field-hint">
+                Tip: a number makes this land harder — e.g. "25%", "3 weeks", "$40k", "2x".
+              </p>
+            )}
           </div>
-          <button type="button" className="btn btn-ghost experience-remove" onClick={() => removeEntry(index)}>
-            Remove
-          </button>
+          <div className="experience-row-actions">
+            <button
+              type="button"
+              className="btn btn-ghost experience-row-move"
+              onClick={() => onChange(moveItem(achievements, index, "up"))}
+              disabled={index === 0}
+              aria-label="Move up"
+              title="Move up"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost experience-row-move"
+              onClick={() => onChange(moveItem(achievements, index, "down"))}
+              disabled={index === achievements.length - 1}
+              aria-label="Move down"
+              title="Move down"
+            >
+              ↓
+            </button>
+            <button type="button" className="btn btn-ghost experience-remove" onClick={() => duplicateEntry(index)}>
+              Duplicate
+            </button>
+            <button type="button" className="btn btn-ghost experience-remove" onClick={() => removeEntry(index)}>
+              Remove
+            </button>
+          </div>
         </div>
       ))}
       <button type="button" className="btn btn-ghost btn-block" onClick={addEntry}>

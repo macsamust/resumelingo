@@ -1,5 +1,7 @@
+import { KeyboardEvent } from "react";
 import { WorkExperienceEntry } from "../../types";
 import { generateId } from "../../utils/id";
+import { duplicateItem, moveItem } from "../../utils/listEditing";
 import { MonthYearField } from "./MonthYearField";
 
 interface Props {
@@ -34,11 +36,29 @@ export function ExperienceEditor({ experience, onChange }: Props) {
 
   const addEntry = () => onChange([...experience, blankEntry()]);
   const removeEntry = (index: number) => onChange(experience.filter((_, i) => i !== index));
+  // Duplicate needs a fresh id — achievements link to a job by
+  // WorkExperienceEntry.id (see AchievementEditor's "which job" dropdown),
+  // and sharing the original's id would nest the same achievements under
+  // both entries at once.
+  const duplicateEntry = (index: number) => onChange(duplicateItem(experience, index, (entry) => ({ ...entry, id: generateId() })));
+
+  // Hitting Enter in any plain text field of the last row adds a new blank
+  // row — a spreadsheet-style shortcut for entering several jobs in a row
+  // without reaching for the "+ Add" button each time. Excludes checkboxes
+  // (Enter shouldn't toggle "I currently work here" into also adding a row)
+  // and anything that isn't the last row (so it can't fire mid-list).
+  const handleRowKeyDown = (e: KeyboardEvent<HTMLDivElement>, index: number) => {
+    const target = e.target;
+    if (e.key !== "Enter" || index !== experience.length - 1) return;
+    if (!(target instanceof HTMLInputElement) || target.type === "checkbox") return;
+    e.preventDefault();
+    addEntry();
+  };
 
   return (
     <div className="experience-editor">
       {experience.map((entry, index) => (
-        <div className="experience-row" key={index}>
+        <div className="experience-row" key={entry.id ?? index} onKeyDown={(e) => handleRowKeyDown(e, index)}>
           <div className="field">
             <label>Company</label>
             <input
@@ -95,9 +115,34 @@ export function ExperienceEditor({ experience, onChange }: Props) {
             />
             I currently work here
           </label>
-          <button type="button" className="btn btn-ghost experience-remove" onClick={() => removeEntry(index)}>
-            Remove
-          </button>
+          <div className="experience-row-actions">
+            <button
+              type="button"
+              className="btn btn-ghost experience-row-move"
+              onClick={() => onChange(moveItem(experience, index, "up"))}
+              disabled={index === 0}
+              aria-label="Move up"
+              title="Move up"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost experience-row-move"
+              onClick={() => onChange(moveItem(experience, index, "down"))}
+              disabled={index === experience.length - 1}
+              aria-label="Move down"
+              title="Move down"
+            >
+              ↓
+            </button>
+            <button type="button" className="btn btn-ghost experience-remove" onClick={() => duplicateEntry(index)}>
+              Duplicate
+            </button>
+            <button type="button" className="btn btn-ghost experience-remove" onClick={() => removeEntry(index)}>
+              Remove
+            </button>
+          </div>
         </div>
       ))}
       <button type="button" className="btn btn-ghost btn-block" onClick={addEntry}>
