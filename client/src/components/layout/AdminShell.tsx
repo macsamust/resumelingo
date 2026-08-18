@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { ReactNode } from "react";
 import { useAdminAuth } from "../../context/AdminAuthContext";
+import { ToastProvider } from "../common/Toast";
 
 /**
  * Grouped by what the section manages — Subscriber (accounts/billing) vs.
@@ -36,29 +37,31 @@ export function AdminShell({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="app-shell">
-      <aside className="app-sidebar admin-sidebar">
-        <div className="admin-sidebar-head">
-          <span className="admin-badge">Admin</span>
-          {admin && <p className="admin-sidebar-email">{admin.email}</p>}
-        </div>
-        {LINK_GROUPS.map((group) => (
-          <div className="app-sidebar-group" key={group.label}>
-            <span className="app-sidebar-group-label">{group.label}</span>
-            <div className="app-sidebar-links">
-              {group.links.map((link) => (
-                <NavLink key={link.to} to={link.to} className={({ isActive }) => (isActive ? "active" : "")}>
-                  {link.label}
-                </NavLink>
-              ))}
-            </div>
+    <ToastProvider>
+      <div className="app-shell">
+        <aside className="app-sidebar admin-sidebar">
+          <div className="admin-sidebar-head">
+            <span className="admin-badge">Admin</span>
+            {admin && <p className="admin-sidebar-email">{admin.email}</p>}
           </div>
-        ))}
-        <button className="btn btn-ghost admin-logout" onClick={onLogout} type="button">
-          Log out
-        </button>
-      </aside>
-      <div className="app-content">{children}</div>
-    </div>
+          {LINK_GROUPS.map((group) => (
+            <div className="app-sidebar-group" key={group.label}>
+              <span className="app-sidebar-group-label">{group.label}</span>
+              <div className="app-sidebar-links">
+                {group.links.map((link) => (
+                  <NavLink key={link.to} to={link.to} className={({ isActive }) => (isActive ? "active" : "")}>
+                    {link.label}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+          ))}
+          <button className="btn btn-ghost admin-logout" onClick={onLogout} type="button">
+            Log out
+          </button>
+        </aside>
+        <div className="app-content">{children}</div>
+      </div>
+    </ToastProvider>
   );
 }

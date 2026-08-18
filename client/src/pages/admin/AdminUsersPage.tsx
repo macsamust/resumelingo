@@ -2,7 +2,10 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import { AdminShell } from "../../components/layout/AdminShell";
 import { nextSortState, SortableHeader, SortState } from "../../components/admin/SortableHeader";
 import { AdminTableSkeleton } from "../../components/admin/AdminTableSkeleton";
+import { PasswordResetDialog } from "../../components/admin/PasswordResetDialog";
 import { Skeleton } from "../../components/common/Skeleton";
+import { ConfirmDialog } from "../../components/common/ConfirmDialog";
+import { useToast } from "../../components/common/Toast";
 import { adminApi, ApiError } from "../../api";
 import { AdminUserSummary, Resume, SubscriptionTier } from "../../types";
 
@@ -39,6 +42,7 @@ function compareUsers(a: AdminUserSummary, b: AdminUserSummary, sort: SortState<
 }
 
 export function AdminUsersPage() {
+  const { showToast } = useToast();
   const [users, setUsers] = useState<AdminUserSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +51,13 @@ export function AdminUsersPage() {
   const [resumesById, setResumesById] = useState<Record<string, Resume[]>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
   const [sort, setSort] = useState<SortState<UserSortKey>>({ key: "name", direction: "asc" });
+  // Which user (if any) is currently the subject of a confirm/prompt-style
+  // dialog — replaces window.confirm()/prompt() with the app's own styled
+  // Modal-based dialogs (see ConfirmDialog/PasswordResetDialog), which are
+  // reliably dismissible with Escape and don't look out of place next to
+  // the rest of the UI.
+  const [confirmDeleteUser, setConfirmDeleteUser] = useState<AdminUserSummary | null>(null);
+  const [passwordResetUser, setPasswordResetUser] = useState<AdminUserSummary | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -90,7 +101,7 @@ export function AdminUsersPage() {
       await adminApi.changeUserTier(user.id, tier);
       load();
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : "Couldn't change tier.");
+      showToast("error", err instanceof ApiError ? err.message : "Couldn't change tier.");
     } finally {
       setBusyId(null);
     }
@@ -102,36 +113,34 @@ export function AdminUsersPage() {
       await adminApi.setUserSuspended(user.id, !user.suspended);
       load();
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : "Couldn't update account status.");
+      showToast("error", err instanceof ApiError ? err.message : "Couldn't update account status.");
     } finally {
       setBusyId(null);
     }
   };
 
-  const onResetPassword = async (user: AdminUserSummary) => {
-    const newPassword = prompt(`Set a new password for ${user.email} (at least 8 characters):`);
-    if (!newPassword) return;
-    setBusyId(user.id);
+  const onResetPassword = async (newPassword: string) => {
+    if (!passwordResetUser) return;
     try {
-      await adminApi.resetUserPassword(user.id, newPassword);
-      alert("Password reset.");
+      await adminApi.resetUserPassword(passwordResetUser.id, newPassword);
+      showToast("success", `Password reset for ${passwordResetUser.email}.`);
+      setPasswordResetUser(null);
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : "Couldn't reset password.");
-    } finally {
-      setBusyId(null);
+      showToast("error", err instanceof ApiError ? err.message : "Couldn't reset password.");
+      // Left open on failure — the admin can correct/retry without
+      // re-opening the dialog and losing what they'd typed.
     }
   };
 
-  const onDelete = async (user: AdminUserSummary) => {
-    if (!confirm(`Permanently delete ${user.email} and all of their resumes? This cannot be undone.`)) return;
-    setBusyId(user.id);
+  const onDelete = async () => {
+    if (!confirmDeleteUser) return;
     try {
-      await adminApi.deleteUser(user.id);
+      await adminApi.deleteUser(confirmDeleteUser.id);
+      showToast("success", `${confirmDeleteUser.email} was deleted.`);
+      setConfirmDeleteUser(null);
       load();
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : "Couldn't delete account.");
-    } finally {
-      setBusyId(null);
+      showToast("error", err instanceof ApiError ? err.message : "Couldn't delete account.");
     }
   };
 
@@ -198,10 +207,14 @@ export function AdminUsersPage() {
                     <button className="btn btn-ghost btn-sm" disabled={busyId === user.id} onClick={() => onToggleSuspend(user)}>
                       {user.suspended ? "Unsuspend" : "Suspend"}
                     </button>
-                    <button className="btn btn-ghost btn-sm" disabled={busyId === user.id} onClick={() => onResetPassword(user)}>
+                    <button className="btn btn-ghost btn-sm" disabled={busyId === user.id} onClick={() => setPasswordResetUser(user)}>
                       Reset password
                     </button>
-                    <button className="btn btn-ghost btn-sm admin-danger" disabled={busyId === user.id} onClick={() => onDelete(user)}>
+                    <button
+                      className="btn btn-ghost btn-sm admin-danger"
+                      disabled={busyId === user.id}
+                      onClick={() => setConfirmDeleteUser(user)}
+                    >
                       Delete
                     </button>
                   </td>
@@ -244,6 +257,23 @@ export function AdminUsersPage() {
             )}
           </tbody>
         </table>
+      )}
+      {passwordResetUser && (
+        <PasswordResetDialog
+          email={passwordResetUser.email}
+          onSubmit={onResetPassword}
+          onCancel={() => setPasswordResetUser(null)}
+        />
+      )}
+      {confirmDeleteUser && (
+        <ConfirmDialog
+          title="Delete account"
+          message={`Permanently delete ${confirmDeleteUser.email} and all of their resumes? This cannot be undone.`}
+          confirmLabel="Delete"
+          danger
+          onConfirm={onDelete}
+          onCancel={() => setConfirmDeleteUser(null)}
+        />
       )}
     </AdminShell>
   );

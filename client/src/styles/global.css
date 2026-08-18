@@ -34,6 +34,8 @@ button { font-family: inherit; }
 .btn-ghost { background: transparent; color: var(--navy); border: 1.5px solid var(--border); }
 .btn-ghost:hover { border-color: var(--indigo); color: var(--indigo); }
 .btn-light { background: #fff; color: var(--indigo); }
+.btn-danger { background: #dc2626; color: #fff; box-shadow: 0 8px 20px -6px rgba(220,38,38,.45); }
+.btn-danger:hover { background: #b91c1c; }
 .btn-block { width: 100%; }
 .btn:disabled { opacity: .6; cursor: not-allowed; }
 
@@ -1087,4 +1089,55 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   .tpl-mono-header { flex-direction: column; text-align: center; }
   .tpl-pill-grid { grid-template-columns: 1fr; }
   .tpl-pill-header { flex-direction: column; }
+}
+
+/* Modal (components/common/Modal.tsx) — a styled confirm()/prompt()
+   replacement. Fixed full-viewport backdrop with a centered panel; used
+   directly by admin dialogs like ConfirmDialog/PasswordResetDialog. */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(15,23,42,.55); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  z-index: 100; animation: modal-fade-in .15s ease;
+}
+.modal-panel {
+  background: #fff; border-radius: 16px; padding: 26px; width: 100%; max-width: 440px;
+  box-shadow: 0 30px 60px -20px rgba(15,23,42,.45); animation: modal-pop-in .15s ease;
+}
+.modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.modal-head h2 { font-size: 19px; color: var(--navy); }
+.modal-close {
+  background: none; border: none; padding: 4px; font-size: 22px; line-height: 1; color: var(--muted); cursor: pointer;
+}
+.modal-close:hover { color: var(--navy); }
+.modal-close:disabled { opacity: .4; cursor: not-allowed; }
+.modal-message { font-size: 14.5px; color: var(--navy-light); margin-bottom: 20px; line-height: 1.55; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+.modal-actions .btn { padding: 10px 20px; font-size: 14px; }
+@keyframes modal-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modal-pop-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop, .modal-panel { animation: none; }
+}
+
+/* Toast notifications (components/common/Toast.tsx) — a styled alert()
+   replacement. Stacks bottom-right, above everything including modals, so
+   a toast fired right after a modal closes (e.g. "Account deleted.") is
+   never hidden behind it. */
+.toast-stack {
+  position: fixed; bottom: 24px; right: 24px; z-index: 200;
+  display: flex; flex-direction: column; gap: 10px; max-width: 360px;
+}
+.toast {
+  display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: 12px;
+  font-size: 13.5px; font-weight: 500; box-shadow: 0 16px 32px -12px rgba(15,23,42,.3);
+  animation: toast-slide-in .2s ease;
+}
+.toast span { flex: 1; }
+.toast-success { background: #16a34a; color: #fff; }
+.toast-error { background: #dc2626; color: #fff; }
+.toast-dismiss { background: none; border: none; padding: 0; font-size: 17px; line-height: 1; color: rgba(255,255,255,.85); cursor: pointer; }
+.toast-dismiss:hover { color: #fff; }
+@keyframes toast-slide-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
 }
