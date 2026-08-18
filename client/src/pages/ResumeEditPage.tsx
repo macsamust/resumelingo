@@ -585,7 +585,7 @@ export function ResumeEditPage() {
 
           <div className="builder-progress">
             <div className="builder-progress-label">
-              <span>Progress</span>
+              <span>Resume Build Progress</span>
               <span>
                 {sectionProgress.requiredComplete} of {sectionProgress.requiredTotal} sections complete
               </span>
