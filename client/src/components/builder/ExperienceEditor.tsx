@@ -7,6 +7,9 @@ import { MonthYearField } from "./MonthYearField";
 interface Props {
   experience: WorkExperienceEntry[];
   onChange: (experience: WorkExperienceEntry[]) => void;
+  /** Distinct company/title values from this resume's own other rows plus the user's other resumes — see ResumeEditPage's companySuggestions/titleSuggestions. Powers the native browser autocomplete on those two fields via <datalist>; omitted (empty array) is fine, it just means no suggestions yet. */
+  companySuggestions?: string[];
+  titleSuggestions?: string[];
 }
 
 function blankEntry(): WorkExperienceEntry {
@@ -29,7 +32,7 @@ function blankEntry(): WorkExperienceEntry {
  * gets sorted and rendered — current roles first, then by most recent end
  * date, so entries don't need to be added in any particular order here).
  */
-export function ExperienceEditor({ experience, onChange }: Props) {
+export function ExperienceEditor({ experience, onChange, companySuggestions = [], titleSuggestions = [] }: Props) {
   const updateEntry = (index: number, patch: Partial<WorkExperienceEntry>) => {
     onChange(experience.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)));
   };
@@ -57,6 +60,20 @@ export function ExperienceEditor({ experience, onChange }: Props) {
 
   return (
     <div className="experience-editor">
+      {companySuggestions.length > 0 && (
+        <datalist id="experience-company-suggestions">
+          {companySuggestions.map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
+      )}
+      {titleSuggestions.length > 0 && (
+        <datalist id="experience-title-suggestions">
+          {titleSuggestions.map((t) => (
+            <option key={t} value={t} />
+          ))}
+        </datalist>
+      )}
       {experience.map((entry, index) => (
         <div className="experience-row" key={entry.id ?? index} onKeyDown={(e) => handleRowKeyDown(e, index)}>
           <div className="field">
@@ -65,6 +82,7 @@ export function ExperienceEditor({ experience, onChange }: Props) {
               value={entry.company}
               onChange={(e) => updateEntry(index, { company: e.target.value })}
               placeholder="e.g. Acme Corp"
+              list={companySuggestions.length > 0 ? "experience-company-suggestions" : undefined}
             />
           </div>
           <div className="field">
@@ -73,6 +91,7 @@ export function ExperienceEditor({ experience, onChange }: Props) {
               value={entry.title}
               onChange={(e) => updateEntry(index, { title: e.target.value })}
               placeholder="e.g. Senior Software Engineer"
+              list={titleSuggestions.length > 0 ? "experience-title-suggestions" : undefined}
             />
           </div>
           <div className="experience-location">

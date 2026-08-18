@@ -5,6 +5,7 @@ import { CollapsibleSection, ForceOpenSignal } from "../components/builder/Colla
 import { DynamicQuestionForm } from "../components/builder/DynamicQuestionForm";
 import { ExperienceEditor } from "../components/builder/ExperienceEditor";
 import { EducationEditor } from "../components/builder/EducationEditor";
+import { CopyFromResume } from "../components/builder/CopyFromResume";
 import { AwardsEditor } from "../components/builder/AwardsEditor";
 import { AchievementEditor } from "../components/builder/AchievementEditor";
 import { SkillsAndToolsEditor } from "../components/builder/SkillsAndToolsEditor";
@@ -91,6 +92,12 @@ export function ResumeEditPage() {
   const [loading, setLoading] = useState(true);
   const [forceOpen, setForceOpen] = useState<ForceOpenSignal | undefined>(undefined);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  // The user's other resumes (this one excluded) — powers "Copy from
+  // another resume" in Work Experience/Education and the Company/Title/
+  // School autocomplete suggestions below. Fetched once on load; a stale
+  // list (from creating another resume in a different tab mid-edit) is an
+  // acceptable tradeoff for not re-fetching on every keystroke.
+  const [otherResumes, setOtherResumes] = useState<Resume[]>([]);
   // A locally-autosaved draft found on load that's newer than this resume's
   // last real save — offered via a banner rather than silently applied, so
   // a leftover draft can never clobber data the user (or another
@@ -136,8 +143,8 @@ export function ResumeEditPage() {
 
   useEffect(() => {
     if (!id) return;
-    Promise.all([resumeApi.getById(id), catalogApi.listTemplates(), catalogApi.listProfessions()])
-      .then(([resumeRes, templatesRes, professionsRes]) => {
+    Promise.all([resumeApi.getById(id), catalogApi.listTemplates(), catalogApi.listProfessions(), resumeApi.list()])
+      .then(([resumeRes, templatesRes, professionsRes, allResumesRes]) => {
         const r = resumeRes.resume;
         setResume(r);
         setFullName(r.fullName);
@@ -172,6 +179,7 @@ export function ResumeEditPage() {
         setTemplates(templatesRes.templates);
         setProfessions(professionsRes.professions);
         setProfessionKey(r.profession);
+        setOtherResumes(allResumesRes.resumes.filter((other) => other.id !== r.id));
 
         // Offer to restore a local autosave only if it's actually newer than
         // this resume's last real save — otherwise it's a stale leftover
@@ -390,6 +398,33 @@ export function ResumeEditPage() {
     coverLetterEnabled,
     usesSkillsAndTools,
   ]);
+
+  // Autocomplete suggestions for Company/Title (Work Experience) and School
+  // (Education) — pulled from this resume's own other rows plus every other
+  // resume the user has, via the native <input list="..."> + <datalist>
+  // pattern (no client-side fuzzy-matching library needed, the browser
+  // handles that). Kept simple as exact distinct strings, sorted for a
+  // stable/predictable dropdown order.
+  const companySuggestions = useMemo(() => {
+    const set = new Set<string>();
+    for (const e of experience) if (e.company.trim()) set.add(e.company.trim());
+    for (const r of otherResumes) for (const e of r.experience) if (e.company.trim()) set.add(e.company.trim());
+    return Array.from(set).sort();
+  }, [experience, otherResumes]);
+
+  const titleSuggestions = useMemo(() => {
+    const set = new Set<string>();
+    for (const e of experience) if (e.title.trim()) set.add(e.title.trim());
+    for (const r of otherResumes) for (const e of r.experience) if (e.title.trim()) set.add(e.title.trim());
+    return Array.from(set).sort();
+  }, [experience, otherResumes]);
+
+  const schoolSuggestions = useMemo(() => {
+    const set = new Set<string>();
+    for (const e of education) if (e.school.trim()) set.add(e.school.trim());
+    for (const r of otherResumes) for (const e of r.education) if (e.school.trim()) set.add(e.school.trim());
+    return Array.from(set).sort();
+  }, [education, otherResumes]);
 
   // Recomputed live from whatever's currently in the form — no save needed
   // to see an updated score, and nothing here ever leaves the browser.
@@ -738,11 +773,29 @@ export function ResumeEditPage() {
           </CollapsibleSection>
 
           <CollapsibleSection title="Work Experience" forceOpen={forceOpen} complete={sectionProgress.workExperience}>
-            <ExperienceEditor experience={experience} onChange={setExperience} />
+            <CopyFromResume
+              otherResumes={otherResumes}
+              getItems={(r) => r.experience}
+              transform={(entry) => ({ ...entry, id: generateId() })}
+              onCopy={(items) => setExperience((prev) => [...prev, ...items])}
+              label="Copy work experience from…"
+            />
+            <ExperienceEditor
+              experience={experience}
+              onChange={setExperience}
+              companySuggestions={companySuggestions}
+              titleSuggestions={titleSuggestions}
+            />
           </CollapsibleSection>
 
           <CollapsibleSection title="Education" forceOpen={forceOpen} complete={sectionProgress.education}>
-            <EducationEditor education={education} onChange={setEducation} />
+            <CopyFromResume
+              otherResumes={otherResumes}
+              getItems={(r) => r.education}
+              onCopy={(items) => setEducation((prev) => [...prev, ...items])}
+              label="Copy education from…"
+            />
+            <EducationEditor education={education} onChange={setEducation} schoolSuggestions={schoolSuggestions} />
           </CollapsibleSection>
 
           <CollapsibleSection title="Awards" forceOpen={forceOpen} complete={sectionProgress.awards}>

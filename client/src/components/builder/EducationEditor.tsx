@@ -6,6 +6,8 @@ import { MonthYearField } from "./MonthYearField";
 interface Props {
   education: EducationEntry[];
   onChange: (education: EducationEntry[]) => void;
+  /** Distinct school names from this resume's own other rows plus the user's other resumes — see ResumeEditPage's schoolSuggestions. Powers the native browser autocomplete via <datalist>; omitted (empty array) just means no suggestions yet. */
+  schoolSuggestions?: string[];
 }
 
 const BLANK_ENTRY: EducationEntry = {
@@ -23,7 +25,7 @@ const BLANK_ENTRY: EducationEntry = {
  * disables the end date — same pattern as ExperienceEditor.tsx. See
  * ResumePreview.tsx for how this list gets sorted and rendered.
  */
-export function EducationEditor({ education, onChange }: Props) {
+export function EducationEditor({ education, onChange, schoolSuggestions = [] }: Props) {
   const updateEntry = (index: number, patch: Partial<EducationEntry>) => {
     onChange(education.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)));
   };
@@ -44,6 +46,13 @@ export function EducationEditor({ education, onChange }: Props) {
 
   return (
     <div className="experience-editor">
+      {schoolSuggestions.length > 0 && (
+        <datalist id="education-school-suggestions">
+          {schoolSuggestions.map((s) => (
+            <option key={s} value={s} />
+          ))}
+        </datalist>
+      )}
       {education.map((entry, index) => (
         <div className="experience-row" key={index} onKeyDown={(e) => handleRowKeyDown(e, index)}>
           <div className="field">
@@ -52,6 +61,7 @@ export function EducationEditor({ education, onChange }: Props) {
               value={entry.school}
               onChange={(e) => updateEntry(index, { school: e.target.value })}
               placeholder="e.g. University of Michigan"
+              list={schoolSuggestions.length > 0 ? "education-school-suggestions" : undefined}
             />
           </div>
           <div className="field">

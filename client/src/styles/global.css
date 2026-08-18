@@ -527,6 +527,17 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
    .hero-note so it doesn't compete with real field labels. */
 .field-hint { font-size: 12px; color: var(--muted); font-style: italic; margin: 6px 0 0; }
 
+/* "Copy from another resume" control (CopyFromResume.tsx) — sits above the
+   row list in Work Experience/Education. Only rendered at all when the user
+   has another resume with something in that section to offer. */
+.copy-from-resume { display: flex; gap: 8px; margin-bottom: 16px; }
+.copy-from-resume select {
+  flex: 1; padding: 11px 14px; border-radius: 10px; border: 1.5px solid var(--border);
+  font-size: 14px; font-family: inherit; color: var(--navy-light); background: #fff;
+}
+.copy-from-resume select:focus { outline: none; border-color: var(--indigo); }
+.copy-from-resume .btn { flex-shrink: 0; padding: 9px 16px; font-size: 13.5px; }
+
 .preview-col { position: sticky; top: 90px; }
 .preview-panel { position: static; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 28px; overflow: hidden; }
 .preview-template-tag { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; padding: 4px 10px; border-radius: 999px; background: var(--tpl-accent-soft, #eef2ff); color: var(--tpl-accent, var(--indigo)); margin-bottom: 10px; }
