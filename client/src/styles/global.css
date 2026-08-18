@@ -375,12 +375,12 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .builder-section.is-collapsed .builder-section-chevron { transform: rotate(-90deg); }
 .builder-section-toggle:hover .builder-section-title { color: var(--indigo); }
 
-/* Progress dot next to a section title — hollow (just an outline) until the
-   section has meaningful content, then filled teal. See CollapsibleSection's
-   `complete` prop and ResumeEditPage's `sectionProgress`. */
+/* Progress dot next to a section title — filled red while the section is
+   still empty, filled teal once it has meaningful content. See
+   CollapsibleSection's `complete` prop and ResumeEditPage's `sectionProgress`. */
 .builder-section-dot {
   width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-  border: 1.5px solid var(--border); background: transparent; transition: background .15s ease, border-color .15s ease;
+  background: #ef4444; border: 1.5px solid #ef4444; transition: background .15s ease, border-color .15s ease;
 }
 .builder-section-dot.is-complete { background: var(--teal); border-color: var(--teal); }
 

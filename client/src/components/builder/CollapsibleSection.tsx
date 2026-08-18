@@ -14,8 +14,8 @@ interface CollapsibleSectionProps {
   /** Optional broadcast signal (e.g. from an "Expand all"/"Collapse all" control) that overrides the section's own open/closed state whenever it changes. */
   forceOpen?: ForceOpenSignal;
   /**
-   * When provided, renders a small progress dot next to the title — filled
-   * when the section has meaningful content, hollow when it's still empty.
+   * When provided, renders a small progress dot next to the title — teal
+   * when the section has meaningful content, red when it's still empty.
    * Left undefined (no dot at all) for sections where "complete" doesn't
    * really apply — Template and Sharing always have a value by default, and
    * ATS Check/Version History are tools rather than data entry. See
