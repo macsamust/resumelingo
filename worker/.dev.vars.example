@@ -1,1 +1,6 @@
 JWT_SECRET=dev-only-secret-change-me
+
+# Password reset email (see src/services/EmailService.ts). Get a key from
+# https://resend.com (API Keys). RESEND_FROM_EMAIL is already set as a
+# non-secret var in wrangler.jsonc, so it doesn't need to be repeated here.
+RESEND_API_KEY=re_...

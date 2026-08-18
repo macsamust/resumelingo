@@ -991,6 +991,12 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   .nav-links { display: none; }
   h1 { font-size: 30px; }
   .steps, .feature-grid, .pricing-grid, .stories-grid, .resources-grid, .footer-grid, .mission-grid, .link-grid, .dashboard-grid, .answer-grid, .references-grid { grid-template-columns: 1fr; }
+  /* City/State and Start/End Date pairs in ExperienceEditor, EducationEditor,
+     and ReferencesEditor — unlike every other paired-field grid above, these
+     had no narrow-screen collapse, so each field shrank to ~150px on a
+     phone. Found during a mobile-width audit of the multi-section builder
+     forms, not reported by a user — no overflow, just cramped. */
+  .experience-location, .experience-dates { grid-template-columns: 1fr; }
   .cta-band { padding: 44px 24px; }
   section { padding: 56px 0; }
   .app-content { padding: 24px 16px; }
