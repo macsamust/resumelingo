@@ -801,7 +801,7 @@ export function ResumeEditPage() {
             <CollapsibleSection title="Version History" forceOpen={forceOpen}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
                 A version is saved automatically every time you edit and save this resume — restore any of the last
-                20 to undo changes.
+                10 to undo changes.
               </p>
               {id && <VersionHistoryPanel resumeId={id} />}
             </CollapsibleSection>

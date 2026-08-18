@@ -49,7 +49,7 @@ export interface ResumeVersionRecord {
 }
 
 /** How many past versions to keep per resume — see snapshot()'s prune step. Chosen as a reasonable "undo the last several edits" window without letting the table grow unbounded on a resume that's edited constantly. */
-const MAX_VERSIONS_PER_RESUME = 20;
+const MAX_VERSIONS_PER_RESUME = 10;
 
 function toSnapshot(resume: Resume): ResumeVersionSnapshot {
   return {

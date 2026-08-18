@@ -8,7 +8,7 @@ import { formatRelativeTime } from "../../utils/time";
  * ResumeService.assertVersionHistoryAllowed) — a lighter, automatic
  * counterpart to Clone's manual "save a copy." Every non-link-only save
  * snapshots the resume's *pre-save* content (see ResumeService.update), so
- * this lists "how it looked right before each of your last 20 edits" and
+ * this lists "how it looked right before each of your last 10 edits" and
  * lets you jump back to any of them.
  *
  * Restoring reloads the page rather than trying to repopulate this page's
