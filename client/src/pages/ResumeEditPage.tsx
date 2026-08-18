@@ -21,6 +21,7 @@ import { getTemplateStyle } from "../config/templateStyles";
 import { buildResumeTextBlob, matchKeywords, runHealthChecks } from "../utils/atsCheck";
 import { CLEARANCE_OPTIONS, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
 import { generateId } from "../utils/id";
+import { clearDraft, loadDraft, ResumeDraft, saveDraft } from "../utils/resumeDraft";
 import {
   AchievementEntry,
   AwardEntry,
@@ -90,6 +91,11 @@ export function ResumeEditPage() {
   const [loading, setLoading] = useState(true);
   const [forceOpen, setForceOpen] = useState<ForceOpenSignal | undefined>(undefined);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  // A locally-autosaved draft found on load that's newer than this resume's
+  // last real save — offered via a banner rather than silently applied, so
+  // a leftover draft can never clobber data the user (or another
+  // tab/device) actually saved more recently. See utils/resumeDraft.ts.
+  const [pendingDraft, setPendingDraft] = useState<ResumeDraft | null>(null);
 
   // Shows the floating "back to top" button once the page's own header has
   // scrolled out of view, so it's not just sitting on top of it uselessly.
@@ -166,6 +172,18 @@ export function ResumeEditPage() {
         setTemplates(templatesRes.templates);
         setProfessions(professionsRes.professions);
         setProfessionKey(r.profession);
+
+        // Offer to restore a local autosave only if it's actually newer than
+        // this resume's last real save — otherwise it's a stale leftover
+        // from before a save that already happened (here or on another
+        // device/tab), and applying it would silently roll the resume back.
+        const draft = loadDraft(r.id);
+        if (draft && new Date(draft.savedAt).getTime() > new Date(r.updatedAt).getTime()) {
+          setPendingDraft(draft);
+        } else if (draft) {
+          clearDraft(r.id);
+        }
+
         return catalogApi.getProfessionQuestions(r.profession);
       })
       .then((res) => setProfessionDetail(res.profession))
@@ -190,6 +208,188 @@ export function ResumeEditPage() {
     setAnswers({});
     catalogApi.getProfessionQuestions(key).then((res) => setProfessionDetail(res.profession));
   };
+
+  /** Applies every field from a found local draft, then dismisses the banner. */
+  const restoreDraft = () => {
+    if (!pendingDraft) return;
+    setFullName(pendingDraft.fullName);
+    setContactEmail(pendingDraft.contactEmail);
+    setContactPhone(pendingDraft.contactPhone);
+    setContactLinkedIn(pendingDraft.contactLinkedIn);
+    setPhotoUrl(pendingDraft.photoUrl);
+    setTitle(pendingDraft.title);
+    setTemplateKey(pendingDraft.templateKey);
+    setVisibility(pendingDraft.visibility);
+    setAccessPasswordExpiresAt(pendingDraft.accessPasswordExpiresAt);
+    setAnswers(pendingDraft.answers);
+    setExperience(pendingDraft.experience);
+    setEducation(pendingDraft.education);
+    setAwards(pendingDraft.awards);
+    setAchievements(pendingDraft.achievements);
+    setSkillsAndTools(pendingDraft.skillsAndTools);
+    setCoverLetterEnabled(pendingDraft.coverLetterEnabled);
+    setRecruiterModeEnabled(pendingDraft.recruiterModeEnabled);
+    setRecruiterLocation(pendingDraft.recruiterLocation);
+    setRecruiterAvailability(pendingDraft.recruiterAvailability);
+    setRecruiterClearance(pendingDraft.recruiterClearance);
+    setRecruiterWorkAuthorization(pendingDraft.recruiterWorkAuthorization);
+    setRecruiterExpectedSalary(pendingDraft.recruiterExpectedSalary);
+    setRecruiterRemotePreference(pendingDraft.recruiterRemotePreference);
+    setReferencesEnabled(pendingDraft.referencesEnabled);
+    setReferences(pendingDraft.references);
+    setReferencesRecruiterModeOnly(pendingDraft.referencesRecruiterModeOnly);
+    setCombineExperienceFormat(pendingDraft.combineExperienceFormat);
+    if (pendingDraft.professionKey && pendingDraft.professionKey !== professionKey) {
+      onProfessionChange(pendingDraft.professionKey);
+    }
+    setPendingDraft(null);
+  };
+
+  const discardDraft = () => {
+    if (id) clearDraft(id);
+    setPendingDraft(null);
+  };
+
+  // Autosaves a snapshot of the whole form to localStorage shortly after
+  // each change, so closing the tab or a browser crash before hitting "Save
+  // changes" doesn't lose the work — see utils/resumeDraft.ts. Skipped
+  // entirely while the initial load is still in flight (nothing to save
+  // yet) and while a just-found draft is awaiting the user's restore/discard
+  // decision (autosaving here would immediately overwrite the very draft
+  // being offered, with the pre-restore form state).
+  useEffect(() => {
+    if (loading || !id || pendingDraft) return;
+    const handle = setTimeout(() => {
+      saveDraft(id, {
+        fullName,
+        contactEmail,
+        contactPhone,
+        contactLinkedIn,
+        photoUrl,
+        title,
+        professionKey,
+        templateKey,
+        visibility,
+        accessPasswordExpiresAt,
+        answers,
+        experience,
+        education,
+        awards,
+        achievements,
+        skillsAndTools,
+        coverLetterEnabled,
+        recruiterModeEnabled,
+        recruiterLocation,
+        recruiterAvailability,
+        recruiterClearance,
+        recruiterWorkAuthorization,
+        recruiterExpectedSalary,
+        recruiterRemotePreference,
+        referencesEnabled,
+        references,
+        referencesRecruiterModeOnly,
+        combineExperienceFormat,
+      });
+    }, 800);
+    return () => clearTimeout(handle);
+  }, [
+    loading,
+    id,
+    pendingDraft,
+    fullName,
+    contactEmail,
+    contactPhone,
+    contactLinkedIn,
+    photoUrl,
+    title,
+    professionKey,
+    templateKey,
+    visibility,
+    accessPasswordExpiresAt,
+    answers,
+    experience,
+    education,
+    awards,
+    achievements,
+    skillsAndTools,
+    coverLetterEnabled,
+    recruiterModeEnabled,
+    recruiterLocation,
+    recruiterAvailability,
+    recruiterClearance,
+    recruiterWorkAuthorization,
+    recruiterExpectedSalary,
+    recruiterRemotePreference,
+    referencesEnabled,
+    references,
+    referencesRecruiterModeOnly,
+    combineExperienceFormat,
+  ]);
+
+  // Whether this profession actually has any Additional Details questions —
+  // some professions don't, in which case that section's progress dot is
+  // omitted entirely rather than showing as permanently "incomplete".
+  const professionHasQuestions = !!professionDetail && professionDetail.questions.length > 0;
+
+  // Drives both the per-section progress dots (CollapsibleSection's
+  // `complete` prop) and the "X of Y sections complete" summary near the
+  // top of the form. `requiredComplete`/`requiredTotal` only count the
+  // sections that meaningfully affect the generated resume — Awards,
+  // Recruiter Mode, References, and Cover Letter are genuinely optional
+  // extras, so they still get a dot for feedback but aren't part of the
+  // fraction.
+  const sectionProgress = useMemo(() => {
+    const info = fullName.trim() !== "" && contactEmail.trim() !== "" && title.trim() !== "";
+    const skills = skillsAndTools.length > 0;
+    const workExperience = experience.some((e) => e.company.trim() !== "" && e.title.trim() !== "");
+    const educationDone = education.some((e) => e.school.trim() !== "" || e.degree.trim() !== "" || e.fieldOfStudy.trim() !== "");
+    const awardsDone = awards.some((a) => a.title.trim() !== "");
+    const achievementsDone = achievements.some(
+      (a) => a.challenge.trim() !== "" || a.action.trim() !== "" || a.result.trim() !== ""
+    );
+    const additionalDetails = professionHasQuestions
+      ? professionDetail!.questions.some((q) => (answers[q.key] ?? "").trim() !== "")
+      : false;
+    const recruiterMode = recruiterModeEnabled;
+    const referencesDone = referencesEnabled && references.length > 0;
+    const coverLetter = coverLetterEnabled;
+
+    const required = [info, workExperience, educationDone, achievementsDone];
+    if (usesSkillsAndTools) required.push(skills);
+    if (professionHasQuestions) required.push(additionalDetails);
+
+    return {
+      info,
+      skills,
+      workExperience,
+      education: educationDone,
+      awards: awardsDone,
+      achievements: achievementsDone,
+      additionalDetails,
+      recruiterMode,
+      references: referencesDone,
+      coverLetter,
+      requiredComplete: required.filter(Boolean).length,
+      requiredTotal: required.length,
+    };
+  }, [
+    fullName,
+    contactEmail,
+    title,
+    skillsAndTools,
+    experience,
+    education,
+    awards,
+    achievements,
+    professionHasQuestions,
+    professionDetail,
+    answers,
+    recruiterModeEnabled,
+    referencesEnabled,
+    references,
+    coverLetterEnabled,
+    usesSkillsAndTools,
+  ]);
 
   // Recomputed live from whatever's currently in the form — no save needed
   // to see an updated score, and nothing here ever leaves the browser.
@@ -308,6 +508,10 @@ export function ResumeEditPage() {
         referencesRecruiterModeOnly,
       });
       setResume(updated);
+      // Now safely persisted server-side — the local autosave would only be
+      // stale from here on, and leaving it around would just prompt an
+      // unnecessary "restore?" banner on the next visit.
+      clearDraft(id);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong saving your resume.");
     } finally {
@@ -360,11 +564,39 @@ export function ResumeEditPage() {
         </div>
       </div>
       {error && <div className="form-error">{error}</div>}
+      {pendingDraft && (
+        <div className="draft-restore-banner">
+          <span>You have unsaved changes from earlier — restore them?</span>
+          <span className="draft-restore-banner-actions">
+            <button type="button" className="draft-restore-banner-restore" onClick={restoreDraft}>
+              Restore
+            </button>
+            <button type="button" className="draft-restore-banner-discard" onClick={discardDraft}>
+              Discard
+            </button>
+          </span>
+        </div>
+      )}
       <form id="resume-edit-form" onSubmit={onSubmit} className="builder-grid">
         <div className="builder-panel">
           <button className="btn btn-primary btn-block" type="submit" disabled={saving} style={{ marginBottom: 20 }}>
             {saving ? "Saving…" : "Save changes"}
           </button>
+
+          <div className="builder-progress">
+            <div className="builder-progress-label">
+              <span>Progress</span>
+              <span>
+                {sectionProgress.requiredComplete} of {sectionProgress.requiredTotal} sections complete
+              </span>
+            </div>
+            <div className="builder-progress-track">
+              <div
+                className="builder-progress-fill"
+                style={{ width: `${(sectionProgress.requiredComplete / Math.max(1, sectionProgress.requiredTotal)) * 100}%` }}
+              />
+            </div>
+          </div>
 
           <div className="builder-toggle-all">
             <button type="button" onClick={() => setForceOpen({ open: true, token: Date.now() })}>
@@ -376,7 +608,7 @@ export function ResumeEditPage() {
             </button>
           </div>
 
-          <CollapsibleSection title="Info" forceOpen={forceOpen}>
+          <CollapsibleSection title="Info" forceOpen={forceOpen} complete={sectionProgress.info}>
             <div className="field">
               <label>Your full name</label>
               <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
@@ -441,7 +673,7 @@ export function ResumeEditPage() {
           </CollapsibleSection>
 
           {usesSkillsAndTools && (
-            <CollapsibleSection title="Skills & Tools" forceOpen={forceOpen}>
+            <CollapsibleSection title="Skills & Tools" forceOpen={forceOpen} complete={sectionProgress.skills}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
                 Available on every Premium template. Click a suggested keyword to add it — skills and tools are
                 grouped separately in both the picker and the resume itself.
@@ -505,19 +737,19 @@ export function ResumeEditPage() {
             </p>
           </CollapsibleSection>
 
-          <CollapsibleSection title="Work Experience" forceOpen={forceOpen}>
+          <CollapsibleSection title="Work Experience" forceOpen={forceOpen} complete={sectionProgress.workExperience}>
             <ExperienceEditor experience={experience} onChange={setExperience} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Education" forceOpen={forceOpen}>
+          <CollapsibleSection title="Education" forceOpen={forceOpen} complete={sectionProgress.education}>
             <EducationEditor education={education} onChange={setEducation} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Awards" forceOpen={forceOpen}>
+          <CollapsibleSection title="Awards" forceOpen={forceOpen} complete={sectionProgress.awards}>
             <AwardsEditor awards={awards} onChange={setAwards} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Key Achievements" forceOpen={forceOpen}>
+          <CollapsibleSection title="Key Achievements" forceOpen={forceOpen} complete={sectionProgress.achievements}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
               Describe a challenge, what you did, and the result — this is what turns into impact-focused resume bullets.
             </p>
@@ -537,7 +769,11 @@ export function ResumeEditPage() {
             />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Additional Details" forceOpen={forceOpen}>
+          <CollapsibleSection
+            title="Additional Details"
+            forceOpen={forceOpen}
+            complete={professionHasQuestions ? sectionProgress.additionalDetails : undefined}
+          >
             {professionDetail && (
               <DynamicQuestionForm
                 questions={professionDetail.questions}
@@ -647,7 +883,7 @@ export function ResumeEditPage() {
           )}
 
           {isPremium && (
-            <CollapsibleSection title="Recruiter Mode" forceOpen={forceOpen}>
+            <CollapsibleSection title="Recruiter Mode" forceOpen={forceOpen} complete={sectionProgress.recruiterMode}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
                 Adds a candidate summary card to the top of your public resume link — skills (pulled automatically
                 from your resume), availability, clearance, location, work authorization, expected salary, and
@@ -729,7 +965,7 @@ export function ResumeEditPage() {
           )}
 
           {isPremium && (
-            <CollapsibleSection title="References" forceOpen={forceOpen}>
+            <CollapsibleSection title="References" forceOpen={forceOpen} complete={sectionProgress.references}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
                 Adds a References section to your public resume link. Off by default — nothing appears until you
                 turn this on and add at least one reference.
@@ -764,7 +1000,7 @@ export function ResumeEditPage() {
           )}
 
           {isPremium && selectedTemplateIsPremium && (
-            <CollapsibleSection title="Cover Letter" forceOpen={forceOpen}>
+            <CollapsibleSection title="Cover Letter" forceOpen={forceOpen} complete={sectionProgress.coverLetter}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
                 Generates a tailored AI cover letter alongside this resume. Off by default — turn this on to have one
                 written and kept in sync automatically.

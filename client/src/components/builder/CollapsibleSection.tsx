@@ -13,10 +13,20 @@ interface CollapsibleSectionProps {
   defaultOpen?: boolean;
   /** Optional broadcast signal (e.g. from an "Expand all"/"Collapse all" control) that overrides the section's own open/closed state whenever it changes. */
   forceOpen?: ForceOpenSignal;
+  /**
+   * When provided, renders a small progress dot next to the title — filled
+   * when the section has meaningful content, hollow when it's still empty.
+   * Left undefined (no dot at all) for sections where "complete" doesn't
+   * really apply — Template and Sharing always have a value by default, and
+   * ATS Check/Version History are tools rather than data entry. See
+   * ResumeEditPage's `sectionProgress` for how each section's value is
+   * computed.
+   */
+  complete?: boolean;
 }
 
 /** A titled, collapsible block used to group each part of the resume editor (Details, Sharing, Work Experience, ...) so long forms are easier to navigate. */
-export function CollapsibleSection({ title, children, defaultOpen = true, forceOpen }: CollapsibleSectionProps) {
+export function CollapsibleSection({ title, children, defaultOpen = true, forceOpen, complete }: CollapsibleSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
 
   useEffect(() => {
@@ -31,7 +41,14 @@ export function CollapsibleSection({ title, children, defaultOpen = true, forceO
         <span className="builder-section-chevron" aria-hidden="true">
           ▾
         </span>
-        <span>{title}</span>
+        <span className="builder-section-title">{title}</span>
+        {complete !== undefined && (
+          <span
+            className={`builder-section-dot ${complete ? "is-complete" : ""}`}
+            aria-label={complete ? "Section has content" : "Section is empty"}
+            title={complete ? "Section has content" : "Section is empty"}
+          />
+        )}
       </button>
       {open && <div className="builder-section-body">{children}</div>}
     </section>
