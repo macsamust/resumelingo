@@ -35,6 +35,8 @@ export interface CreateResumeInput {
   skillsAndTools?: SkillOrTool[];
   generatedSummary: string;
   generatedBullets: string[];
+  /** Premium-only branded slug (see ResumeService.create's generateBrandedSlug call) — omitted for every other tier, which keeps today's {title}-{random6} behavior untouched. */
+  slug?: string;
 }
 
 export interface UpdateResumeInput {
@@ -117,7 +119,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
     const record: ResumeRecord = {
       id: nanoid(12),
       userId: input.userId,
-      slug: `${slugify(input.title)}-${nanoid(6)}`,
+      slug: input.slug ?? `${slugify(input.title)}-${nanoid(6)}`,
       fullName: input.fullName,
       contactEmail: input.contactEmail,
       contactPhone: input.contactPhone,
@@ -241,12 +243,12 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
    * clone always starts as a private, unshared, unviewed draft rather than
    * silently inheriting a live public link.
    */
-  async clone(source: ResumeRecord, overrides: { title: string; templateKey: string }): Promise<ResumeRecord> {
+  async clone(source: ResumeRecord, overrides: { title: string; templateKey: string; slug?: string }): Promise<ResumeRecord> {
     const now = new Date().toISOString();
     const record: ResumeRecord = {
       ...source,
       id: nanoid(12),
-      slug: `${slugify(overrides.title)}-${nanoid(6)}`,
+      slug: overrides.slug ?? `${slugify(overrides.title)}-${nanoid(6)}`,
       title: overrides.title,
       templateKey: overrides.templateKey,
       visibility: LinkVisibility.Private,
@@ -270,4 +272,28 @@ function slugify(title: string): string {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "") || "resume"
   );
+}
+
+/**
+ * Premium-only "branded" slug — {subscriber name}-{resume title}, e.g.
+ * "jordan-lee-software-engineer", instead of the {title}-{random6} every
+ * other tier gets. Declared here (not as a method) so it can be reused by
+ * ResumeService for both create() and clone() without duplicating the
+ * collision-avoidance loop. Falls back to appending -2, -3, ... only if the
+ * clean slug is already taken (e.g. the same person creates two resumes
+ * with the same title) — most of the time this never triggers.
+ */
+export async function generateBrandedSlug(
+  resumes: Pick<ResumeRepository, "findBySlug">,
+  subscriberName: string,
+  title: string
+): Promise<string> {
+  const base = `${slugify(subscriberName)}-${slugify(title)}`;
+  let candidate = base;
+  let suffix = 2;
+  while (await resumes.findBySlug(candidate)) {
+    candidate = `${base}-${suffix}`;
+    suffix++;
+  }
+  return candidate;
 }

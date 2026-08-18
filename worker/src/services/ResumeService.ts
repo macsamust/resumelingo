@@ -1,4 +1,4 @@
-import { ResumeRepository, UpdateResumeInput } from "../repositories/ResumeRepository";
+import { generateBrandedSlug, ResumeRepository, UpdateResumeInput } from "../repositories/ResumeRepository";
 import { UserRepository } from "../repositories/UserRepository";
 import { ResumeAnalyticsRepository } from "../repositories/ResumeAnalyticsRepository";
 import { ResumeVersionRecord, ResumeVersionRepository } from "../repositories/ResumeVersionRepository";
@@ -198,8 +198,18 @@ export class ResumeService {
         })
       : "";
 
+    // Premium perk: a clean "{subscriber name}-{resume title}" public link
+    // instead of the {title}-{random6} every other tier gets — see
+    // ResumeRepository.generateBrandedSlug. Left undefined for every other
+    // tier, which keeps the repository's own default slug logic untouched.
+    const slug =
+      user.subscriptionTier === SubscriptionTier.Premium
+        ? await generateBrandedSlug(this.resumes, user.name, input.title)
+        : undefined;
+
     const record = await this.resumes.create({
       userId: user.id,
+      slug,
       // Defaults to the account holder's name, but is editable per resume.
       fullName,
       // Defaults contact email to the account's email — phone and LinkedIn
@@ -393,7 +403,12 @@ export class ResumeService {
     const templateKey = input.templateKey ?? record.templateKey;
     assertTemplateAllowed(user.subscriptionTier, templateKey);
 
-    const cloned = await this.resumes.clone(record, { title: input.title, templateKey });
+    const slug =
+      user.subscriptionTier === SubscriptionTier.Premium
+        ? await generateBrandedSlug(this.resumes, user.name, input.title)
+        : undefined;
+
+    const cloned = await this.resumes.clone(record, { title: input.title, templateKey, slug });
     const resume = new Resume(cloned);
     await this.analytics.recordScoreSnapshot(resume.id, resume.strengthScore);
     return resume;
