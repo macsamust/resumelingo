@@ -3,9 +3,10 @@ name: CI
 # Runs on every push to main and every PR targeting main. The "deploy" job
 # only fires on a push to main (not PRs) and only after "typecheck" passes.
 #
-# No automated tests exist yet in this repo (server/, worker/, and client/
-# all lack a "test" script) — this workflow only catches type errors and
-# build failures. Add a "test" step per project once real tests exist.
+# server/, worker/, and client/ each have their own Vitest suite ("npm test")
+# alongside typecheck — see e.g. server/src/services/AuthService.test.ts and
+# ResumeService.test.ts (mirrored in worker/), and client/src/utils/
+# atsCheck.test.ts.
 on:
   push:
     branches: [main]
@@ -37,16 +38,23 @@ jobs:
       - name: Build shared types package
         run: npm install --prefix shared && npm run build --prefix shared
 
-      - name: server — install & build
-        run: npm ci --prefix server && npm run build --prefix server
+      - name: server — install, test & build
+        run: |
+          npm ci --prefix server
+          npm run test --prefix server
+          npm run build --prefix server
 
-      - name: worker — install & typecheck
-        run: npm ci --prefix worker && npm run typecheck --prefix worker
+      - name: worker — install, typecheck & test
+        run: |
+          npm ci --prefix worker
+          npm run typecheck --prefix worker
+          npm run test --prefix worker
 
-      - name: client — install, typecheck & build
+      - name: client — install, typecheck, test & build
         run: |
           npm ci --prefix client
           npm run typecheck --prefix client
+          npm run test --prefix client
           npm run build --prefix client
 
   deploy:

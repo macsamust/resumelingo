@@ -37,7 +37,7 @@ import { getProfessionByKey } from "../config/professions";
  */
 
 /** Whether templateKey resolves to a Premium-category template — the gate for the "Generate AI cover letter" checkbox. */
-function isPremiumTemplate(templateKey: string): boolean {
+export function isPremiumTemplate(templateKey: string): boolean {
   return getTemplateByKey(templateKey)?.category === TemplateCategory.Premium;
 }
 
@@ -61,7 +61,7 @@ export class VersionNotFoundError extends Error {}
 // client-side step is ever bypassed.
 const MAX_PHOTO_DATA_URL_LENGTH = 2_000_000;
 
-function assertPhotoSizeOk(photoUrl: string | undefined): void {
+export function assertPhotoSizeOk(photoUrl: string | undefined): void {
   if (photoUrl && photoUrl.length > MAX_PHOTO_DATA_URL_LENGTH) {
     throw new PhotoTooLargeError("That photo is too large — please use a smaller image.");
   }
@@ -72,7 +72,7 @@ function assertPhotoSizeOk(photoUrl: string | undefined): void {
  * (never throws) for an unknown key — template *existence* isn't validated
  * here, only the tier gate for known templates, matching prior behavior.
  */
-function assertTemplateAllowed(tier: User["subscriptionTier"], templateKey: string): void {
+export function assertTemplateAllowed(tier: User["subscriptionTier"], templateKey: string): void {
   const template = getTemplateByKey(templateKey);
   if (!template) return;
   if (canUseTemplate(tier, template.category)) return;
@@ -85,7 +85,7 @@ function assertTemplateAllowed(tier: User["subscriptionTier"], templateKey: stri
  * config/visibilityAccess.ts for the allow-list (Starter: public only;
  * Professional: public + private; Premium: all three, including password).
  */
-function assertVisibilityAllowed(tier: User["subscriptionTier"], visibility: LinkVisibility): void {
+export function assertVisibilityAllowed(tier: User["subscriptionTier"], visibility: LinkVisibility): void {
   if (canUseVisibility(tier, visibility)) return;
   const requiredPlan = getPlan(VISIBILITY_MIN_TIER[visibility]);
   throw new VisibilityAccessError(
@@ -104,7 +104,7 @@ function assertVisibilityAllowed(tier: User["subscriptionTier"], visibility: Lin
 const LINK_ONLY_UPDATE_KEYS = new Set(["active", "visibility", "accessPassword", "accessPasswordExpiresAt"]);
 
 /** Throws unless `tier` is Professional or Premium — Starter accounts can't pause/resume a resume's public link. */
-function assertActiveToggleAllowed(tier: User["subscriptionTier"]): void {
+export function assertActiveToggleAllowed(tier: User["subscriptionTier"]): void {
   if (tier === SubscriptionTier.Professional || tier === SubscriptionTier.Premium) return;
   throw new ActiveToggleAccessError(
     "Activating/deactivating a resume link requires the Professional or Premium plan. Upgrade to use this feature."
@@ -112,7 +112,7 @@ function assertActiveToggleAllowed(tier: User["subscriptionTier"]): void {
 }
 
 /** Throws unless `tier` is Professional or Premium — same gate as Clone, the closest existing "extra copy of your work" perk. */
-function assertVersionHistoryAllowed(tier: User["subscriptionTier"]): void {
+export function assertVersionHistoryAllowed(tier: User["subscriptionTier"]): void {
   if (tier === SubscriptionTier.Professional || tier === SubscriptionTier.Premium) return;
   throw new VersionHistoryAccessError(
     "Version history requires the Professional or Premium plan. Upgrade to use this feature."

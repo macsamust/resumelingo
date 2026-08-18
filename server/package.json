@@ -10,7 +10,9 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "seed": "tsx src/db/seed.ts",
-    "export:accounts": "tsx scripts/exportAccountsToD1.ts"
+    "export:accounts": "tsx scripts/exportAccountsToD1.ts",
+    "pretest": "npm install --prefix ../shared && npm run build --prefix ../shared",
+    "test": "vitest run"
   },
   "dependencies": {
     "@resumelingo/shared": "file:../shared",
@@ -31,6 +33,7 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^20.14.15",
     "tsx": "^4.19.1",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.8"
   }
 }
