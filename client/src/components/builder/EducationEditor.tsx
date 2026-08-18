@@ -1,7 +1,16 @@
 import { KeyboardEvent } from "react";
 import { EducationEntry } from "../../types";
 import { duplicateItem, moveItem } from "../../utils/listEditing";
+import { EmptyRowExample } from "./EmptyRowExample";
 import { MonthYearField } from "./MonthYearField";
+
+const EXAMPLE_FIELDS = [
+  { label: "School", value: "University of Michigan" },
+  { label: "Degree", value: "B.S." },
+  { label: "Field of study", value: "Computer Science" },
+  { label: "Start date", value: "Aug 2016" },
+  { label: "End date", value: "May 2020" },
+];
 
 interface Props {
   education: EducationEntry[];
@@ -53,6 +62,7 @@ export function EducationEditor({ education, onChange, schoolSuggestions = [] }:
           ))}
         </datalist>
       )}
+      {education.length === 0 && <EmptyRowExample fields={EXAMPLE_FIELDS} />}
       {education.map((entry, index) => (
         <div className="experience-row" key={index} onKeyDown={(e) => handleRowKeyDown(e, index)}>
           <div className="field">

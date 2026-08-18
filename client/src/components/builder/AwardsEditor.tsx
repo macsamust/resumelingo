@@ -1,7 +1,15 @@
 import { KeyboardEvent } from "react";
 import { AwardEntry } from "../../types";
 import { duplicateItem, moveItem } from "../../utils/listEditing";
+import { EmptyRowExample } from "./EmptyRowExample";
 import { MonthYearField } from "./MonthYearField";
+
+const EXAMPLE_FIELDS = [
+  { label: "Award title", value: "Employee of the Year" },
+  { label: "Issuing organization", value: "Acme Corp" },
+  { label: "Date received", value: "Dec 2023" },
+  { label: "Description", value: "Awarded to the top-performing engineer company-wide" },
+];
 
 interface Props {
   awards: AwardEntry[];
@@ -43,6 +51,7 @@ export function AwardsEditor({ awards, onChange }: Props) {
 
   return (
     <div className="experience-editor">
+      {awards.length === 0 && <EmptyRowExample fields={EXAMPLE_FIELDS} />}
       {awards.map((entry, index) => (
         <div className="experience-row" key={index} onKeyDown={(e) => handleRowKeyDown(e, index)}>
           <div className="field">

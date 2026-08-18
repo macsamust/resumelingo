@@ -2,7 +2,17 @@ import { KeyboardEvent } from "react";
 import { WorkExperienceEntry } from "../../types";
 import { generateId } from "../../utils/id";
 import { duplicateItem, moveItem } from "../../utils/listEditing";
+import { EmptyRowExample } from "./EmptyRowExample";
 import { MonthYearField } from "./MonthYearField";
+
+const EXAMPLE_FIELDS = [
+  { label: "Company", value: "Acme Corp" },
+  { label: "Title held", value: "Senior Software Engineer" },
+  { label: "City", value: "Austin" },
+  { label: "State", value: "TX" },
+  { label: "Start date", value: "Jan 2022" },
+  { label: "End date", value: "Present" },
+];
 
 interface Props {
   experience: WorkExperienceEntry[];
@@ -74,6 +84,7 @@ export function ExperienceEditor({ experience, onChange, companySuggestions = []
           ))}
         </datalist>
       )}
+      {experience.length === 0 && <EmptyRowExample fields={EXAMPLE_FIELDS} />}
       {experience.map((entry, index) => (
         <div className="experience-row" key={entry.id ?? index} onKeyDown={(e) => handleRowKeyDown(e, index)}>
           <div className="field">

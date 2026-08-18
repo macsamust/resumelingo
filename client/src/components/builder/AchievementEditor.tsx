@@ -1,5 +1,12 @@
 import { AchievementEntry, WorkExperienceEntry } from "../../types";
 import { duplicateItem, moveItem } from "../../utils/listEditing";
+import { EmptyRowExample } from "./EmptyRowExample";
+
+const EXAMPLE_FIELDS = [
+  { label: "Challenge", value: "Signups were dropping off 40% of the way through onboarding" },
+  { label: "Action", value: "Redesigned the onboarding flow and cut it from 8 steps to 3" },
+  { label: "Result", value: "A 25% increase in completed signups within one quarter" },
+];
 
 interface Props {
   achievements: AchievementEntry[];
@@ -53,6 +60,7 @@ export function AchievementEditor({ achievements, onChange, experience, showJobL
 
   return (
     <div className="experience-editor">
+      {achievements.length === 0 && <EmptyRowExample fields={EXAMPLE_FIELDS} />}
       {achievements.map((entry, index) => (
         <div className="experience-row" key={index}>
           {showJobLink && experience.length > 0 && (

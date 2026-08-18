@@ -1,7 +1,18 @@
 import { KeyboardEvent } from "react";
 import { ReferenceEntry } from "../../types";
 import { duplicateItem, moveItem } from "../../utils/listEditing";
+import { EmptyRowExample } from "./EmptyRowExample";
 import { MonthYearField } from "./MonthYearField";
+
+const EXAMPLE_FIELDS = [
+  { label: "Name", value: "Jordan Lee" },
+  { label: "Company position", value: "Engineering Director" },
+  { label: "Company", value: "Acme Corp" },
+  { label: "Email", value: "jordan@example.com" },
+  { label: "Phone", value: "(555) 123-4567" },
+  { label: "Affiliation", value: "Former Manager" },
+  { label: "Date observed", value: "Jan 2020 – Dec 2022" },
+];
 
 interface Props {
   references: ReferenceEntry[];
@@ -52,6 +63,7 @@ export function ReferencesEditor({ references, onChange }: Props) {
 
   return (
     <div className="experience-editor">
+      {references.length === 0 && <EmptyRowExample fields={EXAMPLE_FIELDS} />}
       {references.map((entry, index) => (
         <div className="experience-row" key={index} onKeyDown={(e) => handleRowKeyDown(e, index)}>
           <div className="field">
