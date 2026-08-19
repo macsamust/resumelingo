@@ -237,24 +237,6 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
    design: small, uppercase, light — ambient context, not a badge to notice. */
 .app-sidebar-tier { position: absolute; top: 14px; right: 14px; font-size: 10.5px; font-weight: 600; color: #94a3b8; letter-spacing: .02em; text-transform: uppercase; }
 .app-content { flex: 1; padding: 32px 36px; max-width: 1040px; }
-/* Breadcrumbs.tsx — sits directly above .app-page-head on nested pages
-   (Edit Resume, Career Coach, Thank-You Letter) that previously had no
-   orientation at the top of the page at all. Explicitly resets
-   justify-content/padding/max-width/margin: this is a bare <nav> element,
-   which otherwise inherits the site header's generic `nav { ... }` rule
-   above (line 43) — that rule's `justify-content: space-between` was
-   spreading "Dashboard /" and the current-page label to opposite ends of
-   the container instead of side by side, making the second crumb look
-   like it wasn't rendering at all. */
-.breadcrumbs {
-  display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center;
-  padding: 0; max-width: none; margin: 0 0 10px;
-  font-size: 13px; font-weight: 500;
-}
-.breadcrumb-item a { color: var(--muted); }
-.breadcrumb-item a:hover { color: var(--indigo); text-decoration: underline; }
-.breadcrumb-item span[aria-current="page"] { color: var(--navy-light); font-weight: 600; }
-.breadcrumb-sep { margin: 0 8px; color: var(--border); }
 .app-page-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
 .app-page-head h1 { font-size: 26px; }
 .app-page-head-count { font-size: 15px; font-weight: 500; color: var(--muted); }

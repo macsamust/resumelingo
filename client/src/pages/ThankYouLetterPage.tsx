@@ -1,7 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
-import { Breadcrumbs } from "../components/common/Breadcrumbs";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, thankYouLetterApi } from "../api";
 import { ThankYouScenario, ThankYouScenarioOption } from "../types";
@@ -29,7 +28,6 @@ function downloadTextFile(filename: string, contents: string): void {
 function ThankYouLetterLocked() {
   return (
     <AppShell>
-      <Breadcrumbs items={[{ label: "Dashboard", to: "/dashboard" }, { label: "Thank-You Letter" }]} />
       <div className="app-page-head">
         <h1>Thank-You Letter</h1>
       </div>
@@ -103,7 +101,6 @@ export function ThankYouLetterPage() {
 
   return (
     <AppShell>
-      <Breadcrumbs items={[{ label: "Dashboard", to: "/dashboard" }, { label: "Thank-You Letter" }]} />
       <div className="app-page-head">
         <h1>Thank-You Letter</h1>
       </div>
