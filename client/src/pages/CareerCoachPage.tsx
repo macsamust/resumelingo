@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
+import { Breadcrumbs } from "../components/common/Breadcrumbs";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, careerCoachApi } from "../api";
 import { CareerCoachAnswer } from "../api/CareerCoachApi";
@@ -15,6 +16,7 @@ interface Exchange {
 function CareerCoachLocked() {
   return (
     <AppShell>
+      <Breadcrumbs items={[{ label: "Dashboard", to: "/dashboard" }, { label: "Career Coach" }]} />
       <div className="app-page-head">
         <h1>Career Coach</h1>
       </div>
@@ -68,6 +70,7 @@ export function CareerCoachPage() {
 
   return (
     <AppShell>
+      <Breadcrumbs items={[{ label: "Dashboard", to: "/dashboard" }, { label: "Career Coach" }]} />
       <div className="app-page-head">
         <h1>Career Coach</h1>
       </div>

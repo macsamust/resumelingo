@@ -14,6 +14,7 @@ import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { ResumePreview } from "../components/builder/ResumePreview";
 import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
 import { VersionHistoryPanel } from "../components/common/VersionHistoryPanel";
+import { Breadcrumbs } from "../components/common/Breadcrumbs";
 import { ApiError, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL } from "../utils/templateAccess";
@@ -587,6 +588,7 @@ export function ResumeEditPage() {
 
   return (
     <AppShell>
+      <Breadcrumbs items={[{ label: "Dashboard", to: "/dashboard" }, { label: resume.title || "Edit Resume" }]} />
       <div className="app-page-head">
         <h1 id="edit-resume-title">Edit Resume</h1>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
