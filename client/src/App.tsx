@@ -15,6 +15,7 @@ import { ResumeEditPage } from "./pages/ResumeEditPage";
 import { PublicResumePage } from "./pages/PublicResumePage";
 import { ThankYouLetterPage } from "./pages/ThankYouLetterPage";
 import { CareerCoachPage } from "./pages/CareerCoachPage";
+import { NotFoundPage } from "./pages/NotFoundPage";
 import { AdminProtectedRoute } from "./components/layout/AdminProtectedRoute";
 import { AdminLoginPage } from "./pages/admin/AdminLoginPage";
 import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
@@ -129,7 +130,7 @@ export default function App() {
           }
         />
         <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
-        <Route path="*" element={<LandingPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       {!isPublicResumeRoute && !isAdminRoute && <Footer />}
     </>

@@ -953,6 +953,21 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 }
 .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
 
+/* 404 (NotFoundPage.tsx) — the catch-all route used to silently render the
+   landing page for any unmatched URL, which made a broken/mistyped link
+   look like it worked. Deliberately reuses .lead/.btn rather than
+   introducing new type/button styles, so it reads as part of the same
+   site, not a bolted-on error page. */
+.not-found { text-align: center; padding: 120px 24px; }
+.not-found-code {
+  font-size: 96px; font-weight: 800; line-height: 1; letter-spacing: -.02em;
+  background: linear-gradient(135deg, var(--indigo), var(--teal)); -webkit-background-clip: text; background-clip: text; color: transparent;
+  margin-bottom: 8px;
+}
+.not-found h1 { margin-bottom: 14px; }
+.not-found .lead { margin: 0 auto 32px; }
+.not-found-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
 /* Shimmering placeholder block — see components/common/Skeleton.tsx. Used
    to build page-specific skeleton screens (DashboardSkeleton.tsx is the
    first) instead of a plain "Loading…" spinner. */
