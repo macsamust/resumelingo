@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { CollapsibleSection, ForceOpenSignal } from "../components/builder/CollapsibleSection";
@@ -103,6 +103,17 @@ export function ResumeEditPage() {
   // a leftover draft can never clobber data the user (or another
   // tab/device) actually saved more recently. See utils/resumeDraft.ts.
   const [pendingDraft, setPendingDraft] = useState<ResumeDraft | null>(null);
+  // Whether the form currently differs from what's actually saved on the
+  // server — drives the beforeunload warning below. localStorage autosave
+  // protects the *data* from a closed tab or crash, but it doesn't stop
+  // someone from closing the tab thinking they'd hit "Save changes" when
+  // they'd only autosaved locally, hence this separate, explicit signal.
+  const [isDirty, setIsDirty] = useState(false);
+  // True once the form has "settled" after a load/restore/discard — the
+  // dirty-tracking effect below fires on that settling too (same
+  // dependency list as autosave), and that first firing must not count as
+  // a real edit or the warning would fire on a page that was never touched.
+  const hasSettledRef = useRef(false);
 
   // Shows the floating "back to top" button once the page's own header has
   // scrolled out of view, so it's not just sitting on top of it uselessly.
@@ -334,6 +345,72 @@ export function ResumeEditPage() {
     combineExperienceFormat,
   ]);
 
+  // Tracks whether the form has actually changed since it last matched the
+  // server — same dependency list as the autosave effect above, since both
+  // need to fire on exactly the same "something changed" signal. While
+  // loading, or while a restore/discard decision is pending, any firing is
+  // just the form settling into place rather than a real edit, so
+  // hasSettledRef is reset and the very next firing after that is skipped
+  // once rather than marked dirty.
+  useEffect(() => {
+    if (loading || pendingDraft) {
+      hasSettledRef.current = false;
+      return;
+    }
+    if (!hasSettledRef.current) {
+      hasSettledRef.current = true;
+      return;
+    }
+    setIsDirty(true);
+  }, [
+    loading,
+    pendingDraft,
+    fullName,
+    contactEmail,
+    contactPhone,
+    contactLinkedIn,
+    photoUrl,
+    title,
+    professionKey,
+    templateKey,
+    visibility,
+    accessPasswordExpiresAt,
+    answers,
+    experience,
+    education,
+    awards,
+    achievements,
+    skillsAndTools,
+    coverLetterEnabled,
+    recruiterModeEnabled,
+    recruiterLocation,
+    recruiterAvailability,
+    recruiterClearance,
+    recruiterWorkAuthorization,
+    recruiterExpectedSalary,
+    recruiterRemotePreference,
+    referencesEnabled,
+    references,
+    referencesRecruiterModeOnly,
+    combineExperienceFormat,
+  ]);
+
+  // Warns before closing the tab, refreshing, or navigating to a different
+  // site while there are unsaved changes — the autosave above protects the
+  // *data*, but without this someone can still close the tab thinking a
+  // change was actually saved when it was only saved locally. Browsers
+  // ignore any custom message text and show their own wording, but still
+  // require `returnValue` to be set for the native prompt to appear.
+  useEffect(() => {
+    if (!isDirty) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
   // Whether this profession actually has any Additional Details questions —
   // some professions don't, in which case that section's progress dot is
   // omitted entirely rather than showing as permanently "incomplete".
@@ -547,6 +624,7 @@ export function ResumeEditPage() {
       // stale from here on, and leaving it around would just prompt an
       // unnecessary "restore?" banner on the next visit.
       clearDraft(id);
+      setIsDirty(false);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong saving your resume.");
     } finally {
