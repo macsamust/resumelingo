@@ -111,16 +111,33 @@ export function ResumeBuilderPage() {
   // `complete` prop) — same lightweight "has anything meaningful been
   // entered" check ResumeEditPage's sectionProgress uses, trimmed to just
   // the sections this page has.
-  const sectionProgress = useMemo(
-    () => ({
-      info: fullName.trim() !== "" && contactEmail.trim() !== "" && title.trim() !== "",
-      workExperience: experience.some((e) => e.company.trim() !== "" && e.title.trim() !== ""),
-      education: education.some((e) => e.school.trim() !== "" || e.degree.trim() !== "" || e.fieldOfStudy.trim() !== ""),
-      awards: awards.some((a) => a.title.trim() !== ""),
-      achievements: achievements.some((a) => a.challenge.trim() !== "" || a.action.trim() !== "" || a.result.trim() !== ""),
-    }),
-    [fullName, contactEmail, title, experience, education, awards, achievements]
-  );
+  // requiredComplete/requiredTotal mirror ResumeEditPage's sectionProgress —
+  // only the sections that meaningfully affect the generated resume (Info,
+  // Work Experience, Education, Highlights & Achievements) count toward the
+  // fraction. Awards and "Answer a few questions" are explicitly optional on
+  // this page (see their hero-note copy below), so like Edit's Awards
+  // section they still get a progress dot but aren't part of the count.
+  const sectionProgress = useMemo(() => {
+    const info = fullName.trim() !== "" && contactEmail.trim() !== "" && title.trim() !== "";
+    const workExperience = experience.some((e) => e.company.trim() !== "" && e.title.trim() !== "");
+    const educationDone = education.some((e) => e.school.trim() !== "" || e.degree.trim() !== "" || e.fieldOfStudy.trim() !== "");
+    const awardsDone = awards.some((a) => a.title.trim() !== "");
+    const achievementsDone = achievements.some(
+      (a) => a.challenge.trim() !== "" || a.action.trim() !== "" || a.result.trim() !== ""
+    );
+
+    const required = [info, workExperience, educationDone, achievementsDone];
+
+    return {
+      info,
+      workExperience,
+      education: educationDone,
+      awards: awardsDone,
+      achievements: achievementsDone,
+      requiredComplete: required.filter(Boolean).length,
+      requiredTotal: required.length,
+    };
+  }, [fullName, contactEmail, title, experience, education, awards, achievements]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -207,6 +224,21 @@ export function ResumeBuilderPage() {
       />
       <form onSubmit={onSubmit} className="builder-grid">
         <div className="builder-panel">
+          <div className="builder-progress">
+            <div className="builder-progress-label">
+              <span>Resume Build Progress</span>
+              <span>
+                {sectionProgress.requiredComplete} of {sectionProgress.requiredTotal} sections complete
+              </span>
+            </div>
+            <div className="builder-progress-track">
+              <div
+                className="builder-progress-fill"
+                style={{ width: `${(sectionProgress.requiredComplete / Math.max(1, sectionProgress.requiredTotal)) * 100}%` }}
+              />
+            </div>
+          </div>
+
           <div className="builder-toggle-all">
             <button type="button" onClick={() => setForceOpen({ open: true, token: Date.now() })}>
               Expand all
