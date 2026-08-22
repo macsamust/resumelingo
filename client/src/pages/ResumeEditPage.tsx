@@ -113,6 +113,10 @@ export function ResumeEditPage() {
   // someone from closing the tab thinking they'd hit "Save changes" when
   // they'd only autosaved locally, hence this separate, explicit signal.
   const [isDirty, setIsDirty] = useState(false);
+  // Drives the small status line next to "Save changes" — reflects the
+  // on-blur autosave below, separate from `saving` (which is specifically
+  // the explicit button's own in-flight state).
+  const [autoSaveState, setAutoSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   // True once the form has "settled" after a load/restore/discard — the
   // dirty-tracking effect below fires on that settling too (same
   // dependency list as autosave), and that first firing must not count as
@@ -375,6 +379,10 @@ export function ResumeEditPage() {
       return;
     }
     setIsDirty(true);
+    // A fresh edit makes a stale "Saved"/error message from before
+    // misleading — clear it so the status line reflects the current,
+    // not-yet-autosaved state until the next save actually completes.
+    setAutoSaveState("idle");
   }, [
     loading,
     pendingDraft,
@@ -600,57 +608,101 @@ export function ResumeEditPage() {
     return () => clearTimeout(handle);
   }, [id, isPremium, keywordMatch]);
 
+  // Shared by the explicit "Save changes" button and the on-blur autosave
+  // below, so the two paths can never drift out of sync with each other.
+  const buildSavePayload = () => ({
+    fullName,
+    contactEmail,
+    contactPhone,
+    contactLinkedIn,
+    photoUrl,
+    title,
+    profession: professionKey,
+    templateKey,
+    visibility,
+    accessPassword: visibility === "password" ? accessPassword : null,
+    accessPasswordExpiresAt:
+      visibility === "password" && accessPasswordExpiresAt ? new Date(accessPasswordExpiresAt).toISOString() : null,
+    coverLetterEnabled,
+    recruiterModeEnabled,
+    recruiterLocation,
+    recruiterAvailability,
+    recruiterClearance,
+    recruiterWorkAuthorization,
+    recruiterExpectedSalary,
+    recruiterRemotePreference,
+    combineExperienceFormat,
+    answers,
+    experience,
+    education,
+    awards,
+    achievements,
+    skillsAndTools,
+    languages,
+    referencesEnabled,
+    references,
+    referencesRecruiterModeOnly,
+  });
+
+  const persist = async () => {
+    if (!id) return;
+    const { resume: updated } = await resumeApi.update(id, buildSavePayload());
+    setResume(updated);
+    // Now safely persisted server-side — the local autosave would only be
+    // stale from here on, and leaving it around would just prompt an
+    // unnecessary "restore?" banner on the next visit.
+    clearDraft(id);
+    setIsDirty(false);
+  };
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!id) return;
     setError(null);
     setSaving(true);
     try {
-      const { resume: updated } = await resumeApi.update(id, {
-        fullName,
-        contactEmail,
-        contactPhone,
-        contactLinkedIn,
-        photoUrl,
-        title,
-        profession: professionKey,
-        templateKey,
-        visibility,
-        accessPassword: visibility === "password" ? accessPassword : null,
-        accessPasswordExpiresAt:
-          visibility === "password" && accessPasswordExpiresAt ? new Date(accessPasswordExpiresAt).toISOString() : null,
-        coverLetterEnabled,
-        recruiterModeEnabled,
-        recruiterLocation,
-        recruiterAvailability,
-        recruiterClearance,
-        recruiterWorkAuthorization,
-        recruiterExpectedSalary,
-        recruiterRemotePreference,
-        combineExperienceFormat,
-        answers,
-        experience,
-        education,
-        awards,
-        achievements,
-        skillsAndTools,
-        languages,
-        referencesEnabled,
-        references,
-        referencesRecruiterModeOnly,
-      });
-      setResume(updated);
-      // Now safely persisted server-side — the local autosave would only be
-      // stale from here on, and leaving it around would just prompt an
-      // unnecessary "restore?" banner on the next visit.
-      clearDraft(id);
-      setIsDirty(false);
+      await persist();
+      setAutoSaveState("idle");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong saving your resume.");
     } finally {
       setSaving(false);
     }
   };
+
+  // Autosaves to the server (not just localStorage) as soon as a field
+  // loses focus, so "Save changes" becomes a manual fallback rather than
+  // the only way changes actually persist. Debounced slightly so tabbing
+  // quickly through several fields collapses into one request instead of
+  // firing on every single blur. Skipped while an explicit save or another
+  // autosave is already in flight (savingInFlightRef), while nothing has
+  // actually changed (isDirty), and while a restore/discard decision on a
+  // local draft is still pending — same guards the localStorage autosave
+  // effect above uses, for the same reasons.
+  const autosaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savingInFlightRef = useRef(false);
+
+  const handleFormBlur = () => {
+    if (autosaveTimeoutRef.current) clearTimeout(autosaveTimeoutRef.current);
+    autosaveTimeoutRef.current = setTimeout(async () => {
+      if (savingInFlightRef.current || saving || !isDirty || !id || pendingDraft) return;
+      savingInFlightRef.current = true;
+      setAutoSaveState("saving");
+      try {
+        await persist();
+        setAutoSaveState("saved");
+        setTimeout(() => setAutoSaveState((s) => (s === "saved" ? "idle" : s)), 3000);
+      } catch {
+        setAutoSaveState("error");
+      } finally {
+        savingInFlightRef.current = false;
+      }
+    }, 400);
+  };
+
+  useEffect(() => () => {
+    if (autosaveTimeoutRef.current) clearTimeout(autosaveTimeoutRef.current);
+  }, []);
 
   const onDelete = async () => {
     if (!id || !confirm("Delete this resume? This cannot be undone.")) return;
@@ -710,13 +762,21 @@ export function ResumeEditPage() {
           </span>
         </div>
       )}
-      <form id="resume-edit-form" onSubmit={onSubmit} className="builder-grid">
+      <form id="resume-edit-form" onSubmit={onSubmit} className="builder-grid" onBlur={handleFormBlur}>
         <div className="builder-panel">
-          <button className="btn btn-primary btn-block" type="submit" disabled={saving} style={{ marginBottom: 20 }}>
+          <button className="btn btn-primary btn-block" type="submit" disabled={saving} style={{ marginBottom: 8 }}>
             {saving ? "Saving…" : "Save changes"}
           </button>
 
-          <div className="builder-progress">
+          {autoSaveState !== "idle" && (
+            <p className={`autosave-indicator ${autoSaveState === "error" ? "is-error" : ""}`} role="status" aria-live="polite">
+              {autoSaveState === "saving" && "Saving…"}
+              {autoSaveState === "saved" && "All changes saved"}
+              {autoSaveState === "error" && "Couldn't autosave — click Save changes to retry"}
+            </p>
+          )}
+
+          <div className="builder-progress" style={{ marginTop: 12 }}>
             <div className="builder-progress-label">
               <span>Resume Build Progress</span>
               <span>

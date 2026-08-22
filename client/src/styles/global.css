@@ -405,6 +405,11 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .builder-toggle-all button:hover { color: var(--indigo); text-decoration: underline; }
 .builder-toggle-all span { font-size: 12px; color: var(--border); }
 
+/* On-blur autosave status line, shown just under "Save changes"/"Create my
+   resume" — see ResumeEditPage's/ResumeBuilderPage's handleFormBlur. */
+.autosave-indicator { font-size: 12.5px; font-weight: 600; color: var(--muted); margin: 0; }
+.autosave-indicator.is-error { color: #ef4444; }
+
 /* "X of Y sections complete" progress summary, shown above the section list. */
 .builder-progress { margin-bottom: 18px; }
 .builder-progress-label { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
