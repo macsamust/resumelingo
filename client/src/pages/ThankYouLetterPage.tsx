@@ -29,7 +29,7 @@ function ThankYouLetterLocked() {
   return (
     <AppShell>
       <div className="app-page-head">
-        <h1>Thank-You Letter</h1>
+        <h1>Thank You Letter</h1>
       </div>
       <div className="empty-state">
         <p>AI thank-you letters are a Premium feature. Upgrade your plan to write one.</p>
@@ -102,7 +102,7 @@ export function ThankYouLetterPage() {
   return (
     <AppShell>
       <div className="app-page-head">
-        <h1>Thank-You Letter</h1>
+        <h1>Thank You Letter</h1>
       </div>
       <p className="hero-note" style={{ marginBottom: 20 }}>
         Fill in a few details about who you're writing to, and get a ready-to-send thank-you note. Nothing here is

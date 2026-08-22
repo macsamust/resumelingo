@@ -10,7 +10,7 @@ export function Navbar() {
   // CareerCenterPage.tsx). Once someone's logged in, though, it's a
   // Professional/Premium perk, same gate as the dashboard's Career Articles
   // section (DashboardPage.tsx's showCareerArticles) and the Career Coach/
-  // Thank-You Letter links in AppShell.
+  // Thank You Letter links in AppShell.
   const isProfessional = user?.subscriptionTier === "professional";
   const isPremium = user?.subscriptionTier === "premium";
   const showCareerCenterLink = !user || isProfessional || isPremium;
