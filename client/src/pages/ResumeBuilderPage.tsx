@@ -58,7 +58,7 @@ export function ResumeBuilderPage() {
   // Checked up front, before the form renders at all — the server also
   // rejects a create() past the plan's resume limit (see ResumeService),
   // but that only surfaces as an error after someone has already filled out
-  // the entire form and hit "Create my ResumeLingo". Blocking here instead
+  // the entire form and hit "Create my Poly". Blocking here instead
   // means they never start filling it out only to be turned away at Save.
   const [limitStatus, setLimitStatus] = useState<{ reached: boolean; planName: string; resumeLimit: number } | null>(null);
 
@@ -385,7 +385,7 @@ export function ResumeBuilderPage() {
           </CollapsibleSection>
 
           <button className="btn btn-primary btn-block" type="submit" disabled={submitting || !professionKey} style={{ marginTop: 20 }}>
-            {submitting ? "Generating your resume…" : "Create my ResumeLingo"}
+            {submitting ? "Generating your resume…" : "Create my Poly"}
           </button>
         </div>
 

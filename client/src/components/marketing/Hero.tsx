@@ -17,7 +17,7 @@ export function Hero() {
           </p>
           <div className="hero-actions">
             <Link to="/signup" className="btn btn-primary">
-              Create your ResumeLingo
+              Create your Poly
             </Link>
             <a href="#how" className="btn btn-ghost">
               See how it works
@@ -26,8 +26,11 @@ export function Hero() {
           <p className="hero-note">No design skills needed · Free tier available · Cancel anytime</p>
         </div>
         <div className="hero-visual">
+          {/* Poly, the ResumeLingo mascot — stands alone here with no adjacent
+              brand text, so it gets a real alt/title (see ParrotLogo's
+              `decorative` prop) instead of being hidden from screen readers. */}
           <div className="hero-mascot">
-            <ParrotLogo size={110} />
+            <ParrotLogo size={110} decorative={false} />
           </div>
           <div className="browser-bar">
             <span style={{ background: "#f87171" }}></span>

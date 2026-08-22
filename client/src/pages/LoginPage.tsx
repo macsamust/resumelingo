@@ -48,7 +48,7 @@ export function LoginPage() {
           </button>
         </form>
         <p className="form-footnote">
-          New here? <Link to="/signup">Create a ResumeLingo</Link>
+          New here? <Link to="/signup">Create a Poly</Link>
         </p>
       </div>
     </div>
