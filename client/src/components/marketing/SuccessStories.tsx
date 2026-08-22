@@ -1,6 +1,6 @@
 /** Exported so the Premium dashboard's "Success Stories" section can reuse this same list rather than duplicating it. */
 export const STORIES = [
-  { initial: "C", quote: "I landed a Senior Engineer position within weeks of sharing my Poly link.", name: "Chris R.", role: "Senior Engineer" },
+  { initial: "C", quote: "I landed a Senior Engineer position within weeks of sharing my resume link.", name: "Chris R.", role: "Senior Engineer" },
   { initial: "P", quote: "Switching templates and tightening my bullets with the AI generator helped me increase my salary by $28,000.", name: "Priya M.", role: "Program Manager" },
   { initial: "S", quote: "I used ResumeLingo to reposition my experience and successfully switched careers into tech.", name: "Sam T.", role: "Cloud Architect" },
 ];
@@ -11,7 +11,7 @@ export function SuccessStories() {
       <div className="wrap">
         <div className="section-head">
           <span className="section-tag">Success stories</span>
-          <h2>Subscribers who put their Poly to work</h2>
+          <h2>Subscribers who put their resume to work</h2>
         </div>
         <div className="stories-grid">
           {STORIES.map((s) => (

@@ -24,7 +24,7 @@ export function ValueProposition() {
             <p className="link-desc">A password-protected or one-time link shared only with the people you choose.</p>
           </div>
         </div>
-        <p className="value-note">Update your Poly once, and everyone who has the link automatically sees the latest version.</p>
+        <p className="value-note">Update your resume once, and everyone who has the link automatically sees the latest version.</p>
       </div>
     </section>
   );

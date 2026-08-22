@@ -314,7 +314,7 @@ export function CareerCenterPage() {
           <h2>Ready to put this into practice?</h2>
           <p>Build a resume that reflects everything above, in minutes.</p>
           <Link to="/signup" className="btn btn-primary">
-            Create your Poly
+            Create your resume
           </Link>
         </div>
       </section>

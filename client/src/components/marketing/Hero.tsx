@@ -17,7 +17,7 @@ export function Hero() {
           </p>
           <div className="hero-actions">
             <Link to="/signup" className="btn btn-primary">
-              Create your Poly
+              Create your resume
             </Link>
             <a href="#how" className="btn btn-ghost">
               See how it works

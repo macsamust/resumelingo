@@ -6,10 +6,10 @@ export function CTA() {
       <div className="wrap">
         <div className="cta-band">
           <h2>Your resume deserves to be a living career profile — not a static document.</h2>
-          <p>Answer a few questions, let AI write it, and share your Poly link today.</p>
+          <p>Answer a few questions, let AI write it, and share your resume link today.</p>
           <div className="cta-actions">
             <Link to="/signup" className="btn btn-light">
-              Create your Poly — free
+              Create your resume — free
             </Link>
             <a href="#pricing" className="btn btn-ghost" style={{ borderColor: "rgba(255,255,255,.3)", color: "#fff" }}>
               View pricing

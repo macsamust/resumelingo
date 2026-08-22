@@ -39,7 +39,7 @@ export function SignupPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h1>Create your Poly</h1>
+        <h1>Create your resume</h1>
         <p className="sub">Start free with one resume — upgrade anytime.</p>
         {error && <div className="form-error">{error}</div>}
         <form onSubmit={onSubmit}>
@@ -67,7 +67,7 @@ export function SignupPage() {
             </select>
           </div>
           <button className="btn btn-primary btn-block" type="submit" disabled={submitting}>
-            {submitting ? "Creating account…" : "Create my Poly"}
+            {submitting ? "Creating account…" : "Create my resume"}
           </button>
         </form>
         <p className="form-footnote">

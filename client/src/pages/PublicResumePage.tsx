@@ -237,7 +237,7 @@ export function PublicResumePage() {
         if (err instanceof ApiError && err.status === 403 && err.reason === "private") {
           // Private/owner-only resumes have no password to enter — asking for
           // one would send the visitor into a form they can never satisfy.
-          setError("This Poly is private. Only the owner can view it — sign in as the owner to access it.");
+          setError("This resume is private. Only the owner can view it — sign in as the owner to access it.");
         } else if (err instanceof ApiError && err.status === 403 && err.reason === "expired") {
           // Expired password-protected links are deactivated outright — no
           // password prompt, since no password would work at this point.
@@ -271,7 +271,7 @@ export function PublicResumePage() {
       <div className="auth-page">
         <div className="auth-card">
           <h1>Password required</h1>
-          <p className="sub">This Poly is password-protected.</p>
+          <p className="sub">This resume is password-protected.</p>
           <form onSubmit={onSubmitPassword}>
             <div className="field">
               <label>Password</label>
@@ -290,7 +290,7 @@ export function PublicResumePage() {
     return (
       <div className="empty-state">
         <p>{error || "Resume not found."}</p>
-        {error?.startsWith("This Poly is private") && (
+        {error?.startsWith("This resume is private") && (
           <Link to="/login" className="btn btn-primary">
             Sign in
           </Link>
