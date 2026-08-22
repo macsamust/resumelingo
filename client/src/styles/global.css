@@ -1041,6 +1041,25 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 }
 .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
 
+/* Inline import-in-progress banner (ResumeImportPanel) — plain gray text was
+   easy to miss while an upload/AI-extract call is running, especially since
+   the "analyzing" step can take several seconds. Reuses .spinner-ring at a
+   smaller size inside a tinted, bordered box so it reads as an active,
+   attention-grabbing state rather than static copy. */
+.import-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: rgba(79, 70, 229, 0.08);
+  border: 1px solid rgba(79, 70, 229, 0.3);
+  border-radius: 10px;
+  color: var(--navy-light);
+  font-weight: 600;
+}
+.import-status .spinner-ring { width: 18px; height: 18px; border-width: 2.5px; flex-shrink: 0; }
+
 /* 404 (NotFoundPage.tsx) — the catch-all route used to silently render the
    landing page for any unmatched URL, which made a broken/mistyped link
    look like it worked. Deliberately reuses .lead/.btn rather than

@@ -91,9 +91,17 @@ export function ResumeImportPanel({ canImport, onImported }: Props) {
         onChange={onFileChange}
         disabled={status === "extracting" || status === "analyzing"}
       />
-      {status === "extracting" && <p className="hero-note" style={{ marginTop: 10 }}>Reading {fileName}…</p>}
+      {status === "extracting" && (
+        <div className="import-status" role="status" aria-live="polite">
+          <span className="spinner-ring" aria-hidden="true" />
+          Reading {fileName}…
+        </div>
+      )}
       {status === "analyzing" && (
-        <p className="hero-note" style={{ marginTop: 10 }}>Analyzing your resume — this can take a few seconds…</p>
+        <div className="import-status" role="status" aria-live="polite">
+          <span className="spinner-ring" aria-hidden="true" />
+          Analyzing your resume with AI — this can take up to 30 seconds…
+        </div>
       )}
       {status === "error" && error && (
         <div className="form-error" style={{ marginTop: 10 }}>
