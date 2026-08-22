@@ -942,10 +942,6 @@ export function ResumeEditPage() {
             <EducationEditor education={education} onChange={setEducation} schoolSuggestions={schoolSuggestions} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Awards" forceOpen={forceOpen} defaultOpen={false}>
-            <AwardsEditor awards={awards} onChange={setAwards} />
-          </CollapsibleSection>
-
           <CollapsibleSection title="Languages" forceOpen={forceOpen} defaultOpen={false}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
               Optional — list any languages you speak and how fluently.
@@ -979,6 +975,10 @@ export function ResumeEditPage() {
               experience={experience}
               showJobLink={combineExperienceFormat}
             />
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Awards" forceOpen={forceOpen} defaultOpen={false}>
+            <AwardsEditor awards={awards} onChange={setAwards} />
           </CollapsibleSection>
 
           <CollapsibleSection
