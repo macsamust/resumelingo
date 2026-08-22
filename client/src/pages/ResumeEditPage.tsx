@@ -438,29 +438,26 @@ export function ResumeEditPage() {
   // omitted entirely rather than showing as permanently "incomplete".
   const professionHasQuestions = !!professionDetail && professionDetail.questions.length > 0;
 
-  // Drives both the per-section progress dots (CollapsibleSection's
+  // Drives both the per-section progress glyphs (CollapsibleSection's
   // `complete` prop) and the "X of Y sections complete" summary near the
   // top of the form. `requiredComplete`/`requiredTotal` only count the
   // sections that meaningfully affect the generated resume — Awards,
-  // Recruiter Mode, References, and Cover Letter are genuinely optional
-  // extras, so they still get a dot for feedback but aren't part of the
-  // fraction.
+  // Languages, Recruiter Mode, References, and Cover Letter are genuinely
+  // optional extras, so — matching New Resume's treatment of its own
+  // optional sections — they don't get a glyph at all, keeping every glyph
+  // shown mapped 1:1 to the fraction instead of one appearing on a section
+  // that isn't actually counted.
   const sectionProgress = useMemo(() => {
     const info = fullName.trim() !== "" && contactEmail.trim() !== "" && title.trim() !== "";
     const skills = skillsAndTools.length > 0;
     const workExperience = experience.some((e) => e.company.trim() !== "" && e.title.trim() !== "");
     const educationDone = education.some((e) => e.school.trim() !== "" || e.degree.trim() !== "" || e.fieldOfStudy.trim() !== "");
-    const awardsDone = awards.some((a) => a.title.trim() !== "");
-    const languagesDone = languages.some((l) => l.language.trim() !== "");
     const achievementsDone = achievements.some(
       (a) => a.challenge.trim() !== "" || a.action.trim() !== "" || a.result.trim() !== ""
     );
     const additionalDetails = professionHasQuestions
       ? professionDetail!.questions.some((q) => (answers[q.key] ?? "").trim() !== "")
       : false;
-    const recruiterMode = recruiterModeEnabled;
-    const referencesDone = referencesEnabled && references.length > 0;
-    const coverLetter = coverLetterEnabled;
 
     const required = [info, workExperience, educationDone, achievementsDone];
     if (usesSkillsAndTools) required.push(skills);
@@ -471,13 +468,8 @@ export function ResumeEditPage() {
       skills,
       workExperience,
       education: educationDone,
-      awards: awardsDone,
-      languages: languagesDone,
       achievements: achievementsDone,
       additionalDetails,
-      recruiterMode,
-      references: referencesDone,
-      coverLetter,
       requiredComplete: required.filter(Boolean).length,
       requiredTotal: required.length,
     };
@@ -486,18 +478,12 @@ export function ResumeEditPage() {
     contactEmail,
     title,
     skillsAndTools,
-    languages,
     experience,
     education,
-    awards,
     achievements,
     professionHasQuestions,
     professionDetail,
     answers,
-    recruiterModeEnabled,
-    referencesEnabled,
-    references,
-    coverLetterEnabled,
     usesSkillsAndTools,
   ]);
 
@@ -956,11 +942,11 @@ export function ResumeEditPage() {
             <EducationEditor education={education} onChange={setEducation} schoolSuggestions={schoolSuggestions} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Awards" forceOpen={forceOpen} defaultOpen={false} complete={sectionProgress.awards}>
+          <CollapsibleSection title="Awards" forceOpen={forceOpen} defaultOpen={false}>
             <AwardsEditor awards={awards} onChange={setAwards} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Languages" forceOpen={forceOpen} defaultOpen={false} complete={sectionProgress.languages}>
+          <CollapsibleSection title="Languages" forceOpen={forceOpen} defaultOpen={false}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
               Optional — list any languages you speak and how fluently.
             </p>
@@ -1109,7 +1095,7 @@ export function ResumeEditPage() {
           )}
 
           {isPremium && (
-            <CollapsibleSection title="Recruiter Mode" forceOpen={forceOpen} complete={sectionProgress.recruiterMode}>
+            <CollapsibleSection title="Recruiter Mode" forceOpen={forceOpen}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
                 Adds a candidate summary card to the top of your public resume link — skills (pulled automatically
                 from your resume), availability, clearance, location, work authorization, expected salary, and
@@ -1191,7 +1177,7 @@ export function ResumeEditPage() {
           )}
 
           {isPremium && (
-            <CollapsibleSection title="References" forceOpen={forceOpen} complete={sectionProgress.references}>
+            <CollapsibleSection title="References" forceOpen={forceOpen}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
                 Adds a References section to your public resume link. Off by default — nothing appears until you
                 turn this on and add at least one reference.
@@ -1226,7 +1212,7 @@ export function ResumeEditPage() {
           )}
 
           {isPremium && selectedTemplateIsPremium && (
-            <CollapsibleSection title="Cover Letter" forceOpen={forceOpen} complete={sectionProgress.coverLetter}>
+            <CollapsibleSection title="Cover Letter" forceOpen={forceOpen}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
                 Generates a tailored AI cover letter alongside this resume. Off by default — turn this on to have one
                 written and kept in sync automatically.
