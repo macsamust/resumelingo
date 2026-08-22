@@ -115,13 +115,14 @@ export function ResumeBuilderPage() {
   // only the sections that meaningfully affect the generated resume (Info,
   // Work Experience, Education, Highlights & Achievements) count toward the
   // fraction. Awards and "Answer a few questions" are explicitly optional on
-  // this page (see their hero-note copy below), so like Edit's Awards
-  // section they still get a progress dot but aren't part of the count.
+  // this page (see their hero-note copy below) — unlike Edit Resume, neither
+  // gets a progress glyph here either, so every glyph shown maps 1:1 to the
+  // "X of Y sections complete" count instead of a glyph appearing on a
+  // section that isn't actually counted.
   const sectionProgress = useMemo(() => {
     const info = fullName.trim() !== "" && contactEmail.trim() !== "" && title.trim() !== "";
     const workExperience = experience.some((e) => e.company.trim() !== "" && e.title.trim() !== "");
     const educationDone = education.some((e) => e.school.trim() !== "" || e.degree.trim() !== "" || e.fieldOfStudy.trim() !== "");
-    const awardsDone = awards.some((a) => a.title.trim() !== "");
     const achievementsDone = achievements.some(
       (a) => a.challenge.trim() !== "" || a.action.trim() !== "" || a.result.trim() !== ""
     );
@@ -132,12 +133,11 @@ export function ResumeBuilderPage() {
       info,
       workExperience,
       education: educationDone,
-      awards: awardsDone,
       achievements: achievementsDone,
       requiredComplete: required.filter(Boolean).length,
       requiredTotal: required.length,
     };
-  }, [fullName, contactEmail, title, experience, education, awards, achievements]);
+  }, [fullName, contactEmail, title, experience, education, achievements]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -364,7 +364,7 @@ export function ResumeBuilderPage() {
             />
           </CollapsibleSection>
 
-          <CollapsibleSection title="6. Awards" forceOpen={forceOpen} defaultOpen={false} complete={sectionProgress.awards}>
+          <CollapsibleSection title="6. Awards" forceOpen={forceOpen} defaultOpen={false}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
               Optional — you can always add these later from the Edit Resume page.
             </p>
