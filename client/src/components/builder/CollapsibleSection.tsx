@@ -14,13 +14,13 @@ interface CollapsibleSectionProps {
   /** Optional broadcast signal (e.g. from an "Expand all"/"Collapse all" control) that overrides the section's own open/closed state whenever it changes. */
   forceOpen?: ForceOpenSignal;
   /**
-   * When provided, renders a small progress dot next to the title — teal
-   * when the section has meaningful content, red when it's still empty.
-   * Left undefined (no dot at all) for sections where "complete" doesn't
-   * really apply — Template and Sharing always have a value by default, and
-   * ATS Check/Version History are tools rather than data entry. See
-   * ResumeEditPage's `sectionProgress` for how each section's value is
-   * computed.
+   * When provided, renders a small status glyph next to the title — a green
+   * check once the section has meaningful content, a red minus while it's
+   * still empty. Left undefined (no glyph at all) for sections where
+   * "complete" doesn't really apply — Template and Sharing always have a
+   * value by default, and ATS Check/Version History are tools rather than
+   * data entry. See ResumeEditPage's `sectionProgress` for how each
+   * section's value is computed.
    */
   complete?: boolean;
 }
@@ -44,10 +44,13 @@ export function CollapsibleSection({ title, children, defaultOpen = true, forceO
         <span className="builder-section-title">{title}</span>
         {complete !== undefined && (
           <span
-            className={`builder-section-dot ${complete ? "is-complete" : ""}`}
+            className={`builder-section-status ${complete ? "is-complete" : "is-empty"}`}
             aria-label={complete ? "Section has content" : "Section is empty"}
             title={complete ? "Section has content" : "Section is empty"}
-          />
+            aria-hidden="false"
+          >
+            {complete ? "✓" : "−"}
+          </span>
         )}
       </button>
       {open && <div className="builder-section-body">{children}</div>}

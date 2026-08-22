@@ -388,14 +388,17 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .builder-section.is-collapsed .builder-section-chevron { transform: rotate(-90deg); }
 .builder-section-toggle:hover .builder-section-title { color: var(--indigo); }
 
-/* Progress dot next to a section title — filled red while the section is
-   still empty, filled teal once it has meaningful content. See
+/* Status glyph next to a section title — a red minus while the section is
+   still empty, a green check once it has meaningful content. See
    CollapsibleSection's `complete` prop and ResumeEditPage's `sectionProgress`. */
-.builder-section-dot {
-  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-  background: #ef4444; border: 1.5px solid #ef4444; transition: background .15s ease, border-color .15s ease;
+.builder-section-status {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; flex-shrink: 0;
+  font-size: 12px; font-weight: 800; line-height: 1;
+  transition: color .15s ease;
 }
-.builder-section-dot.is-complete { background: var(--teal); border-color: var(--teal); }
+.builder-section-status.is-empty { color: #ef4444; }
+.builder-section-status.is-complete { color: #16a34a; }
 
 .builder-toggle-all { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 14px; }
 .builder-toggle-all button { background: none; border: none; padding: 0; font-size: 12.5px; font-weight: 600; color: var(--muted); cursor: pointer; font-family: inherit; }
