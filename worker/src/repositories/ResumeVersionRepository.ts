@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { Resume } from "../models/Resume";
-import { AchievementEntry, AwardEntry, EducationEntry, ReferenceEntry, SkillOrTool, WorkExperienceEntry } from "../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LanguageEntry, ReferenceEntry, SkillOrTool, WorkExperienceEntry } from "../types";
 
 /**
  * What a version actually captures — the resume's *content*, not how its
@@ -33,6 +33,7 @@ export interface ResumeVersionSnapshot {
   awards: AwardEntry[];
   achievements: AchievementEntry[];
   skillsAndTools: SkillOrTool[];
+  languages: LanguageEntry[];
   referencesEnabled: boolean;
   references: ReferenceEntry[];
   referencesRecruiterModeOnly: boolean;
@@ -75,6 +76,7 @@ function toSnapshot(resume: Resume): ResumeVersionSnapshot {
     awards: resume.awards,
     achievements: resume.achievements,
     skillsAndTools: resume.skillsAndTools,
+    languages: resume.languages,
     referencesEnabled: resume.referencesEnabled,
     references: resume.references,
     referencesRecruiterModeOnly: resume.referencesRecruiterModeOnly,

@@ -3,10 +3,12 @@ name: CI
 # Runs on every push to main and every PR targeting main. The "deploy" job
 # only fires on a push to main (not PRs) and only after "typecheck" passes.
 #
-# server/, worker/, and client/ each have their own Vitest suite ("npm test")
-# alongside typecheck — see e.g. server/src/services/AuthService.test.ts and
-# ResumeService.test.ts (mirrored in worker/), and client/src/utils/
-# atsCheck.test.ts.
+# worker/ and client/ each have their own Vitest suite ("npm test") alongside
+# typecheck — see e.g. worker/src/services/ResumeService.test.ts and
+# client/src/utils/atsCheck.test.ts. (There used to be a third, server/,
+# mirroring worker/'s tests on Node+Express+Postgres — it was retired and
+# deleted since only worker/ was ever actually deployed; see git history
+# before this commit if you ever need to reference it.)
 on:
   push:
     branches: [main]
@@ -24,25 +26,18 @@ jobs:
           node-version: 20
           cache: npm
           cache-dependency-path: |
-            server/package-lock.json
             worker/package-lock.json
             client/package-lock.json
 
-      # Both server/ and worker/ depend on this via a `file:../shared`
-      # reference (see shared/package.json) — has to be built before either
-      # of them can resolve it. server's/worker's own npm scripts also have
-      # prebuild/predeploy/pretypecheck hooks that redo this, so this step
-      # is really just making the first, explicit build fast and visible in
-      # the log; the per-project hooks below are what make it actually safe
-      # even if someone reorders these steps later.
+      # worker/ depends on this via a `file:../shared` reference (see
+      # shared/package.json) — has to be built before it can resolve it.
+      # worker's own npm scripts also have prebuild/predeploy/pretypecheck
+      # hooks that redo this, so this step is really just making the first,
+      # explicit build fast and visible in the log; the per-project hooks
+      # below are what make it actually safe even if someone reorders these
+      # steps later.
       - name: Build shared types package
         run: npm install --prefix shared && npm run build --prefix shared
-
-      - name: server — install, test & build
-        run: |
-          npm ci --prefix server
-          npm run test --prefix server
-          npm run build --prefix server
 
       - name: worker — install, typecheck & test
         run: |

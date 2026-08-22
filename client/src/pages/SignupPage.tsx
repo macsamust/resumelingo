@@ -25,7 +25,10 @@ export function SignupPage() {
     setSubmitting(true);
     try {
       await register({ name, email, password, profession: profession || undefined });
-      navigate("/dashboard");
+      // Distinguishes a brand-new account's first landing on the dashboard
+      // from a returning user's — see DashboardPage's `welcome` query param,
+      // which swaps "Welcome back" for "Welcome" when this is set.
+      navigate("/dashboard?welcome=1");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
     } finally {

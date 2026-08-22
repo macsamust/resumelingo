@@ -103,6 +103,22 @@ export interface AdminRecord {
   email: string;
   passwordHash: string;
   createdAt: string;
+  /** Consecutive failed login attempts since the last success — reset to 0 on a successful login. See AdminService.login's lockout logic. */
+  failedLoginAttempts: number;
+  /** ISO timestamp the account is locked until, or null if not currently locked. */
+  lockedUntil: string | null;
+}
+
+/** One entry in the admin_audit_log table (see repositories/AdminAuditLogRepository.ts) — records who did what, to what, and when for every sensitive admin action. */
+export interface AdminAuditLogRecord {
+  id: string;
+  adminId: string;
+  adminEmail: string;
+  action: string;
+  targetType: string;
+  targetId: string | null;
+  detail: string | null;
+  createdAt: string;
 }
 
 /** DB-backed template row (see repositories/TemplateRepository.ts). `enabled` controls whether it's offered to users; disabled templates stay selectable by resumes that already used them. */
@@ -236,6 +252,18 @@ export interface SkillOrTool {
 }
 
 /**
+ * One language entry in the optional "Languages" section — `proficiency`
+ * is a free string but the builder's LanguagesEditor only offers the
+ * standard ILR-style scale (Native/Bilingual, Full Professional,
+ * Professional Working, Limited Working, Elementary) so resumes read
+ * consistently without this being a hardcoded enum here.
+ */
+export interface LanguageEntry {
+  language: string;
+  proficiency: string;
+}
+
+/**
  * One professional reference (Edit Resume, Premium subscribers only — see
  * ResumeRecord.referencesEnabled). "dateObservedStart"/"dateObservedEnd" are
  * the range this reference worked with/observed the candidate, each
@@ -312,6 +340,7 @@ export interface ResumeRecord {
   awards: string; // JSON-serialized AwardEntry[]
   achievements: string; // JSON-serialized AchievementEntry[]
   skillsAndTools: string; // JSON-serialized SkillOrTool[]
+  languages: string; // JSON-serialized LanguageEntry[]
   /**
    * "References" section (Edit Resume, Premium subscribers only —
    * re-checked and silently coerced off on every update in

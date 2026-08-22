@@ -22,7 +22,7 @@ const JOB_SEARCH_RESOURCE_ANCHORS = ["interview-tips", "salary-negotiation", "ne
 const CAREER_ARTICLE_IDS = ["career-advice", "promotion-advice", "career-planning", "industry-news"];
 
 export function DashboardPage() {
-  const { user } = useAuth();
+  const { user, refresh: refreshUser } = useAuth();
   const { showToast } = useToast();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,6 +30,10 @@ export function DashboardPage() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const checkoutStatus = searchParams.get("checkout");
+  // Set only on the redirect straight from signup (see SignupPage.tsx) —
+  // distinguishes a brand-new account's very first dashboard visit from
+  // every later one, so it doesn't call a first-time user a "back".
+  const isFirstVisit = searchParams.get("welcome") === "1";
   // Which resume (if any) is the subject of a confirm/prompt-style dialog —
   // replaces window.confirm()/window.prompt() with the app's own styled
   // Modal-based dialogs, same pattern as AdminUsersPage.
@@ -56,6 +60,20 @@ export function DashboardPage() {
   };
 
   useEffect(load, []);
+
+  // Stripe's webhook (which flips subscriptionTier in our DB) can land a
+  // beat after the browser gets redirected back here, so on a successful
+  // checkout we re-pull the user rather than relying on the AuthContext
+  // snapshot fetched at app load (which would still show the old tier). One
+  // retry a few seconds later covers the case where the webhook was still
+  // in flight on the first attempt.
+  useEffect(() => {
+    if (checkoutStatus !== "success") return;
+    refreshUser();
+    const retry = setTimeout(refreshUser, 4000);
+    return () => clearTimeout(retry);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkoutStatus]);
 
   // Closes a resume card's "more actions" menu on any click outside it — the
   // trigger/menu themselves stop propagation (see below) so the same click
@@ -151,7 +169,9 @@ export function DashboardPage() {
     <AppShell>
       <div className="app-page-head">
         <div>
-          <h1>{user ? `Welcome back, ${user.name.split(" ")[0]}` : "Dashboard"}</h1>
+          <h1>
+            {user ? `Welcome${isFirstVisit ? "" : " back"}, ${user.name.split(" ")[0]}` : "Dashboard"}
+          </h1>
           <p className="hero-note">
             <Link to="/profile">View profile</Link>
           </p>
@@ -166,7 +186,7 @@ export function DashboardPage() {
 
       {checkoutStatus === "success" && (
         <div className="empty-state" style={{ marginBottom: 24 }}>
-          Subscription updated! It may take a few seconds to reflect below — refresh if needed.
+          Subscription updated! It may take a few seconds to reflect below.
         </div>
       )}
       {checkoutStatus === "cancelled" && (

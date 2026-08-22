@@ -1,15 +1,19 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
+import { CollapsibleSection, ForceOpenSignal } from "../components/builder/CollapsibleSection";
 import { DynamicQuestionForm } from "../components/builder/DynamicQuestionForm";
 import { ExperienceEditor } from "../components/builder/ExperienceEditor";
 import { EducationEditor } from "../components/builder/EducationEditor";
 import { AwardsEditor } from "../components/builder/AwardsEditor";
 import { AchievementEditor } from "../components/builder/AchievementEditor";
+import { AchievementGeneratorPanel } from "../components/builder/AchievementGeneratorPanel";
 import { PhotoUploader } from "../components/builder/PhotoUploader";
+import { ResumeImportPanel } from "../components/builder/ResumeImportPanel";
 import { ResumePreview } from "../components/builder/ResumePreview";
 import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
 import { ApiError, catalogApi, resumeApi } from "../api";
+import { ImportedResumeData } from "../api/ResumeImportApi";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL } from "../utils/templateAccess";
 import { getTemplateStyle } from "../config/templateStyles";
@@ -41,10 +45,15 @@ export function ResumeBuilderPage() {
   const [experience, setExperience] = useState<WorkExperienceEntry[]>([]);
   const [education, setEducation] = useState<EducationEntry[]>([]);
   const [awards, setAwards] = useState<AwardEntry[]>([]);
+  // Highlights and Key Achievements are the same underlying list — a
+  // "highlight" is just an achievement with only Action filled in (see
+  // HighlightsEditor.tsx). Populated either by hand (Challenge/Action/Result
+  // form) or by "Import an existing resume" below.
   const [achievements, setAchievements] = useState<AchievementEntry[]>([]);
   const [coverLetterEnabled, setCoverLetterEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [forceOpen, setForceOpen] = useState<ForceOpenSignal | undefined>(undefined);
 
   // Checked up front, before the form renders at all — the server also
   // rejects a create() past the plan's resume limit (see ResumeService),
@@ -73,6 +82,11 @@ export function ResumeBuilderPage() {
   // checkbox from appearing for a template that can't use it.
   const selectedTemplateIsPremium = templates.find((t) => t.key === templateKey)?.category === "premium";
 
+  // Gate for both "Import an existing resume" and "Generate from keywords" —
+  // same Professional/Premium tier as Resume Import (see worker's
+  // ResumeImportController/AchievementGenerateController).
+  const canUseAiAssist = user?.subscriptionTier === "professional" || user?.subscriptionTier === "premium";
+
   useEffect(() => {
     catalogApi.listProfessions().then((res) => {
       setProfessions(res.professions);
@@ -92,6 +106,21 @@ export function ResumeBuilderPage() {
   useEffect(() => {
     if (!selectedTemplateIsPremium) setCoverLetterEnabled(false);
   }, [selectedTemplateIsPremium]);
+
+  // Drives each accordion section's progress dot (see CollapsibleSection's
+  // `complete` prop) — same lightweight "has anything meaningful been
+  // entered" check ResumeEditPage's sectionProgress uses, trimmed to just
+  // the sections this page has.
+  const sectionProgress = useMemo(
+    () => ({
+      info: fullName.trim() !== "" && contactEmail.trim() !== "" && title.trim() !== "",
+      workExperience: experience.some((e) => e.company.trim() !== "" && e.title.trim() !== ""),
+      education: education.some((e) => e.school.trim() !== "" || e.degree.trim() !== "" || e.fieldOfStudy.trim() !== ""),
+      awards: awards.some((a) => a.title.trim() !== ""),
+      achievements: achievements.some((a) => a.challenge.trim() !== "" || a.action.trim() !== "" || a.result.trim() !== ""),
+    }),
+    [fullName, contactEmail, title, experience, education, awards, achievements]
+  );
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -160,120 +189,170 @@ export function ResumeBuilderPage() {
         <h1>New Resume</h1>
       </div>
       {error && <div className="form-error">{error}</div>}
+      <ResumeImportPanel
+        canImport={canUseAiAssist}
+        onImported={(data: ImportedResumeData) => {
+          // Only overwrite a field the import actually found something for —
+          // e.g. contactEmail already defaults to the account's email above,
+          // and an empty import result shouldn't blank that out.
+          if (data.fullName) setFullName(data.fullName);
+          if (data.contactEmail) setContactEmail(data.contactEmail);
+          if (data.contactPhone) setContactPhone(data.contactPhone);
+          if (data.contactLinkedIn) setContactLinkedIn(data.contactLinkedIn);
+          if (data.experience.length > 0) setExperience(data.experience);
+          if (data.education.length > 0) setEducation(data.education);
+          if (data.awards.length > 0) setAwards(data.awards);
+          if (data.achievements.length > 0) setAchievements(data.achievements);
+        }}
+      />
       <form onSubmit={onSubmit} className="builder-grid">
         <div className="builder-panel">
-          <h2>1. Tell us about the role</h2>
-          <div className="field">
-            <label>Your full name</label>
-            <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Jordan Lee" />
-          </div>
-          <div className="field">
-            <label>Email</label>
-            <input
-              type="email"
-              value={contactEmail}
-              onChange={(e) => setContactEmail(e.target.value)}
-              placeholder="e.g. jordan@example.com"
-            />
-          </div>
-          <div className="field">
-            <label>Phone</label>
-            <input
-              type="tel"
-              value={contactPhone}
-              onChange={(e) => setContactPhone(e.target.value)}
-              placeholder="e.g. (555) 123-4567"
-            />
-          </div>
-          <div className="field">
-            <label>LinkedIn URL</label>
-            <input
-              value={contactLinkedIn}
-              onChange={(e) => setContactLinkedIn(e.target.value)}
-              placeholder="e.g. https://www.linkedin.com/in/jordanlee"
-            />
-          </div>
-          <div className="field">
-            <label>Resume title</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Cloud Architect Resume" />
-          </div>
-          <div className="field">
-            <label>Profession</label>
-            <select value={professionKey} onChange={(e) => setProfessionKey(e.target.value)}>
-              {professions.map((p) => (
-                <option key={p.key} value={p.key}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
+          <div className="builder-toggle-all">
+            <button type="button" onClick={() => setForceOpen({ open: true, token: Date.now() })}>
+              Expand all
+            </button>
+            <span aria-hidden="true">·</span>
+            <button type="button" onClick={() => setForceOpen({ open: false, token: Date.now() })}>
+              Collapse all
+            </button>
           </div>
 
-          <h2>2. Choose a template</h2>
-          <div className="template-choices">
-            {templates.map((t) => {
-              const locked = !!user && !canUseTemplate(user.subscriptionTier, t.category);
-              const upgradeHint = `Upgrade to ${TIER_LABEL[CATEGORY_MIN_TIER[t.category]]} to use this template.`;
-              return (
-                <span
-                  key={t.key}
-                  className={`template-pill ${templateKey === t.key ? "active" : ""} ${locked ? "locked" : ""}`}
-                  onClick={() => {
-                    if (!locked) setTemplateKey(t.key);
-                  }}
-                  title={locked ? `${upgradeHint} ${t.description}` : t.description}
-                >
-                  {t.name}
-                  {locked && (
-                    <span className="template-pill-lock" aria-hidden="true">
-                      🔒
-                    </span>
-                  )}
-                </span>
-              );
-            })}
-          </div>
-          {usesPhoto && <PhotoUploader value={photoUrl} onChange={setPhotoUrl} />}
-          {selectedTemplateIsPremium && (
-            <label className="checkbox-field">
+          <CollapsibleSection title="1. Tell us about the role" forceOpen={forceOpen} complete={sectionProgress.info}>
+            <div className="field">
+              <label>Your full name</label>
+              <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Jordan Lee" />
+            </div>
+            <div className="field">
+              <label>Email</label>
               <input
-                type="checkbox"
-                checked={coverLetterEnabled}
-                onChange={(e) => setCoverLetterEnabled(e.target.checked)}
+                type="email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                placeholder="e.g. jordan@example.com"
               />
-              Generate an AI cover letter for this resume
-            </label>
-          )}
+            </div>
+            <div className="field">
+              <label>Phone</label>
+              <input
+                type="tel"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                placeholder="e.g. (555) 123-4567"
+              />
+            </div>
+            <div className="field">
+              <label>LinkedIn URL</label>
+              <input
+                value={contactLinkedIn}
+                onChange={(e) => setContactLinkedIn(e.target.value)}
+                placeholder="e.g. https://www.linkedin.com/in/jordanlee"
+              />
+            </div>
+            <div className="field">
+              <label>Resume title</label>
+              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Cloud Architect Resume" />
+            </div>
+            <div className="field">
+              <label>Profession</label>
+              <select value={professionKey} onChange={(e) => setProfessionKey(e.target.value)}>
+                {professions.map((p) => (
+                  <option key={p.key} value={p.key}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </CollapsibleSection>
 
-          <h2>3. Work experience</h2>
-          <ExperienceEditor experience={experience} onChange={setExperience} />
+          <CollapsibleSection title="2. Choose a template" forceOpen={forceOpen}>
+            <div className="template-choices">
+              {templates.map((t) => {
+                const locked = !!user && !canUseTemplate(user.subscriptionTier, t.category);
+                const upgradeHint = `Upgrade to ${TIER_LABEL[CATEGORY_MIN_TIER[t.category]]} to use this template.`;
+                return (
+                  <span
+                    key={t.key}
+                    className={`template-pill ${templateKey === t.key ? "active" : ""} ${locked ? "locked" : ""}`}
+                    onClick={() => {
+                      if (!locked) setTemplateKey(t.key);
+                    }}
+                    title={locked ? `${upgradeHint} ${t.description}` : t.description}
+                  >
+                    {t.name}
+                    {locked && (
+                      <span className="template-pill-lock" aria-hidden="true">
+                        🔒
+                      </span>
+                    )}
+                  </span>
+                );
+              })}
+            </div>
+            {usesPhoto && <PhotoUploader value={photoUrl} onChange={setPhotoUrl} />}
+            {selectedTemplateIsPremium && (
+              <label className="checkbox-field">
+                <input
+                  type="checkbox"
+                  checked={coverLetterEnabled}
+                  onChange={(e) => setCoverLetterEnabled(e.target.checked)}
+                />
+                Generate an AI cover letter for this resume
+              </label>
+            )}
+          </CollapsibleSection>
 
-          <h2>4. Education</h2>
-          <EducationEditor education={education} onChange={setEducation} />
+          <CollapsibleSection title="3. Work experience" forceOpen={forceOpen} complete={sectionProgress.workExperience}>
+            <ExperienceEditor experience={experience} onChange={setExperience} />
+          </CollapsibleSection>
 
-          <h2>5. Awards</h2>
-          <AwardsEditor awards={awards} onChange={setAwards} />
+          <CollapsibleSection title="4. Education" forceOpen={forceOpen} complete={sectionProgress.education}>
+            <EducationEditor education={education} onChange={setEducation} />
+          </CollapsibleSection>
 
-          <h2>6. Key achievements</h2>
-          <p className="hero-note" style={{ marginBottom: 16 }}>
-            Describe a challenge, what you did, and the result — this is what turns into impact-focused resume bullets.
-          </p>
-          <AchievementEditor
-            achievements={achievements}
-            onChange={setAchievements}
-            experience={experience}
-            showJobLink={false}
-          />
-
-          <h2>7. Answer a few questions</h2>
-          {professionDetail && (
-            <DynamicQuestionForm
-              questions={professionDetail.questions}
-              answers={answers}
-              onChange={(key, value) => setAnswers((prev) => ({ ...prev, [key]: value }))}
+          <CollapsibleSection
+            title="5. Highlights & key achievements"
+            forceOpen={forceOpen}
+            complete={sectionProgress.achievements}
+          >
+            <p className="hero-note" style={{ marginBottom: 16 }}>
+              Add a quick one-line bullet, or describe a challenge, what you did, and the result for a more detailed,
+              structured accomplishment — both turn into resume bullets.
+            </p>
+            <AchievementGeneratorPanel
+              canGenerate={canUseAiAssist}
+              professionLabel={professionDetail?.label ?? ""}
+              jobTitle={experience[0]?.title || undefined}
+              onGenerated={(generated) => setAchievements((prev) => [...prev, ...generated])}
             />
-          )}
+            <AchievementEditor
+              achievements={achievements}
+              onChange={setAchievements}
+              experience={experience}
+              showJobLink={false}
+            />
+          </CollapsibleSection>
 
-          <button className="btn btn-primary btn-block" type="submit" disabled={submitting || !professionKey}>
+          <CollapsibleSection title="6. Awards" forceOpen={forceOpen} defaultOpen={false} complete={sectionProgress.awards}>
+            <p className="hero-note" style={{ marginBottom: 16 }}>
+              Optional — you can always add these later from the Edit Resume page.
+            </p>
+            <AwardsEditor awards={awards} onChange={setAwards} />
+          </CollapsibleSection>
+
+          <CollapsibleSection title="7. Answer a few questions" forceOpen={forceOpen} defaultOpen={false}>
+            <p className="hero-note" style={{ marginBottom: 16 }}>
+              Optional — a few profession-specific prompts to help sharpen your summary.
+            </p>
+            {professionDetail && (
+              <DynamicQuestionForm
+                questions={professionDetail.questions}
+                answers={answers}
+                onChange={(key, value) => setAnswers((prev) => ({ ...prev, [key]: value }))}
+              />
+            )}
+          </CollapsibleSection>
+
+          <button className="btn btn-primary btn-block" type="submit" disabled={submitting || !professionKey} style={{ marginTop: 20 }}>
             {submitting ? "Generating your resume…" : "Create my ResumeLingo"}
           </button>
         </div>

@@ -17,7 +17,7 @@ export class AdminTemplateController {
   };
 
   create = async (c: Context<AppEnv>) => {
-    const { templateRepository } = c.get("services");
+    const { templateRepository, adminAuditLogRepository } = c.get("services");
     const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
     const { name, description, key, category, enabled, sortOrder } = body;
     if (!name || typeof name !== "string") {
@@ -41,14 +41,21 @@ export class AdminTemplateController {
       enabled: (enabled as boolean) ?? true,
       sortOrder: typeof sortOrder === "number" ? sortOrder : 0,
     });
+    await adminAuditLogRepository.log(c.get("admin")!, {
+      action: "template.create",
+      targetType: "template",
+      targetId: templateKey,
+      detail: nameStr,
+    });
     return c.json({ template: created }, 201);
   };
 
   update = async (c: Context<AppEnv>) => {
-    const { templateRepository } = c.get("services");
+    const { templateRepository, adminAuditLogRepository } = c.get("services");
     const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
     const { name, description, category, enabled, sortOrder } = body;
-    const updated = await templateRepository.update(c.req.param("key")!, {
+    const key = c.req.param("key")!;
+    const updated = await templateRepository.update(key, {
       name: name as string | undefined,
       description: description as string | undefined,
       category: category as TemplateCategory | undefined,
@@ -56,15 +63,27 @@ export class AdminTemplateController {
       sortOrder: sortOrder as number | undefined,
     });
     if (!updated) return c.json({ error: "Template not found." }, 404);
+    await adminAuditLogRepository.log(c.get("admin")!, {
+      action: "template.update",
+      targetType: "template",
+      targetId: key,
+      detail: updated.name,
+    });
     return c.json({ template: updated });
   };
 
   remove = async (c: Context<AppEnv>) => {
-    const { templateRepository } = c.get("services");
+    const { templateRepository, adminAuditLogRepository } = c.get("services");
     const key = c.req.param("key")!;
     const existing = await templateRepository.findByKey(key);
     if (!existing) return c.json({ error: "Template not found." }, 404);
     await templateRepository.delete(key);
+    await adminAuditLogRepository.log(c.get("admin")!, {
+      action: "template.delete",
+      targetType: "template",
+      targetId: key,
+      detail: existing.name,
+    });
     return c.json({ success: true });
   };
 }

@@ -18,9 +18,12 @@ export const TEMPLATES: TemplateDefinition[] = [
   { key: "government-contractor", name: "Government Contractor", description: "Highlights clearance and contract vehicles.", category: TemplateCategory.Premium },
   { key: "timeline", name: "Timeline", description: "Full-width name banner over a contact-and-skills sidebar, with an icon-marker career timeline.", category: TemplateCategory.Upgrade },
   { key: "portrait", name: "Portrait", description: "Colored photo banner over badge-marked work history, with a skills-and-volunteer-work sidebar.", category: TemplateCategory.Premium },
-  { key: "designer", name: "Designer", description: "Bold circular photo with an accent-color corner block, a contact-and-expertise sidebar, and bar-style section headers.", category: TemplateCategory.Premium },
+  { key: "designer", name: "Designer", description: "Bold circular photo with an accent-color corner block, a contact-and-education sidebar, and bar-style section headers.", category: TemplateCategory.Premium },
   { key: "monochrome", name: "Monochrome", description: "Grayscale photo beside a light gray sidebar for contact, education, and skills, with clean underlined section headers.", category: TemplateCategory.Premium },
   { key: "showcase", name: "Showcase", description: "Photo header over a grid of bordered cards, each tagged with a colorful pill-style section label.", category: TemplateCategory.Premium },
+  { key: "framed", name: "Framed", description: "Circular photo beside a bordered name box on a solid navy header, with a light Contact/Education/Skills sidebar.", category: TemplateCategory.Premium },
+  { key: "emblem", name: "Emblem", description: "Full-width navy header with a centered gold monogram and bordered name box, over a Contact/Education/Skills sidebar.", category: TemplateCategory.Premium },
+  { key: "spotlight", name: "Spotlight", description: "Circular photo beside the name on a colored banner header, with Hard Skills/Soft Skills and Workshops & Training sections.", category: TemplateCategory.Premium },
 ];
 
 export function getTemplateByKey(key: string): TemplateDefinition | undefined {

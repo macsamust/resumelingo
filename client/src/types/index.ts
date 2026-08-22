@@ -92,6 +92,18 @@ export interface SkillOrTool {
 }
 
 /**
+ * One language entry in the optional "Languages" section (see
+ * components/builder/LanguagesEditor.tsx). `proficiency` is a free string,
+ * but the editor only offers the standard ILR-style scale (Native/
+ * Bilingual, Full Professional, Professional Working, Limited Working,
+ * Elementary) so resumes read consistently.
+ */
+export interface LanguageEntry {
+  language: string;
+  proficiency: string;
+}
+
+/**
  * One professional reference (Edit Resume, Premium subscribers only — see
  * Resume.referencesEnabled and components/builder/ReferencesEditor.tsx).
  * "dateObservedStart"/"dateObservedEnd" are the range this reference worked
@@ -171,6 +183,8 @@ export interface Resume {
   achievements: AchievementEntry[];
   /** "Skills & Tools" section — only rendered by the Portrait template. See types/index.ts SkillOrTool. */
   skillsAndTools: SkillOrTool[];
+  /** Optional "Languages" section — see LanguageEntry. */
+  languages: LanguageEntry[];
   /** "References" section toggle — Premium subscribers only, off by default. See ReferenceEntry. */
   referencesEnabled: boolean;
   references: ReferenceEntry[];
@@ -220,6 +234,7 @@ export interface PublicResume {
   awards: AwardEntry[];
   achievements: AchievementEntry[];
   skillsAndTools: SkillOrTool[];
+  languages: LanguageEntry[];
   /** Already gated server-side (see server's Resume.publicReferences) — empty whenever referencesEnabled is off, so there's no separate flag to check here. */
   references: ReferenceEntry[];
   generatedSummary: string;
@@ -245,6 +260,56 @@ export interface AdminUserSummary {
   createdAt: string;
   suspended: boolean;
   resumeCount: number;
+  /** The Stripe Customer this account is linked to, if any — null means they've never started a checkout. */
+  stripeCustomerId: string | null;
+  /** True only if Stripe confirmed an active subscription (see SubscriptionService.syncSubscription). A paid tier with this false means an admin set the tier manually, not a real Stripe subscription. */
+  stripeSubscriptionActive: boolean;
+}
+
+/**
+ * Aggregate counts shown on the admin console's landing page — see
+ * api/AdminApi.ts's dashboardSummary. `rangeDays` echoes back whichever of
+ * 7/30/90 the request asked for (see AdminDashboardController.summary),
+ * and each `newInRange` count covers that same window.
+ */
+export interface AdminDashboardSummary {
+  rangeDays: number;
+  users: {
+    total: number;
+    newInRange: number;
+    suspended: number;
+    byTier: Record<SubscriptionTier, number>;
+  };
+  resumes: {
+    total: number;
+    newInRange: number;
+  };
+}
+
+/** One resume in the admin's cross-user search results — a regular Resume plus its owner's name/email, since the admin isn't scoped to one user's page here. */
+export interface AdminResumeSearchResult extends Resume {
+  ownerName: string;
+  ownerEmail: string;
+}
+
+/** One admin account (no password hash) — see api/AdminApi.ts's listAdmins/createAdmin. */
+export interface AdminAccount {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string;
+}
+
+/** One entry in the admin audit log — who did what, to what, and when. See api/AdminApi.ts's listAuditLog. */
+export interface AdminAuditLogEntry {
+  id: string;
+  adminId: string;
+  adminEmail: string;
+  action: string;
+  targetType: string;
+  targetId: string | null;
+  detail: string | null;
+  createdAt: string;
 }
 
 export interface AdminPlan {

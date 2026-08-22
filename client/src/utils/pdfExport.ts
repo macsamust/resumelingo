@@ -113,7 +113,18 @@ class ResumePdfWriter {
   }
 }
 
+/**
+ * Same overrides as PublicResumePage's identical helper — keep these two in
+ * sync. "languages" needs to read "Coding Languages" here too, matching
+ * professions.ts's Software Engineer question label, so it doesn't collide
+ * with the resume's separate, spoken-language "Languages" section.
+ */
+const ANSWER_LABEL_OVERRIDES: Record<string, string> = {
+  languages: "Coding Languages",
+};
+
 function formatAnswerLabel(key: string): string {
+  if (ANSWER_LABEL_OVERRIDES[key]) return ANSWER_LABEL_OVERRIDES[key];
   return key
     .replace(/([A-Z])/g, " $1")
     .trim()
@@ -196,6 +207,15 @@ export function downloadResumePdf(resume: PublicResume): void {
     for (const award of awards) {
       w.entryTitle(`${award.title || "Untitled award"}${award.issuer ? `, ${award.issuer}` : ""} (${formatMonth(award.date)})`);
       if (award.description) w.body(award.description);
+    }
+    w.spacer();
+  }
+
+  const languages = resume.languages ?? [];
+  if (languages.length > 0) {
+    w.sectionHeading("Languages");
+    for (const lang of languages) {
+      w.body(`${lang.language || "Untitled language"}${lang.proficiency ? ` — ${lang.proficiency}` : ""}`);
     }
     w.spacer();
   }

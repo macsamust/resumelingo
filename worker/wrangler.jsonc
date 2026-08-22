@@ -27,11 +27,21 @@
     }
   ],
 
+  // Workers AI — used by ResumeImportService to turn an uploaded resume's
+  // raw text into structured fields (see services/ResumeImportService.ts).
+  // No API key needed; billed through this Cloudflare account. Runs against
+  // the real Workers AI service even under `wrangler dev` (not locally
+  // emulated), so it needs network access and will incur normal Workers AI
+  // usage even in local dev.
+  "ai": {
+    "binding": "AI"
+  },
+
   // Non-secret config. JWT_SECRET and RESEND_API_KEY are intentionally NOT
   // here — set them with `npm run secret:jwt` / `npm run secret:resend-key`
   // so they're encrypted rather than committed to git.
   "vars": {
-    "CLIENT_ORIGIN": "https://resumelingo.legumes-postage-9k.workers.dev/",
+    "CLIENT_ORIGIN": "https://resumelingo.legumes-postage-9k.workers.dev",
     // The "from" address for password-reset emails (Resend requires this to
     // be on a domain you've verified in the Resend dashboard). Not secret —
     // update this directly once you've verified your sending domain.

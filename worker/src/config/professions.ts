@@ -10,7 +10,7 @@ export const PROFESSIONS: ProfessionDefinition[] = [
     key: "software-engineer",
     label: "Software Engineer",
     questions: [
-      { key: "languages", label: "Languages", type: "list", placeholder: "TypeScript, C#, Python" },
+      { key: "languages", label: "Coding Languages", type: "list", placeholder: "TypeScript, C#, Python" },
       { key: "frameworks", label: "Frameworks", type: "list", placeholder: "React, .NET, Django" },
       { key: "cloudPlatforms", label: "Cloud Platforms", type: "list", placeholder: "Azure, AWS" },
       { key: "certifications", label: "Certifications", type: "list" },

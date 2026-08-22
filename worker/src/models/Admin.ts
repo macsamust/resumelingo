@@ -7,6 +7,8 @@ export class Admin {
   readonly email: string;
   readonly passwordHash: string;
   readonly createdAt: string;
+  readonly failedLoginAttempts: number;
+  readonly lockedUntil: string | null;
 
   constructor(record: AdminRecord) {
     this.id = record.id;
@@ -14,6 +16,8 @@ export class Admin {
     this.email = record.email;
     this.passwordHash = record.passwordHash;
     this.createdAt = record.createdAt;
+    this.failedLoginAttempts = record.failedLoginAttempts;
+    this.lockedUntil = record.lockedUntil;
   }
 
   toPublicJSON() {

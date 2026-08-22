@@ -20,7 +20,10 @@ export function SortableHeader<K extends string>({ label, sortKey, sort, onSort 
       aria-sort={active ? (sort.direction === "asc" ? "ascending" : "descending") : "none"}
     >
       {label}
-      <span className="admin-sort-arrow">{active ? (sort.direction === "asc" ? "▲" : "▼") : "⇅"}</span>
+      {/* aria-hidden: the <th>'s own aria-sort already communicates sort state to screen readers, so this glyph would just be redundant/confusing noise read aloud. */}
+      <span className="admin-sort-arrow" aria-hidden="true">
+        {active ? (sort.direction === "asc" ? "▲" : "▼") : "⇅"}
+      </span>
     </th>
   );
 }

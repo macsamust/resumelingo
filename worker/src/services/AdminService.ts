@@ -6,6 +6,10 @@ import { AdminTokenPayload } from "../types";
 
 export class AdminAuthError extends Error {}
 
+/** After this many consecutive wrong passwords, the account is locked out for LOCKOUT_MINUTES. */
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_MINUTES = 15;
+
 /**
  * Mirrors server/'s AdminService, but is a fully separate auth system from
  * AuthService — its own table (admins), its own JWT secret
@@ -40,8 +44,28 @@ export class AdminService {
     const record = await this.admins.findByEmail(email);
     if (!record) throw new AdminAuthError("Invalid email or password.");
 
+    if (record.lockedUntil && new Date(record.lockedUntil) > new Date()) {
+      const minutesLeft = Math.max(1, Math.ceil((new Date(record.lockedUntil).getTime() - Date.now()) / 60000));
+      throw new AdminAuthError(`Too many failed attempts. Try again in ${minutesLeft} minute${minutesLeft === 1 ? "" : "s"}.`);
+    }
+
     const matches = await bcrypt.compare(password, record.passwordHash);
-    if (!matches) throw new AdminAuthError("Invalid email or password.");
+    if (!matches) {
+      const failedLoginAttempts = record.failedLoginAttempts + 1;
+      const lockedUntil =
+        failedLoginAttempts >= MAX_FAILED_ATTEMPTS
+          ? new Date(Date.now() + LOCKOUT_MINUTES * 60000).toISOString()
+          : null;
+      await this.admins.recordLoginFailure(record.id, lockedUntil ? 0 : failedLoginAttempts, lockedUntil);
+      if (lockedUntil) {
+        throw new AdminAuthError(`Too many failed attempts. Try again in ${LOCKOUT_MINUTES} minutes.`);
+      }
+      throw new AdminAuthError("Invalid email or password.");
+    }
+
+    if (record.failedLoginAttempts > 0 || record.lockedUntil) {
+      await this.admins.recordLoginSuccess(record.id);
+    }
 
     const admin = new Admin(record);
     const token = await this.tokens.sign({ adminId: admin.id, email: admin.email });

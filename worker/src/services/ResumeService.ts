@@ -312,7 +312,6 @@ export class ResumeService {
       generatedSummary = generated.summary;
       generatedBullets = generated.bullets;
     }
-
     // Same "silently coerce, don't trust the client" gate as create(),
     // evaluated against whichever templateKey ends up in effect this update.
     const templateKeyFinal = input.templateKey ?? existing.templateKey;
@@ -462,6 +461,7 @@ export class ResumeService {
       awards: s.awards,
       achievements: s.achievements,
       skillsAndTools: s.skillsAndTools,
+      languages: s.languages,
       referencesEnabled: s.referencesEnabled,
       references: s.references,
       referencesRecruiterModeOnly: s.referencesRecruiterModeOnly,

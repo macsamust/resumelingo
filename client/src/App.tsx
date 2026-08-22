@@ -18,11 +18,16 @@ import { CareerCoachPage } from "./pages/CareerCoachPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { AdminProtectedRoute } from "./components/layout/AdminProtectedRoute";
 import { AdminLoginPage } from "./pages/admin/AdminLoginPage";
+import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
 import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
+import { AdminResumesPage } from "./pages/admin/AdminResumesPage";
+import { AdminResumeEditPage } from "./pages/admin/AdminResumeEditPage";
 import { AdminPlansPage } from "./pages/admin/AdminPlansPage";
 import { AdminTemplatesPage } from "./pages/admin/AdminTemplatesPage";
 import { AdminSkillSuggestionsPage } from "./pages/admin/AdminSkillSuggestionsPage";
 import { AdminRoleDescriptionsPage } from "./pages/admin/AdminRoleDescriptionsPage";
+import { AdminAuditLogPage } from "./pages/admin/AdminAuditLogPage";
+import { AdminAdminsPage } from "./pages/admin/AdminAdminsPage";
 
 export default function App() {
   const location = useLocation();
@@ -90,10 +95,34 @@ export default function App() {
         />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route
+          path="/admin/dashboard"
+          element={
+            <AdminProtectedRoute>
+              <AdminDashboardPage />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/users"
           element={
             <AdminProtectedRoute>
               <AdminUsersPage />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/resumes"
+          element={
+            <AdminProtectedRoute>
+              <AdminResumesPage />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/resumes/:id/edit"
+          element={
+            <AdminProtectedRoute>
+              <AdminResumeEditPage />
             </AdminProtectedRoute>
           }
         />
@@ -129,7 +158,23 @@ export default function App() {
             </AdminProtectedRoute>
           }
         />
-        <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
+        <Route
+          path="/admin/audit-log"
+          element={
+            <AdminProtectedRoute>
+              <AdminAuditLogPage />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/admins"
+          element={
+            <AdminProtectedRoute>
+              <AdminAdminsPage />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       {!isPublicResumeRoute && !isAdminRoute && <Footer />}

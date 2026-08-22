@@ -2,7 +2,7 @@
   "name": "@resumelingo/shared",
   "version": "1.0.0",
   "private": true,
-  "description": "Type definitions shared between server/ (Node+Express+Postgres) and worker/ (Cloudflare Workers+Hono+D1) — the DB record shapes, catalog/config value types, and auth token payloads that need to stay identical across both backends. Not consumed by client/, which intentionally keeps its own API-facing view types (see client/src/types/index.ts).",
+  "description": "Type definitions for worker/ (Cloudflare Workers+Hono+D1) — DB record shapes, catalog/config value types, and auth token payloads. Not consumed by client/, which intentionally keeps its own API-facing view types (see client/src/types/index.ts). Originally shared between worker/ and a since-retired server/ (Node+Express+Postgres) parity backend; kept as its own package since worker/ still imports it as file:../shared.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

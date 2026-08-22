@@ -10,6 +10,10 @@ import { useAdminAuth } from "../../context/AdminAuthContext";
  */
 const LINK_GROUPS = [
   {
+    label: "Overview",
+    links: [{ to: "/admin/dashboard", label: "Dashboard" }],
+  },
+  {
     label: "Subscriber",
     links: [
       { to: "/admin/users", label: "Users" },
@@ -19,9 +23,17 @@ const LINK_GROUPS = [
   {
     label: "Resume",
     links: [
+      { to: "/admin/resumes", label: "Resumes" },
       { to: "/admin/templates", label: "Templates" },
       { to: "/admin/skill-suggestions", label: "Skills & Tools" },
       { to: "/admin/role-descriptions", label: "Role Descriptions" },
+    ],
+  },
+  {
+    label: "System",
+    links: [
+      { to: "/admin/admins", label: "Admin Accounts" },
+      { to: "/admin/audit-log", label: "Audit Log" },
     ],
   },
 ];
@@ -40,7 +52,21 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <aside className="app-sidebar admin-sidebar">
         <div className="admin-sidebar-head">
           <span className="admin-badge">Admin</span>
-          {admin && <p className="admin-sidebar-email">{admin.email}</p>}
+          {/* Mirrors the subscriber sidebar's "who am I" block (avatar + name,
+              see AppShell's .app-sidebar-user) so the two menus read the same
+              way, and its bottom border visually separates "who's logged in"
+              from the Overview/Subscriber/Resume/System nav groups below it. */}
+          {admin && (
+            <div className="app-sidebar-user admin-sidebar-user">
+              <span className="app-sidebar-user-avatar" aria-hidden="true">
+                {admin.name.charAt(0).toUpperCase()}
+              </span>
+              <span className="admin-sidebar-user-text">
+                <span className="app-sidebar-user-name">{admin.name}</span>
+                <span className="admin-sidebar-email">{admin.email}</span>
+              </span>
+            </div>
+          )}
         </div>
         {LINK_GROUPS.map((group) => (
           <div className="app-sidebar-group" key={group.label}>

@@ -38,9 +38,23 @@ export interface TemplateStyle {
   bulletsLabel: string;
   /** Overrides the Awards section's label — defaults to "Awards" (see ResumePreview.tsx). */
   awardsLabel?: string;
+  /** Overrides the Skills & Tools section's two group labels — default to "Skills"/"Tools" (see ResumePreview.tsx). */
+  skillsLabel?: string;
+  toolsLabel?: string;
   badge?: string;
   sideAlign?: "left" | "right"; // sidebar family only
   bannerAlign?: "left" | "center"; // executive-banner family only
+  /**
+   * photo-sidebar-underline family only:
+   *   - "banner" wraps the header text in a solid accent-color block with a
+   *     bordered box around the name, photo left-aligned beside it, instead
+   *     of the family's default plain white header.
+   *   - "banner-center" is a full-width solid accent-color header with
+   *     everything centered — photo/initials badge, name, and title all
+   *     stacked and centered, rather than side-by-side. Used by templates
+   *     with no uploaded-photo emphasis (see "emblem").
+   */
+  headerVariant?: "banner" | "banner-center";
 }
 
 const SERIF_ELEGANT = `'Playfair Display', Georgia, 'Times New Roman', serif`;
@@ -159,9 +173,12 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
 
   // Colored full-width banner (name/role/contact grid, plus an initials
   // badge standing in for a profile photo — the resume model has no photo
-  // upload) over a two-column body: main column with a circular badge
-  // marker on every experience/education entry, and a light-tint sidebar
-  // for skills and volunteer work/affiliations.
+  // upload) over a two-column body: larger main column (Summary,
+  // Experience, Highlights) with a circular badge marker on every
+  // experience entry, and a narrower light-tint sidebar (Education, Skills,
+  // Volunteer Work & Affiliations) — Highlights stays in the larger column
+  // and Education in the narrower one, same rule as every other two-column
+  // family (see ResumePreview.tsx's "photo-banner-sidebar" branch).
   portrait: {
     family: "photo-banner-sidebar",
     accent: "#3b6ea5", accentSoft: "#eaf3f8", font: SANS_MODERN,
@@ -171,7 +188,7 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
 
   // Bold circular photo over an accent-color corner block, name/title beside
   // it, then a two-column body: a narrow sidebar (About Me, Contact,
-  // Expertise) beside a main column (Experience, Education, Awards) — each
+  // Education) beside a main column (Experience, Expertise, Awards) — each
   // section labeled with a solid accent-color bar instead of the small
   // dot-marker label every other family uses. See ResumePreview.tsx's
   // "corner-photo-sidebar" branch and global.css's .tpl-corner-* rules.
@@ -201,6 +218,40 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     family: "pill-grid-cards",
     accent: "#16181d", accentSoft: "#f8fafc", font: SANS_GEOMETRIC,
     flow: "summary-first", summaryLabel: "About", bulletsLabel: "Skills",
+  },
+
+  // Same photo-sidebar-underline structure as Monochrome, but with the
+  // header-text half of the header wrapped in a solid navy block and a
+  // bordered box around the name — see headerVariant: "banner" above and
+  // .tpl-mono-header-banner in global.css.
+  framed: {
+    family: "photo-sidebar-underline", headerVariant: "banner",
+    accent: "#1e2a4a", accentSoft: "#eef1f7", font: SANS_MODERN,
+    flow: "summary-first", summaryLabel: "Profile", bulletsLabel: "Highlights",
+  },
+
+  // Full-width navy header, everything centered — a gold monogram badge
+  // (initials, since this one has no photo) over the name in a bordered
+  // box, then title beneath — over the same Contact/Education/Skills
+  // sidebar + Profile/Experience main body as Monochrome/Framed. See
+  // headerVariant: "banner-center" above and .tpl-mono-header-banner-center
+  // in global.css.
+  emblem: {
+    family: "photo-sidebar-underline", headerVariant: "banner-center",
+    accent: "#131c33", accentSoft: "#cda869", font: SERIF_ELEGANT,
+    flow: "summary-first", summaryLabel: "Profile", bulletsLabel: "Highlights",
+  },
+
+  // Circular photo beside the name/title, a colored banner header, then a
+  // two-column body: main column leads with Experience and Highlights
+  // (Workshops & Training reuses the Awards section, relabeled), sidebar
+  // has Education, Hard/Soft Skills. Reuses the photo-banner-sidebar
+  // structure (Portrait) with its own accent palette and Skills & Tools labels.
+  spotlight: {
+    family: "photo-banner-sidebar",
+    accent: "#16324a", accentSoft: "#e7f3f3", font: SANS_MODERN,
+    flow: "summary-first", summaryLabel: "Profile", bulletsLabel: "Highlights",
+    awardsLabel: "Workshops & Training", skillsLabel: "Hard Skills", toolsLabel: "Soft Skills",
   },
 };
 

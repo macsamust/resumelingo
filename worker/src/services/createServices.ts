@@ -8,6 +8,8 @@ import { TemplateRepository } from "../repositories/TemplateRepository";
 import { PlanRepository } from "../repositories/PlanRepository";
 import { SkillSuggestionRepository } from "../repositories/SkillSuggestionRepository";
 import { RoleDescriptionRepository } from "../repositories/RoleDescriptionRepository";
+import { AdminAuditLogRepository } from "../repositories/AdminAuditLogRepository";
+import { AdminLoginIpLogRepository } from "../repositories/AdminLoginIpLogRepository";
 import { TokenService } from "./TokenService";
 import { AuthService } from "./AuthService";
 import { ResumeService } from "./ResumeService";
@@ -16,6 +18,8 @@ import { AdminService } from "./AdminService";
 import { RuleBasedContentGenerator } from "./ContentGenerator";
 import { StripeService } from "./StripeService";
 import { EmailService } from "./EmailService";
+import { ResumeImportService } from "./ResumeImportService";
+import { AchievementGeneratorService } from "./AchievementGeneratorService";
 
 export interface Services {
   authService: AuthService;
@@ -29,12 +33,19 @@ export interface Services {
   planRepository: PlanRepository;
   skillSuggestionRepository: SkillSuggestionRepository;
   roleDescriptionRepository: RoleDescriptionRepository;
+  adminAuditLogRepository: AdminAuditLogRepository;
+  /** Backs the IP-based rate limit on admin login — see AdminAuthController.login. */
+  adminLoginIpLogRepository: AdminLoginIpLogRepository;
+  /** Exposed directly for the admin console's own account-management screen — see AdminManagementController. */
+  adminRepository: AdminRepository;
   /** Exposed directly (not just via authService) for the admin console's user-management screens — see AdminUserController. */
   userRepository: UserRepository;
   /** Exposed directly for the admin console's "view a user's resumes" drill-down and cascade-delete — see AdminUserController. */
   resumeRepository: ResumeRepository;
   /** Exposed directly for DashboardController's Resume Analytics aggregation and ResumeController.recordKeywordCheck. */
   resumeAnalyticsRepository: ResumeAnalyticsRepository;
+  resumeImportService: ResumeImportService;
+  achievementGeneratorService: AchievementGeneratorService;
 }
 
 /**
@@ -53,6 +64,8 @@ export function createServices(env: Env): Services {
   const planRepository = new PlanRepository(env.DB);
   const skillSuggestionRepository = new SkillSuggestionRepository(env.DB);
   const roleDescriptionRepository = new RoleDescriptionRepository(env.DB);
+  const adminAuditLogRepository = new AdminAuditLogRepository(env.DB);
+  const adminLoginIpLogRepository = new AdminLoginIpLogRepository(env.DB);
   const resumeAnalyticsRepository = new ResumeAnalyticsRepository(env.DB);
   const resumeVersionRepository = new ResumeVersionRepository(env.DB);
 
@@ -72,6 +85,8 @@ export function createServices(env: Env): Services {
     env.STRIPE_PRICE_PREMIUM
   );
   const adminService = new AdminService(adminRepo, adminTokenService, env.ADMIN_EMAIL, env.ADMIN_PASSWORD);
+  const resumeImportService = new ResumeImportService(env.AI);
+  const achievementGeneratorService = new AchievementGeneratorService(env.AI);
 
   return {
     authService,
@@ -84,8 +99,13 @@ export function createServices(env: Env): Services {
     planRepository,
     skillSuggestionRepository,
     roleDescriptionRepository,
+    adminAuditLogRepository,
+    adminLoginIpLogRepository,
+    adminRepository: adminRepo,
     userRepository: userRepo,
     resumeRepository: resumeRepo,
     resumeAnalyticsRepository,
+    resumeImportService,
+    achievementGeneratorService,
   };
 }

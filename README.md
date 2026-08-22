@@ -1,155 +1,82 @@
-# ResumeLingo — Full-Stack Scaffold
+# ResumeLingo
 
-A starter implementation of the ResumeLingo product: a React + TypeScript client,
-plus **two interchangeable backends** built with the same object-oriented
-layered architecture (models → repositories → services → controllers →
-routes):
-
-- **`server/`** — Node.js + Express + Postgres (via `pg`). Good for local
-  development, or for hosting anywhere that runs a normal Node process
-  (Render, Railway, Fly.io, etc.) alongside a Postgres database.
-- **`worker/`** — Cloudflare Workers + Hono + D1. The version to use if
-  you're deploying on Cloudflare, since Cloudflare Workers can't run
-  Express or native Node addons like `better-sqlite3`.
-
-Both share the same `models/`, `config/`, and business rules — only the
-persistence layer (SQL driver), the JWT signing library, and the HTTP
-framework differ, because those are the only pieces that actually touch
-Node-specific or Workers-specific APIs.
+A React + TypeScript client backed by a Cloudflare Workers + Hono + D1 API,
+using a layered architecture (models → repositories → services →
+controllers → routes).
 
 This is a working scaffold, not the finished product — it covers the core
 loop (register/login, the profession-aware resume builder, AI-style content
-generation, public/private share links, dashboard, subscription tiers) so
-you have real code to extend rather than a blank project.
+generation, public/private share links, dashboard, subscription tiers, and
+an admin console) so you have real code to extend rather than a blank
+project.
+
+> **Note:** an earlier version of this project also included `server/`, a
+> parity backend on Node + Express + Postgres, kept in sync with `worker/`
+> as an alternate way to self-host outside Cloudflare. It was never actually
+> deployed, `worker/` was always the real production backend, and
+> maintaining two parallel implementations of every feature had become pure
+> overhead with no upside — so `server/` was retired and deleted. If you
+> ever need to reference it, it's in this repo's git history prior to its
+> removal.
 
 ## Architecture
 
 ```
 resumelingo-app/
-  client/   React + TypeScript app (Vite) — same for both backends
-  server/   Node + Express + TypeScript API (Postgres via `pg`)
-  worker/   Cloudflare Worker + Hono + TypeScript API (D1)
+  client/   React + TypeScript app (Vite)
+  worker/   Cloudflare Worker + Hono + TypeScript API (D1) — the only backend
+  shared/   TypeScript types shared with worker/ (DB record shapes, config
+            value types, auth token payloads) — compiled to shared/dist/,
+            which worker/ imports via a file:../shared dependency
 ```
 
-### Shared layers (`models/`, `config/`)
+### `worker/` layers
 
-- **models/** — `User`, `Resume`: wrap a raw DB row with behavior (e.g.
-  `user.canCreateAdditionalResume()`, `resume.isAccessibleBy(userId, password)`).
-  Identical in both backends — no I/O.
+- **models/** — `User`, `Resume`, `Admin`: wrap a raw D1 row with behavior
+  (e.g. `user.canCreateAdditionalResume()`, `resume.isAccessibleBy(userId,
+  password)`).
+- **repositories/** — one per table, built fresh per request from the D1
+  binding (`c.env.DB`) via `createServices(env)` — Workers have no
+  cross-request module-level state, unlike a long-lived Node process.
+- **services/** — business logic: `ResumeService`, `AuthService`,
+  `AdminService`, `SubscriptionService` (Stripe), `ContentGenerator.ts` (the
+  rule-based "AI" resume writer — pure logic, no I/O).
+- **controllers/routes/** — Hono handlers and route wiring, including a
+  full admin console API (`admin.routes.ts`) behind its own JWT auth.
 - **config/** — static product data: `professions.ts` (the question set per
-  profession), `templates.ts` (15 resume templates), `subscriptionPlans.ts`
-  (Starter/Professional/Premium). Identical in both backends.
-
-### Backend-specific layers
-
-|                    | `server/` (Node)                         | `worker/` (Cloudflare)                          |
-|--------------------|---------------------------------------------|----------------------------------------------------|
-| HTTP framework     | Express                                   | [Hono](https://hono.dev)                          |
-| Database           | Postgres, via `pg` connection pool        | D1 (Cloudflare's SQLite), via `env.DB`            |
-| Repositories       | Async methods (`pg`'s driver is Promise-based) | Async methods (D1's driver is Promise-based) |
-| JWT signing        | `jsonwebtoken` (Node `crypto`)             | `jose` (Web Crypto API, works in both dev & prod) |
-| Password hashing   | `bcryptjs`                                 | `bcryptjs` (pure JS, works unchanged)             |
-| Request context    | `req`/`res`                                | Hono `Context` (`c`)                               |
-| Per-request wiring  | Repositories share one module-level `Pool` (connection pooling handled by `pg` itself) | `createServices(env)` builds fresh repositories/services per request from `c.env.DB`, since the D1 binding only exists inside a request |
-
-`ContentGenerator.ts` (the rule-based "AI" resume writer) is pure logic with
-no I/O at all, so it's copied byte-for-byte between the two backends.
+  profession), `templates.ts` (resume templates), `subscriptionPlans.ts`
+  (Starter/Professional/Premium).
 
 ### Frontend layers (`client/src`)
 
 - **api/** — `ApiClient` is a base class handling fetch + auth headers +
-  error normalization; `AuthApi`, `ResumeApi`, `CatalogApi` extend it. Talks
-  to whichever backend is running at `/api` (same origin in production).
+  error normalization; `AuthApi`, `ResumeApi`, `CatalogApi`, `AdminApi`
+  extend it. Talks to the Worker at `/api` (same origin in production).
 - **context/AuthContext.tsx** — React context wrapping the auth API and
-  current user.
+  current user. `AdminAuthContext.tsx` is the separate admin equivalent.
 - **components/marketing/** — the public landing page (hero, mission/vision,
   pricing, Career Center, templates, success stories, etc.), data-driven
   where it matters (Pricing and Templates fetch live from the API).
 - **components/builder/** — `DynamicQuestionForm` renders whatever question
   set the selected profession returns; `ResumePreview` shows the
-  live/generated content.
+  live/generated content, reused as-is by the admin console's own resume
+  editor and template preview.
 - **pages/** — routed pages: landing, login, signup, dashboard, resume
-  builder, resume edit, and the public `/r/:slug` resume viewer (supports
-  password-protected links).
+  builder, resume edit, the public `/r/:slug` resume viewer (supports
+  password-protected links), and the full admin console (`pages/admin/`).
 
 ---
 
-## Option A — Node + Express + Postgres (local dev, or Render)
+## Deploying to Cloudflare (Workers + D1)
 
-Requires Node.js 18+, npm, and a Postgres database (local, or a free-tier
-managed one — see the Render section below). This was scaffolded in a
-sandbox without registry access, so **`npm install` has not been run or
-verified here** — run it yourself and fix up any dependency version hiccups
-if they come up.
-
-```bash
-# from the resumelingo-app/ folder
-npm run install:all
-
-# copy env files and adjust if needed
-cp server/.env.example server/.env
-cp client/.env.example client/.env
-```
-
-Edit `server/.env` and set `DATABASE_URL` to a real Postgres connection
-string (local Postgres, or a hosted one — see below). The server creates its
-tables automatically on startup if they don't exist yet (`migrate()` in
-`server/src/db/database.ts`), so there's no separate migration command to
-run for this backend.
-
-```bash
-# terminal 1 — API on http://localhost:4000
-npm run dev:server
-
-# terminal 2 — app on http://localhost:5173
-npm run dev:client
-
-# optional: seed a demo account (demo@resumelingo.app / password123) + one resume
-npm run seed
-```
-
-For this split local setup, `client/.env` needs
-`VITE_API_URL=http://localhost:4000/api` set (the deployed/Cloudflare
-version doesn't need this — see Option B below).
-
-### Deploying this backend on Render (free tier)
-
-1. **Create a Postgres database:** Render dashboard → **New → Postgres** →
-   choose the **Free** instance type. Once it's up, copy the **External
-   Database URL** from its dashboard page.
-2. **Create a web service** for `server/`: Render dashboard → **New → Web
-   Service** → connect your GitHub repo.
-   - **Root Directory:** `server`
-   - **Build Command:** `npm install && npm run build`
-   - **Start Command:** `npm start`
-   - **Instance Type:** Free (or a paid one for no spin-down/cold-starts)
-3. **Set environment variables** on the web service: `DATABASE_URL` (paste
-   the External Database URL from step 1), `JWT_SECRET` (any long random
-   string), `CLIENT_ORIGIN` (the URL your frontend is served from, so CORS
-   allows it).
-4. Deploy. On first boot, `migrate()` creates the `users`/`resumes` tables
-   in your Postgres database automatically.
-
-Free-tier caveats worth knowing before you rely on this for real data: free
-Render Postgres databases **expire 30 days after creation** (14-day grace
-period to upgrade before deletion), and free web services **spin down after
-15 minutes idle** (about a minute to wake back up on the next request). Fine
-for testing/demos; for anything you want to keep long-term, upgrade the
-Postgres instance to a paid plan before the 30-day mark.
-
----
-
-## Option B — Deploying to Cloudflare (Workers + D1)
-
-This is the path if you want everything — frontend and API — hosted on
-Cloudflare. One Worker serves the built React app as static assets **and**
-runs the API, so there's a single URL and no CORS to configure in
-production.
+Frontend and API both run on Cloudflare. One Worker serves the built React
+app as static assets **and** runs the API, so there's a single URL and no
+CORS to configure in production.
 
 ### Prerequisites
 
 - A Cloudflare account (free tier is enough to start).
-- Your code pushed to GitHub (you said it already is).
+- Your code pushed to GitHub.
 - Node 18+ and npm locally, at least for this first-time setup.
 
 ### 1. Install dependencies and log in
@@ -170,23 +97,35 @@ This prints a `database_id`. Open `worker/wrangler.jsonc` and paste it into
 the `d1_databases[0].database_id` field (replacing
 `REPLACE_WITH_YOUR_DATABASE_ID`). Commit that change.
 
-### 3. Run the migration
+### 3. Run the migrations
 
 ```bash
-npm run db:migrate:remote    # applies migrations/0001_init.sql to the real hosted DB
+npm run db:migrate:remote    # applies every migrations/*.sql file to the real hosted DB
 npm run db:migrate:local     # optional: same, but for local `wrangler dev` testing
 ```
 
-### 4. Set the JWT secret
+D1's `--remote` (production) and `--local` (used by `wrangler dev`) are two
+independent database copies — a new migration has to be applied to both
+separately, or local dev will be missing tables/columns production already
+has.
+
+### 4. Set secrets
 
 ```bash
-npm run secret:jwt
+npm run secret:jwt                        # regular user auth
+npm run secret:stripe-key                 # Stripe secret key, if billing is enabled
+npm run secret:stripe-webhook
+npm run secret:stripe-price-professional
+npm run secret:stripe-price-premium
+npm run secret:resend-key                 # transactional email (password resets, etc.)
 ```
 
-This prompts for a value and stores it encrypted on Cloudflare — deliberately
+Each prompts for a value and stores it encrypted on Cloudflare — deliberately
 **not** in `wrangler.jsonc`, since that file gets committed to git. For local
-`wrangler dev`, copy `.dev.vars.example` to `.dev.vars` and put a dev secret
-there instead (that file is gitignored).
+`wrangler dev`, copy `.dev.vars.example` to `.dev.vars` and put dev values
+there instead (that file is gitignored). An `ADMIN_JWT_SECRET` can also be
+set separately from `JWT_SECRET` for the admin console's own token signing —
+see `wrangler.jsonc`'s `vars`/secrets and `createServices.ts`.
 
 ### 5. Build the client
 
@@ -216,17 +155,16 @@ relative path `/api`).
 ### 7. (Optional) Auto-deploy on every push
 
 Cloudflare can rebuild and redeploy automatically whenever you push to
-GitHub, instead of you running `npm run deploy` by hand:
+GitHub, instead of you running `npm run deploy` by hand — see
+`.github/workflows/ci.yml` for a working GitHub Actions version of this
+(typecheck + test on every push/PR, deploy on push to `main`).
 
-1. Cloudflare dashboard → **Workers & Pages** → your `resumelingo` Worker →
-   **Settings → Builds → Connect**.
-2. Point it at your GitHub repo.
-3. Set **root directory** to `worker`, and a **build command** that builds
-   the client first, e.g. `npm install && cd ../client && npm install && npm run build`.
-
-Cloudflare's dashboard UI for this changes fairly often, so treat the exact
-field names as approximate — the concept (root directory + build command
-that produces `client/dist` before `wrangler deploy` runs) is what matters.
+Alternatively, via Cloudflare's own dashboard: **Workers & Pages** → your
+`resumelingo` Worker → **Settings → Builds → Connect**, point it at your
+GitHub repo, root directory `worker`, build command
+`npm install && cd ../client && npm install && npm run build`. Cloudflare's
+dashboard UI for this changes fairly often, so treat the exact field names
+as approximate.
 
 ### 8. (Optional) Custom domain
 
@@ -250,23 +188,26 @@ Two ways to develop locally once the D1 database and secrets are set up:
 ## What's implemented vs. stubbed
 
 **Implemented:** registration/login (JWT + bcrypt), profession-aware resume
-builder with 10 profession question sets, rule-based "AI" content generation,
-15 templates, public/private/password-protected share links with view
-counting, dashboard summary (resumes, views, Profile Strength Score,
-suggested improvements), subscription tiers with resume-count enforcement.
+builder with profession-specific question sets, rule-based "AI" content
+generation, many resume templates, public/private/password-protected share
+links with view counting, dashboard summary (resumes, views, Profile
+Strength Score, suggested improvements), Stripe-backed subscription tiers
+with resume-count enforcement, and a full admin console (user/resume
+management, template/plan/catalog CRUD, audit logging, CSV export, bulk
+actions).
 
-**Stubbed / intentionally simple:** the "AI" generator is rule-based
-templating, not a real LLM call (swap `RuleBasedContentGenerator` for a real
-provider behind the same `IContentGenerator` interface — on Cloudflare,
-Workers AI is a natural fit). Resume analytics are limited to view count.
-The "Coming to Premium" features from the marketing page (Career Portfolio,
-AI Career Coach, Recruiter Mode, etc.) are marketing copy only — no backend
-for them yet. The `npm run seed` demo-data script only exists for the
-Node/`server` backend; there's no D1 equivalent yet, so on Cloudflare just
-sign up through the UI.
+**Stubbed / intentionally simple:** the "AI" generator (`ContentGenerator.ts`)
+is rule-based templating, not a real LLM call — swap
+`RuleBasedContentGenerator` for a real provider behind the same
+`IContentGenerator` interface (Workers AI, already available as a binding in
+`wrangler.jsonc`, is a natural fit — see `ResumeImportService`/
+`AchievementGeneratorService` for existing `env.AI` usage elsewhere in this
+codebase). Resume analytics are limited to view count. The "Coming to
+Premium" features from the marketing page (Career Portfolio, etc.) are
+marketing copy only where no backend exists yet — check `pages/` and
+`worker/src/routes/` for what's actually wired up (Career Coach and
+Thank-You Letter generation, for instance, are real).
 
-Note on running both backends: they're two independent, complete options —
-not meant to be mixed. `server/`'s Postgres database and `worker/`'s D1
-database are separate, unrelated databases; D1 is only reachable from inside
-a Cloudflare Worker, so `server/` (wherever it's hosted) can never read from
-or write to it. Pick one backend to actually run in production.
+See `TODO.md` for a running list of larger, deliberately-deferred
+improvements (admin roles/permissions, 2FA, subscriber-facing resume content
+editing, etc.).

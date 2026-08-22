@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { getTemplateStyle } from "../../config/templateStyles";
-import { AchievementEntry, AwardEntry, EducationEntry, SkillOrTool, WorkExperienceEntry } from "../../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LanguageEntry, SkillOrTool, WorkExperienceEntry } from "../../types";
 import { groupAchievementsByExperience } from "../../utils/starBullet";
 
 interface Props {
@@ -27,6 +27,8 @@ interface Props {
   skillsAndTools?: SkillOrTool[];
   /** Whether to render the Skills & Tools section — true for every Premium-tier template, computed by the caller (which knows the template's category; this component only knows its layout family). False/omitted hides it even if skillsAndTools has entries, so a resume that's since moved off a Premium template doesn't keep showing a Premium-only section. */
   showSkillsAndTools?: boolean;
+  /** Optional "Languages" section — not tier-gated, unlike Skills & Tools. Omitted entirely (no empty section) when empty. */
+  languages?: LanguageEntry[];
 }
 
 /**
@@ -112,6 +114,7 @@ export function ResumePreview({
   combineExperienceFormat = false,
   skillsAndTools = [],
   showSkillsAndTools = false,
+  languages = [],
 }: Props) {
   const style = getTemplateStyle(templateKey ?? "modern");
   const cssVars = {
@@ -293,17 +296,33 @@ export function ResumePreview({
       <span className="tpl-section-label">Skills &amp; Tools</span>
       {skills.length > 0 && (
         <div className="tpl-skills-tools-group">
-          <span className="tpl-skills-tools-group-label">Skills</span>
+          <span className="tpl-skills-tools-group-label">{style.skillsLabel ?? "Skills"}</span>
           <p className="tpl-skills-tools-list">{skills.map((s) => s.label).join(", ")}</p>
         </div>
       )}
       {skills.length > 0 && tools.length > 0 && <div className="tpl-skills-tools-divider" />}
       {tools.length > 0 && (
         <div className="tpl-skills-tools-group">
-          <span className="tpl-skills-tools-group-label">Tools</span>
+          <span className="tpl-skills-tools-group-label">{style.toolsLabel ?? "Tools"}</span>
           <p className="tpl-skills-tools-list">{tools.map((s) => s.label).join(", ")}</p>
         </div>
       )}
+    </div>
+  );
+
+  // Optional, not tier-gated (unlike Skills & Tools) — omitted entirely when
+  // empty, same "no empty section" rule every other block here follows.
+  const languagesBlock = languages.length > 0 && (
+    <div className="tpl-section">
+      <span className="tpl-section-label">Languages</span>
+      <ul className="tpl-languages-list">
+        {languages.map((l, i) => (
+          <li key={i}>
+            <span className="tpl-languages-name">{l.language || "Untitled language"}</span>
+            {l.proficiency && <span className="tpl-languages-proficiency"> — {l.proficiency}</span>}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 
@@ -333,6 +352,10 @@ export function ResumePreview({
 
   if (style.family === "sidebar") {
     const sideFirst = (style.sideAlign ?? "left") === "left";
+    // Education moves into the narrower side column (with Highlights kept
+    // in the wider main column below) so every two-column template follows
+    // the same rule: Highlights/Achievements live in the larger column,
+    // Education in the smaller one.
     const sideContent = (
       <div className="tpl-side">
         {fullName && <p className="tpl-fullname">{fullName}</p>}
@@ -343,13 +366,17 @@ export function ResumePreview({
             {style.badge}
           </span>
         )}
+        {educationBlock}
       </div>
     );
     const mainContent = (
       <div className="tpl-main">
-        {orderedSections}
+        {summaryBlock}
+        {experienceBlock}
+        {bulletsBlock}
         {skillsAndToolsBlock}
         {awardsBlock}
+        {languagesBlock}
       </div>
     );
 
@@ -403,12 +430,13 @@ export function ResumePreview({
             <div className="tpl-timeline-side">
               {sidebarContact}
               {summaryBlock}
+              {educationBlock}
             </div>
             <div className="tpl-timeline-main">
               {bulletsBlock}
               {experienceBlock}
-              {educationBlock}
               {awardsBlock}
+              {languagesBlock}
             </div>
           </div>
         </div>
@@ -453,12 +481,13 @@ export function ResumePreview({
             <div className="tpl-photo-main">
               {summaryBlock}
               {experienceBlock}
-              {educationBlock}
+              {bulletsBlock}
             </div>
             <div className="tpl-photo-side">
-              {bulletsBlock}
+              {educationBlock}
               {skillsAndToolsBlock}
               {awardsBlock}
+              {languagesBlock}
             </div>
           </div>
         </div>
@@ -517,12 +546,13 @@ export function ResumePreview({
             <div className="tpl-corner-side">
               {summaryBlock}
               {contactList}
-              {bulletsBlock}
+              {educationBlock}
               {skillsAndToolsBlock}
+              {languagesBlock}
             </div>
             <div className="tpl-corner-main">
               {experienceBlock}
-              {educationBlock}
+              {bulletsBlock}
               {awardsBlock}
             </div>
           </div>
@@ -548,7 +578,15 @@ export function ResumePreview({
       <div className="preview-col">
         {templateTag}
         <div className="preview-panel tpl-photo-sidebar-underline" style={cssVars}>
-          <div className="tpl-mono-header">
+          <div
+            className={`tpl-mono-header ${
+              style.headerVariant === "banner"
+                ? "tpl-mono-header-banner"
+                : style.headerVariant === "banner-center"
+                  ? "tpl-mono-header-banner-center"
+                  : ""
+            }`}
+          >
             <div className="tpl-mono-photo-wrap">
               {photoUrl ? (
                 <img
@@ -574,6 +612,7 @@ export function ResumePreview({
               {sidebarContact}
               {educationBlock}
               {skillsAndToolsBlock}
+              {languagesBlock}
             </div>
             <div className="tpl-mono-main">
               {summaryBlock}
@@ -608,6 +647,7 @@ export function ResumePreview({
     const experienceCard = experienceBlock && <div className="tpl-pill-card tpl-pill-experience">{experienceBlock}</div>;
     const educationCard = educationBlock && <div className="tpl-pill-card tpl-pill-education">{educationBlock}</div>;
     const awardsCard = awardsBlock && <div className="tpl-pill-card tpl-pill-awards">{awardsBlock}</div>;
+    const languagesCard = languagesBlock && <div className="tpl-pill-card tpl-pill-languages">{languagesBlock}</div>;
 
     return (
       <div className="preview-col">
@@ -642,6 +682,7 @@ export function ResumePreview({
               {skillsAndToolsCard}
               {educationCard}
               {awardsCard}
+              {languagesCard}
             </div>
             <div className="tpl-pill-col">
               {experienceCard}
@@ -670,6 +711,7 @@ export function ResumePreview({
         {orderedSections}
         {skillsAndToolsBlock}
         {awardsBlock}
+        {languagesBlock}
       </div>
     </div>
   );

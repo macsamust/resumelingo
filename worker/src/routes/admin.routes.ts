@@ -7,6 +7,10 @@ import { AdminPlanController } from "../controllers/AdminPlanController";
 import { AdminTemplateController } from "../controllers/AdminTemplateController";
 import { AdminSkillSuggestionController } from "../controllers/AdminSkillSuggestionController";
 import { AdminRoleDescriptionController } from "../controllers/AdminRoleDescriptionController";
+import { AdminDashboardController } from "../controllers/AdminDashboardController";
+import { AdminResumeController } from "../controllers/AdminResumeController";
+import { AdminAuditLogController } from "../controllers/AdminAuditLogController";
+import { AdminManagementController } from "../controllers/AdminManagementController";
 
 const admin = new Hono<AppEnv>();
 
@@ -14,12 +18,34 @@ const authController = new AdminAuthController();
 admin.post("/auth/login", authController.login);
 admin.get("/auth/me", requireAdminAuth, authController.me);
 
+const dashboardController = new AdminDashboardController();
+admin.get("/dashboard/summary", requireAdminAuth, dashboardController.summary);
+
+const resumeSearchController = new AdminResumeController();
+admin.get("/resumes", requireAdminAuth, resumeSearchController.search);
+admin.get("/resumes/export", requireAdminAuth, resumeSearchController.exportCsv);
+admin.post("/resumes/bulk-delete", requireAdminAuth, resumeSearchController.bulkDelete);
+admin.get("/resumes/:id", requireAdminAuth, resumeSearchController.get);
+admin.put("/resumes/:id", requireAdminAuth, resumeSearchController.update);
+
+const auditLogController = new AdminAuditLogController();
+admin.get("/audit-log", requireAdminAuth, auditLogController.list);
+admin.get("/audit-log/export", requireAdminAuth, auditLogController.exportCsv);
+
+const adminManagementController = new AdminManagementController();
+admin.get("/admins", requireAdminAuth, adminManagementController.list);
+admin.post("/admins", requireAdminAuth, adminManagementController.create);
+admin.delete("/admins/:id", requireAdminAuth, adminManagementController.remove);
+
 const userController = new AdminUserController();
 admin.get("/users", requireAdminAuth, userController.list);
+admin.get("/users/export", requireAdminAuth, userController.exportCsv);
+admin.post("/users/bulk-suspend", requireAdminAuth, userController.bulkSetSuspended);
+admin.post("/users/bulk-delete", requireAdminAuth, userController.bulkRemove);
 admin.get("/users/:id/resumes", requireAdminAuth, userController.resumesForUser);
 admin.put("/users/:id/tier", requireAdminAuth, userController.changeTier);
 admin.put("/users/:id/suspend", requireAdminAuth, userController.setSuspended);
-admin.put("/users/:id/password", requireAdminAuth, userController.resetPassword);
+admin.post("/users/:id/send-password-reset", requireAdminAuth, userController.sendPasswordReset);
 admin.delete("/users/:id", requireAdminAuth, userController.remove);
 
 const planController = new AdminPlanController();

@@ -1,4 +1,4 @@
-import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, ReferenceEntry, ResumeRecord, SkillOrTool, WorkExperienceEntry } from "../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LanguageEntry, LinkVisibility, ReferenceEntry, ResumeRecord, SkillOrTool, WorkExperienceEntry } from "../types";
 import { getTemplateByKey } from "../config/templates";
 import { getProfessionByKey } from "../config/professions";
 import { extractKeywords } from "../utils/keywords";
@@ -47,6 +47,7 @@ export class Resume {
   readonly awards: AwardEntry[];
   readonly achievements: AchievementEntry[];
   readonly skillsAndTools: SkillOrTool[];
+  readonly languages: LanguageEntry[];
   readonly referencesEnabled: boolean;
   readonly references: ReferenceEntry[];
   readonly referencesRecruiterModeOnly: boolean;
@@ -88,6 +89,7 @@ export class Resume {
     this.awards = JSON.parse(record.awards || "[]");
     this.achievements = JSON.parse(record.achievements || "[]");
     this.skillsAndTools = JSON.parse(record.skillsAndTools || "[]");
+    this.languages = JSON.parse(record.languages || "[]");
     this.referencesEnabled = !!record.referencesEnabled;
     this.references = JSON.parse(record.references || "[]");
     this.referencesRecruiterModeOnly = !!record.referencesRecruiterModeOnly;
@@ -230,6 +232,7 @@ export class Resume {
       awards: this.awards,
       achievements: this.achievements,
       skillsAndTools: this.skillsAndTools,
+      languages: this.languages,
       referencesEnabled: this.referencesEnabled,
       references: this.references,
       referencesRecruiterModeOnly: this.referencesRecruiterModeOnly,
@@ -261,6 +264,7 @@ export class Resume {
       awards: this.awards,
       achievements: this.achievements,
       skillsAndTools: this.skillsAndTools,
+      languages: this.languages,
       references: this.publicReferences,
       generatedSummary: this.generatedSummary,
       generatedBullets: this.generatedBullets,

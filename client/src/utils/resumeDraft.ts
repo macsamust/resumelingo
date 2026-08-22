@@ -2,6 +2,7 @@ import {
   AchievementEntry,
   AwardEntry,
   EducationEntry,
+  LanguageEntry,
   LinkVisibility,
   ReferenceEntry,
   SkillOrTool,
@@ -35,6 +36,7 @@ export interface ResumeDraft {
   awards: AwardEntry[];
   achievements: AchievementEntry[];
   skillsAndTools: SkillOrTool[];
+  languages: LanguageEntry[];
   coverLetterEnabled: boolean;
   recruiterModeEnabled: boolean;
   recruiterLocation: string;

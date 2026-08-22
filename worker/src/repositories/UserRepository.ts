@@ -98,12 +98,150 @@ export class UserRepository extends BaseRepository<UserRecord> {
     await this.db.prepare(`UPDATE users SET suspended = ? WHERE id = ?`).bind(suspended ? 1 : 0, userId).run();
   }
 
+  /** Bulk version of setSuspended — one statement covering every id, for the admin Users page's multi-select suspend/unsuspend. */
+  async setSuspendedBulk(userIds: string[], suspended: boolean): Promise<void> {
+    if (userIds.length === 0) return;
+    const placeholders = userIds.map(() => "?").join(", ");
+    await this.db
+      .prepare(`UPDATE users SET suspended = ? WHERE id IN (${placeholders})`)
+      .bind(suspended ? 1 : 0, ...userIds)
+      .run();
+  }
+
   async countResumesForUser(userId: string): Promise<number> {
     const row = await this.db
       .prepare(`SELECT COUNT(*) as count FROM resumes WHERE userId = ?`)
       .bind(userId)
       .first<{ count: number }>();
     return row?.count ?? 0;
+  }
+
+  /** Column (or CASE expression) each admin Users list sort key maps to — whitelisted rather than interpolating the key directly, since it goes straight into an ORDER BY clause. */
+  private static readonly SORT_COLUMNS: Record<string, string> = {
+    name: "u.name",
+    email: "u.email",
+    subscriptionTier: `CASE u.subscriptionTier WHEN 'starter' THEN 0 WHEN 'professional' THEN 1 WHEN 'premium' THEN 2 ELSE 3 END`,
+    resumeCount: "resumeCount",
+    suspended: "u.suspended",
+    createdAt: "u.createdAt",
+  };
+
+  /**
+   * One page of users plus their resume counts, optionally filtered by a
+   * name/email search — used by the admin Users list. Replaces the old
+   * findAllWithResumeCounts(), which still loaded every user in one go
+   * (fine for the N+1 query problem, but not for the "load the whole table
+   * on every page view" problem as the user base grows). Sorting and
+   * filtering both happen in SQL rather than client-side, so they apply
+   * across the whole table, not just the current page.
+   */
+  async findPageWithResumeCounts(params: {
+    page: number;
+    pageSize: number;
+    q?: string;
+    sortKey: string;
+    sortDirection: "asc" | "desc";
+  }): Promise<{ users: (UserRecord & { resumeCount: number })[]; total: number }> {
+    const page = Math.max(1, params.page);
+    const pageSize = Math.min(200, Math.max(1, params.pageSize));
+    const offset = (page - 1) * pageSize;
+    const q = params.q?.trim();
+    const where = q ? `WHERE u.name LIKE ? OR u.email LIKE ?` : "";
+    const likeArgs = q ? [`%${q}%`, `%${q}%`] : [];
+    const orderColumn = UserRepository.SORT_COLUMNS[params.sortKey] ?? UserRepository.SORT_COLUMNS.name;
+    const orderDir = params.sortDirection === "desc" ? "DESC" : "ASC";
+
+    const countRow = await this.db
+      .prepare(`SELECT COUNT(*) as count FROM users u ${where}`)
+      .bind(...likeArgs)
+      .first<{ count: number }>();
+
+    const { results } = await this.db
+      .prepare(
+        `SELECT u.*, COUNT(r.id) as resumeCount
+         FROM users u
+         LEFT JOIN resumes r ON r."userId" = u.id
+         ${where}
+         GROUP BY u.id
+         ORDER BY ${orderColumn} ${orderDir}
+         LIMIT ? OFFSET ?`
+      )
+      .bind(...likeArgs, pageSize, offset)
+      .all<UserRecord & { resumeCount: number }>();
+
+    return {
+      users: results.map((row) => ({ ...normalizeBooleans(row), resumeCount: row.resumeCount })),
+      total: countRow?.count ?? 0,
+    };
+  }
+
+  /**
+   * Every user matching the same search used by findPageWithResumeCounts,
+   * unpaginated (up to `limit`) — backs the Users CSV export, which needs
+   * the whole filtered result set rather than just the page currently on
+   * screen. Capped at 5,000 rows so a very large, unfiltered export can't
+   * blow past D1/Worker response limits.
+   */
+  async findAllWithResumeCountsMatching(params: {
+    q?: string;
+    sortKey: string;
+    sortDirection: "asc" | "desc";
+    limit?: number;
+  }): Promise<(UserRecord & { resumeCount: number })[]> {
+    const q = params.q?.trim();
+    const where = q ? `WHERE u.name LIKE ? OR u.email LIKE ?` : "";
+    const likeArgs = q ? [`%${q}%`, `%${q}%`] : [];
+    const orderColumn = UserRepository.SORT_COLUMNS[params.sortKey] ?? UserRepository.SORT_COLUMNS.name;
+    const orderDir = params.sortDirection === "desc" ? "DESC" : "ASC";
+    const limit = Math.min(5000, Math.max(1, params.limit ?? 5000));
+
+    const { results } = await this.db
+      .prepare(
+        `SELECT u.*, COUNT(r.id) as resumeCount
+         FROM users u
+         LEFT JOIN resumes r ON r."userId" = u.id
+         ${where}
+         GROUP BY u.id
+         ORDER BY ${orderColumn} ${orderDir}
+         LIMIT ?`
+      )
+      .bind(...likeArgs, limit)
+      .all<UserRecord & { resumeCount: number }>();
+
+    return results.map((row) => ({ ...normalizeBooleans(row), resumeCount: row.resumeCount }));
+  }
+
+  /** Total account count, and how many joined in the last N days — powers the admin dashboard's "Users" tile. */
+  async countAll(): Promise<number> {
+    const row = await this.db.prepare(`SELECT COUNT(*) as count FROM users`).first<{ count: number }>();
+    return row?.count ?? 0;
+  }
+
+  async countCreatedSince(isoDate: string): Promise<number> {
+    const row = await this.db
+      .prepare(`SELECT COUNT(*) as count FROM users WHERE createdAt >= ?`)
+      .bind(isoDate)
+      .first<{ count: number }>();
+    return row?.count ?? 0;
+  }
+
+  async countSuspended(): Promise<number> {
+    const row = await this.db.prepare(`SELECT COUNT(*) as count FROM users WHERE suspended = 1`).first<{ count: number }>();
+    return row?.count ?? 0;
+  }
+
+  /** Users grouped by tier, e.g. { starter: 40, professional: 12, premium: 5 } — zero-filled for tiers with no users. */
+  async countByTier(): Promise<Record<SubscriptionTier, number>> {
+    const { results } = await this.db
+      .prepare(`SELECT subscriptionTier, COUNT(*) as count FROM users GROUP BY subscriptionTier`)
+      .all<{ subscriptionTier: SubscriptionTier; count: number }>();
+    const counts: Record<SubscriptionTier, number> = {
+      [SubscriptionTier.Starter]: 0,
+      [SubscriptionTier.Professional]: 0,
+      [SubscriptionTier.Premium]: 0,
+    };
+    for (const row of results) counts[row.subscriptionTier] = row.count;
+    return counts;
   }
 
   async findByStripeCustomerId(customerId: string): Promise<UserRecord | undefined> {

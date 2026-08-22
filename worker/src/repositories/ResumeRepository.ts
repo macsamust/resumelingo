@@ -4,6 +4,7 @@ import {
   AchievementEntry,
   AwardEntry,
   EducationEntry,
+  LanguageEntry,
   LinkVisibility,
   ReferenceEntry,
   ResumeRecord,
@@ -33,6 +34,7 @@ export interface CreateResumeInput {
   awards: AwardEntry[];
   achievements: AchievementEntry[];
   skillsAndTools?: SkillOrTool[];
+  languages?: LanguageEntry[];
   generatedSummary: string;
   generatedBullets: string[];
   /** Premium-only branded slug (see ResumeService.create's generateBrandedSlug call) — omitted for every other tier, which keeps today's {title}-{random6} behavior untouched. */
@@ -68,6 +70,7 @@ export interface UpdateResumeInput {
   awards?: AwardEntry[];
   achievements?: AchievementEntry[];
   skillsAndTools?: SkillOrTool[];
+  languages?: LanguageEntry[];
   referencesEnabled?: boolean;
   references?: ReferenceEntry[];
   referencesRecruiterModeOnly?: boolean;
@@ -114,6 +117,101 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
     return results.map(normalizeBooleans);
   }
 
+  /** Total resume count, and how many were created in the last N days — powers the admin dashboard's "Resumes" tile. */
+  async countAll(): Promise<number> {
+    const row = await this.db.prepare(`SELECT COUNT(*) as count FROM resumes`).first<{ count: number }>();
+    return row?.count ?? 0;
+  }
+
+  async countCreatedSince(isoDate: string): Promise<number> {
+    const row = await this.db
+      .prepare(`SELECT COUNT(*) as count FROM resumes WHERE createdAt >= ?`)
+      .bind(isoDate)
+      .first<{ count: number }>();
+    return row?.count ?? 0;
+  }
+
+  /**
+   * Search across every user's resumes by title, slug, or owner email/name
+   * — the admin's global resume search (see AdminResumeController), since
+   * the only prior way to find a resume was opening the right user first.
+   * Joins users for the owner's name/email since resumes only stores
+   * userId. Paginated the same way as the admin Users list.
+   */
+  async searchAllWithOwner(params: {
+    page: number;
+    pageSize: number;
+    q?: string;
+  }): Promise<{ resumes: (ResumeRecord & { ownerName: string; ownerEmail: string })[]; total: number }> {
+    const page = Math.max(1, params.page);
+    const pageSize = Math.min(200, Math.max(1, params.pageSize));
+    const offset = (page - 1) * pageSize;
+    const q = params.q?.trim();
+    const where = q ? `WHERE r.title LIKE ? OR r.slug LIKE ? OR u.email LIKE ? OR u.name LIKE ?` : "";
+    const likeArgs = q ? [`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`] : [];
+
+    const countRow = await this.db
+      .prepare(`SELECT COUNT(*) as count FROM resumes r JOIN users u ON u.id = r."userId" ${where}`)
+      .bind(...likeArgs)
+      .first<{ count: number }>();
+
+    const { results } = await this.db
+      .prepare(
+        `SELECT r.*, u.name as ownerName, u.email as ownerEmail
+         FROM resumes r
+         JOIN users u ON u.id = r."userId"
+         ${where}
+         ORDER BY r."updatedAt" DESC
+         LIMIT ? OFFSET ?`
+      )
+      .bind(...likeArgs, pageSize, offset)
+      .all<ResumeRecord & { ownerName: string; ownerEmail: string }>();
+
+    return {
+      resumes: results.map((row) => ({ ...normalizeBooleans(row), ownerName: row.ownerName, ownerEmail: row.ownerEmail })),
+      total: countRow?.count ?? 0,
+    };
+  }
+
+  /**
+   * Every resume matching the same search used by searchAllWithOwner,
+   * unpaginated (up to `limit`) — backs the Resumes CSV export. Capped at
+   * 5,000 rows for the same reason as UserRepository's equivalent.
+   */
+  async searchAllWithOwnerUnpaged(params: { q?: string; limit?: number }): Promise<(ResumeRecord & { ownerName: string; ownerEmail: string })[]> {
+    const q = params.q?.trim();
+    const where = q ? `WHERE r.title LIKE ? OR r.slug LIKE ? OR u.email LIKE ? OR u.name LIKE ?` : "";
+    const likeArgs = q ? [`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`] : [];
+    const limit = Math.min(5000, Math.max(1, params.limit ?? 5000));
+
+    const { results } = await this.db
+      .prepare(
+        `SELECT r.*, u.name as ownerName, u.email as ownerEmail
+         FROM resumes r
+         JOIN users u ON u.id = r."userId"
+         ${where}
+         ORDER BY r."updatedAt" DESC
+         LIMIT ?`
+      )
+      .bind(...likeArgs, limit)
+      .all<ResumeRecord & { ownerName: string; ownerEmail: string }>();
+
+    return results.map((row) => ({ ...normalizeBooleans(row), ownerName: row.ownerName, ownerEmail: row.ownerEmail }));
+  }
+
+  /** Bulk version of delete() — same child-table cascade, batched per resume id so partial failures can't leave orphaned child rows. Used by the admin Resumes page's multi-select delete. */
+  async deleteBulk(ids: string[]): Promise<void> {
+    if (ids.length === 0) return;
+    const statements = ids.flatMap((id) => [
+      this.db.prepare(`DELETE FROM resume_versions WHERE "resumeId" = ?`).bind(id),
+      this.db.prepare(`DELETE FROM resume_views WHERE "resumeId" = ?`).bind(id),
+      this.db.prepare(`DELETE FROM resume_score_snapshots WHERE "resumeId" = ?`).bind(id),
+      this.db.prepare(`DELETE FROM resume_keyword_checks WHERE "resumeId" = ?`).bind(id),
+      this.db.prepare(`DELETE FROM resumes WHERE id = ?`).bind(id),
+    ]);
+    await this.db.batch(statements);
+  }
+
   async create(input: CreateResumeInput): Promise<ResumeRecord> {
     const now = new Date().toISOString();
     const record: ResumeRecord = {
@@ -150,6 +248,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       awards: JSON.stringify(input.awards),
       achievements: JSON.stringify(input.achievements),
       skillsAndTools: JSON.stringify(input.skillsAndTools ?? []),
+      languages: JSON.stringify(input.languages ?? []),
       // References, like Recruiter Mode, is only ever turned on from Edit
       // Resume, never at creation time.
       referencesEnabled: false,
@@ -212,6 +311,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       awards: input.awards ? JSON.stringify(input.awards) : existing.awards,
       achievements: input.achievements ? JSON.stringify(input.achievements) : existing.achievements,
       skillsAndTools: input.skillsAndTools ? JSON.stringify(input.skillsAndTools) : existing.skillsAndTools,
+      languages: input.languages ? JSON.stringify(input.languages) : existing.languages,
       referencesEnabled: input.referencesEnabled !== undefined ? input.referencesEnabled : existing.referencesEnabled,
       references: input.references ? JSON.stringify(input.references) : existing.references,
       referencesRecruiterModeOnly:
@@ -228,9 +328,38 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
     await this.db.prepare(`UPDATE resumes SET viewCount = viewCount + 1 WHERE id = ?`).bind(id).run();
   }
 
-  /** Admin action — deletes every resume owned by a user, e.g. right before deleting the account itself. */
+  /**
+   * Deletes a resume along with every row in the child tables that
+   * reference it via `resumeId` (resume_versions, resume_views,
+   * resume_score_snapshots, resume_keyword_checks — see migrations 0007/
+   * 0008). D1 now enforces FOREIGN KEY constraints, so deleting the parent
+   * row first (the old, inherited BaseRepository.delete behavior) fails
+   * with SQLITE_CONSTRAINT_FOREIGNKEY whenever any of those child rows
+   * exist — which by the time someone clicks "Delete" is virtually always
+   * true (every resume gets at least one score snapshot on create). Run as
+   * a single D1 batch so this is atomic — either every row for this resume
+   * disappears, or none do.
+   */
+  async delete(id: string): Promise<void> {
+    await this.db.batch([
+      this.db.prepare(`DELETE FROM resume_versions WHERE "resumeId" = ?`).bind(id),
+      this.db.prepare(`DELETE FROM resume_views WHERE "resumeId" = ?`).bind(id),
+      this.db.prepare(`DELETE FROM resume_score_snapshots WHERE "resumeId" = ?`).bind(id),
+      this.db.prepare(`DELETE FROM resume_keyword_checks WHERE "resumeId" = ?`).bind(id),
+      this.db.prepare(`DELETE FROM resumes WHERE id = ?`).bind(id),
+    ]);
+  }
+
+  /** Admin action — deletes every resume owned by a user, e.g. right before deleting the account itself. Same child-table cascade as delete() above, just scoped to every resume this user owns instead of one. */
   async deleteAllForUser(userId: string): Promise<void> {
-    await this.db.prepare(`DELETE FROM resumes WHERE userId = ?`).bind(userId).run();
+    const resumeIdSubquery = `SELECT id FROM resumes WHERE userId = ?`;
+    await this.db.batch([
+      this.db.prepare(`DELETE FROM resume_versions WHERE "resumeId" IN (${resumeIdSubquery})`).bind(userId),
+      this.db.prepare(`DELETE FROM resume_views WHERE "resumeId" IN (${resumeIdSubquery})`).bind(userId),
+      this.db.prepare(`DELETE FROM resume_score_snapshots WHERE "resumeId" IN (${resumeIdSubquery})`).bind(userId),
+      this.db.prepare(`DELETE FROM resume_keyword_checks WHERE "resumeId" IN (${resumeIdSubquery})`).bind(userId),
+      this.db.prepare(`DELETE FROM resumes WHERE userId = ?`).bind(userId),
+    ]);
   }
 
   /**

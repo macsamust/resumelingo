@@ -5,12 +5,14 @@
 -- worker/src/controllers/DashboardController.ts and
 -- worker/src/services/ResumeService.ts before this migration.
 --
--- No `IF NOT EXISTS` / no ON DELETE CASCADE enforcement beyond the FOREIGN
--- KEY declaration itself — D1 doesn't enforce foreign keys by default
--- (PRAGMA foreign_keys is off unless a session turns it on), same as every
--- other table in this schema; deleting a resume currently doesn't cascade
--- these rows away programmatically either, matching ResumeRepository as it
--- stands today. That's an existing gap, not one introduced here.
+-- No ON DELETE CASCADE on the FOREIGN KEY declarations below — D1 does
+-- enforce foreign keys (confirmed by the FOREIGN KEY constraint failures
+-- this caused on resume deletion once these tables existed), so deleting a
+-- resume that has any of these child rows fails unless the child rows are
+-- deleted first. That cascade is handled in application code instead —
+-- see ResumeRepository.delete()/deleteAllForUser(), which delete from this
+-- table (and resume_versions, see migration 0008) before deleting the
+-- resumes row itself.
 
 -- One row per public resume view — see ResumeService.getPublicBySlug, which
 -- calls this alongside the always-visible resumes.viewCount increment. Feeds

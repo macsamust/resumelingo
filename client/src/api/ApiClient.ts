@@ -65,4 +65,23 @@ export class ApiClient {
   protected del<T>(path: string) {
     return this.request<T>(path, { method: "DELETE" });
   }
+
+  /**
+   * Fetches a file (e.g. a CSV export) and returns it as a Blob rather than
+   * JSON — a plain `<a href>` can't carry the Authorization header this API
+   * needs, so downloads have to go through fetch() with the token attached,
+   * same as every other request here. See utils/downloadBlob.ts for turning
+   * the result into an actual browser download.
+   */
+  protected async getBlob(path: string): Promise<Blob> {
+    const headers: Record<string, string> = {};
+    if (this.token) headers.Authorization = `Bearer ${this.token}`;
+    const response = await fetch(`${this.baseUrl}${path}`, { method: "GET", headers });
+    if (!response.ok) {
+      const isJson = response.headers.get("content-type")?.includes("application/json");
+      const body = isJson ? await response.json().catch(() => ({})) : undefined;
+      throw new ApiError(body?.error || response.statusText, response.status, body?.reason);
+    }
+    return response.blob();
+  }
 }

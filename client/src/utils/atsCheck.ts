@@ -164,6 +164,8 @@ export function buildResumeTextBlob(input: {
   answers: Record<string, string>;
   /** Optional — omitted entirely for non-Premium templates, which don't have this section (see ResumeEditPage's usesSkillsAndTools). */
   skillsAndTools?: { label: string }[];
+  /** Optional — languages this resume lists, if any. */
+  languages?: { language: string }[];
 }): string {
   const parts: string[] = [input.title, input.professionLabel, input.summary, ...input.bullets];
   for (const job of input.experience) parts.push(job.title, job.company);
@@ -172,5 +174,6 @@ export function buildResumeTextBlob(input: {
   for (const a of input.achievements) parts.push(a.challenge, a.action, a.result);
   for (const value of Object.values(input.answers)) parts.push(value);
   for (const item of input.skillsAndTools ?? []) parts.push(item.label);
+  for (const lang of input.languages ?? []) parts.push(lang.language);
   return parts.filter(Boolean).join(" \n ");
 }

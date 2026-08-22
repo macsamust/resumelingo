@@ -8,7 +8,9 @@ import { EducationEditor } from "../components/builder/EducationEditor";
 import { CopyFromResume } from "../components/builder/CopyFromResume";
 import { AwardsEditor } from "../components/builder/AwardsEditor";
 import { AchievementEditor } from "../components/builder/AchievementEditor";
+import { AchievementGeneratorPanel } from "../components/builder/AchievementGeneratorPanel";
 import { SkillsAndToolsEditor } from "../components/builder/SkillsAndToolsEditor";
+import { LanguagesEditor } from "../components/builder/LanguagesEditor";
 import { ReferencesEditor } from "../components/builder/ReferencesEditor";
 import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { ResumePreview } from "../components/builder/ResumePreview";
@@ -27,6 +29,7 @@ import {
   AchievementEntry,
   AwardEntry,
   EducationEntry,
+  LanguageEntry,
   LinkVisibility,
   ProfessionDefinition,
   ProfessionSummary,
@@ -74,6 +77,7 @@ export function ResumeEditPage() {
   const [awards, setAwards] = useState<AwardEntry[]>([]);
   const [achievements, setAchievements] = useState<AchievementEntry[]>([]);
   const [skillsAndTools, setSkillsAndTools] = useState<SkillOrTool[]>([]);
+  const [languages, setLanguages] = useState<LanguageEntry[]>([]);
   const [coverLetterEnabled, setCoverLetterEnabled] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
   const [recruiterModeEnabled, setRecruiterModeEnabled] = useState(false);
@@ -127,6 +131,11 @@ export function ResumeEditPage() {
   // client/src/utils/atsCheck.ts for why this stays entirely client-side
   // (no save, no network call, nothing to protect server-side).
   const isPremium = user?.subscriptionTier === "premium";
+
+  // Gate for "Generate from keywords" inside Highlights & Key Achievements —
+  // same Professional/Premium tier as Resume Import (see worker's
+  // AchievementGenerateController).
+  const canUseAiAssist = user?.subscriptionTier === "professional" || user?.subscriptionTier === "premium";
 
   // Version History is a Professional/Premium perk — same tier as Clone,
   // the closest existing "extra copy of your work" feature. Enforced again
@@ -187,6 +196,7 @@ export function ResumeEditPage() {
         setAwards(r.awards);
         setAchievements(r.achievements);
         setSkillsAndTools(r.skillsAndTools);
+        setLanguages(r.languages);
         setTemplates(templatesRes.templates);
         setProfessions(professionsRes.professions);
         setProfessionKey(r.profession);
@@ -246,6 +256,7 @@ export function ResumeEditPage() {
     setAwards(pendingDraft.awards);
     setAchievements(pendingDraft.achievements);
     setSkillsAndTools(pendingDraft.skillsAndTools);
+    setLanguages(pendingDraft.languages ?? []); // ?? [] guards a draft saved before this field existed
     setCoverLetterEnabled(pendingDraft.coverLetterEnabled);
     setRecruiterModeEnabled(pendingDraft.recruiterModeEnabled);
     setRecruiterLocation(pendingDraft.recruiterLocation);
@@ -296,6 +307,7 @@ export function ResumeEditPage() {
         awards,
         achievements,
         skillsAndTools,
+        languages,
         coverLetterEnabled,
         recruiterModeEnabled,
         recruiterLocation,
@@ -331,6 +343,7 @@ export function ResumeEditPage() {
     awards,
     achievements,
     skillsAndTools,
+    languages,
     coverLetterEnabled,
     recruiterModeEnabled,
     recruiterLocation,
@@ -381,6 +394,7 @@ export function ResumeEditPage() {
     awards,
     achievements,
     skillsAndTools,
+    languages,
     coverLetterEnabled,
     recruiterModeEnabled,
     recruiterLocation,
@@ -429,6 +443,7 @@ export function ResumeEditPage() {
     const workExperience = experience.some((e) => e.company.trim() !== "" && e.title.trim() !== "");
     const educationDone = education.some((e) => e.school.trim() !== "" || e.degree.trim() !== "" || e.fieldOfStudy.trim() !== "");
     const awardsDone = awards.some((a) => a.title.trim() !== "");
+    const languagesDone = languages.some((l) => l.language.trim() !== "");
     const achievementsDone = achievements.some(
       (a) => a.challenge.trim() !== "" || a.action.trim() !== "" || a.result.trim() !== ""
     );
@@ -449,6 +464,7 @@ export function ResumeEditPage() {
       workExperience,
       education: educationDone,
       awards: awardsDone,
+      languages: languagesDone,
       achievements: achievementsDone,
       additionalDetails,
       recruiterMode,
@@ -462,6 +478,7 @@ export function ResumeEditPage() {
     contactEmail,
     title,
     skillsAndTools,
+    languages,
     experience,
     education,
     awards,
@@ -537,6 +554,7 @@ export function ResumeEditPage() {
       // point of the check. Only relevant for templates that have this
       // section at all (see usesSkillsAndTools below).
       skillsAndTools: usesSkillsAndTools ? skillsAndTools : undefined,
+      languages,
     });
     return matchKeywords(jobDescription, resumeText);
   }, [
@@ -551,6 +569,7 @@ export function ResumeEditPage() {
     answers,
     usesSkillsAndTools,
     skillsAndTools,
+    languages,
   ]);
 
   /**
@@ -615,6 +634,7 @@ export function ResumeEditPage() {
         awards,
         achievements,
         skillsAndTools,
+        languages,
         referencesEnabled,
         references,
         referencesRecruiterModeOnly,
@@ -876,13 +896,22 @@ export function ResumeEditPage() {
             <EducationEditor education={education} onChange={setEducation} schoolSuggestions={schoolSuggestions} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Awards" forceOpen={forceOpen} complete={sectionProgress.awards}>
+          <CollapsibleSection title="Awards" forceOpen={forceOpen} defaultOpen={false} complete={sectionProgress.awards}>
             <AwardsEditor awards={awards} onChange={setAwards} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Key Achievements" forceOpen={forceOpen} complete={sectionProgress.achievements}>
+          <CollapsibleSection title="Languages" forceOpen={forceOpen} defaultOpen={false} complete={sectionProgress.languages}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
-              Describe a challenge, what you did, and the result — this is what turns into impact-focused resume bullets.
+              Optional — list any languages you speak and how fluently.
+            </p>
+            <LanguagesEditor languages={languages} onChange={setLanguages} />
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Highlights & Key Achievements" forceOpen={forceOpen} complete={sectionProgress.achievements}>
+            <p className="hero-note" style={{ marginBottom: 16 }}>
+              Add a quick one-line bullet, or describe a challenge, what you did, and the result for a more detailed,
+              structured accomplishment — both turn into resume bullets. Mainly populated by "Import an existing
+              resume," but editable here too.
             </p>
             <label className="checkbox-field" style={{ marginBottom: 16 }}>
               <input
@@ -892,6 +921,12 @@ export function ResumeEditPage() {
               />
               Combine Work Experience with Achievements (nest each bullet under the job it belongs to)
             </label>
+            <AchievementGeneratorPanel
+              canGenerate={canUseAiAssist}
+              professionLabel={professionDetail?.label ?? resume.professionLabel}
+              jobTitle={experience[0]?.title || undefined}
+              onGenerated={(generated) => setAchievements((prev) => [...prev, ...generated])}
+            />
             <AchievementEditor
               achievements={achievements}
               onChange={setAchievements}
@@ -1233,6 +1268,7 @@ export function ResumeEditPage() {
             combineExperienceFormat={combineExperienceFormat}
             skillsAndTools={skillsAndTools}
             showSkillsAndTools={usesSkillsAndTools}
+            languages={languages}
           />
         </div>
       </form>

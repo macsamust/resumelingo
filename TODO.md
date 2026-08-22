@@ -1,63 +1,15 @@
-# TODO / Future Work
+# To Do — Later Consideration
 
-## React Router v6 → v7 upgrade
+## Admin console — security/access hardening
 
-**Why:** `npm audit` flags `react-router`/`react-router-dom` (moderate — open
-redirect via backslash in `<Link>`/`useNavigate`, GHSA-wrjc-x8rr-h8h6). The
-patched version is `7.18.0` — a full major-version jump from the `^6.26.1`
-currently installed, not a safe drop-in patch, so `npm audit fix` won't
-apply it automatically.
+Flagged during the admin console audit but deliberately held back, since each needs a product decision (not just implementation) before starting:
 
-**Actual risk today:** low. The bug needs an attacker-controlled path fed
-into `<Link>`/`useNavigate`; every route in this app is a static,
-app-defined path, not built from unsanitized user input. Real bug, low
-practical exploitability here — worth fixing, not urgent.
+- **Admin roles/permissions.** Today every admin account has identical, all-or-nothing access — any admin can delete users, change plan pricing, or remove other admins (see `AdminAdminsPage.tsx`'s own warning banner). Needs a decision on what a "read-only" or "support" tier admin should and shouldn't be able to do before it can be built.
+- **Shorter admin JWT expiry + token revocation.** Admin tokens are stateless with a flat 7-day expiry (`TokenService`, `createServices.ts`). Removing an admin (`AdminManagementController.remove`) doesn't invalidate their already-issued token — it stays valid for up to 7 days after removal. Needs a decision on the tradeoff between session length and how quickly a removed admin's access should actually stop.
+- **2FA on admin login.** `AdminService.login` is password-only. Given this console can delete accounts and change billing tiers, TOTP or WebAuthn would meaningfully raise the bar — needs a decision on which second factor to support and the enrollment/recovery flow.
+- **Tamper-evident audit log.** `admin_audit_log` rows are plain inserts with no hash chaining/checksum — a rogue admin with direct DB access could edit or delete past entries without a trace. Needs a decision on whether to hash-chain entries, ship them to an external append-only log, or both.
 
-**Scope, already researched:**
-- The app only uses the plain declarative API — `<BrowserRouter>` +
-  `<Routes>`/`<Route>` in `main.tsx`/`App.tsx`. No `createBrowserRouter`,
-  `RouterProvider`, loaders, actions, or fetchers — so almost all of v7's
-  breaking changes (which are about the data-router APIs) don't apply.
-- Of the two future flags relevant to a declarative app:
-  - `v7_relativeSplatPath` — only matters for nested multi-segment splat
-    routes (e.g. `dashboard/*`) with relative links beneath them. This app
-    has just one top-level catch-all (`<Route path="*" element={<LandingPage />} />`),
-    not nested — unaffected.
-  - `v7_startTransition` — only matters if `React.lazy` is used inside a
-    component body. Not used anywhere in this app — unaffected.
-- Recommended package change: bump `react-router-dom` `^6.26.1` → `^7.x`
-  directly (keep the `react-router-dom` package name, don't switch to the
-  bare `react-router` package) — v7 still ships `react-router-dom` with
-  the same exports (`BrowserRouter`, `Routes`, `Route`, `Link`, `NavLink`,
-  `Navigate`, `useNavigate`, `useParams`, `useSearchParams`, `useLocation`),
-  so none of the 26 files currently importing from `"react-router-dom"`
-  need their imports touched.
+## Subscriber-facing — resume content editing
 
-**Suggested steps:**
-1. Enable both future flags on `<BrowserRouter>` in `main.tsx` while still
-   on the latest 6.x — safe, reversible, surfaces any console warnings
-   without changing behavior.
-2. Fix anything that surfaces.
-3. Bump `react-router-dom` to `^7.x`.
-4. Manual click-through regression pass (no route/component test coverage
-   exists yet, so this is the real check): landing/marketing pages,
-   login/signup/forgot-password/reset-password, dashboard (uses
-   `useSearchParams`), resume builder + edit, public resume link (all
-   three visibility modes), thank-you letter, career coach, every admin
-   page, protected-route redirects (logged-out → `/login`, logged-in
-   hitting `/login` → dashboard), and the `*` catch-all.
-
-**Known blocker:** couldn't be installed or verified in the Claude sandbox
-used to research this (npm registry access blocked there) — needs to
-happen in a real dev environment with actual manual testing before it
-ships.
-
----
-
-## Other known open items
-
-- **npm audit — `esbuild`/`vite`/`vitest` chain** (moderate, all three
-  packages: client/server/worker): dev/test-tooling only, never ships to
-  production. Fix requires `vitest@4.1.10`, a major bump from the current
-  `2.1.8` (skips 3.x entirely). Deliberately deferred — would need real
-  testing of the whole test suite against v4 before taking it.
+- **Direct editing of the generated Summary/Objective/Profile text.** `generatedSummary` (labeled "Objective," "Summary," "Profile," etc. depending on template — see `templateStyles.ts`'s `summaryLabel`) is produced by a deterministic rule-based generator (`ContentGenerator.ts`) from profession + interview answers + achievements, and today only an admin can hand-edit it (added for support cases — see `AdminResumeEditPage.tsx`). Regular subscribers have no way to tweak the wording themselves. Recommended approach: add an editable field on the subscriber's own Edit Resume page, plus a `summaryManuallyEdited` flag so `ResumeService.update` stops silently regenerating over a manual edit when profession/answers/achievements/name/title change afterward — with a "reset to auto-generated" action to opt back in. Same treatment would apply to `generatedBullets`.
+- **Multiple auto-generated variants to choose from.** Lower priority than direct editing, and more work: the generator is fully deterministic (no randomness, no AI call), so "regenerate" would produce identical output today. Real variants would need either several alternate phrasing templates per profession or an LLM-backed generator, neither of which exists in this codebase yet. Worth revisiting only if user feedback after shipping direct editing shows people want alternatives rather than just wanting to fix the wording themselves.

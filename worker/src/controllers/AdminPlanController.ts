@@ -19,7 +19,7 @@ export class AdminPlanController {
   };
 
   update = async (c: Context<AppEnv>) => {
-    const { planRepository } = c.get("services");
+    const { planRepository, adminAuditLogRepository } = c.get("services");
     const tier = c.req.param("tier")! as SubscriptionTier;
     if (!Object.values(SubscriptionTier).includes(tier)) {
       return c.json({ error: "Invalid subscription tier." }, 400);
@@ -39,6 +39,12 @@ export class AdminPlanController {
       features: features as string[] | undefined,
     });
     if (!updated) return c.json({ error: "Plan not found." }, 404);
+    await adminAuditLogRepository.log(c.get("admin")!, {
+      action: "plan.update",
+      targetType: "plan",
+      targetId: tier,
+      detail: `${updated.name}: $${updated.priceMonthly}/mo, limit ${updated.resumeLimit}`,
+    });
     return c.json({
       plan: {
         tier: updated.tier,

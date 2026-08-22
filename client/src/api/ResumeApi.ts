@@ -1,5 +1,5 @@
 import { ApiClient } from "./ApiClient";
-import { AchievementEntry, AwardEntry, EducationEntry, LinkVisibility, ReferenceEntry, Resume, ResumeVersion, SkillOrTool, WorkExperienceEntry } from "../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LanguageEntry, LinkVisibility, ReferenceEntry, Resume, ResumeVersion, SkillOrTool, WorkExperienceEntry } from "../types";
 
 export interface CreateResumeInput {
   fullName?: string;
@@ -33,6 +33,8 @@ export interface CreateResumeInput {
   achievements?: AchievementEntry[];
   /** "Skills & Tools" section — only rendered by the Portrait template. */
   skillsAndTools?: SkillOrTool[];
+  /** Optional "Languages" section — see types/index.ts LanguageEntry. */
+  languages?: LanguageEntry[];
   /** "References" section toggle — only takes effect server-side for Premium subscribers (see ResumeService.update), same gate as recruiterModeEnabled. */
   referencesEnabled?: boolean;
   references?: ReferenceEntry[];

@@ -4,6 +4,8 @@ import { Env } from "./types";
 import { withServices } from "./middleware/servicesMiddleware";
 import authRoutes from "./routes/auth.routes";
 import resumeRoutes from "./routes/resume.routes";
+import resumeImportRoutes from "./routes/resumeImport.routes";
+import achievementGenerateRoutes from "./routes/achievementGenerate.routes";
 import professionRoutes from "./routes/profession.routes";
 import templateRoutes from "./routes/template.routes";
 import publicRoutes from "./routes/public.routes";
@@ -28,6 +30,8 @@ import {
   VersionNotFoundError,
   VisibilityAccessError,
 } from "./services/ResumeService";
+import { ResumeImportError } from "./services/ResumeImportService";
+import { AchievementGenerateError } from "./services/AchievementGeneratorService";
 
 /**
  * Entry point for the whole Worker. wrangler.jsonc's `run_worker_first` is
@@ -57,6 +61,15 @@ app.use("/api/*", withServices);
 app.get("/api/health", (c) => c.json({ status: "ok", service: "resumelingo-worker" }));
 app.route("/api/auth", authRoutes);
 app.route("/api/resumes", resumeRoutes);
+// Deliberately its own top-level path, not nested under /api/resumes/*
+// (e.g. /api/resumes/import) — resumeRoutes is itself a Hono sub-app
+// mounted at that prefix, so a path under it would either collide with its
+// POST /:id/... routes or depend on Hono's exact not-found fallthrough
+// behavior between two app.route() calls sharing a prefix. A separate
+// top-level path avoids that ambiguity entirely.
+app.route("/api/resume-import", resumeImportRoutes);
+// Same "own top-level path" reasoning as resume-import above.
+app.route("/api/achievement-generate", achievementGenerateRoutes);
 app.route("/api/professions", professionRoutes);
 app.route("/api/templates", templateRoutes);
 app.route("/api/public", publicRoutes);
@@ -96,6 +109,10 @@ app.onError((err, c) => {
       ? 400
       : err instanceof InvalidResetTokenError
       ? 400
+      : err instanceof ResumeImportError
+      ? 502
+      : err instanceof AchievementGenerateError
+      ? 502
       : 500;
   if (status === 500) console.error(err);
   const reason = err instanceof ResumeAccessError ? err.reason : undefined;

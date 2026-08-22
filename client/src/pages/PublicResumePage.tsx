@@ -11,12 +11,26 @@ import { downloadResumePdf } from "../utils/pdfExport";
 
 /**
  * Turns a camelCase profession-question key (e.g. "cloudPlatforms",
- * "language", "yearsExperience") into a properly capitalized label
- * ("Cloud Platforms", "Language", "Years Experience") for the Additional
- * Details heading — used on screen, in print, and in the text export so
- * all three stay consistent.
+ * "yearsExperience") into a properly capitalized label ("Cloud Platforms",
+ * "Years Experience") for the Additional Details heading — used on screen,
+ * in print, and in the text/PDF exports so all four stay consistent.
+ *
+ * ANSWER_LABEL_OVERRIDES handles keys whose generic camelCase-split label
+ * doesn't match what's actually configured in professions.ts (worker's and
+ * server's copies) — the builder's DynamicQuestionForm reads that label
+ * directly, but this function only ever sees the raw answer key, not the
+ * profession's question config, so a mismatch has to be corrected by hand
+ * here. Currently just "languages": professions.ts labels the Software
+ * Engineer question "Coding Languages" (to distinguish it from the resume's
+ * separate, spoken-language "Languages" section — see LanguageEntry), but
+ * the generic split would otherwise produce "Languages" here.
  */
+const ANSWER_LABEL_OVERRIDES: Record<string, string> = {
+  languages: "Coding Languages",
+};
+
 function formatAnswerLabel(key: string): string {
+  if (ANSWER_LABEL_OVERRIDES[key]) return ANSWER_LABEL_OVERRIDES[key];
   return key
     .replace(/([A-Z])/g, " $1")
     .trim()
@@ -99,6 +113,15 @@ function resumeToPlainText(resume: PublicResume): string {
     for (const award of awards) {
       lines.push(`${award.title || "Untitled award"}${award.issuer ? `, ${award.issuer}` : ""} (${formatMonth(award.date)})`);
       if (award.description) lines.push(award.description);
+    }
+    lines.push("");
+  }
+
+  const languages = resume.languages ?? [];
+  if (languages.length > 0) {
+    lines.push("LANGUAGES");
+    for (const lang of languages) {
+      lines.push(`${lang.language || "Untitled language"}${lang.proficiency ? ` — ${lang.proficiency}` : ""}`);
     }
     lines.push("");
   }
@@ -384,6 +407,7 @@ export function PublicResumePage() {
         combineExperienceFormat={resume.combineExperienceFormat}
         skillsAndTools={resume.skillsAndTools}
         showSkillsAndTools={resume.template?.category === "premium"}
+        languages={resume.languages}
       />
       {(() => {
         const answerEntries = Object.entries(resume.answers).filter(([, v]) => v && v.trim());

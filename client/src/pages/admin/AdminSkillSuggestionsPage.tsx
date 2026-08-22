@@ -2,6 +2,8 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AdminShell } from "../../components/layout/AdminShell";
 import { nextSortState, SortableHeader, SortState } from "../../components/admin/SortableHeader";
 import { AdminTableSkeleton } from "../../components/admin/AdminTableSkeleton";
+import { ConfirmDialog } from "../../components/common/ConfirmDialog";
+import { useToast } from "../../components/common/Toast";
 import { adminApi, catalogApi, ApiError } from "../../api";
 import { AdminSkillSuggestion, ProfessionSummary } from "../../types";
 
@@ -36,6 +38,7 @@ function compareSuggestions(a: AdminSkillSuggestion, b: AdminSkillSuggestion, so
  * AdminTemplatesPage.tsx, just keyed by profession instead of template key.
  */
 export function AdminSkillSuggestionsPage() {
+  const { showToast } = useToast();
   const [professions, setProfessions] = useState<ProfessionSummary[]>([]);
   const [suggestions, setSuggestions] = useState<AdminSkillSuggestion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +49,9 @@ export function AdminSkillSuggestionsPage() {
   const [creating, setCreating] = useState(false);
   const [filterProfession, setFilterProfession] = useState<string>("all");
   const [sort, setSort] = useState<SortState<SuggestionSortKey>>({ key: "professionKey", direction: "asc" });
+  // Which suggestion (if any) is the subject of the delete confirm dialog —
+  // replaces window.confirm(), same pattern as AdminUsersPage.
+  const [confirmDelete, setConfirmDelete] = useState<AdminSkillSuggestion | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -108,20 +114,23 @@ export function AdminSkillSuggestionsPage() {
       });
       load();
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : "Couldn't save keyword.");
+      showToast("error", err instanceof ApiError ? err.message : "Couldn't save keyword.");
     } finally {
       setBusyId(null);
     }
   };
 
-  const onDelete = async (s: AdminSkillSuggestion) => {
-    if (!confirm(`Remove "${s.label}" from ${professionLabel(s.professionKey)}'s suggestions?`)) return;
+  const onDelete = async () => {
+    if (!confirmDelete) return;
+    const s = confirmDelete;
     setBusyId(s.id);
     try {
       await adminApi.deleteSkillSuggestion(s.id);
+      showToast("success", `"${s.label}" was removed.`);
+      setConfirmDelete(null);
       load();
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : "Couldn't delete keyword.");
+      showToast("error", err instanceof ApiError ? err.message : "Couldn't delete keyword.");
     } finally {
       setBusyId(null);
     }
@@ -256,7 +265,7 @@ export function AdminSkillSuggestionsPage() {
                       <button className="btn btn-ghost btn-sm" disabled={busyId === s.id} onClick={() => onSave(s.id)}>
                         Save
                       </button>
-                      <button className="btn btn-ghost btn-sm admin-danger" disabled={busyId === s.id} onClick={() => onDelete(s)}>
+                      <button className="btn btn-ghost btn-sm admin-danger" disabled={busyId === s.id} onClick={() => setConfirmDelete(s)}>
                         Delete
                       </button>
                     </td>
@@ -266,6 +275,16 @@ export function AdminSkillSuggestionsPage() {
             </tbody>
           </table>
         </>
+      )}
+      {confirmDelete && (
+        <ConfirmDialog
+          title="Remove keyword"
+          message={`Remove "${confirmDelete.label}" from ${professionLabel(confirmDelete.professionKey)}'s suggestions?`}
+          confirmLabel="Remove"
+          danger
+          onConfirm={onDelete}
+          onCancel={() => setConfirmDelete(null)}
+        />
       )}
     </AdminShell>
   );

@@ -1,7 +1,9 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AdminShell } from "../../components/layout/AdminShell";
 import { adminApi, catalogApi, ApiError } from "../../api";
 import { AdminListSkeleton } from "../../components/admin/AdminListSkeleton";
+import { ConfirmDialog } from "../../components/common/ConfirmDialog";
+import { useToast } from "../../components/common/Toast";
 import { AdminRoleDescription, ProfessionSummary } from "../../types";
 
 interface Draft {
@@ -61,6 +63,7 @@ function parseTraitTriples(draft: Draft): { traits: [string, string, string]; ke
  * traits include {keyTraits[0]}, {keyTraits[1]}, and {keyTraits[2]}."
  */
 export function AdminRoleDescriptionsPage() {
+  const { showToast } = useToast();
   const [descriptions, setDescriptions] = useState<AdminRoleDescription[]>([]);
   const [professions, setProfessions] = useState<ProfessionSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +72,10 @@ export function AdminRoleDescriptionsPage() {
   const [editing, setEditing] = useState<Record<string, Draft>>({});
   const [newRole, setNewRole] = useState<Draft>(EMPTY_NEW);
   const [creating, setCreating] = useState(false);
+  const [query, setQuery] = useState("");
+  // Which role description (if any) is the subject of the delete confirm
+  // dialog — replaces window.confirm(), same pattern as AdminUsersPage.
+  const [confirmDelete, setConfirmDelete] = useState<AdminRoleDescription | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -124,7 +131,7 @@ export function AdminRoleDescriptionsPage() {
     const draft = editing[id];
     const parsed = parseTraitTriples(draft);
     if (typeof parsed === "string") {
-      alert(parsed);
+      showToast("error", parsed);
       return;
     }
     setBusyId(id);
@@ -140,27 +147,48 @@ export function AdminRoleDescriptionsPage() {
       });
       load();
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : "Couldn't save role description.");
+      showToast("error", err instanceof ApiError ? err.message : "Couldn't save role description.");
     } finally {
       setBusyId(null);
     }
   };
 
-  const onDelete = async (r: AdminRoleDescription) => {
-    if (!confirm(`Delete the "${r.category}" role description?${r.isFallback ? " This is the generic fallback used when no keyword matches — deleting it may leave some 'Other' resumes without a summary voice." : ""}`)) return;
+  const onDelete = async () => {
+    if (!confirmDelete) return;
+    const r = confirmDelete;
     setBusyId(r.id);
     try {
       await adminApi.deleteRoleDescription(r.id);
+      showToast("success", `"${r.category}" was deleted.`);
+      setConfirmDelete(null);
       load();
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : "Couldn't delete role description.");
+      showToast("error", err instanceof ApiError ? err.message : "Couldn't delete role description.");
     } finally {
       setBusyId(null);
     }
   };
 
-  const professionRows = descriptions.filter((r) => r.professionKey);
-  const otherRows = descriptions.filter((r) => !r.professionKey);
+  // Client-side filter — this catalog is small (one row per profession plus
+  // a handful of "Other" sub-categories), so unlike the Users/Resumes lists
+  // there's no real benefit to pushing search server-side here.
+  const filteredDescriptions = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return descriptions;
+    return descriptions.filter((r) => {
+      const label = r.professionKey ? professionLabel(r.professionKey) : "";
+      return (
+        r.category.toLowerCase().includes(q) ||
+        r.descriptor.toLowerCase().includes(q) ||
+        label.toLowerCase().includes(q) ||
+        r.keywords.some((k) => k.toLowerCase().includes(q))
+      );
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [descriptions, query, professions]);
+
+  const professionRows = filteredDescriptions.filter((r) => r.professionKey);
+  const otherRows = filteredDescriptions.filter((r) => !r.professionKey);
 
   const renderRow = (r: AdminRoleDescription) => {
     const draft = editing[r.id] ?? toDraft(r);
@@ -214,7 +242,7 @@ export function AdminRoleDescriptionsPage() {
           <button className="btn btn-ghost btn-sm" disabled={busyId === r.id} onClick={() => onSave(r.id)}>
             Save
           </button>
-          <button className="btn btn-ghost btn-sm admin-danger" disabled={busyId === r.id} onClick={() => onDelete(r)}>
+          <button className="btn btn-ghost btn-sm admin-danger" disabled={busyId === r.id} onClick={() => setConfirmDelete(r)}>
             Delete
           </button>
         </div>
@@ -225,7 +253,15 @@ export function AdminRoleDescriptionsPage() {
   return (
     <AdminShell>
       <div className="app-page-head">
-        <h1>Role Descriptions</h1>
+        <h1>
+          Role Descriptions <span className="app-page-head-count">({descriptions.length})</span>
+        </h1>
+        <input
+          className="admin-search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search by profession, category, descriptor, or keyword…"
+        />
       </div>
       <p className="hero-note admin-plan-warning">
         These build every profession's About-statement voice: "{"{descriptor}"} who combines{" "}
@@ -292,14 +328,38 @@ export function AdminRoleDescriptionsPage() {
 
       {loading ? (
         <AdminListSkeleton rows={5} />
+      ) : filteredDescriptions.length === 0 ? (
+        <p className="hero-note">No role descriptions match "{query}".</p>
       ) : (
         <>
-          <h2 style={{ marginTop: 32 }}>Named professions</h2>
-          <div className="admin-role-description-list">{professionRows.map(renderRow)}</div>
+          {professionRows.length > 0 && (
+            <>
+              <h2 style={{ marginTop: 32 }}>Named professions</h2>
+              <div className="admin-role-description-list">{professionRows.map(renderRow)}</div>
+            </>
+          )}
 
-          <h2 style={{ marginTop: 32 }}>"Other" sub-categories &amp; fallback</h2>
-          <div className="admin-role-description-list">{otherRows.map(renderRow)}</div>
+          {otherRows.length > 0 && (
+            <>
+              <h2 style={{ marginTop: 32 }}>"Other" sub-categories &amp; fallback</h2>
+              <div className="admin-role-description-list">{otherRows.map(renderRow)}</div>
+            </>
+          )}
         </>
+      )}
+      {confirmDelete && (
+        <ConfirmDialog
+          title="Delete role description"
+          message={`Delete the "${confirmDelete.category}" role description?${
+            confirmDelete.isFallback
+              ? " This is the generic fallback used when no keyword matches — deleting it may leave some 'Other' resumes without a summary voice."
+              : ""
+          }`}
+          confirmLabel="Delete"
+          danger
+          onConfirm={onDelete}
+          onCancel={() => setConfirmDelete(null)}
+        />
       )}
     </AdminShell>
   );

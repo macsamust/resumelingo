@@ -6,6 +6,8 @@ interface Props {
   children: ReactNode;
   /** Disables Escape/backdrop-click dismissal — used while a request is in flight, so a stray Escape (or an accidental click on the backdrop) can't lose feedback mid-save. */
   disableDismiss?: boolean;
+  /** Widens the panel beyond the default 440px — for content that doesn't fit a narrow confirm-style dialog, e.g. a full resume preview. */
+  wide?: boolean;
 }
 
 /**
@@ -15,7 +17,7 @@ interface Props {
  * reliably dismissible with Escape across every browser and doesn't look
  * out of place next to the rest of the UI.
  */
-export function Modal({ title, onClose, children, disableDismiss }: Props) {
+export function Modal({ title, onClose, children, disableDismiss, wide }: Props) {
   useEffect(() => {
     if (disableDismiss) return;
     const onKeyDown = (e: KeyboardEvent) => {
@@ -27,7 +29,13 @@ export function Modal({ title, onClose, children, disableDismiss }: Props) {
 
   return (
     <div className="modal-backdrop" onClick={() => !disableDismiss && onClose()}>
-      <div className="modal-panel" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={`modal-panel${wide ? " modal-panel-wide" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-head">
           <h2>{title}</h2>
           <button type="button" className="modal-close" onClick={onClose} disabled={disableDismiss} aria-label="Close">

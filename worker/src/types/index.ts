@@ -10,6 +10,8 @@ export * from "@resumelingo/shared";
 export interface Env {
   DB: D1Database;
   ASSETS: Fetcher;
+  /** Workers AI — see services/ResumeImportService.ts. */
+  AI: Ai;
   JWT_SECRET: string;
   CLIENT_ORIGIN: string;
   /** Falls back to JWT_SECRET if unset — see services/AdminService.ts. */
