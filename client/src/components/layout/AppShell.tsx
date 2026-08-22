@@ -9,7 +9,7 @@ const LINKS = [
   // Premium only — see ThankYouLetterPage.tsx/ThankYouLetterController.ts,
   // which enforce the same restriction server-side, so this is just tidying
   // the nav rather than the actual gate.
-  { to: "/thank-you-letter", label: "Thank You Letter", minTier: "premium" as const },
+  { to: "/thank-you-letter", label: "Thank-You Letter", minTier: "premium" as const },
   // Premium only — see CareerCoachPage.tsx/CareerCoachController.ts, which
   // enforce the same restriction server-side, so this is just tidying the
   // nav rather than the actual gate.

@@ -3,7 +3,7 @@ export type LinkVisibility = "public" | "password" | "private";
 /** Which subscription tier a template requires — 1:1 with SubscriptionTier (basic=starter, upgrade=professional, premium=premium). */
 export type TemplateCategory = "basic" | "upgrade" | "premium";
 
-/** Which situation the AI Thank You Letter tool is writing for — see ThankYouLetterPage.tsx. */
+/** Which situation the AI Thank-You Letter tool is writing for — see ThankYouLetterPage.tsx. */
 export type ThankYouScenario = "post-interview" | "offer-acceptance" | "staying-in-touch" | "networking";
 
 export interface ThankYouScenarioOption {

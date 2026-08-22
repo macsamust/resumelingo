@@ -206,7 +206,7 @@ codebase). Resume analytics are limited to view count. The "Coming to
 Premium" features from the marketing page (Career Portfolio, etc.) are
 marketing copy only where no backend exists yet — check `pages/` and
 `worker/src/routes/` for what's actually wired up (Career Coach and
-Thank You Letter generation, for instance, are real).
+Thank-You Letter generation, for instance, are real).
 
 See `TODO.md` for a running list of larger, deliberately-deferred
 improvements (admin roles/permissions, 2FA, subscriber-facing resume content
