@@ -5,7 +5,7 @@ const FEATURES = [
   { icon: "👁️", title: "Live preview", body: "Every change instantly updates across PDF, website, printable resume, and mobile view." },
   { icon: "📄", title: "Multiple resume versions", body: "Clone your resume instead of rewriting it — a Cloud Architect version, a Program Manager version, a Solutions Architect version — each with its own summary and keywords." },
   { icon: "🔒", title: "Public or private sharing", body: "Set links public, password-protected, recruiter-only, or one-time use, with optional expiration dates and QR codes." },
-  { icon: "📊", title: "Resume analytics", body: "See who's viewing your resume — views, unique visitors, location, device, time on page, downloads, and referral source." },
+  { icon: "📊", title: "Resume analytics", body: "See how your resume is performing, with a running view count and trend over time." },
   { icon: "✅", title: "Resume Health Score & ATS optimization", body: "Get a Health Score, flags for missing metrics or weak summaries, and keyword recommendations scanned against real job titles." },
   { icon: "📚", title: "Career Center", body: "Resume tips, interview tips, salary negotiation, and success stories — all tailored to your profession, right on your dashboard." },
 ];
