@@ -37,6 +37,16 @@
     "binding": "AI"
   },
 
+  // Drives the weekly re-engagement view digest (ViewDigestService, invoked
+  // from index.ts's `scheduled` export) — this is the app's first-ever
+  // background job. "0 14 * * 1" is every Monday at 14:00 UTC (~9-10am US
+  // Eastern depending on DST). Cron Triggers only take effect once deployed
+  // (`wrangler deploy`); `wrangler dev` does not fire them automatically —
+  // see the "Local dev" note in the deploy docs.
+  "triggers": {
+    "crons": ["0 14 * * 1"]
+  },
+
   // Non-secret config. JWT_SECRET and RESEND_API_KEY are intentionally NOT
   // here — set them with `npm run secret:jwt` / `npm run secret:resend-key`
   // so they're encrypted rather than committed to git.

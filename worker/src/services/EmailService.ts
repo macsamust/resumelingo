@@ -53,4 +53,21 @@ export class EmailService {
       `,
     });
   }
+
+  /** Weekly re-engagement digest (ViewDigestService) — "N views this week" plus a mandatory unsubscribe link (CAN-SPAM requirement for any recurring email like this). */
+  async sendViewDigestEmail(to: string, input: { totalViews: number; unsubscribeUrl: string }): Promise<void> {
+    const viewsLabel = input.totalViews === 1 ? "1 view" : `${input.totalViews} views`;
+    await this.send({
+      to,
+      subject: `Your resume got ${viewsLabel} this week`,
+      html: `
+        <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
+          <h2 style="margin-bottom: 8px;">Your weekly resume digest</h2>
+          <p>Your resumes got <strong>${viewsLabel}</strong> over the past 7 days.</p>
+          <p style="color: #64748b; font-size: 13px;">Log in to ResumeLingo to see the full breakdown and keep your resume up to date.</p>
+          <p style="color: #94a3b8; font-size: 12px; margin-top: 32px;">Don't want these emails? <a href="${input.unsubscribeUrl}" style="color: #94a3b8;">Unsubscribe from the weekly digest</a>.</p>
+        </div>
+      `,
+    });
+  }
 }

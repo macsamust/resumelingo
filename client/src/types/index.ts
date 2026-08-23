@@ -156,6 +156,8 @@ export interface AuthUser {
   subscriptionTier: SubscriptionTier;
   plan: SubscriptionPlan;
   createdAt: string;
+  /** Weekly resume-view digest opt-out — see ProfilePage's "Email preferences" section. Only meaningful for Professional/Premium accounts, which are the only tiers the digest is ever sent to. */
+  viewDigestOptOut: boolean;
 }
 
 export interface Resume {

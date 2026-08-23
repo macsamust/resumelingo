@@ -9,7 +9,7 @@ import { SubscriptionTier, UserRecord } from "../types";
  * normalizeBooleans.
  */
 function normalizeBooleans(row: UserRecord): UserRecord {
-  return { ...row, suspended: !!row.suspended };
+  return { ...row, suspended: !!row.suspended, viewDigestOptOut: !!row.viewDigestOptOut };
 }
 
 export class UserRepository extends BaseRepository<UserRecord> {
@@ -44,6 +44,7 @@ export class UserRepository extends BaseRepository<UserRecord> {
       createdAt: new Date().toISOString(),
       resetTokenHash: null,
       resetTokenExpiresAt: null,
+      viewDigestOptOut: false,
     };
     await this.insertRow(record as unknown as Record<string, unknown>);
     return record;
@@ -87,6 +88,31 @@ export class UserRepository extends BaseRepository<UserRecord> {
       .prepare(`UPDATE users SET passwordHash = ?, resetTokenHash = NULL, resetTokenExpiresAt = NULL WHERE id = ?`)
       .bind(passwordHash, userId)
       .run();
+  }
+
+  /** Settings-page toggle (ProfilePage) and the token-verified public unsubscribe link both land here — see AuthService.setViewDigestOptOut. */
+  async setViewDigestOptOut(userId: string, optOut: boolean): Promise<void> {
+    await this.db.prepare(`UPDATE users SET "viewDigestOptOut" = ? WHERE id = ?`).bind(optOut ? 1 : 0, userId).run();
+  }
+
+  /**
+   * Professional/Premium subscribers who haven't opted out — the recipient
+   * list for ViewDigestService's weekly cron run. Tier eligibility and
+   * opt-out default are both explicit product decisions (see TODO.md);
+   * unpaginated since this only runs once a week off the request path, but
+   * capped well above any realistic user count as a backstop against an
+   * unbounded scan if that ever changes.
+   */
+  async findEligibleForDigest(): Promise<UserRecord[]> {
+    const { results } = await this.db
+      .prepare(
+        `SELECT * FROM users
+         WHERE "subscriptionTier" IN (?, ?) AND "viewDigestOptOut" = 0
+         LIMIT 20000`
+      )
+      .bind(SubscriptionTier.Professional, SubscriptionTier.Premium)
+      .all<UserRecord>();
+    return results.map(normalizeBooleans);
   }
 
   async updateSubscriptionTier(userId: string, tier: SubscriptionTier): Promise<void> {

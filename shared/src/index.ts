@@ -89,6 +89,8 @@ export interface UserRecord {
   /** Self-service password reset — only the SHA-256 hash is stored, never the raw token. Both null when no reset is in flight. */
   resetTokenHash: string | null;
   resetTokenExpiresAt: string | null;
+  /** Opt-out flag for the weekly re-engagement view-count digest email (ViewDigestService). Defaults false (receiving it) — only ever read for Professional/Premium accounts, see UserRepository.findEligibleForDigest. */
+  viewDigestOptOut: boolean;
 }
 
 /**

@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { Env } from "./types";
 import { withServices } from "./middleware/servicesMiddleware";
+import { createServices } from "./services/createServices";
 import authRoutes from "./routes/auth.routes";
 import resumeRoutes from "./routes/resume.routes";
 import resumeImportRoutes from "./routes/resumeImport.routes";
@@ -18,6 +19,7 @@ import thankYouLetterRoutes from "./routes/thankYouLetter.routes";
 import webhookRoutes from "./routes/webhooks.routes";
 import jobApplicationRoutes from "./routes/jobApplication.routes";
 import { AuthError, InvalidResetTokenError } from "./services/AuthService";
+import { InvalidUnsubscribeTokenError } from "./controllers/AuthController";
 import { AdminAuthError } from "./services/AdminService";
 import {
   ActiveToggleAccessError,
@@ -133,6 +135,8 @@ app.onError((err, c) => {
       ? 400
       : err instanceof InvalidResetTokenError
       ? 400
+      : err instanceof InvalidUnsubscribeTokenError
+      ? 400
       : err instanceof ResumeImportError
       ? 502
       : err instanceof AchievementGenerateError
@@ -150,4 +154,22 @@ app.notFound((c) => {
   return c.env.ASSETS.fetch(c.req.raw);
 });
 
-export default app;
+export default {
+  fetch: app.fetch,
+  /**
+   * Fired by the Cron Trigger in wrangler.jsonc's `triggers.crons`
+   * ("0 14 * * 1" — every Monday). The Worker's very first background job
+   * — everything else in this app only ever runs on an incoming request.
+   * `ctx.waitUntil` keeps the invocation alive until the digest run
+   * finishes rather than letting the runtime tear it down as soon as this
+   * handler returns.
+   */
+  scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+    const services = createServices(env);
+    ctx.waitUntil(
+      services.viewDigestService.sendWeeklyDigests().then((summary) => {
+        console.log("Weekly view digest run complete", summary);
+      })
+    );
+  },
+};

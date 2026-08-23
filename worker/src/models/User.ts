@@ -17,6 +17,7 @@ export class User {
   readonly stripeCustomerId: string | null;
   readonly stripeSubscriptionId: string | null;
   readonly createdAt: string;
+  readonly viewDigestOptOut: boolean;
 
   constructor(record: UserRecord) {
     this.id = record.id;
@@ -29,6 +30,7 @@ export class User {
     this.stripeCustomerId = record.stripeCustomerId;
     this.stripeSubscriptionId = record.stripeSubscriptionId;
     this.createdAt = record.createdAt;
+    this.viewDigestOptOut = record.viewDigestOptOut;
   }
 
   get plan() {
@@ -50,6 +52,7 @@ export class User {
       subscriptionTier: this.subscriptionTier,
       plan: this.plan,
       createdAt: this.createdAt,
+      viewDigestOptOut: this.viewDigestOptOut,
     };
   }
 }

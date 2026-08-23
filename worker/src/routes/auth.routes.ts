@@ -13,5 +13,10 @@ auth.post("/reset-password", controller.resetPassword);
 auth.get("/me", requireAuth, controller.me);
 auth.put("/me", requireAuth, controller.updateProfile);
 auth.put("/me/password", requireAuth, controller.changePassword);
+auth.put("/me/email-preferences", requireAuth, controller.updateEmailPreferences);
+// Public — reached from an email link, not from a logged-in session. See
+// AuthController.unsubscribeDigest for why this is a POST (from a client
+// button click) rather than a bare GET link.
+auth.post("/unsubscribe-digest", controller.unsubscribeDigest);
 
 export default auth;

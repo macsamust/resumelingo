@@ -20,6 +20,7 @@ function makeUserRecord(overrides: Partial<UserRecord> = {}): UserRecord {
     createdAt: new Date().toISOString(),
     resetTokenHash: null,
     resetTokenExpiresAt: null,
+    viewDigestOptOut: false,
     ...overrides,
   };
 }

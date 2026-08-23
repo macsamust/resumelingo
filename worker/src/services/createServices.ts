@@ -22,6 +22,7 @@ import { StripeService } from "./StripeService";
 import { EmailService } from "./EmailService";
 import { ResumeImportService } from "./ResumeImportService";
 import { AchievementGeneratorService } from "./AchievementGeneratorService";
+import { ViewDigestService, UnsubscribeDigestTokenPayload } from "./ViewDigestService";
 
 export interface Services {
   authService: AuthService;
@@ -49,6 +50,9 @@ export interface Services {
   resumeImportService: ResumeImportService;
   achievementGeneratorService: AchievementGeneratorService;
   jobApplicationService: JobApplicationService;
+  viewDigestService: ViewDigestService;
+  /** Verifies the token on GET /api/auth/unsubscribe-digest — kept separate from authService's tokenService since it's a different payload shape/purpose and a much longer expiry. */
+  unsubscribeDigestTokenService: TokenService<UnsubscribeDigestTokenPayload>;
 }
 
 /**
@@ -75,6 +79,10 @@ export function createServices(env: Env): Services {
 
   const tokenService = new TokenService<AuthTokenPayload>(env.JWT_SECRET);
   const adminTokenService = new TokenService<AdminTokenPayload>(env.ADMIN_JWT_SECRET || env.JWT_SECRET);
+  // 180d, not the default 7d — an unsubscribe link in an email a user might not
+  // open right away should still work weeks later, and re-confirming an
+  // already-set opt-out is harmless.
+  const unsubscribeDigestTokenService = new TokenService<UnsubscribeDigestTokenPayload>(env.JWT_SECRET, "180d");
 
   const contentGenerator = new RuleBasedContentGenerator(roleDescriptionRepository);
 
@@ -92,6 +100,14 @@ export function createServices(env: Env): Services {
   const resumeImportService = new ResumeImportService(env.AI);
   const achievementGeneratorService = new AchievementGeneratorService(env.AI);
   const jobApplicationService = new JobApplicationService(jobApplicationRepository, resumeRepo, userRepo);
+  const viewDigestService = new ViewDigestService(
+    userRepo,
+    resumeRepo,
+    resumeAnalyticsRepository,
+    emailService,
+    unsubscribeDigestTokenService,
+    env.CLIENT_ORIGIN
+  );
 
   return {
     authService,
@@ -113,5 +129,7 @@ export function createServices(env: Env): Services {
     resumeImportService,
     achievementGeneratorService,
     jobApplicationService,
+    viewDigestService,
+    unsubscribeDigestTokenService,
   };
 }

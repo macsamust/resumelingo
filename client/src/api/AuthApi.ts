@@ -35,4 +35,13 @@ export class AuthApi extends ApiClient {
   resetPassword(input: { token: string; newPassword: string }) {
     return this.post<{ success: true }>("/auth/reset-password", input);
   }
+
+  updateEmailPreferences(input: { viewDigestOptOut: boolean }) {
+    return this.put<{ user: AuthUser }>("/auth/me/email-preferences", input);
+  }
+
+  /** Public — no auth token needed, this is reached from an email link. See AuthController.unsubscribeDigest for why it's a POST from a button click rather than a bare GET link. */
+  unsubscribeDigest(token: string) {
+    return this.post<{ success: true }>("/auth/unsubscribe-digest", { token });
+  }
 }

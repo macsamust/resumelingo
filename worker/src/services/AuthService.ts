@@ -134,6 +134,14 @@ export class AuthService {
     await this.emailService.sendPasswordResetEmail(record.email, resetUrl);
   }
 
+  /** Settings-page toggle for the weekly view digest — see UserRepository.setViewDigestOptOut. */
+  async setViewDigestOptOut(userId: string, optOut: boolean): Promise<User> {
+    await this.users.setViewDigestOptOut(userId, optOut);
+    const record = await this.users.findById(userId);
+    if (!record) throw new AuthError("User not found.");
+    return new User(record);
+  }
+
   /** Consumes a reset token — one-time use, since resetPassword() clears it on the same write that sets the new password. */
   async resetPassword(token: string, newPassword: string): Promise<void> {
     const tokenHash = await sha256Hex(token);

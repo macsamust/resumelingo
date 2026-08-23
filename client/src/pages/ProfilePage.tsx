@@ -26,6 +26,9 @@ export function ProfilePage() {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
 
+  const [digestError, setDigestError] = useState<string | null>(null);
+  const [savingDigest, setSavingDigest] = useState(false);
+
   useEffect(() => {
     catalogApi.listProfessions().then((res) => setProfessions(res.professions)).catch(() => setProfessions([]));
   }, []);
@@ -60,6 +63,19 @@ export function ProfilePage() {
       setPasswordError(err instanceof ApiError ? err.message : "Something went wrong changing your password.");
     } finally {
       setSavingPassword(false);
+    }
+  };
+
+  const onToggleDigest = async (checked: boolean) => {
+    setDigestError(null);
+    setSavingDigest(true);
+    try {
+      const { user: updated } = await authApi.updateEmailPreferences({ viewDigestOptOut: !checked });
+      updateUser(updated);
+    } catch (err) {
+      setDigestError(err instanceof ApiError ? err.message : "Something went wrong saving your email preferences.");
+    } finally {
+      setSavingDigest(false);
     }
   };
 
@@ -135,6 +151,22 @@ export function ProfilePage() {
           </button>
         </form>
       </div>
+
+      {(user.subscriptionTier === "professional" || user.subscriptionTier === "premium") && (
+        <div className="builder-panel" style={{ maxWidth: 520, marginTop: 28 }}>
+          <h2>Email preferences</h2>
+          {digestError && <div className="form-error">{digestError}</div>}
+          <label className="field" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <input
+              type="checkbox"
+              checked={!user.viewDigestOptOut}
+              disabled={savingDigest}
+              onChange={(e) => onToggleDigest(e.target.checked)}
+            />
+            <span>Weekly resume view digest — a Monday summary of how many views your resumes got that week.</span>
+          </label>
+        </div>
+      )}
     </AppShell>
   );
 }
