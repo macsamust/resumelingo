@@ -23,13 +23,35 @@ export function assertJobApplicationSizeOk(notes: string | undefined, link: stri
 }
 
 // Unlike resumes (ResumeLimitError, plan-tiered), this isn't a paid-feature
-// gate — it's a flat backstop against a runaway client bug or scripted abuse
-// creating unbounded rows, same "generous, won't affect real usage" spirit
-// as MAX_GENERATED_BULLETS_COUNT. 500 tracked applications is far beyond any
-// real job search.
-const MAX_APPLICATIONS_PER_USER = 500;
+// gate — it's a product-level cap on an active job search, paired with the
+// "approaching the limit" warning (JobApplicationsPage.tsx, at 40/80%) and
+// the stale-cleanup recommendation below so hitting it is avoidable, not a
+// dead end.
+export const MAX_APPLICATIONS_PER_USER = 50;
+// Matches the "approaching the limit" warning threshold on the client —
+// kept here too since JobApplicationController.list exposes it in the
+// response so the client doesn't have to hardcode the same number twice.
+export const APPLICATIONS_WARNING_THRESHOLD = 40;
 
 export class JobApplicationLimitError extends Error {}
+
+// "Recommend deleting older, outdated applications" — deliberately never
+// automatic (see JobApplicationController.deleteStale/cleanupStale route):
+// nothing here silently removes a user's data. This only computes *which*
+// applications are stale; the client surfaces that as a "clean up" banner
+// the user has to click, same ConfirmDialog pattern used for every other
+// delete in this app. "Stale" is measured from appliedDate when set
+// (the date it actually went out), falling back to createdAt for an
+// application that was logged without one.
+const STALE_AFTER_MS = 365 * 24 * 60 * 60 * 1000; // ~12 months
+
+function effectiveDateMs(a: JobApplicationRecord): number {
+  return new Date(a.appliedDate || a.createdAt).getTime();
+}
+
+export function isStaleApplication(a: JobApplicationRecord, now: number = Date.now()): boolean {
+  return effectiveDateMs(a) < now - STALE_AFTER_MS;
+}
 
 /**
  * Job application tracker — see migrations/0015_job_applications.sql and
@@ -74,6 +96,22 @@ export class JobApplicationService {
   async delete(userId: string, id: string): Promise<void> {
     await this.getOwned(userId, id); // throws if not found/owned
     await this.applications.delete(id);
+  }
+
+  /**
+   * Deletes every application of this user's that's over 12 months old (see
+   * isStaleApplication) — only ever called from the client's "Clean up old
+   * applications" banner after an explicit confirm, never on a schedule.
+   * Recomputes staleness itself from this user's own rows rather than
+   * trusting a client-supplied id list, so there's no way to pass someone
+   * else's id here. Returns how many were removed, for the confirmation
+   * toast.
+   */
+  async deleteStale(userId: string): Promise<number> {
+    const all = await this.applications.findAllForUser(userId);
+    const staleIds = all.filter((a) => isStaleApplication(a)).map((a) => a.id);
+    if (staleIds.length > 0) await this.applications.deleteBulk(staleIds);
+    return staleIds.length;
   }
 
   /** A resumeId picked from the "Which resume?" dropdown must actually belong to this user — same ownership check as everywhere else, just against the other repository. */

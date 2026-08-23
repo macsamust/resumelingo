@@ -66,6 +66,14 @@ export function JobApplicationsPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<JobApplication | null>(null);
   const [statusFilter, setStatusFilter] = useState<"all" | JobApplicationStatus>("all");
+  // limit/warningThreshold/staleCount all come from the server (see
+  // JobApplicationController.list) rather than being hardcoded here, so the
+  // banners below can never drift from the server's own cap/cutoff.
+  const [limit, setLimit] = useState<number | null>(null);
+  const [warningThreshold, setWarningThreshold] = useState<number | null>(null);
+  const [staleCount, setStaleCount] = useState(0);
+  const [confirmingCleanup, setConfirmingCleanup] = useState(false);
+  const [cleaningUp, setCleaningUp] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -74,6 +82,9 @@ export function JobApplicationsPage() {
       .then(([appsRes, resumesRes]) => {
         setApplications(appsRes.applications);
         setResumes(resumesRes.resumes);
+        setLimit(appsRes.limit);
+        setWarningThreshold(appsRes.warningThreshold);
+        setStaleCount(appsRes.staleCount);
         const nextEditing: Record<string, Draft> = {};
         appsRes.applications.forEach((a) => (nextEditing[a.id] = toDraft(a)));
         setEditing(nextEditing);
@@ -163,14 +174,32 @@ export function JobApplicationsPage() {
     }
   };
 
+  /** "Clean up old applications" — only ever runs after the confirm dialog below; the server recomputes which applications are actually over 12 months old itself rather than trusting a client-supplied list (see JobApplicationService.deleteStale). Never automatic. */
+  const onCleanupStale = async () => {
+    setCleaningUp(true);
+    try {
+      const { deletedCount } = await jobApplicationApi.cleanupStale();
+      showToast("success", `Removed ${deletedCount} application${deletedCount === 1 ? "" : "s"} older than 12 months.`);
+      setConfirmingCleanup(false);
+      load();
+    } catch (err) {
+      showToast("error", err instanceof ApiError ? err.message : "Couldn't clean up old applications.");
+    } finally {
+      setCleaningUp(false);
+    }
+  };
+
   const visible = statusFilter === "all" ? applications : applications.filter((a) => a.status === statusFilter);
+  const nearLimit = limit !== null && warningThreshold !== null && applications.length >= warningThreshold;
+  const atLimit = limit !== null && applications.length >= limit;
 
   return (
     <AppShell>
       <div className="app-page-head">
         <h1>Job Applications</h1>
         <span className="app-page-head-count">
-          {applications.length} tracked
+          {applications.length}
+          {limit !== null ? ` / ${limit}` : ""} tracked
         </span>
       </div>
       <p className="hero-note" style={{ marginBottom: 20 }}>
@@ -178,6 +207,25 @@ export function JobApplicationsPage() {
         application here to keep it all in one place.
       </p>
       {error && <div className="form-error">{error}</div>}
+
+      {nearLimit && (
+        <div className={`job-app-banner ${atLimit ? "job-app-banner-limit" : "job-app-banner-warning"}`}>
+          {atLimit
+            ? `You've reached the ${limit}-application limit — remove one (or clean up old ones below) before adding another.`
+            : `You're at ${applications.length} of ${limit} tracked applications — worth cleaning up old ones before you hit the limit.`}
+        </div>
+      )}
+
+      {staleCount > 0 && (
+        <div className="job-app-banner">
+          <span>
+            {staleCount} application{staleCount === 1 ? " is" : "s are"} older than 12 months — probably safe to clean up.
+          </span>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setConfirmingCleanup(true)}>
+            Clean up old applications
+          </button>
+        </div>
+      )}
 
       <form className="admin-new-template" onSubmit={onCreate} style={{ marginBottom: 24 }}>
         <h2>Log an application</h2>
@@ -358,6 +406,17 @@ export function JobApplicationsPage() {
           danger
           onConfirm={onDelete}
           onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+
+      {confirmingCleanup && (
+        <ConfirmDialog
+          title="Clean up old applications"
+          message={`Remove ${staleCount} application${staleCount === 1 ? "" : "s"} older than 12 months (based on when it was applied, or logged if no date was set)? This can't be undone.`}
+          confirmLabel={cleaningUp ? "Removing…" : "Remove them"}
+          danger
+          onConfirm={onCleanupStale}
+          onCancel={() => setConfirmingCleanup(false)}
         />
       )}
     </AppShell>

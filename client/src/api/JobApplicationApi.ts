@@ -12,8 +12,9 @@ export interface JobApplicationInput {
 }
 
 export class JobApplicationApi extends ApiClient {
+  /** limit/warningThreshold/staleCount come from the server (see JobApplicationController.list) so the "approaching the limit"/"clean up old applications" banners can never drift from the server's own cap and 12-month cutoff. */
   list() {
-    return this.get<{ applications: JobApplication[] }>("/job-applications");
+    return this.get<{ applications: JobApplication[]; limit: number; warningThreshold: number; staleCount: number }>("/job-applications");
   }
 
   create(input: JobApplicationInput) {
@@ -26,5 +27,10 @@ export class JobApplicationApi extends ApiClient {
 
   remove(id: string) {
     return this.del<void>(`/job-applications/${id}`);
+  }
+
+  /** Deletes every application of the current user's over 12 months old — only ever called from the "Clean up old applications" banner after an explicit confirm dialog, never automatically. */
+  cleanupStale() {
+    return this.post<{ deletedCount: number }>("/job-applications/cleanup-stale");
   }
 }

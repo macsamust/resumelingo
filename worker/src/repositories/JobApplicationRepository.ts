@@ -78,4 +78,9 @@ export class JobApplicationRepository extends BaseRepository<JobApplicationRecor
     return merged;
   }
 
+  /** Bulk version of delete() — used by JobApplicationService.deleteStale's "clean up old applications" action, batched the same way ResumeRepository.deleteBulk is. */
+  async deleteBulk(ids: string[]): Promise<void> {
+    if (ids.length === 0) return;
+    await this.db.batch(ids.map((id) => this.db.prepare(`DELETE FROM job_applications WHERE id = ?`).bind(id)));
+  }
 }
