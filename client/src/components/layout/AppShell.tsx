@@ -6,6 +6,8 @@ import { TIER_LABEL } from "../../utils/templateAccess";
 const LINKS = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/resumes/new", label: "New Resume" },
+  // Not tier-gated — see JobApplicationService's class comment.
+  { to: "/job-applications", label: "Job Applications" },
   // Premium only — see ThankYouLetterPage.tsx/ThankYouLetterController.ts,
   // which enforce the same restriction server-side, so this is just tidying
   // the nav rather than the actual gate.

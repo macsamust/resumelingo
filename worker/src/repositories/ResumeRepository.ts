@@ -212,6 +212,11 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       this.db.prepare(`DELETE FROM resume_views WHERE "resumeId" = ?`).bind(id),
       this.db.prepare(`DELETE FROM resume_score_snapshots WHERE "resumeId" = ?`).bind(id),
       this.db.prepare(`DELETE FROM resume_keyword_checks WHERE "resumeId" = ?`).bind(id),
+      // Unlike the DELETEs above, job_applications rows survive — see
+      // migrations/0015_job_applications.sql — since losing an application's
+      // notes/status history just because the resume it was sent with got
+      // deleted would be a bad surprise. Only the now-dangling link is cleared.
+      this.db.prepare(`UPDATE job_applications SET "resumeId" = NULL WHERE "resumeId" = ?`).bind(id),
       this.db.prepare(`DELETE FROM resumes WHERE id = ?`).bind(id),
     ]);
     await this.db.batch(statements);
@@ -353,6 +358,10 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       this.db.prepare(`DELETE FROM resume_views WHERE "resumeId" = ?`).bind(id),
       this.db.prepare(`DELETE FROM resume_score_snapshots WHERE "resumeId" = ?`).bind(id),
       this.db.prepare(`DELETE FROM resume_keyword_checks WHERE "resumeId" = ?`).bind(id),
+      // See deleteBulk's comment — job_applications rows survive a resume
+      // delete (only the now-dangling resumeId link is cleared), unlike
+      // every other child table above.
+      this.db.prepare(`UPDATE job_applications SET "resumeId" = NULL WHERE "resumeId" = ?`).bind(id),
       this.db.prepare(`DELETE FROM resumes WHERE id = ?`).bind(id),
     ]);
   }
@@ -365,6 +374,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       this.db.prepare(`DELETE FROM resume_views WHERE "resumeId" IN (${resumeIdSubquery})`).bind(userId),
       this.db.prepare(`DELETE FROM resume_score_snapshots WHERE "resumeId" IN (${resumeIdSubquery})`).bind(userId),
       this.db.prepare(`DELETE FROM resume_keyword_checks WHERE "resumeId" IN (${resumeIdSubquery})`).bind(userId),
+      this.db.prepare(`UPDATE job_applications SET "resumeId" = NULL WHERE "resumeId" IN (${resumeIdSubquery})`).bind(userId),
       this.db.prepare(`DELETE FROM resumes WHERE userId = ?`).bind(userId),
     ]);
   }

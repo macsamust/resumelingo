@@ -6,6 +6,7 @@ import { ThankYouLetterApi } from "./ThankYouLetterApi";
 import { CareerCoachApi } from "./CareerCoachApi";
 import { ResumeImportApi } from "./ResumeImportApi";
 import { AchievementGenerateApi } from "./AchievementGenerateApi";
+import { JobApplicationApi } from "./JobApplicationApi";
 
 export const authApi = new AuthApi();
 export const resumeApi = new ResumeApi();
@@ -14,6 +15,7 @@ export const thankYouLetterApi = new ThankYouLetterApi();
 export const careerCoachApi = new CareerCoachApi();
 export const resumeImportApi = new ResumeImportApi();
 export const achievementGenerateApi = new AchievementGenerateApi();
+export const jobApplicationApi = new JobApplicationApi();
 // Deliberately not included in setAuthToken below — the admin token lives
 // under its own storage key and is set via AdminAuthContext instead, so a
 // regular user login/logout never touches the admin session.
@@ -28,6 +30,7 @@ export function setAuthToken(token: string | null) {
   careerCoachApi.setToken(token);
   resumeImportApi.setToken(token);
   achievementGenerateApi.setToken(token);
+  jobApplicationApi.setToken(token);
 }
 
 export * from "./ApiClient";
@@ -39,3 +42,4 @@ export * from "./ThankYouLetterApi";
 export * from "./CareerCoachApi";
 export * from "./ResumeImportApi";
 export * from "./AchievementGenerateApi";
+export * from "./JobApplicationApi";

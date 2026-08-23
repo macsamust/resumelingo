@@ -3,6 +3,7 @@ import { UserRepository } from "../repositories/UserRepository";
 import { ResumeRepository } from "../repositories/ResumeRepository";
 import { ResumeAnalyticsRepository } from "../repositories/ResumeAnalyticsRepository";
 import { ResumeVersionRepository } from "../repositories/ResumeVersionRepository";
+import { JobApplicationRepository } from "../repositories/JobApplicationRepository";
 import { AdminRepository } from "../repositories/AdminRepository";
 import { TemplateRepository } from "../repositories/TemplateRepository";
 import { PlanRepository } from "../repositories/PlanRepository";
@@ -13,6 +14,7 @@ import { AdminLoginIpLogRepository } from "../repositories/AdminLoginIpLogReposi
 import { TokenService } from "./TokenService";
 import { AuthService } from "./AuthService";
 import { ResumeService } from "./ResumeService";
+import { JobApplicationService } from "./JobApplicationService";
 import { SubscriptionService } from "./SubscriptionService";
 import { AdminService } from "./AdminService";
 import { RuleBasedContentGenerator } from "./ContentGenerator";
@@ -46,6 +48,7 @@ export interface Services {
   resumeAnalyticsRepository: ResumeAnalyticsRepository;
   resumeImportService: ResumeImportService;
   achievementGeneratorService: AchievementGeneratorService;
+  jobApplicationService: JobApplicationService;
 }
 
 /**
@@ -68,6 +71,7 @@ export function createServices(env: Env): Services {
   const adminLoginIpLogRepository = new AdminLoginIpLogRepository(env.DB);
   const resumeAnalyticsRepository = new ResumeAnalyticsRepository(env.DB);
   const resumeVersionRepository = new ResumeVersionRepository(env.DB);
+  const jobApplicationRepository = new JobApplicationRepository(env.DB);
 
   const tokenService = new TokenService<AuthTokenPayload>(env.JWT_SECRET);
   const adminTokenService = new TokenService<AdminTokenPayload>(env.ADMIN_JWT_SECRET || env.JWT_SECRET);
@@ -87,6 +91,7 @@ export function createServices(env: Env): Services {
   const adminService = new AdminService(adminRepo, adminTokenService, env.ADMIN_EMAIL, env.ADMIN_PASSWORD);
   const resumeImportService = new ResumeImportService(env.AI);
   const achievementGeneratorService = new AchievementGeneratorService(env.AI);
+  const jobApplicationService = new JobApplicationService(jobApplicationRepository, resumeRepo);
 
   return {
     authService,
@@ -107,5 +112,6 @@ export function createServices(env: Env): Services {
     resumeAnalyticsRepository,
     resumeImportService,
     achievementGeneratorService,
+    jobApplicationService,
   };
 }

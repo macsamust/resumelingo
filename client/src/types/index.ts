@@ -6,6 +6,25 @@ export type TemplateCategory = "basic" | "upgrade" | "premium";
 /** Which situation the AI Thank-You Letter tool is writing for — see ThankYouLetterPage.tsx. */
 export type ThankYouScenario = "post-interview" | "offer-acceptance" | "staying-in-touch" | "networking";
 
+/** Job application tracker — see JobApplicationsPage.tsx, worker's migrations/0015_job_applications.sql. Not tier-gated. */
+export type JobApplicationStatus = "applied" | "interviewing" | "offer" | "rejected" | "withdrawn";
+
+export interface JobApplication {
+  id: string;
+  userId: string;
+  /** Null once the linked resume is deleted, or if no resume was ever linked — the application itself is never deleted along with it. */
+  resumeId: string | null;
+  company: string;
+  role: string;
+  status: JobApplicationStatus;
+  /** ISO date (yyyy-mm-dd), or null if not set. */
+  appliedDate: string | null;
+  link: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ThankYouScenarioOption {
   key: ThankYouScenario;
   label: string;

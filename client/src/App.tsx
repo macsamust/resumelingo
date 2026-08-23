@@ -15,6 +15,7 @@ import { ResumeEditPage } from "./pages/ResumeEditPage";
 import { PublicResumePage } from "./pages/PublicResumePage";
 import { ThankYouLetterPage } from "./pages/ThankYouLetterPage";
 import { CareerCoachPage } from "./pages/CareerCoachPage";
+import { JobApplicationsPage } from "./pages/JobApplicationsPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { AdminProtectedRoute } from "./components/layout/AdminProtectedRoute";
 import { AdminLoginPage } from "./pages/admin/AdminLoginPage";
@@ -74,6 +75,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ResumeEditPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/job-applications"
+          element={
+            <ProtectedRoute>
+              <JobApplicationsPage />
             </ProtectedRoute>
           }
         />

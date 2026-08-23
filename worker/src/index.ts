@@ -16,6 +16,7 @@ import adminRoutes from "./routes/admin.routes";
 import careerCoachRoutes from "./routes/careerCoach.routes";
 import thankYouLetterRoutes from "./routes/thankYouLetter.routes";
 import webhookRoutes from "./routes/webhooks.routes";
+import jobApplicationRoutes from "./routes/jobApplication.routes";
 import { AuthError, InvalidResetTokenError } from "./services/AuthService";
 import { AdminAuthError } from "./services/AdminService";
 import {
@@ -33,6 +34,12 @@ import {
 } from "./services/ResumeService";
 import { ResumeImportError } from "./services/ResumeImportService";
 import { AchievementGenerateError } from "./services/AchievementGeneratorService";
+import {
+  JobApplicationAccessError,
+  JobApplicationLimitError,
+  JobApplicationNotFoundError,
+  JobApplicationTooLargeError,
+} from "./services/JobApplicationService";
 
 /**
  * Entry point for the whole Worker. wrangler.jsonc's `run_worker_first` is
@@ -81,6 +88,7 @@ app.route("/api/admin", adminRoutes);
 app.route("/api/career-coach", careerCoachRoutes);
 app.route("/api/thank-you-letters", thankYouLetterRoutes);
 app.route("/api/webhooks", webhookRoutes);
+app.route("/api/job-applications", jobApplicationRoutes);
 
 app.onError((err, c) => {
   const status =
@@ -92,6 +100,16 @@ app.onError((err, c) => {
       ? 404
       : err instanceof ResumeAccessError
       ? 403
+      : err instanceof JobApplicationNotFoundError
+      ? 404
+      : err instanceof JobApplicationAccessError
+      ? 403
+      : err instanceof JobApplicationTooLargeError
+      ? 400
+      : err instanceof JobApplicationLimitError
+      // 429 (not 402 like ResumeLimitError) — this cap isn't an upgrade
+      // gate, there's no paid tier that raises it, just a flat backstop.
+      ? 429
       : err instanceof ResumeLimitError
       ? 402
       : err instanceof TemplateAccessError

@@ -361,6 +361,30 @@ export interface ResumeRecord {
   updatedAt: string;
 }
 
+export type JobApplicationStatus = "applied" | "interviewing" | "offer" | "rejected" | "withdrawn";
+
+/**
+ * Job application tracker — see worker/migrations/0015_job_applications.sql
+ * and TODO.md's "Product review" note. Net-new domain model tying which
+ * resume (if any) was sent where, and what happened after; not part of the
+ * Resume record itself since one resume can be sent to many roles.
+ */
+export interface JobApplicationRecord {
+  id: string;
+  userId: string;
+  /** Null once the linked resume is deleted (see ResumeRepository.delete/deleteBulk/deleteAllForUser) or if no resume was ever linked — the application row itself is never deleted along with it. */
+  resumeId: string | null;
+  company: string;
+  role: string;
+  status: JobApplicationStatus;
+  /** ISO date (yyyy-mm-dd), or null if not set. */
+  appliedDate: string | null;
+  link: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AuthTokenPayload {
   userId: string;
   email: string;
