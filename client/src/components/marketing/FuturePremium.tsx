@@ -7,15 +7,16 @@
 // overpromised — it turned out to describe an already-shipped feature
 // (ResumeRepository.generateBrandedSlug's {name}-{title} public link),
 // just mislabeled, so it moved back to Pricing.tsx/subscriptionPlans.ts as
-// "Branded resume link" instead. This entry is the real, still-unbuilt
-// thing that name implies — hosting a resume on a subscriber's own domain
-// (DNS/hostname verification, certs, routing) — kept distinct so the two
-// are never confused again. See TODO.md's "Product review" note for sizing.
+// "Branded resume link" instead. A "Your own domain" entry briefly sat
+// here after that for the real, DNS-level version of the feature — pulled
+// per explicit decision not to build real custom-domain hosting at all
+// (no clear upside, real downsides — e.g. verifying and being responsible
+// for arbitrary third-party domains/certs, and the abuse surface of
+// letting anyone point a domain at hosted content). See TODO.md.
 const FUTURE = [
   { tag: "Portfolio", title: "Career Portfolio", body: "Showcase projects, videos, awards, certifications, patents, publications, recommendations, and volunteer work." },
   { tag: "Networking", title: "Digital business card", body: "Scan a QR code for instant access to your resume." },
   { tag: "Video", title: "Video introduction", body: "A one-minute video introduction — recruiters love this." },
-  { tag: "Branding", title: "Your own domain", body: "Host your public resume link on a domain you own, instead of resumelingo.com." },
 ];
 
 export function FuturePremium() {
