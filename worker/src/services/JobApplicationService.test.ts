@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { assertJobApplicationSizeOk, isStaleApplication, JobApplicationTooLargeError } from "./JobApplicationService";
-import { JobApplicationRecord } from "../types";
+import {
+  assertJobApplicationSizeOk,
+  assertJobApplicationTrackerAllowed,
+  isStaleApplication,
+  JobApplicationTierAccessError,
+  JobApplicationTooLargeError,
+} from "./JobApplicationService";
+import { JobApplicationRecord, SubscriptionTier } from "../types";
 
 function makeApplication(overrides: Partial<JobApplicationRecord>): JobApplicationRecord {
   return {
@@ -38,6 +44,17 @@ describe("assertJobApplicationSizeOk", () => {
 
   it("allows notes/link exactly at the limit", () => {
     expect(() => assertJobApplicationSizeOk("a".repeat(4_000), "a".repeat(2_000))).not.toThrow();
+  });
+});
+
+describe("assertJobApplicationTrackerAllowed", () => {
+  it("blocks Starter", () => {
+    expect(() => assertJobApplicationTrackerAllowed(SubscriptionTier.Starter)).toThrow(JobApplicationTierAccessError);
+  });
+
+  it("allows Professional and Premium", () => {
+    expect(() => assertJobApplicationTrackerAllowed(SubscriptionTier.Professional)).not.toThrow();
+    expect(() => assertJobApplicationTrackerAllowed(SubscriptionTier.Premium)).not.toThrow();
   });
 });
 

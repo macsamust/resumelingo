@@ -22,6 +22,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanDefinition[] = [
       "Resume scoring",
       "Career Center",
       "AI assistance",
+      "Job application tracker",
     ],
   },
   {

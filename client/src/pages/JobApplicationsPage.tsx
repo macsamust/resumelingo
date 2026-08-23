@@ -1,7 +1,9 @@
 import { FormEvent, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { ConfirmDialog } from "../components/common/ConfirmDialog";
 import { useToast } from "../components/common/Toast";
+import { useAuth } from "../context/AuthContext";
 import { ApiError, jobApplicationApi, resumeApi } from "../api";
 import { JobApplication, JobApplicationStatus, Resume } from "../types";
 
@@ -46,14 +48,34 @@ function toDraft(a: JobApplication): Draft {
   };
 }
 
+function JobApplicationsLocked() {
+  return (
+    <AppShell>
+      <div className="app-page-head">
+        <h1>Job Applications</h1>
+      </div>
+      <div className="empty-state">
+        <p>Job application tracking is a Professional/Premium feature. Upgrade your plan to start tracking where you've applied.</p>
+        <Link to="/dashboard" className="btn btn-primary">
+          Upgrade my plan
+        </Link>
+      </div>
+    </AppShell>
+  );
+}
+
 /**
  * Job application tracker — where a resume was actually sent, and what
  * happened after. Sits alongside Clone ("save a copy of this resume for a
  * new target role") as the missing other half: Clone answers "which resume
- * did I make for this?", this answers "did I ever hear back?". Not
- * tier-gated — see JobApplicationService's class comment.
+ * did I make for this?", this answers "did I ever hear back?".
+ * Professional/Premium only (see JobApplicationService's class comment) —
+ * server-enforced on every route, this is just the same "don't show a
+ * Starter subscriber a form that will 402" treatment CareerCoachPage.tsx
+ * gives Career Coach.
  */
 export function JobApplicationsPage() {
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [resumes, setResumes] = useState<Resume[]>([]);
@@ -93,7 +115,15 @@ export function JobApplicationsPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, []);
+  // Skips the fetch entirely for a Starter subscriber — the server would
+  // just 402 it, and the locked-state return below never renders anything
+  // that needs this data anyway.
+  useEffect(() => {
+    if (user && user.subscriptionTier === "starter") return;
+    load();
+  }, [user]);
+
+  if (user && user.subscriptionTier === "starter") return <JobApplicationsLocked />;
 
   const resumeTitle = (resumeId: string | null) => resumes.find((r) => r.id === resumeId)?.title;
 

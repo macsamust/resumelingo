@@ -1,7 +1,7 @@
 import { SubscriptionTier, TemplateCategory } from "../types";
 
-/** Ranked 1:1 — a subscriber can use any template at or below their tier's rank. */
-const TIER_RANK: Record<SubscriptionTier, number> = { starter: 0, professional: 1, premium: 2 };
+/** Ranked 1:1 — a subscriber can use any template at or below their tier's rank. Exported for other "at or above this tier" checks (e.g. AppShell.tsx's nav minTier filter) so they don't duplicate this ranking. */
+export const TIER_RANK: Record<SubscriptionTier, number> = { starter: 0, professional: 1, premium: 2 };
 const CATEGORY_RANK: Record<TemplateCategory, number> = { basic: 0, upgrade: 1, premium: 2 };
 
 /** The cheapest subscription tier that can use a template of this category. */

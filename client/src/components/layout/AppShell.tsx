@@ -1,13 +1,15 @@
 import { Link, NavLink } from "react-router-dom";
 import { ReactNode } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { TIER_LABEL } from "../../utils/templateAccess";
+import { TIER_LABEL, TIER_RANK } from "../../utils/templateAccess";
 
 const LINKS = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/resumes/new", label: "New Resume" },
-  // Not tier-gated — see JobApplicationService's class comment.
-  { to: "/job-applications", label: "Job Applications" },
+  // Professional/Premium only — see JobApplicationService's class comment,
+  // which enforces the same restriction server-side, so this is just
+  // tidying the nav rather than the actual gate.
+  { to: "/job-applications", label: "Job Applications", minTier: "professional" as const },
   // Premium only — see ThankYouLetterPage.tsx/ThankYouLetterController.ts,
   // which enforce the same restriction server-side, so this is just tidying
   // the nav rather than the actual gate.
@@ -20,7 +22,10 @@ const LINKS = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const links = LINKS.filter((link) => !link.minTier || user?.subscriptionTier === link.minTier);
+  // "At or above" minTier, not exact-match — a Premium subscriber should
+  // still see a "professional"-minTier link like Job Applications, not just
+  // someone on Professional exactly.
+  const links = LINKS.filter((link) => !link.minTier || (!!user && TIER_RANK[user.subscriptionTier] >= TIER_RANK[link.minTier]));
 
   return (
     <div className="app-shell">

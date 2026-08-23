@@ -38,6 +38,7 @@ import {
   JobApplicationAccessError,
   JobApplicationLimitError,
   JobApplicationNotFoundError,
+  JobApplicationTierAccessError,
   JobApplicationTooLargeError,
 } from "./services/JobApplicationService";
 
@@ -104,6 +105,8 @@ app.onError((err, c) => {
       ? 404
       : err instanceof JobApplicationAccessError
       ? 403
+      : err instanceof JobApplicationTierAccessError
+      ? 402
       : err instanceof JobApplicationTooLargeError
       ? 400
       : err instanceof JobApplicationLimitError

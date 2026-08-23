@@ -91,7 +91,7 @@ export function createServices(env: Env): Services {
   const adminService = new AdminService(adminRepo, adminTokenService, env.ADMIN_EMAIL, env.ADMIN_PASSWORD);
   const resumeImportService = new ResumeImportService(env.AI);
   const achievementGeneratorService = new AchievementGeneratorService(env.AI);
-  const jobApplicationService = new JobApplicationService(jobApplicationRepository, resumeRepo);
+  const jobApplicationService = new JobApplicationService(jobApplicationRepository, resumeRepo, userRepo);
 
   return {
     authService,
