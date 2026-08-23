@@ -41,6 +41,8 @@ export interface CreateResumeInput {
   slug?: string;
 }
 
+
+
 export interface UpdateResumeInput {
   fullName?: string;
   contactEmail?: string;
@@ -76,6 +78,8 @@ export interface UpdateResumeInput {
   referencesRecruiterModeOnly?: boolean;
   generatedSummary?: string;
   generatedBullets?: string[];
+  /** See ResumeRecord.summaryManuallyEdited / ResumeService.update's regeneration gate. Send `false` explicitly for the "Reset to auto-generated" action. */
+  summaryManuallyEdited?: boolean;
 }
 
 /**
@@ -93,6 +97,7 @@ function normalizeBooleans(row: ResumeRecord): ResumeRecord {
     combineExperienceFormat: !!row.combineExperienceFormat,
     referencesEnabled: !!row.referencesEnabled,
     referencesRecruiterModeOnly: !!row.referencesRecruiterModeOnly,
+    summaryManuallyEdited: !!row.summaryManuallyEdited,
   };
 }
 
@@ -256,6 +261,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       referencesRecruiterModeOnly: false,
       generatedSummary: input.generatedSummary,
       generatedBullets: JSON.stringify(input.generatedBullets),
+      summaryManuallyEdited: false,
       viewCount: 0,
       createdAt: now,
       updatedAt: now,
@@ -318,6 +324,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
         input.referencesRecruiterModeOnly !== undefined ? input.referencesRecruiterModeOnly : existing.referencesRecruiterModeOnly,
       generatedSummary: input.generatedSummary ?? existing.generatedSummary,
       generatedBullets: input.generatedBullets ? JSON.stringify(input.generatedBullets) : existing.generatedBullets,
+      summaryManuallyEdited: input.summaryManuallyEdited !== undefined ? input.summaryManuallyEdited : existing.summaryManuallyEdited,
       updatedAt: bumpUpdatedAt ? new Date().toISOString() : existing.updatedAt,
     };
     await this.updateRow(id, merged as unknown as Record<string, unknown>);

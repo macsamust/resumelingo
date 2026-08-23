@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 import { SubscriptionTier, LinkVisibility } from "../types";
 import {
   assertActiveToggleAllowed,
+  assertGeneratedContentSizeOk,
   assertPhotoSizeOk,
   assertTemplateAllowed,
   assertVersionHistoryAllowed,
   assertVisibilityAllowed,
   ActiveToggleAccessError,
+  GeneratedContentTooLargeError,
   PhotoTooLargeError,
   TemplateAccessError,
   VersionHistoryAccessError,
@@ -108,5 +110,28 @@ describe("assertPhotoSizeOk", () => {
   it("allows a photo exactly at the limit", () => {
     const atLimit = "a".repeat(2_000_000);
     expect(() => assertPhotoSizeOk(atLimit)).not.toThrow();
+  });
+});
+
+describe("assertGeneratedContentSizeOk", () => {
+  it("allows undefined, empty, and reasonably sized manual edits", () => {
+    expect(() => assertGeneratedContentSizeOk(undefined, undefined)).not.toThrow();
+    expect(() => assertGeneratedContentSizeOk("", [])).not.toThrow();
+    expect(() => assertGeneratedContentSizeOk("A short summary.", ["Led a team of 5.", "Shipped on time."])).not.toThrow();
+  });
+
+  it("blocks a summary over the 4,000-character backstop", () => {
+    const oversized = "a".repeat(4_001);
+    expect(() => assertGeneratedContentSizeOk(oversized, undefined)).toThrow(GeneratedContentTooLargeError);
+  });
+
+  it("blocks more than 60 bullets", () => {
+    const tooMany = Array.from({ length: 61 }, (_, i) => `Bullet ${i}`);
+    expect(() => assertGeneratedContentSizeOk(undefined, tooMany)).toThrow(GeneratedContentTooLargeError);
+  });
+
+  it("blocks a single bullet over the 500-character backstop", () => {
+    const oversizedBullet = "a".repeat(501);
+    expect(() => assertGeneratedContentSizeOk(undefined, [oversizedBullet])).toThrow(GeneratedContentTooLargeError);
   });
 });

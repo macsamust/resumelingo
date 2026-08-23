@@ -53,6 +53,7 @@ export class Resume {
   readonly referencesRecruiterModeOnly: boolean;
   readonly generatedSummary: string;
   readonly generatedBullets: string[];
+  readonly summaryManuallyEdited: boolean;
   readonly viewCount: number;
   readonly createdAt: string;
   readonly updatedAt: string;
@@ -95,6 +96,7 @@ export class Resume {
     this.referencesRecruiterModeOnly = !!record.referencesRecruiterModeOnly;
     this.generatedSummary = record.generatedSummary;
     this.generatedBullets = JSON.parse(record.generatedBullets || "[]");
+    this.summaryManuallyEdited = !!record.summaryManuallyEdited;
     this.viewCount = record.viewCount;
     this.createdAt = record.createdAt;
     this.updatedAt = record.updatedAt;
@@ -238,6 +240,7 @@ export class Resume {
       referencesRecruiterModeOnly: this.referencesRecruiterModeOnly,
       generatedSummary: this.generatedSummary,
       generatedBullets: this.generatedBullets,
+      summaryManuallyEdited: this.summaryManuallyEdited,
       viewCount: this.viewCount,
       strengthScore: this.strengthScore,
       createdAt: this.createdAt,

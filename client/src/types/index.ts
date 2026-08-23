@@ -192,6 +192,8 @@ export interface Resume {
   referencesRecruiterModeOnly: boolean;
   generatedSummary: string;
   generatedBullets: string[];
+  /** True once the subscriber has hand-edited generatedSummary/generatedBullets on Edit Resume — stops the server from silently regenerating over that edit when profession/answers/achievements/name/title change afterward. See Edit Resume's "Edit summary" panel and its "Reset to auto-generated" action. */
+  summaryManuallyEdited: boolean;
   viewCount: number;
   /** Profile Strength Score (0-100) for this resume alone — same formula as DashboardSummary.profileStrengthScore, which averages this across all of a user's resumes. See server's Resume.strengthScore. */
   strengthScore: number;

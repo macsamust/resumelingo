@@ -21,6 +21,7 @@ import { AdminAuthError } from "./services/AdminService";
 import {
   ActiveToggleAccessError,
   CloneAccessError,
+  GeneratedContentTooLargeError,
   PhotoTooLargeError,
   ResumeAccessError,
   ResumeLimitError,
@@ -106,6 +107,8 @@ app.onError((err, c) => {
       : err instanceof VersionNotFoundError
       ? 404
       : err instanceof PhotoTooLargeError
+      ? 400
+      : err instanceof GeneratedContentTooLargeError
       ? 400
       : err instanceof InvalidResetTokenError
       ? 400

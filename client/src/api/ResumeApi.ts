@@ -40,6 +40,11 @@ export interface CreateResumeInput {
   references?: ReferenceEntry[];
   /** "Only add references to Recruiter Mode printout section when selecting 'View resume'" checkbox — see types/index.ts Resume.referencesRecruiterModeOnly. */
   referencesRecruiterModeOnly?: boolean;
+  /** Direct hand-edit of the generated Summary/bullets text (Edit Resume's "Generated Summary & Bullets" panel) — sent together with summaryManuallyEdited: true from that panel's own save action, separate from the rest of this form. See types/index.ts Resume.summaryManuallyEdited. */
+  generatedSummary?: string;
+  generatedBullets?: string[];
+  /** Send `false` to reset back to auto-generated (see ResumeService.update). */
+  summaryManuallyEdited?: boolean;
 }
 
 export class ResumeApi extends ApiClient {

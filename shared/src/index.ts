@@ -354,6 +354,8 @@ export interface ResumeRecord {
   referencesRecruiterModeOnly: boolean;
   generatedSummary: string;
   generatedBullets: string; // JSON-serialized string[]
+  /** True once the subscriber has hand-edited generatedSummary/generatedBullets on Edit Resume (see ResumeEditPage.tsx's "Edit summary" panel) — stops ResumeService.update from silently regenerating over that edit when profession/answers/achievements/name/title change afterward. A "Reset to auto-generated" action clears it back to false. Defaults to false (admin support edits via AdminResumeEditPage.tsx don't set this). */
+  summaryManuallyEdited: boolean;
   viewCount: number;
   createdAt: string;
   updatedAt: string;
