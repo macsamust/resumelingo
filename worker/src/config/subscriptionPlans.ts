@@ -34,6 +34,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanDefinition[] = [
       "Everything in Professional",
       "Unlimited resumes",
       "Premium templates",
+      "Branded resume link",
       "Resume analytics",
       "Interview preparation",
       "Career coaching resources",

@@ -1,16 +1,21 @@
 // AI Career Coach, Recruiter Mode, and Professional References have all
 // shipped (see CareerCoachPage.tsx, ResumeEditPage.tsx's "Recruiter Mode"
 // section, and its "References" section/ReferencesEditor.tsx) — removed
-// from this "coming soon" list accordingly. Custom domain was previously
-// listed as a live Premium perk in Pricing.tsx/subscriptionPlans.ts, but
-// there's no backing implementation (no domain field, no DNS/hostname
-// verification, no routing) anywhere in worker/ — moved here instead of
-// overpromising it as available today. See TODO.md's "Product review" note.
+// from this "coming soon" list accordingly.
+//
+// "Custom domain" briefly sat here after being pulled from Pricing.tsx as
+// overpromised — it turned out to describe an already-shipped feature
+// (ResumeRepository.generateBrandedSlug's {name}-{title} public link),
+// just mislabeled, so it moved back to Pricing.tsx/subscriptionPlans.ts as
+// "Branded resume link" instead. This entry is the real, still-unbuilt
+// thing that name implies — hosting a resume on a subscriber's own domain
+// (DNS/hostname verification, certs, routing) — kept distinct so the two
+// are never confused again. See TODO.md's "Product review" note for sizing.
 const FUTURE = [
   { tag: "Portfolio", title: "Career Portfolio", body: "Showcase projects, videos, awards, certifications, patents, publications, recommendations, and volunteer work." },
   { tag: "Networking", title: "Digital business card", body: "Scan a QR code for instant access to your resume." },
   { tag: "Video", title: "Video introduction", body: "A one-minute video introduction — recruiters love this." },
-  { tag: "Branding", title: "Custom domain", body: "Host your public resume link on your own domain instead of resumelingo.com." },
+  { tag: "Branding", title: "Your own domain", body: "Host your public resume link on a domain you own, instead of resumelingo.com." },
 ];
 
 export function FuturePremium() {
