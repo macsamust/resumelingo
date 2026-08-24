@@ -4,16 +4,24 @@ import { TokenService } from "./TokenService";
 import { EmailService } from "./EmailService";
 import { User } from "../models/User";
 import { AuthTokenPayload } from "../types";
+import { isValidEmail, normalizeEmail } from "../utils/validation";
 
 export class AuthError extends Error {}
 
 /** Thrown when a password-reset token is missing, doesn't match any user, or has expired — mapped to 400 in index.ts's onError. */
 export class InvalidResetTokenError extends Error {}
 
-const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
+/** Thrown when a verification-link token is missing, doesn't match any user, or has expired — same treatment as InvalidResetTokenError. */
+export class InvalidVerificationTokenError extends Error {}
 
-/** Random 32-byte hex token — the value that goes in the email link. */
-function generateResetToken(): string {
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
+// Longer than the reset token — verifying an address is far less
+// time-sensitive than proving you currently control it for a password
+// reset, and someone might not open the email right away.
+const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+/** Random 32-byte hex token — the value that goes in the email link. Shared by both the password-reset and email-verification flows. */
+function generateRandomToken(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   return Array.from(bytes)
     .map((b) => b.toString(16).padStart(2, "0"))
@@ -48,19 +56,55 @@ export class AuthService {
   ) {}
 
   async register(input: { name: string; email: string; password: string; profession?: string }) {
-    const existing = await this.users.findByEmail(input.email);
+    const email = normalizeEmail(input.email);
+    if (!isValidEmail(email)) throw new AuthError("Please enter a valid email address.");
+    const existing = await this.users.findByEmail(email);
     if (existing) throw new AuthError("An account with that email already exists.");
 
     const passwordHash = await bcrypt.hash(input.password, 10);
     const record = await this.users.create({
       name: input.name,
-      email: input.email,
+      email,
       passwordHash,
       profession: input.profession ?? null,
     });
     const user = new User(record);
     const token = await this.tokens.sign({ userId: user.id, email: user.email });
+    // Registration succeeds regardless of whether the verification email
+    // actually sends — a Resend outage or bad address shouldn't turn a
+    // successful account creation into a failed signup response (which
+    // would also make the client retry into "email already exists"). The
+    // account just stays unverified until the user hits "resend
+    // verification" from the AppShell banner.
+    await this.sendVerificationEmail(user).catch((err) => console.error("Failed to send verification email on register", err));
     return { user, token };
+  }
+
+  /** Generates and emails a fresh verification link, overwriting any earlier pending one. Shared by register() and resendVerificationEmail(). */
+  private async sendVerificationEmail(user: User): Promise<void> {
+    const token = generateRandomToken();
+    const tokenHash = await sha256Hex(token);
+    const expiresAt = new Date(Date.now() + VERIFICATION_TOKEN_TTL_MS).toISOString();
+    await this.users.setVerificationToken(user.id, tokenHash, expiresAt);
+    const verifyUrl = `${this.clientOrigin.replace(/\/$/, "")}/verify-email?token=${token}`;
+    await this.emailService.sendVerificationEmail(user.email, verifyUrl);
+  }
+
+  /** Logged-in-only resend (see AppShell's "verify your email" banner) — no email-address parameter, so there's no account-enumeration surface here the way requestPasswordReset needs to guard against. No-ops silently if already verified. */
+  async resendVerificationEmail(userId: string): Promise<void> {
+    const record = await this.users.findById(userId);
+    if (!record || record.emailVerified) return;
+    await this.sendVerificationEmail(new User(record));
+  }
+
+  /** Consumes a verification token — one-time use, since confirmEmailVerification() clears it on the same write that flips emailVerified. */
+  async verifyEmail(token: string): Promise<void> {
+    const tokenHash = await sha256Hex(token);
+    const record = await this.users.findByVerificationTokenHash(tokenHash);
+    if (!record || !record.verificationTokenExpiresAt || new Date(record.verificationTokenExpiresAt).getTime() < Date.now()) {
+      throw new InvalidVerificationTokenError("This verification link is invalid or has expired.");
+    }
+    await this.users.confirmEmailVerification(record.id);
   }
 
   async login(email: string, password: string) {
@@ -86,20 +130,46 @@ export class AuthService {
     return this.tokens.verify(token);
   }
 
-  /** Updates name/email/profession. Rejects an email change if another account already uses it. */
+  /**
+   * Updates name/email/profession. Rejects an email change if another
+   * account already uses it. Changing the email flips emailVerified back to
+   * false and sends a fresh verification link to the new address — the old
+   * address's prior verification doesn't carry over to a different address
+   * the account hasn't proven it controls yet.
+   */
   async updateProfile(
     userId: string,
     input: { name?: string; email?: string; profession?: string | null }
   ): Promise<User> {
+    const current = await this.users.findById(userId);
+    if (!current) throw new AuthError("User not found.");
+
+    let email: string | undefined;
+    let emailChanged = false;
     if (input.email) {
-      const existing = await this.users.findByEmail(input.email);
-      if (existing && existing.id !== userId) {
-        throw new AuthError("An account with that email already exists.");
+      email = normalizeEmail(input.email);
+      if (!isValidEmail(email)) throw new AuthError("Please enter a valid email address.");
+      if (email !== current.email) {
+        const existing = await this.users.findByEmail(email);
+        if (existing && existing.id !== userId) {
+          throw new AuthError("An account with that email already exists.");
+        }
+        emailChanged = true;
       }
     }
-    await this.users.update(userId, input);
+
+    await this.users.update(userId, { ...input, email });
+    if (emailChanged) {
+      await this.users.setEmailUnverified(userId);
+    }
     const record = await this.users.findById(userId);
-    return new User(record!);
+    const user = new User(record!);
+    if (emailChanged) {
+      await this.sendVerificationEmail(user).catch((err) =>
+        console.error("Failed to send verification email on email change", err)
+      );
+    }
+    return user;
   }
 
   /** Requires the current password to confirm identity before setting a new one. */
@@ -125,7 +195,7 @@ export class AuthService {
     const record = await this.users.findByEmail(email);
     if (!record) return;
 
-    const token = generateResetToken();
+    const token = generateRandomToken();
     const tokenHash = await sha256Hex(token);
     const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS).toISOString();
     await this.users.setResetToken(record.id, tokenHash, expiresAt);

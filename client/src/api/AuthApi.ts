@@ -44,4 +44,14 @@ export class AuthApi extends ApiClient {
   unsubscribeDigest(token: string) {
     return this.post<{ success: true }>("/auth/unsubscribe-digest", { token });
   }
+
+  /** Public — reached from the verification email's link. Safe to auto-fire on page load, unlike unsubscribeDigest — see AuthController.verifyEmail. */
+  verifyEmail(token: string) {
+    return this.post<{ success: true }>("/auth/verify-email", { token });
+  }
+
+  /** Logged-in only — powers the "Resend verification email" button on AppShell's nudge banner. */
+  resendVerification() {
+    return this.post<{ success: true }>("/auth/resend-verification", {});
+  }
 }

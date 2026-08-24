@@ -91,6 +91,11 @@ export interface UserRecord {
   resetTokenExpiresAt: string | null;
   /** Opt-out flag for the weekly re-engagement view-count digest email (ViewDigestService). Defaults false (receiving it) — only ever read for Professional/Premium accounts, see UserRepository.findEligibleForDigest. */
   viewDigestOptOut: boolean;
+  /** Whether this account's current email address has been confirmed via the verification-link flow (AuthService.verifyEmail). Existing accounts were grandfathered to true when this shipped — see migration 0017. Doesn't gate login or any feature; AppShell just shows a dismissible nudge banner when false. */
+  emailVerified: boolean;
+  /** Same hashed-token-only pattern as resetTokenHash/resetTokenExpiresAt — never store the raw token. Both null when no verification is pending. */
+  verificationTokenHash: string | null;
+  verificationTokenExpiresAt: string | null;
 }
 
 /**

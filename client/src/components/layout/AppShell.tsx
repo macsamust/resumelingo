@@ -1,7 +1,8 @@
 import { Link, NavLink } from "react-router-dom";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { TIER_LABEL, TIER_RANK } from "../../utils/templateAccess";
+import { authApi, ApiError } from "../../api";
 
 const LINKS = [
   { to: "/dashboard", label: "Dashboard" },
@@ -19,6 +20,59 @@ const LINKS = [
   // nav rather than the actual gate.
   { to: "/career-coach", label: "Career Coach", minTier: "premium" as const },
 ];
+
+/**
+ * Dismissible-per-session nudge for an unverified email — doesn't gate
+ * anything (see migration 0017's comment: "track + nudge only", not an
+ * access-control change). Dismissal isn't persisted anywhere; it just hides
+ * for the rest of this page load, same as most banners of this kind.
+ */
+function VerifyEmailBanner() {
+  const { refresh } = useAuth();
+  const [dismissed, setDismissed] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (dismissed) return null;
+
+  const onResend = async () => {
+    setError(null);
+    setSending(true);
+    try {
+      await authApi.resendVerification();
+      setSent(true);
+      refresh();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong sending that email.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="app-banner app-banner-notice">
+      <span>
+        {sent
+          ? "Verification email sent — check your inbox."
+          : "Please verify your email address. Check your inbox for a link, or"}
+        {!sent && (
+          <>
+            {" "}
+            <button type="button" className="app-banner-link" onClick={onResend} disabled={sending}>
+              {sending ? "sending…" : "resend the verification email"}
+            </button>
+            .
+          </>
+        )}
+      </span>
+      {error && <span className="app-banner-error">{error}</span>}
+      <button type="button" className="app-banner-dismiss" aria-label="Dismiss" onClick={() => setDismissed(true)}>
+        ×
+      </button>
+    </div>
+  );
+}
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -52,7 +106,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </div>
       </aside>
-      <div className="app-content">{children}</div>
+      <div className="app-content">
+        {user && !user.emailVerified && <VerifyEmailBanner />}
+        {children}
+      </div>
     </div>
   );
 }

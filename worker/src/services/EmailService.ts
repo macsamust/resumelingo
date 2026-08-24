@@ -54,6 +54,25 @@ export class EmailService {
     });
   }
 
+  /** Sent on register and on every email-address change (see AuthService.sendVerificationEmail) — confirms the account holder actually controls the address. Link expires in 24 hours; the settings-page/AppShell banner can trigger a fresh one via resendVerificationEmail if it lapses. */
+  async sendVerificationEmail(to: string, verifyUrl: string): Promise<void> {
+    await this.send({
+      to,
+      subject: "Verify your ResumeLingo email address",
+      html: `
+        <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
+          <h2 style="margin-bottom: 8px;">Verify your email address</h2>
+          <p>Confirm that this is your email address to finish setting up your ResumeLingo account. This link expires in 24 hours.</p>
+          <p style="margin: 24px 0;">
+            <a href="${verifyUrl}" style="background: #4f46e5; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Verify email address</a>
+          </p>
+          <p style="color: #64748b; font-size: 13px;">If you didn't create this account or make this change, you can safely ignore this email.</p>
+          <p style="color: #94a3b8; font-size: 12px; word-break: break-all;">Or paste this link into your browser: ${verifyUrl}</p>
+        </div>
+      `,
+    });
+  }
+
   /** Weekly re-engagement digest (ViewDigestService) — "N views this week" plus a mandatory unsubscribe link (CAN-SPAM requirement for any recurring email like this). */
   async sendViewDigestEmail(to: string, input: { totalViews: number; unsubscribeUrl: string }): Promise<void> {
     const viewsLabel = input.totalViews === 1 ? "1 view" : `${input.totalViews} views`;

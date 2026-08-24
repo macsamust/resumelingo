@@ -18,7 +18,7 @@ import careerCoachRoutes from "./routes/careerCoach.routes";
 import thankYouLetterRoutes from "./routes/thankYouLetter.routes";
 import webhookRoutes from "./routes/webhooks.routes";
 import jobApplicationRoutes from "./routes/jobApplication.routes";
-import { AuthError, InvalidResetTokenError } from "./services/AuthService";
+import { AuthError, InvalidResetTokenError, InvalidVerificationTokenError } from "./services/AuthService";
 import { InvalidUnsubscribeTokenError } from "./controllers/AuthController";
 import { AdminAuthError } from "./services/AdminService";
 import {
@@ -136,6 +136,8 @@ app.onError((err, c) => {
       : err instanceof InvalidResetTokenError
       ? 400
       : err instanceof InvalidUnsubscribeTokenError
+      ? 400
+      : err instanceof InvalidVerificationTokenError
       ? 400
       : err instanceof ResumeImportError
       ? 502

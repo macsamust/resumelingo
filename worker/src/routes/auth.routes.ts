@@ -18,5 +18,8 @@ auth.put("/me/email-preferences", requireAuth, controller.updateEmailPreferences
 // AuthController.unsubscribeDigest for why this is a POST (from a client
 // button click) rather than a bare GET link.
 auth.post("/unsubscribe-digest", controller.unsubscribeDigest);
+// Public — reached from the verification email's link, not a logged-in session.
+auth.post("/verify-email", controller.verifyEmail);
+auth.post("/resend-verification", requireAuth, controller.resendVerification);
 
 export default auth;

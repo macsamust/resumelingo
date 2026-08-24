@@ -1,5 +1,6 @@
 import { Context } from "hono";
 import { AppEnv } from "../middleware/servicesMiddleware";
+import { isValidEmail } from "../utils/validation";
 
 /** Thrown when an unsubscribe link's token is missing, malformed, expired, or signed for a different purpose — mapped to 400 in index.ts's onError, same treatment as InvalidResetTokenError. */
 export class InvalidUnsubscribeTokenError extends Error {}
@@ -64,6 +65,12 @@ export class AuthController {
     if (!email) {
       return c.json({ error: "email is required." }, 400);
     }
+    // A format check here is safe to answer directly (it says nothing about
+    // whether the address is registered) — everything past this point stays
+    // on requestPasswordReset's "always resolve the same way" contract.
+    if (!isValidEmail(email)) {
+      return c.json({ error: "Please enter a valid email address." }, 400);
+    }
     await authService.requestPasswordReset(email);
     // Always the same response, whether or not the email matched an account.
     return c.json({ success: true });
@@ -116,6 +123,26 @@ export class AuthController {
       throw new InvalidUnsubscribeTokenError("This unsubscribe link is invalid or has expired.");
     }
     await userRepository.setViewDigestOptOut(payload.userId, true);
+    return c.json({ success: true });
+  };
+
+  /** Public — reached from the "Verify email address" link (see EmailService.sendVerificationEmail). Unlike unsubscribe, there's no anti-scanner concern here (a security scanner prefetching the link just verifies the address a little early, which isn't harmful), so this is a plain token-in-body POST from the client's auto-firing /verify-email page rather than requiring a manual button click. */
+  verifyEmail = async (c: Context<AppEnv>) => {
+    const { authService } = c.get("services");
+    const body = await c.req.json().catch(() => ({}));
+    const { token } = body as Record<string, string>;
+    if (!token) {
+      return c.json({ error: "token is required." }, 400);
+    }
+    await authService.verifyEmail(token);
+    return c.json({ success: true });
+  };
+
+  /** Logged-in-only — see AuthService.resendVerificationEmail for why this doesn't take an email parameter (no enumeration surface to guard against). */
+  resendVerification = async (c: Context<AppEnv>) => {
+    const { authService } = c.get("services");
+    const user = c.get("user")!;
+    await authService.resendVerificationEmail(user.id);
     return c.json({ success: true });
   };
 }

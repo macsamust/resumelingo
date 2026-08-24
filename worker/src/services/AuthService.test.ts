@@ -21,6 +21,9 @@ function makeUserRecord(overrides: Partial<UserRecord> = {}): UserRecord {
     resetTokenHash: null,
     resetTokenExpiresAt: null,
     viewDigestOptOut: false,
+    emailVerified: true,
+    verificationTokenHash: null,
+    verificationTokenExpiresAt: null,
     ...overrides,
   };
 }

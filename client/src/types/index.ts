@@ -158,6 +158,8 @@ export interface AuthUser {
   createdAt: string;
   /** Weekly resume-view digest opt-out — see ProfilePage's "Email preferences" section. Only meaningful for Professional/Premium accounts, which are the only tiers the digest is ever sent to. */
   viewDigestOptOut: boolean;
+  /** Whether the current email address has been confirmed — see AppShell's "verify your email" banner. Doesn't gate any feature; it's a nudge, not an access control. */
+  emailVerified: boolean;
 }
 
 export interface Resume {

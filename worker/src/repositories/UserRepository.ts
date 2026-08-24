@@ -9,7 +9,7 @@ import { SubscriptionTier, UserRecord } from "../types";
  * normalizeBooleans.
  */
 function normalizeBooleans(row: UserRecord): UserRecord {
-  return { ...row, suspended: !!row.suspended, viewDigestOptOut: !!row.viewDigestOptOut };
+  return { ...row, suspended: !!row.suspended, viewDigestOptOut: !!row.viewDigestOptOut, emailVerified: !!row.emailVerified };
 }
 
 export class UserRepository extends BaseRepository<UserRecord> {
@@ -20,8 +20,16 @@ export class UserRepository extends BaseRepository<UserRecord> {
     return row ? normalizeBooleans(row) : undefined;
   }
 
+  /**
+   * Case-insensitive on purpose — matches on LOWER(email) rather than a raw
+   * `=` comparison, so `Foo@Example.com` and `foo@example.com` resolve to
+   * the same account regardless of how either was typed. Every write path
+   * (register/updateProfile in AuthService) also lowercases before storing,
+   * so this is defense-in-depth against any row that predates that
+   * normalization rather than the only thing making it work.
+   */
   async findByEmail(email: string): Promise<UserRecord | undefined> {
-    const row = await this.db.prepare(`SELECT * FROM users WHERE email = ?`).bind(email).first<UserRecord>();
+    const row = await this.db.prepare(`SELECT * FROM users WHERE LOWER(email) = LOWER(?)`).bind(email).first<UserRecord>();
     return row ? normalizeBooleans(row) : undefined;
   }
 
@@ -45,6 +53,11 @@ export class UserRepository extends BaseRepository<UserRecord> {
       resetTokenHash: null,
       resetTokenExpiresAt: null,
       viewDigestOptOut: false,
+      // New accounts start unverified — see migration 0017's comment on why
+      // existing accounts were grandfathered to true instead.
+      emailVerified: false,
+      verificationTokenHash: null,
+      verificationTokenExpiresAt: null,
     };
     await this.insertRow(record as unknown as Record<string, unknown>);
     return record;
@@ -63,6 +76,35 @@ export class UserRepository extends BaseRepository<UserRecord> {
       .prepare(`UPDATE users SET name = ?, email = ?, profession = ? WHERE id = ?`)
       .bind(merged.name, merged.email, merged.profession, userId)
       .run();
+  }
+
+  /** Stores a new verification request, overwriting any earlier one — same pattern as setResetToken. Called on register and on every email-address change. */
+  async setVerificationToken(userId: string, tokenHash: string, expiresAt: string): Promise<void> {
+    await this.db
+      .prepare(`UPDATE users SET "verificationTokenHash" = ?, "verificationTokenExpiresAt" = ? WHERE id = ?`)
+      .bind(tokenHash, expiresAt, userId)
+      .run();
+  }
+
+  async findByVerificationTokenHash(tokenHash: string): Promise<UserRecord | undefined> {
+    const row = await this.db
+      .prepare(`SELECT * FROM users WHERE "verificationTokenHash" = ?`)
+      .bind(tokenHash)
+      .first<UserRecord>();
+    return row ? normalizeBooleans(row) : undefined;
+  }
+
+  /** Marks the address verified and clears the token in one step — a used or superseded token can never be replayed, same as resetPassword. */
+  async confirmEmailVerification(userId: string): Promise<void> {
+    await this.db
+      .prepare(`UPDATE users SET "emailVerified" = 1, "verificationTokenHash" = NULL, "verificationTokenExpiresAt" = NULL WHERE id = ?`)
+      .bind(userId)
+      .run();
+  }
+
+  /** Flips emailVerified back to false without touching any pending token — called from updateProfile whenever the address itself changes, since a fresh setVerificationToken call always follows immediately after. */
+  async setEmailUnverified(userId: string): Promise<void> {
+    await this.db.prepare(`UPDATE users SET "emailVerified" = 0 WHERE id = ?`).bind(userId).run();
   }
 
   async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
