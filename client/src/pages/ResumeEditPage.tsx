@@ -154,11 +154,18 @@ export function ResumeEditPage() {
   // AchievementGenerateController).
   const canUseAiAssist = user?.subscriptionTier === "professional" || user?.subscriptionTier === "premium";
 
-  // Version History is a Professional/Premium perk — same tier as Clone,
-  // the closest existing "extra copy of your work" feature. Enforced again
-  // server-side (see ResumeService.assertVersionHistoryAllowed); this just
-  // keeps the section from appearing for an account that can't use it.
-  const canUseVersionHistory = user?.subscriptionTier === "professional" || isPremium;
+  // Version History is now a Premium-only perk (moved off Professional —
+  // see TODO.md). Enforced again server-side
+  // (see ResumeService.assertVersionHistoryAllowed); this just keeps the
+  // section from appearing for an account that can't use it.
+  const canUseVersionHistory = isPremium;
+
+  // References moved onto Professional too (previously Premium-only) —
+  // same tier as Job Applications/Version History used to be. Enforced
+  // again server-side (see ResumeService.update's referencesEnabled gate);
+  // this just keeps the section from appearing for an account that can't
+  // use it.
+  const canUseReferences = user?.subscriptionTier === "professional" || isPremium;
 
   // The photo upload only applies to templates that actually render a photo
   // (Portrait, Designer, Monochrome, Showcase) — hidden for every other template.
@@ -1091,6 +1098,41 @@ export function ResumeEditPage() {
             )}
           </CollapsibleSection>
 
+          {canUseReferences && (
+            <CollapsibleSection title="References" forceOpen={forceOpen} defaultOpen={false}>
+              <p className="hero-note" style={{ marginBottom: 16 }}>
+                Adds a References section to your public resume link. Off by default — nothing appears until you
+                turn this on and add at least one reference.
+              </p>
+              <label className="checkbox-field">
+                <input
+                  type="checkbox"
+                  checked={referencesEnabled}
+                  onChange={(e) => setReferencesEnabled(e.target.checked)}
+                />
+                Add a References section to this resume
+              </label>
+              {referencesEnabled && (
+                <>
+                  <label className="checkbox-field">
+                    <input
+                      type="checkbox"
+                      checked={referencesRecruiterModeOnly}
+                      onChange={(e) => setReferencesRecruiterModeOnly(e.target.checked)}
+                    />
+                    Only add references to Recruiter Mode printout section when selecting "View resume"
+                  </label>
+                  {referencesRecruiterModeOnly && !recruiterModeEnabled && (
+                    <p className="hero-note" style={{ marginTop: -8, marginBottom: 16, color: "var(--muted)" }}>
+                      References won't appear anywhere until Recruiter Mode is also turned on above.
+                    </p>
+                  )}
+                  <ReferencesEditor references={references} onChange={setReferences} />
+                </>
+              )}
+            </CollapsibleSection>
+          )}
+
           {isPremium && (
             <div className="builder-divider">
               <span className="builder-divider-label">Premium Tools</span>
@@ -1267,41 +1309,6 @@ export function ResumeEditPage() {
                       ))}
                     </select>
                   </div>
-                </>
-              )}
-            </CollapsibleSection>
-          )}
-
-          {isPremium && (
-            <CollapsibleSection title="References" forceOpen={forceOpen} defaultOpen={false}>
-              <p className="hero-note" style={{ marginBottom: 16 }}>
-                Adds a References section to your public resume link. Off by default — nothing appears until you
-                turn this on and add at least one reference.
-              </p>
-              <label className="checkbox-field">
-                <input
-                  type="checkbox"
-                  checked={referencesEnabled}
-                  onChange={(e) => setReferencesEnabled(e.target.checked)}
-                />
-                Add a References section to this resume
-              </label>
-              {referencesEnabled && (
-                <>
-                  <label className="checkbox-field">
-                    <input
-                      type="checkbox"
-                      checked={referencesRecruiterModeOnly}
-                      onChange={(e) => setReferencesRecruiterModeOnly(e.target.checked)}
-                    />
-                    Only add references to Recruiter Mode printout section when selecting "View resume"
-                  </label>
-                  {referencesRecruiterModeOnly && !recruiterModeEnabled && (
-                    <p className="hero-note" style={{ marginTop: -8, marginBottom: 16, color: "var(--muted)" }}>
-                      References won't appear anywhere until Recruiter Mode is also turned on above.
-                    </p>
-                  )}
-                  <ReferencesEditor references={references} onChange={setReferences} />
                 </>
               )}
             </CollapsibleSection>

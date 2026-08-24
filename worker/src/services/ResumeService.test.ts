@@ -85,12 +85,12 @@ describe("assertActiveToggleAllowed", () => {
 });
 
 describe("assertVersionHistoryAllowed", () => {
-  it("blocks Starter", () => {
+  it("blocks Starter and Professional", () => {
     expect(() => assertVersionHistoryAllowed(SubscriptionTier.Starter)).toThrow(VersionHistoryAccessError);
+    expect(() => assertVersionHistoryAllowed(SubscriptionTier.Professional)).toThrow(VersionHistoryAccessError);
   });
 
-  it("allows Professional and Premium", () => {
-    expect(() => assertVersionHistoryAllowed(SubscriptionTier.Professional)).not.toThrow();
+  it("allows Premium", () => {
     expect(() => assertVersionHistoryAllowed(SubscriptionTier.Premium)).not.toThrow();
   });
 });

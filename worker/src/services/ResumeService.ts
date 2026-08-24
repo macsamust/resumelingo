@@ -144,12 +144,10 @@ export function assertActiveToggleAllowed(tier: User["subscriptionTier"]): void 
   );
 }
 
-/** Throws unless `tier` is Professional or Premium — same gate as Clone, the closest existing "extra copy of your work" perk. */
+/** Throws unless `tier` is Premium — moved off Professional (References took its place there instead; see TODO.md). */
 export function assertVersionHistoryAllowed(tier: User["subscriptionTier"]): void {
-  if (tier === SubscriptionTier.Professional || tier === SubscriptionTier.Premium) return;
-  throw new VersionHistoryAccessError(
-    "Version history requires the Professional or Premium plan. Upgrade to use this feature."
-  );
+  if (tier === SubscriptionTier.Premium) return;
+  throw new VersionHistoryAccessError("Version history requires the Premium plan. Upgrade to use this feature.");
 }
 
 export interface CreateResumeRequest {
@@ -178,8 +176,10 @@ export interface CreateResumeRequest {
  * Resume Analytics event logging (resume_views/resume_score_snapshots
  * tables, see ResumeAnalyticsRepository) that DashboardController's
  * Premium-only "Resume Analytics" section is built from. All the
- * Premium-tier gating (Recruiter Mode, References, template category, link
- * visibility, cover letter) is preserved exactly.
+ * Premium-tier gating (Recruiter Mode, template category, link visibility,
+ * cover letter) is preserved exactly. References is Professional/Premium,
+ * not Premium-only — see assertVersionHistoryAllowed's neighboring gate,
+ * which swapped the other way (see TODO.md).
  */
 export class ResumeService {
   constructor(
@@ -299,11 +299,11 @@ export class ResumeService {
     // touch the toggle again.
     const recruiterModeRequested = input.recruiterModeEnabled ?? existing.recruiterModeEnabled;
     let recruiterModeEnabled = recruiterModeRequested;
-    // "References" is the same Premium-subscriber-tier gate as Recruiter
-    // Mode above (not tied to which template is selected) — re-checked
-    // alongside it so a downgraded subscriber's public link stops showing
-    // the section on their very next save even if they never touch the
-    // toggle again.
+    // References is Professional/Premium (not tied to which template is
+    // selected, and no longer gated to Premium-only — see TODO.md) —
+    // re-checked on every save so a downgraded-to-Starter subscriber's
+    // public link stops showing the section on their very next save even if
+    // they never touch the toggle again.
     const referencesRequested = input.referencesEnabled ?? existing.referencesEnabled;
     let referencesEnabled = referencesRequested;
     // Activate/Deactivate is a Professional/Premium perk — unlike Recruiter
@@ -319,7 +319,8 @@ export class ResumeService {
         if (visibilityChanging) assertVisibilityAllowed(tier, input.visibility!);
         if (activeChangeRequested) assertActiveToggleAllowed(tier);
         recruiterModeEnabled = recruiterModeRequested && tier === SubscriptionTier.Premium;
-        referencesEnabled = referencesRequested && tier === SubscriptionTier.Premium;
+        referencesEnabled =
+          referencesRequested && (tier === SubscriptionTier.Professional || tier === SubscriptionTier.Premium);
       } else {
         recruiterModeEnabled = false;
         referencesEnabled = false;
