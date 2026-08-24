@@ -90,11 +90,26 @@ export class AuthService {
     await this.emailService.sendVerificationEmail(user.email, verifyUrl);
   }
 
-  /** Logged-in-only resend (see AppShell's "verify your email" banner) — no email-address parameter, so there's no account-enumeration surface here the way requestPasswordReset needs to guard against. No-ops silently if already verified. */
+  /**
+   * Logged-in-only resend (see AppShell's "verify your email" banner) — no
+   * email-address parameter, so there's no account-enumeration surface here
+   * the way requestPasswordReset needs to guard against. No-ops silently if
+   * already verified.
+   *
+   * Send failures are caught and logged rather than thrown, same as
+   * register()/updateProfile() — a Resend-side problem (bad address, sandbox
+   * domain restrictions, an outage) shouldn't surface as a raw internal
+   * error message in the banner's UI. The banner still reports "sent"
+   * either way; the real failure is only visible server-side (wrangler
+   * tail), which is the tradeoff of not wanting to leak Resend's own error
+   * text to end users.
+   */
   async resendVerificationEmail(userId: string): Promise<void> {
     const record = await this.users.findById(userId);
     if (!record || record.emailVerified) return;
-    await this.sendVerificationEmail(new User(record));
+    await this.sendVerificationEmail(new User(record)).catch((err) =>
+      console.error("Failed to send verification email on resend", err)
+    );
   }
 
   /** Consumes a verification token — one-time use, since confirmEmailVerification() clears it on the same write that flips emailVerified. */
