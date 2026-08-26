@@ -52,9 +52,13 @@
   // so they're encrypted rather than committed to git.
   "vars": {
     "CLIENT_ORIGIN": "https://resumelingo.legumes-postage-9k.workers.dev",
-    // The "from" address for password-reset emails (Resend requires this to
-    // be on a domain you've verified in the Resend dashboard). Not secret —
-    // update this directly once you've verified your sending domain.
-    "RESEND_FROM_EMAIL": "ResumeLingo <onboarding@resend.dev>"
+    // The "from" address for every transactional email (password reset,
+    // email verification, the weekly view digest). resumelingo.com is now a
+    // Resend-verified sending domain (DKIM/SPF/MX all confirmed, Aug 2026) —
+    // this was previously stuck on Resend's shared onboarding@resend.dev
+    // sandbox address, which silently refuses to deliver to any recipient
+    // other than the Resend account's own email. Not secret — update this
+    // directly if the sending domain ever changes.
+    "RESEND_FROM_EMAIL": "ResumeLingo <noreply@resumelingo.com>"
   }
 }
