@@ -5,6 +5,7 @@ import { EmailService } from "./EmailService";
 import { User } from "../models/User";
 import { AuthTokenPayload } from "../types";
 import { isValidEmail, normalizeEmail } from "../utils/validation";
+import { randomHex, sha256Hex } from "../utils/crypto";
 
 export class AuthError extends Error {}
 
@@ -24,25 +25,9 @@ const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 // scripted-guessing/abuse defense.
 const VERIFICATION_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 
-/** Random 32-byte hex token — the value that goes in the email link. Shared by both the password-reset and email-verification flows. */
+/** Random 32-byte hex token — the value that goes in the email link. Shared by both the password-reset and email-verification flows. Only its SHA-256 hash (see ../utils/crypto's sha256Hex) is ever stored, same principle as password hashing, except plain SHA-256 (not bcrypt) is fine here since the input is already a high-entropy random token, not a low-entropy human password. */
 function generateRandomToken(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(32));
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-/**
- * Only this hash is ever stored — same principle as password hashing,
- * except SHA-256 (not bcrypt) is fine here since the input is already a
- * high-entropy random token, not a low-entropy human password.
- */
-async function sha256Hex(value: string): Promise<string> {
-  const data = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  return randomHex(32);
 }
 
 /**

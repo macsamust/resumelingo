@@ -34,6 +34,7 @@ const LINK_GROUPS = [
     links: [
       { to: "/admin/admins", label: "Admin Accounts" },
       { to: "/admin/audit-log", label: "Audit Log" },
+      { to: "/admin/security", label: "Security" },
     ],
   },
 ];

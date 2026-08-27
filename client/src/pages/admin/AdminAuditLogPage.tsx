@@ -21,6 +21,7 @@ const ACTION_LABELS: Record<string, string> = {
   "plan.update": "Updated plan pricing",
   "admin.create": "Added admin account",
   "admin.delete": "Removed admin account",
+  "admin.revoke_sessions": "Signed out of all sessions",
   "user.export_csv": "Exported users to CSV",
   "user.bulk_suspend": "Bulk-suspended accounts",
   "user.bulk_unsuspend": "Bulk-unsuspended accounts",
@@ -51,6 +52,7 @@ export function AdminAuditLogPage() {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const hasActiveFilters = Object.values(filters).some(Boolean);
@@ -104,6 +106,27 @@ export function AdminAuditLogPage() {
     }
   };
 
+  /**
+   * On-demand tamper check (see worker's AdminAuditLogRepository.verifyChainIntegrity)
+   * — recomputes the hash chain server-side and reports whether it's intact.
+   * Not run automatically (O(n) on table size), just a manual button here.
+   */
+  const onVerifyIntegrity = async () => {
+    setVerifying(true);
+    try {
+      const result = await adminApi.verifyAuditLogIntegrity();
+      if (result.intact) {
+        showToast("success", "Audit log integrity verified — no tampering detected.");
+      } else {
+        showToast("error", `Tampering detected: chain breaks at entry ${result.brokenAt?.id ?? "(unknown)"}.`);
+      }
+    } catch (err) {
+      showToast("error", err instanceof ApiError ? err.message : "Couldn't verify audit log integrity.");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   return (
     <AdminShell>
       <div className="app-page-head">
@@ -111,6 +134,9 @@ export function AdminAuditLogPage() {
           Audit Log <span className="app-page-head-count">({total})</span>
         </h1>
         <div className="admin-page-head-actions">
+          <button className="btn btn-ghost btn-sm" type="button" disabled={verifying} onClick={onVerifyIntegrity}>
+            {verifying ? "Verifying…" : "Verify integrity"}
+          </button>
           <button className="btn btn-ghost btn-sm" type="button" disabled={exporting || total === 0} onClick={onExport}>
             {exporting ? "Exporting…" : "Export CSV"}
           </button>

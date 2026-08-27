@@ -68,7 +68,7 @@ export class AdminService {
     }
 
     const admin = new Admin(record);
-    const token = await this.tokens.sign({ adminId: admin.id, email: admin.email });
+    const token = await this.tokens.sign({ adminId: admin.id, email: admin.email, tokenVersion: admin.tokenVersion });
     return { admin, token };
   }
 
@@ -79,6 +79,18 @@ export class AdminService {
 
   async verifyToken(token: string): Promise<AdminTokenPayload> {
     return this.tokens.verify(token);
+  }
+
+  /**
+   * Invalidates every previously-issued JWT for this admin at once — the
+   * self-service "log out everywhere" action (see AdminSecurityController),
+   * useful if a token might have leaked (lost/stolen device, a session left
+   * open somewhere) without needing to change the password too. A stateless
+   * JWT has no other way to be revoked early short of waiting out its
+   * expiry — see requireAdminAuth's tokenVersion check.
+   */
+  async revokeSessions(adminId: string): Promise<void> {
+    await this.admins.bumpTokenVersion(adminId);
   }
 
   /**

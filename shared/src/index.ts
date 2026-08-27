@@ -114,6 +114,13 @@ export interface AdminRecord {
   failedLoginAttempts: number;
   /** ISO timestamp the account is locked until, or null if not currently locked. */
   lockedUntil: string | null;
+  /** Bumped to invalidate every previously-issued admin JWT for this account at once — see AdminService.revokeSessions and requireAdminAuth's check against AdminTokenPayload.tokenVersion. Stateless JWTs otherwise stay valid until they naturally expire, with no way to force an early logout (e.g. a stolen token, a suspected-compromised session). */
+  tokenVersion: number;
+  /** Base32 TOTP secret, or null until 2FA is enrolled. Never sent to the client after enrollment completes — see Admin.toPublicJSON. */
+  totpSecret: string | null;
+  totpEnabled: boolean;
+  /** SHA-256 hashes of unused one-time backup codes, JSON-serialized. Each is consumed (removed from this array) the first time it's used in place of a TOTP code — see AdminService.verifyTotpOrBackupCode. Critical for the solo-admin case: losing the authenticator device with no backup codes and no second admin account would mean total, unrecoverable lockout from the admin console. */
+  totpBackupCodeHashes: string;
 }
 
 /** One entry in the admin_audit_log table (see repositories/AdminAuditLogRepository.ts) — records who did what, to what, and when for every sensitive admin action. */
@@ -126,6 +133,16 @@ export interface AdminAuditLogRecord {
   targetId: string | null;
   detail: string | null;
   createdAt: string;
+  /**
+   * SHA-256 hex of (this row's own fields + the previous row's `hash`) —
+   * a hash chain, same idea as a blockchain's block-linking without any of
+   * its distributed-consensus machinery. Editing or deleting any past row
+   * breaks the chain from that point forward, so AdminAuditLogRepository.
+   * verifyChainIntegrity() can detect tampering even by someone with direct
+   * D1 access, which a plain append-only table can't. The very first row
+   * chains against a fixed genesis string (see AdminAuditLogRepository).
+   */
+  hash: string;
 }
 
 /** DB-backed template row (see repositories/TemplateRepository.ts). `enabled` controls whether it's offered to users; disabled templates stay selectable by resumes that already used them. */
@@ -400,4 +417,6 @@ export interface AuthTokenPayload {
 export interface AdminTokenPayload {
   adminId: string;
   email: string;
+  /** Must match AdminRecord.tokenVersion at verify time — see requireAdminAuth. Lets a stateless JWT still be revoked early. */
+  tokenVersion: number;
 }

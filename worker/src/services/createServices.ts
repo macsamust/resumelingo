@@ -88,7 +88,11 @@ export function createServices(env: Env): Services {
   const jobApplicationRepository = new JobApplicationRepository(env.DB);
 
   const tokenService = new TokenService<AuthTokenPayload>(env.JWT_SECRET);
-  const adminTokenService = new TokenService<AdminTokenPayload>(env.ADMIN_JWT_SECRET || env.JWT_SECRET);
+  // 12h, not the default 7d — shrinks how long a leaked/stolen admin token
+  // stays usable. Paired with tokenVersion-based revocation (see
+  // AdminService.revokeSessions/requireAdminAuth) for the "I need this
+  // invalidated right now, not in up to 12 hours" case.
+  const adminTokenService = new TokenService<AdminTokenPayload>(env.ADMIN_JWT_SECRET || env.JWT_SECRET, "12h");
   // 180d, not the default 7d — an unsubscribe link in an email a user might not
   // open right away should still work weeks later, and re-confirming an
   // already-set opt-out is harmless.

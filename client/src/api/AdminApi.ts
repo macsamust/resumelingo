@@ -110,6 +110,11 @@ export class AdminApi extends ApiClient {
     return this.getBlob(`/admin/audit-log/export?${qs}`);
   }
 
+  /** Recomputes the whole hash chain server-side — see worker's AdminAuditLogRepository.verifyChainIntegrity. O(n) on table size, so this is a manual "Verify integrity" button, not something called automatically. */
+  verifyAuditLogIntegrity() {
+    return this.get<{ intact: boolean; brokenAt?: AdminAuditLogEntry }>("/admin/audit-log/verify-integrity");
+  }
+
   listAdmins() {
     return this.get<{ admins: AdminAccount[] }>("/admin/admins");
   }
@@ -120,6 +125,11 @@ export class AdminApi extends ApiClient {
 
   deleteAdmin(id: string) {
     return this.del<{ success: true }>(`/admin/admins/${id}`);
+  }
+
+  /** Signs the calling admin out of every session at once — see worker's AdminSecurityController.revokeSessions. The current session (making this call) is included, so the client should treat this like a logout. */
+  revokeSessions() {
+    return this.post<{ success: true }>("/admin/security/revoke-sessions", {});
   }
 
   /**

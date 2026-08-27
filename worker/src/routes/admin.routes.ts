@@ -11,6 +11,7 @@ import { AdminDashboardController } from "../controllers/AdminDashboardControlle
 import { AdminResumeController } from "../controllers/AdminResumeController";
 import { AdminAuditLogController } from "../controllers/AdminAuditLogController";
 import { AdminManagementController } from "../controllers/AdminManagementController";
+import { AdminSecurityController } from "../controllers/AdminSecurityController";
 
 const admin = new Hono<AppEnv>();
 
@@ -31,11 +32,15 @@ admin.put("/resumes/:id", requireAdminAuth, resumeSearchController.update);
 const auditLogController = new AdminAuditLogController();
 admin.get("/audit-log", requireAdminAuth, auditLogController.list);
 admin.get("/audit-log/export", requireAdminAuth, auditLogController.exportCsv);
+admin.get("/audit-log/verify-integrity", requireAdminAuth, auditLogController.verifyIntegrity);
 
 const adminManagementController = new AdminManagementController();
 admin.get("/admins", requireAdminAuth, adminManagementController.list);
 admin.post("/admins", requireAdminAuth, adminManagementController.create);
 admin.delete("/admins/:id", requireAdminAuth, adminManagementController.remove);
+
+const adminSecurityController = new AdminSecurityController();
+admin.post("/security/revoke-sessions", requireAdminAuth, adminSecurityController.revokeSessions);
 
 const userController = new AdminUserController();
 admin.get("/users", requireAdminAuth, userController.list);

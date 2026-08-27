@@ -48,4 +48,16 @@ export class AdminAuditLogController {
     c.header("Content-Disposition", `attachment; filename="audit-log-${new Date().toISOString().slice(0, 10)}.csv"`);
     return c.body(csv);
   };
+
+  /**
+   * On-demand tamper check (see AdminAuditLogRepository.verifyChainIntegrity)
+   * — walks the whole table recomputing hashes, so this is O(n) on table
+   * size; fine for an admin-triggered "Verify integrity" button, not
+   * something to call on every page load.
+   */
+  verifyIntegrity = async (c: Context<AppEnv>) => {
+    const { adminAuditLogRepository } = c.get("services");
+    const result = await adminAuditLogRepository.verifyChainIntegrity();
+    return c.json(result);
+  };
 }
