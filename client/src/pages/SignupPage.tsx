@@ -67,7 +67,7 @@ export function SignupPage() {
             </select>
           </div>
           <button className="btn btn-primary btn-block" type="submit" disabled={submitting}>
-            {submitting ? "Creating account…" : "Create my resume"}
+            {submitting ? "Creating account…" : "Create an account"}
           </button>
         </form>
         <p className="form-footnote">
