@@ -152,6 +152,32 @@ export function pickTopExperience(experience: WorkExperienceEntry[]): WorkExperi
   return experience.find((e) => e.current) ?? experience[0];
 }
 
+/**
+ * Same "prefer AI, never let it fail the save" wrapper as
+ * ContentGeneratorWithFallback (see ContentGenerator.ts's doc comment for
+ * the full reasoning) — a cover letter is only ever generated on an
+ * already-in-progress resume create/update, so a Workers AI outage here
+ * would otherwise fail that save too. Falls back to
+ * RuleBasedCoverLetterGenerator on any CoverLetterGenerateError; anything
+ * else is rethrown rather than masked.
+ */
+export class CoverLetterGeneratorWithFallback implements ICoverLetterGenerator {
+  constructor(
+    private readonly primary: ICoverLetterGenerator,
+    private readonly fallback: ICoverLetterGenerator
+  ) {}
+
+  async generate(input: CoverLetterInput): Promise<string> {
+    try {
+      return await this.primary.generate(input);
+    } catch (err) {
+      if (!(err instanceof CoverLetterGenerateError)) throw err;
+      console.error("CoverLetterGenerator: AI generation failed, falling back to the rule-based generator:", err);
+      return this.fallback.generate(input);
+    }
+  }
+}
+
 // --- Below: the original deterministic implementation, kept for reference
 // and as a fallback if Workers AI is ever unavailable — no longer wired up
 // by default (see createServices.ts). ---

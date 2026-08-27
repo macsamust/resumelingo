@@ -9,11 +9,16 @@ export interface GeneratedContent {
 
 /**
  * Contract for anything that can turn structured interview answers into
- * resume prose. AiContentGenerator (below) is the default, real Workers AI
+ * resume prose. AiContentGenerator (below) is the real Workers AI
  * implementation as of Aug 2026 — RuleBasedContentGenerator (further below)
- * is kept as the original deterministic fallback (no longer wired up by
- * default), same "keep the old implementation, no longer the default"
- * pattern as CareerCoachGenerator.ts.
+ * is kept as the original deterministic implementation, same "keep the old
+ * implementation, no longer the default on its own" pattern as
+ * CareerCoachGenerator.ts. Unlike CareerCoachGenerator/AchievementGeneratorService
+ * though, this one isn't wired up bare — see ContentGeneratorWithFallback
+ * below, since resume create/update used to be pure D1 + template logic
+ * with no way to fail, and this is on that same critical "save my resume"
+ * path (createServices.ts wires the fallback-wrapped version, not
+ * AiContentGenerator directly).
  */
 export interface IContentGenerator {
   generate(
@@ -180,9 +185,44 @@ export class AiContentGenerator implements IContentGenerator {
   }
 }
 
+/**
+ * Tries the AI generator first; on a Workers AI outage, timeout, or
+ * unparseable response (any ContentGenerateError), falls back to the
+ * deterministic rule-based generator instead of letting the error bubble
+ * up and fail the resume save outright. Resume create/update used to be
+ * pure D1 + template logic with no external dependency, so it could never
+ * fail this way before AiContentGenerator existed — this restores that
+ * "never fails" property while still preferring the AI-written result
+ * whenever it's actually available. Anything that isn't a
+ * ContentGenerateError (a real bug, not an AI-availability problem) is
+ * rethrown rather than masked by a silent fallback.
+ */
+export class ContentGeneratorWithFallback implements IContentGenerator {
+  constructor(
+    private readonly primary: IContentGenerator,
+    private readonly fallback: IContentGenerator
+  ) {}
+
+  async generate(
+    profession: string,
+    answers: Record<string, string>,
+    achievements: AchievementEntry[] = [],
+    fullName?: string,
+    title?: string
+  ): Promise<GeneratedContent> {
+    try {
+      return await this.primary.generate(profession, answers, achievements, fullName, title);
+    } catch (err) {
+      if (!(err instanceof ContentGenerateError)) throw err;
+      console.error("ContentGenerator: AI generation failed, falling back to the rule-based generator:", err);
+      return this.fallback.generate(profession, answers, achievements, fullName, title);
+    }
+  }
+}
+
 // --- Below: the original deterministic implementation, kept for reference
-// and as a fallback if Workers AI is ever unavailable — no longer wired up
-// by default (see createServices.ts). ---
+// and as the fallback ContentGeneratorWithFallback uses when Workers AI is
+// unavailable — no longer wired up bare/on its own (see createServices.ts). ---
 
 export class RuleBasedContentGenerator implements IContentGenerator {
   constructor(private readonly roleDescriptions: RoleDescriptionRepository) {}

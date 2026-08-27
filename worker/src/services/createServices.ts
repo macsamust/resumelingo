@@ -15,11 +15,11 @@ import { EmailVerificationIpLogRepository } from "../repositories/EmailVerificat
 import { TokenService } from "./TokenService";
 import { AuthService } from "./AuthService";
 import { ResumeService } from "./ResumeService";
-import { AiCoverLetterGenerator } from "./CoverLetterGenerator";
+import { AiCoverLetterGenerator, CoverLetterGeneratorWithFallback, RuleBasedCoverLetterGenerator } from "./CoverLetterGenerator";
 import { JobApplicationService } from "./JobApplicationService";
 import { SubscriptionService } from "./SubscriptionService";
 import { AdminService } from "./AdminService";
-import { AiContentGenerator, IContentGenerator } from "./ContentGenerator";
+import { AiContentGenerator, ContentGeneratorWithFallback, IContentGenerator, RuleBasedContentGenerator } from "./ContentGenerator";
 import { StripeService } from "./StripeService";
 import { EmailService } from "./EmailService";
 import { ResumeImportService } from "./ResumeImportService";
@@ -54,7 +54,7 @@ export interface Services {
   resumeAnalyticsRepository: ResumeAnalyticsRepository;
   resumeImportService: ResumeImportService;
   achievementGeneratorService: AchievementGeneratorService;
-  /** Real Workers AI call as of Aug 2026 (see ContentGenerator.ts) — was rule-based template logic. Exposed here only for symmetry with the other AI services; ResumeService is the only consumer, wired at construction below. */
+  /** Real Workers AI call as of Aug 2026, wrapped with a rule-based fallback for AI outages (see ContentGeneratorWithFallback in ContentGenerator.ts) — was bare rule-based template logic. Exposed here only for symmetry with the other AI services; ResumeService is the only consumer, wired at construction below. */
   contentGenerator: IContentGenerator;
   jobApplicationService: JobApplicationService;
   viewDigestService: ViewDigestService;
@@ -94,8 +94,19 @@ export function createServices(env: Env): Services {
   // already-set opt-out is harmless.
   const unsubscribeDigestTokenService = new TokenService<UnsubscribeDigestTokenPayload>(env.JWT_SECRET, "180d");
 
-  const contentGenerator = new AiContentGenerator(env.AI);
-  const coverLetterGenerator = new AiCoverLetterGenerator(env.AI);
+  // Wrapped in a fallback, not wired up bare — resume create/update used to
+  // be pure D1 + template logic with no way to fail, and a raw Workers AI
+  // outage/budget cap shouldn't be able to block a subscriber from saving
+  // their resume. See ContentGeneratorWithFallback/CoverLetterGeneratorWithFallback's
+  // doc comments.
+  const contentGenerator = new ContentGeneratorWithFallback(
+    new AiContentGenerator(env.AI),
+    new RuleBasedContentGenerator(roleDescriptionRepository)
+  );
+  const coverLetterGenerator = new CoverLetterGeneratorWithFallback(
+    new AiCoverLetterGenerator(env.AI),
+    new RuleBasedCoverLetterGenerator()
+  );
 
   const emailService = new EmailService(env.RESEND_API_KEY, env.RESEND_FROM_EMAIL);
   const authService = new AuthService(userRepo, tokenService, emailService, env.CLIENT_ORIGIN);
