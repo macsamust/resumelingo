@@ -1,6 +1,9 @@
 /**
- * The ResumeLingo parrot mark — nicknamed "Poly". This renders the exact
- * approved source image (client/public/brand/parrot-logo-4.png, native
+ * The ResumeLingo parrot mark — full name "Polyglot," goes by "Poly." The
+ * name/story lives as real page copy on the Hero section (see Hero.tsx's
+ * hero-mascot-caption), not just this image's hover tooltip — tooltips
+ * don't reach mobile (no hover state) or screen readers. This renders the
+ * exact approved source image (client/public/brand/parrot-logo-4.png, native
  * 828x732px, transparent background) rather than a hand-drawn SVG
  * recreation. Earlier SVG attempts at "recreating" this shape kept drifting
  * from the original (proportions, curve shapes), so this is the actual
@@ -34,9 +37,9 @@ export function ParrotLogo({ size = 140, decorative = true }: ParrotLogoProps) {
   return (
     <img
       src="/brand/parrot-logo-4.png"
-      alt={decorative ? "" : "Poly, the ResumeLingo parrot mascot"}
+      alt={decorative ? "" : "Poly (short for Polyglot), the ResumeLingo parrot mascot"}
       aria-hidden={decorative ? "true" : undefined}
-      title="Hello, I am Poly"
+      title="Poly"
       width={size}
       height={(size * NATIVE_HEIGHT) / NATIVE_WIDTH}
       style={{ display: "block" }}

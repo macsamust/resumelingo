@@ -28,10 +28,14 @@ export function Hero() {
         <div className="hero-visual">
           {/* Poly, the ResumeLingo mascot — stands alone here with no adjacent
               brand text, so it gets a real alt/title (see ParrotLogo's
-              `decorative` prop) instead of being hidden from screen readers. */}
+              `decorative` prop) instead of being hidden from screen readers.
+              The name/backstory lives here as real, visible copy (readable
+              on mobile, announced to screen readers) rather than only in the
+              image's hover tooltip, which neither of those reach. */}
           <div className="hero-mascot">
             <ParrotLogo size={110} decorative={false} />
           </div>
+          <p className="hero-mascot-caption">Meet Poly — short for Polyglot, our resident many-tongued parrot.</p>
           <div className="browser-bar">
             <span style={{ background: "#f87171" }}></span>
             <span style={{ background: "#fbbf24" }}></span>
