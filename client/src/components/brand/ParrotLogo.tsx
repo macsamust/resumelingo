@@ -36,7 +36,7 @@ export function ParrotLogo({ size = 140, decorative = true }: ParrotLogoProps) {
       src="/brand/parrot-logo-4.png"
       alt={decorative ? "" : "Poly, the ResumeLingo parrot mascot"}
       aria-hidden={decorative ? "true" : undefined}
-      title="Poly"
+      title="Hello, I am Poly"
       width={size}
       height={(size * NATIVE_HEIGHT) / NATIVE_WIDTH}
       style={{ display: "block" }}

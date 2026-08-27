@@ -19,7 +19,7 @@ export function Navbar() {
     <header>
       <nav>
         <div className="logo-block">
-          <Link to="/" className="logo" title="Hello, I am Ploy">
+          <Link to="/" className="logo">
             <ParrotLogo size={30} />
             ResumeLingo
           </Link>
