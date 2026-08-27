@@ -207,6 +207,52 @@ describe("AuthService.requestPasswordReset", () => {
     expect(sendPasswordResetEmail).toHaveBeenCalled();
     consoleErrorSpy.mockRestore();
   });
+
+  it("resolves silently and sends no email for a suspended account", async () => {
+    // Same "resolve silently" treatment as a non-existent email — a
+    // suspended account shouldn't be distinguishable from an unregistered
+    // one by response shape, and shouldn't be able to mint a reset token
+    // that becomes usable the moment the suspension is lifted.
+    const setResetToken = vi.fn(async (..._args: unknown[]) => {});
+    const sendPasswordResetEmail = vi.fn(async () => {});
+    const users = makeUsersMock({
+      findByEmail: vi.fn(async () => makeUserRecord({ suspended: true })),
+      setResetToken,
+    } as never);
+    const service = new AuthService(
+      users,
+      makeTokensMock(),
+      { sendPasswordResetEmail } as unknown as EmailService,
+      "http://localhost:5173"
+    );
+
+    await expect(service.requestPasswordReset("jordan@example.com")).resolves.toBeUndefined();
+    expect(setResetToken).not.toHaveBeenCalled();
+    expect(sendPasswordResetEmail).not.toHaveBeenCalled();
+  });
+});
+
+describe("AuthService.updateProfile", () => {
+  it("throws for a suspended account", async () => {
+    const users = makeUsersMock({ findById: vi.fn(async () => makeUserRecord({ suspended: true })) } as never);
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    await expect(service.updateProfile("user-1", { name: "New Name" })).rejects.toThrow(
+      "This account has been suspended. Contact support for help."
+    );
+  });
+
+  it("updates a non-suspended account normally", async () => {
+    const update = vi.fn(async (..._args: unknown[]) => {});
+    const findById = vi
+      .fn()
+      .mockResolvedValueOnce(makeUserRecord())
+      .mockResolvedValueOnce(makeUserRecord({ name: "New Name" }));
+    const users = makeUsersMock({ findById, update } as never);
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    const result = await service.updateProfile("user-1", { name: "New Name" });
+    expect(result.name).toBe("New Name");
+    expect(update).toHaveBeenCalledWith("user-1", expect.objectContaining({ name: "New Name" }));
+  });
 });
 
 describe("AuthService.resetPassword", () => {

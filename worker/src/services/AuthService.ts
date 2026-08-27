@@ -155,6 +155,16 @@ export class AuthService {
    * false and sends a fresh verification link to the new address — the old
    * address's prior verification doesn't carry over to a different address
    * the account hasn't proven it controls yet.
+   *
+   * Blocks a suspended account the same way login() does — this route is
+   * behind requireAuth, so an already-issued JWT (from before the account
+   * was suspended, or a compromised session an admin suspended in response
+   * to) would otherwise still be able to change the email on file, which
+   * could let whoever holds that session keep control of the account past
+   * suspension (e.g. if it's later reinstated). Doesn't need the "resolve
+   * silently" treatment requestPasswordReset() uses — this is an
+   * authenticated call, not a public one, so there's no account-enumeration
+   * concern in just saying why it was rejected.
    */
   async updateProfile(
     userId: string,
@@ -162,6 +172,7 @@ export class AuthService {
   ): Promise<User> {
     const current = await this.users.findById(userId);
     if (!current) throw new AuthError("User not found.");
+    if (current.suspended) throw new AuthError("This account has been suspended. Contact support for help.");
 
     let email: string | undefined;
     let emailChanged = false;
@@ -219,10 +230,18 @@ export class AuthService {
    * would let an attacker distinguish real accounts from fake ones by
    * Resend send failures alone — the exact oracle this method's "always
    * resolves silently" contract exists to prevent.
+   *
+   * A suspended account is treated the same as a non-existent one here —
+   * `return` early, no token generated, no email sent — rather than
+   * throwing: throwing would both break the "always resolves silently"
+   * contract (letting an attacker distinguish suspended from unregistered
+   * addresses by response shape) and let a suspended user's account (or
+   * whoever compromised it, if that's why it's suspended) generate a valid
+   * reset token that becomes usable the moment the suspension is lifted.
    */
   async requestPasswordReset(email: string): Promise<void> {
     const record = await this.users.findByEmail(email);
-    if (!record) return;
+    if (!record || record.suspended) return;
 
     const token = generateRandomToken();
     const tokenHash = await sha256Hex(token);
