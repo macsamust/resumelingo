@@ -15,6 +15,7 @@ import { EmailVerificationIpLogRepository } from "../repositories/EmailVerificat
 import { TokenService } from "./TokenService";
 import { AuthService } from "./AuthService";
 import { ResumeService } from "./ResumeService";
+import { AiCoverLetterGenerator } from "./CoverLetterGenerator";
 import { JobApplicationService } from "./JobApplicationService";
 import { SubscriptionService } from "./SubscriptionService";
 import { AdminService } from "./AdminService";
@@ -94,10 +95,18 @@ export function createServices(env: Env): Services {
   const unsubscribeDigestTokenService = new TokenService<UnsubscribeDigestTokenPayload>(env.JWT_SECRET, "180d");
 
   const contentGenerator = new AiContentGenerator(env.AI);
+  const coverLetterGenerator = new AiCoverLetterGenerator(env.AI);
 
   const emailService = new EmailService(env.RESEND_API_KEY, env.RESEND_FROM_EMAIL);
   const authService = new AuthService(userRepo, tokenService, emailService, env.CLIENT_ORIGIN);
-  const resumeService = new ResumeService(resumeRepo, userRepo, contentGenerator, resumeAnalyticsRepository, resumeVersionRepository);
+  const resumeService = new ResumeService(
+    resumeRepo,
+    userRepo,
+    contentGenerator,
+    resumeAnalyticsRepository,
+    resumeVersionRepository,
+    coverLetterGenerator
+  );
   const stripeService = new StripeService(env.STRIPE_SECRET_KEY);
   const subscriptionService = new SubscriptionService(
     userRepo,

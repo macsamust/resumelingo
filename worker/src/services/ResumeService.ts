@@ -222,7 +222,7 @@ export class ResumeService {
     // server the actual source of truth rather than trusting the client.
     const coverLetterEnabled = !!input.coverLetterEnabled && isPremiumTemplate(input.templateKey);
     const generatedCoverLetter = coverLetterEnabled
-      ? this.coverLetterGenerator.generate({
+      ? await this.coverLetterGenerator.generate({
           fullName,
           title: input.title,
           professionLabel: getProfessionByKey(input.profession)?.label ?? input.profession,
@@ -391,7 +391,7 @@ export class ResumeService {
         const fullName = input.fullName ?? existing.fullName;
         const title = input.title ?? existing.title;
         const experience = input.experience ?? existing.experience;
-        generatedCoverLetter = this.coverLetterGenerator.generate({
+        generatedCoverLetter = await this.coverLetterGenerator.generate({
           fullName,
           title,
           professionLabel: getProfessionByKey(profession)?.label ?? profession,

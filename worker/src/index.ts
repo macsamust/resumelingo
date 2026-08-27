@@ -38,6 +38,7 @@ import { ResumeImportError } from "./services/ResumeImportService";
 import { AchievementGenerateError } from "./services/AchievementGeneratorService";
 import { CareerCoachGenerateError } from "./services/CareerCoachGenerator";
 import { ContentGenerateError } from "./services/ContentGenerator";
+import { CoverLetterGenerateError } from "./services/CoverLetterGenerator";
 import {
   JobApplicationAccessError,
   JobApplicationLimitError,
@@ -148,6 +149,8 @@ app.onError((err, c) => {
       : err instanceof CareerCoachGenerateError
       ? 502
       : err instanceof ContentGenerateError
+      ? 502
+      : err instanceof CoverLetterGenerateError
       ? 502
       : 500;
   if (status === 500) console.error(err);
