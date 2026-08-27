@@ -12,6 +12,9 @@ const VERIFY_WINDOW_MINUTES = 15;
 /** Resend requests from a single IP before it's throttled — guards against spamming Resend's send quota / a user's own inbox, not against guessing anything. */
 const MAX_RESEND_ATTEMPTS = 5;
 const RESEND_WINDOW_MINUTES = 60;
+/** Forgot-password requests from a single IP before it's throttled — same email-bombing concern as resend above (anyone could otherwise spam an arbitrary victim's inbox with reset emails just by posting their address repeatedly), not a guessing concern. Purely IP-scoped, same limitation as every other rate limit in this codebase (AdminLoginIpLogRepository included) — an attacker rotating IPs isn't stopped by this alone, but it closes the "one-click infinite spam" case. */
+const MAX_FORGOT_PASSWORD_ATTEMPTS = 5;
+const FORGOT_PASSWORD_WINDOW_MINUTES = 60;
 
 /** Same CF-Connecting-IP / x-forwarded-for fallback as AdminAuthController.login. */
 function clientIp(c: Context<AppEnv>): string {
@@ -72,7 +75,20 @@ export class AuthController {
   };
 
   forgotPassword = async (c: Context<AppEnv>) => {
-    const { authService } = c.get("services");
+    const { authService, emailVerificationIpLogRepository } = c.get("services");
+    // Checked before anything else, including the format validation below —
+    // an attacker probing for the rate limit shouldn't be able to burn zero
+    // attempts by sending intentionally-malformed emails first.
+    const ip = clientIp(c);
+    const recentAttempts = await emailVerificationIpLogRepository.countRecentAttempts(
+      ip,
+      "password-reset",
+      FORGOT_PASSWORD_WINDOW_MINUTES
+    );
+    if (recentAttempts >= MAX_FORGOT_PASSWORD_ATTEMPTS) {
+      return c.json({ error: "Too many requests from this network. Please try again later." }, 429);
+    }
+
     const body = await c.req.json().catch(() => ({}));
     const { email } = body as Record<string, string>;
     if (!email) {
@@ -85,6 +101,8 @@ export class AuthController {
       return c.json({ error: "Please enter a valid email address." }, 400);
     }
     await authService.requestPasswordReset(email);
+    await emailVerificationIpLogRepository.recordAttempt(ip, "password-reset");
+    await emailVerificationIpLogRepository.pruneOlderThan(FORGOT_PASSWORD_WINDOW_MINUTES);
     // Always the same response, whether or not the email matched an account.
     return c.json({ success: true });
   };

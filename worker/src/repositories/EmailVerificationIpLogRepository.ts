@@ -1,13 +1,18 @@
 import { nanoid } from "nanoid";
 
-export type EmailVerificationIpAction = "verify" | "resend";
+export type EmailVerificationIpAction = "verify" | "resend" | "password-reset";
 
 /**
- * IP-based rate limiting for the email-verification flow — same pattern as
+ * IP-based rate limiting for auth flows that send an email — same pattern as
  * AdminLoginIpLogRepository (record-a-hit / count-recent-hits / prune), just
- * shared across two different actions via the `action` column rather than
- * one table per action. See AuthController.verifyEmail/resendVerification
- * for how each threshold is applied.
+ * shared across every action that needs it via the `action` column rather
+ * than one table per action. Originally just verify/resend (see
+ * AuthController.verifyEmail/resendVerification); password-reset (see
+ * AuthController.forgotPassword) reuses the same table/class rather than
+ * getting a near-duplicate one, since it's the same "throttle repeated
+ * attempts from one IP" concern with a different trigger and threshold. The
+ * class/table name predates that broadening — kept as-is to avoid a rename
+ * migration for what's purely a naming nicety.
  *
  * Not a BaseRepository subclass, same reasoning as AdminLoginIpLogRepository
  * — this table has no natural "get by id"/"update" access pattern.
