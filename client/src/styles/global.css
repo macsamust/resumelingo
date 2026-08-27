@@ -176,7 +176,17 @@ section { padding: 84px 0; }
 .template-pill-lock { margin-left: 6px; font-size: 11px; }
 
 footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
-.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; margin-bottom: 40px; }
+/* Privacy Policy / Terms of Service (PrivacyPolicyPage.tsx/TermsOfServicePage.tsx)
+   — plain prose pages, narrower than the marketing sections above so long
+   paragraphs stay readable, with a persistent draft-status banner up top. */
+.legal-page { max-width: 760px; padding: 56px 0 72px; }
+.legal-page h1 { font-size: 32px; color: var(--navy); margin-bottom: 6px; }
+.legal-page h2 { font-size: 19px; color: var(--navy); margin: 32px 0 10px; }
+.legal-page p { font-size: 15px; color: var(--navy-light); line-height: 1.7; margin-bottom: 14px; }
+.legal-page a { color: var(--indigo); }
+.legal-draft-banner { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; border-radius: 10px; padding: 14px 18px; font-size: 14px; line-height: 1.6; margin-bottom: 32px; }
+
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 32px; margin-bottom: 40px; }
 .footer-brand p { color: var(--muted); font-size: 14px; margin-top: 12px; max-width: 260px; }
 .footer-col h4 { font-size: 13px; color: var(--navy); margin-bottom: 14px; text-transform: uppercase; letter-spacing: .03em; }
 .footer-col a { display: block; font-size: 14px; color: var(--muted); margin-bottom: 10px; }

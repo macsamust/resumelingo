@@ -31,6 +31,11 @@ export function Footer() {
             <Link to="/login">Log in</Link>
             <Link to="/signup">Sign up</Link>
           </div>
+          <div className="footer-col">
+            <h4>Legal</h4>
+            <Link to="/privacy">Privacy Policy</Link>
+            <Link to="/terms">Terms of Service</Link>
+          </div>
         </div>
         <div className="footer-bottom">
           <p>© {new Date().getFullYear()} ResumeLingo. All rights reserved.</p>
