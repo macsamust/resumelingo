@@ -11,6 +11,7 @@ import { SkillSuggestionRepository } from "../repositories/SkillSuggestionReposi
 import { RoleDescriptionRepository } from "../repositories/RoleDescriptionRepository";
 import { AdminAuditLogRepository } from "../repositories/AdminAuditLogRepository";
 import { AdminLoginIpLogRepository } from "../repositories/AdminLoginIpLogRepository";
+import { EmailVerificationIpLogRepository } from "../repositories/EmailVerificationIpLogRepository";
 import { TokenService } from "./TokenService";
 import { AuthService } from "./AuthService";
 import { ResumeService } from "./ResumeService";
@@ -39,6 +40,8 @@ export interface Services {
   adminAuditLogRepository: AdminAuditLogRepository;
   /** Backs the IP-based rate limit on admin login — see AdminAuthController.login. */
   adminLoginIpLogRepository: AdminLoginIpLogRepository;
+  /** Backs the IP-based rate limit on verify-email/resend-verification — see AuthController. */
+  emailVerificationIpLogRepository: EmailVerificationIpLogRepository;
   /** Exposed directly for the admin console's own account-management screen — see AdminManagementController. */
   adminRepository: AdminRepository;
   /** Exposed directly (not just via authService) for the admin console's user-management screens — see AdminUserController. */
@@ -73,6 +76,7 @@ export function createServices(env: Env): Services {
   const roleDescriptionRepository = new RoleDescriptionRepository(env.DB);
   const adminAuditLogRepository = new AdminAuditLogRepository(env.DB);
   const adminLoginIpLogRepository = new AdminLoginIpLogRepository(env.DB);
+  const emailVerificationIpLogRepository = new EmailVerificationIpLogRepository(env.DB);
   const resumeAnalyticsRepository = new ResumeAnalyticsRepository(env.DB);
   const resumeVersionRepository = new ResumeVersionRepository(env.DB);
   const jobApplicationRepository = new JobApplicationRepository(env.DB);
@@ -122,6 +126,7 @@ export function createServices(env: Env): Services {
     roleDescriptionRepository,
     adminAuditLogRepository,
     adminLoginIpLogRepository,
+    emailVerificationIpLogRepository,
     adminRepository: adminRepo,
     userRepository: userRepo,
     resumeRepository: resumeRepo,

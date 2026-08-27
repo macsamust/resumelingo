@@ -15,10 +15,14 @@ export class InvalidResetTokenError extends Error {}
 export class InvalidVerificationTokenError extends Error {}
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
-// Longer than the reset token — verifying an address is far less
-// time-sensitive than proving you currently control it for a password
-// reset, and someone might not open the email right away.
-const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+// Matches the reset token's window — originally 24 hours, shortened to
+// reduce how long a leaked link stays usable (e.g. forwarded mail, a shared
+// inbox, browser history, an email-security scanner caching the URL). Note
+// this is about leak exposure, not brute force: the token itself is a
+// 256-bit random value, hashed at rest — guessing it isn't feasible at any
+// window length. See EmailVerificationIpLogRepository for the actual
+// scripted-guessing/abuse defense.
+const VERIFICATION_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 /** Random 32-byte hex token — the value that goes in the email link. Shared by both the password-reset and email-verification flows. */
 function generateRandomToken(): string {
