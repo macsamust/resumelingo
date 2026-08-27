@@ -40,7 +40,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanDefinition[] = [
       "Career coaching resources",
       "ATS optimization",
       "AI cover letters & thank-you letters",
-      "Portfolio pages & personal branding tools",
+      "AI Career Coach",
     ],
   },
 ];

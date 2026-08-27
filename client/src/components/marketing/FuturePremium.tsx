@@ -13,8 +13,16 @@
 // (no clear upside, real downsides — e.g. verifying and being responsible
 // for arbitrary third-party domains/certs, and the abuse surface of
 // letting anyone point a domain at hosted content). See TODO.md.
+//
+// "Career Portfolio" (showcase projects/videos/awards/recommendations as a
+// separate hosted page) also sat here, and was promised as a shipped
+// feature on Pricing.tsx/subscriptionPlans.ts ("Portfolio pages & personal
+// branding tools") despite never having been built. Pulled entirely per
+// explicit product decision: a resume builder hosting portfolios, videos,
+// and testimonials is a different product, with its own media-hosting and
+// moderation surface, and doesn't make the actual resumes any better. See
+// TODO.md.
 const FUTURE = [
-  { tag: "Portfolio", title: "Career Portfolio", body: "Showcase projects, videos, awards, certifications, patents, publications, recommendations, and volunteer work." },
   { tag: "Networking", title: "Digital business card", body: "Scan a QR code for instant access to your resume." },
   { tag: "Video", title: "Video introduction", body: "A one-minute video introduction — recruiters love this." },
 ];
