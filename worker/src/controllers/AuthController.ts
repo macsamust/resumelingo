@@ -1,7 +1,7 @@
 import { Context } from "hono";
 import { AppEnv } from "../middleware/servicesMiddleware";
 import { isValidEmail } from "../utils/validation";
-import { InvalidVerificationTokenError } from "../services/AuthService";
+import { AuthError, InvalidVerificationTokenError } from "../services/AuthService";
 
 /** Thrown when an unsubscribe link's token is missing, malformed, expired, or signed for a different purpose — mapped to 400 in index.ts's onError, same treatment as InvalidResetTokenError. */
 export class InvalidUnsubscribeTokenError extends Error {}
@@ -15,6 +15,9 @@ const RESEND_WINDOW_MINUTES = 60;
 /** Forgot-password requests from a single IP before it's throttled — same email-bombing concern as resend above (anyone could otherwise spam an arbitrary victim's inbox with reset emails just by posting their address repeatedly), not a guessing concern. Purely IP-scoped, same limitation as every other rate limit in this codebase (AdminLoginIpLogRepository included) — an attacker rotating IPs isn't stopped by this alone, but it closes the "one-click infinite spam" case. */
 const MAX_FORGOT_PASSWORD_ATTEMPTS = 5;
 const FORGOT_PASSWORD_WINDOW_MINUTES = 60;
+/** Failed login attempts from a single IP before it's throttled — same "guard against scripted guessing" concern as verify above, just against a human-chosen password instead of a 256-bit token. bcrypt already slows each individual guess, but that's not a substitute for actually capping attempts; AdminAuthController.login has had this same protection since the admin console shipped, this just closes the equivalent gap on subscriber login. Failure-only (a legitimate user who gets it right doesn't count against their own limit), same treatment as verify. */
+const MAX_LOGIN_FAILURES = 10;
+const LOGIN_WINDOW_MINUTES = 15;
 
 /** Same CF-Connecting-IP / x-forwarded-for fallback as AdminAuthController.login. */
 function clientIp(c: Context<AppEnv>): string {
@@ -33,15 +36,35 @@ export class AuthController {
     return c.json({ user: user.toPublicJSON(), token }, 201);
   };
 
+  /**
+   * IP-rate-limited on failures only, same shape as verifyEmail below —
+   * guards against scripted password-guessing against a known email
+   * address. Purely IP-scoped, same limitation as every other rate limit in
+   * this codebase (an attacker rotating IPs isn't stopped by this alone).
+   */
   login = async (c: Context<AppEnv>) => {
-    const { authService } = c.get("services");
+    const { authService, emailVerificationIpLogRepository } = c.get("services");
+    const ip = clientIp(c);
+    const recentFailures = await emailVerificationIpLogRepository.countRecentAttempts(ip, "login", LOGIN_WINDOW_MINUTES);
+    if (recentFailures >= MAX_LOGIN_FAILURES) {
+      return c.json({ error: "Too many login attempts from this network. Please try again later." }, 429);
+    }
+
     const body = await c.req.json().catch(() => ({}));
     const { email, password } = body as Record<string, string>;
     if (!email || !password) {
       return c.json({ error: "email and password are required." }, 400);
     }
-    const { user, token } = await authService.login(email, password);
-    return c.json({ user: user.toPublicJSON(), token });
+    try {
+      const { user, token } = await authService.login(email, password);
+      return c.json({ user: user.toPublicJSON(), token });
+    } catch (err) {
+      if (err instanceof AuthError) {
+        await emailVerificationIpLogRepository.recordAttempt(ip, "login");
+        await emailVerificationIpLogRepository.pruneOlderThan(LOGIN_WINDOW_MINUTES);
+      }
+      throw err;
+    }
   };
 
   me = async (c: Context<AppEnv>) => {

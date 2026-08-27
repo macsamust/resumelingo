@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 
-export type EmailVerificationIpAction = "verify" | "resend" | "password-reset";
+export type EmailVerificationIpAction = "verify" | "resend" | "password-reset" | "login";
 
 /**
  * IP-based rate limiting for auth flows that send an email — same pattern as
@@ -13,6 +13,12 @@ export type EmailVerificationIpAction = "verify" | "resend" | "password-reset";
  * attempts from one IP" concern with a different trigger and threshold. The
  * class/table name predates that broadening — kept as-is to avoid a rename
  * migration for what's purely a naming nicety.
+ *
+ * "login" (see AuthController.login) reuses it too, for the same reason —
+ * doesn't send an email at all, but it's the identical "throttle repeated
+ * failures from one IP, failure-only like verify" shape, and this table's
+ * name already stopped being literally accurate once password-reset joined
+ * it.
  *
  * Not a BaseRepository subclass, same reasoning as AdminLoginIpLogRepository
  * — this table has no natural "get by id"/"update" access pattern.
