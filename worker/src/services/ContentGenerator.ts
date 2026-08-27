@@ -9,18 +9,11 @@ export interface GeneratedContent {
 
 /**
  * Contract for anything that can turn structured interview answers into
- * resume prose. RuleBasedContentGenerator (below) is the default,
- * dependency-free implementation.
- *
- * UNLIKE the Node/Express version (where generate() is synchronous, backed
- * by an in-memory role-description cache), this is now async: Role
- * Descriptions moved from a static config array to a D1-backed table (see
- * migrations/0004_admin_catalog.sql), and a Worker has no cross-isolate
- * in-memory cache to read synchronously the way a long-lived Node process
- * does — see RoleDescriptionRepository's doc comment for the fuller
- * rationale. Every call site (ResumeService.create/update) already runs
- * inside an async method, so awaiting this adds one D1 round-trip per
- * resume save without requiring any caller restructuring.
+ * resume prose. AiContentGenerator (below) is the default, real Workers AI
+ * implementation as of Aug 2026 — RuleBasedContentGenerator (further below)
+ * is kept as the original deterministic fallback (no longer wired up by
+ * default), same "keep the old implementation, no longer the default"
+ * pattern as CareerCoachGenerator.ts.
  */
 export interface IContentGenerator {
   generate(
@@ -31,6 +24,165 @@ export interface IContentGenerator {
     title?: string
   ): Promise<GeneratedContent>;
 }
+
+export class ContentGenerateError extends Error {}
+
+const MAX_SUMMARY_LENGTH = 1200;
+const MAX_BULLETS_COUNT = 12;
+const MAX_BULLET_LENGTH = 400;
+const MAX_ANSWER_VALUE_LENGTH = 300;
+
+const SYSTEM_PROMPT = `You write resume content — an About/Summary statement and a list of bullet points — from a person's profession, their answers to a short intake questionnaire, and (when given) specific Challenge/Action/Result achievement entries in their own words.
+
+Respond with ONLY a single JSON object (no prose, no markdown code fence) matching exactly this shape:
+{ "summary": string, "bullets": string[] }
+
+Rules:
+- The summary is a single short paragraph (2-4 sentences) written in third person, resume-voice (no "I"), describing the person's profession, experience level, and standout strengths — the kind of statement that sits at the top of a resume under the person's name.
+- Never invent a specific number, percentage, dollar amount, team size, employer, certification, or timeframe that isn't already present in the given answers or achievements. If years of experience is given, use it. If it isn't, don't guess a number.
+- Prefer building bullets from the given Achievement entries (challenge/action/result) when present — one bullet per achievement, action-led (start with a strong past-tense verb), weaving in the challenge and result when given. If no achievements are given, build bullets from the questionnaire answers instead, describing how the listed skills/tools/experience were applied.
+- Each bullet is one sentence, action-led, and reads like a real resume bullet — not a restatement of the raw answer text.
+- Return at most 10 bullets. Skip questionnaire fields that are blank or clearly not resume-relevant (e.g. a profile URL).
+- Never mention that this was AI-generated, and never include meta-commentary — only the summary and bullets themselves.`;
+
+function truthy(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function cleanString(value: unknown, maxLen: number): string {
+  if (!truthy(value)) return "";
+  return value.trim().slice(0, maxLen);
+}
+
+/** Same tolerant-parsing approach as the other AI services in this codebase (ContentGenerator, CareerCoachGenerator, AchievementGeneratorService, ResumeImportService) — not shared into a common util since each service's error type/messages differ and each is small enough to stay self-contained. */
+function parseModelJson(text: string): Record<string, unknown> {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = fenced ? fenced[1] : text;
+  const firstBrace = candidate.indexOf("{");
+  const lastBrace = candidate.lastIndexOf("}");
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+    throw new ContentGenerateError("The AI didn't return a recognizable result. Try again, or write this in by hand.");
+  }
+  try {
+    return JSON.parse(candidate.slice(firstBrace, lastBrace + 1));
+  } catch {
+    console.error("ContentGenerator: JSON.parse failed on model output:", text);
+    throw new ContentGenerateError("The AI's result couldn't be read. Try again, or write this in by hand.");
+  }
+}
+
+/** Same three response shapes tolerated by every other AI service in this codebase — see ResumeImportService's doc comment for why Workers AI needs this. */
+function extractParsedJson(response: unknown): Record<string, unknown> {
+  const r = response as {
+    response?: unknown;
+    choices?: { message?: { content?: unknown } }[];
+  };
+
+  if (r?.response && typeof r.response === "object") {
+    return r.response as Record<string, unknown>;
+  }
+  if (typeof r?.response === "string" && r.response.trim()) {
+    return parseModelJson(r.response);
+  }
+  const choiceContent = r?.choices?.[0]?.message?.content;
+  if (typeof choiceContent === "string" && choiceContent.trim()) {
+    return parseModelJson(choiceContent);
+  }
+
+  console.error("ContentGenerator: unrecognized Workers AI response shape:", JSON.stringify(response));
+  throw new ContentGenerateError("The AI didn't return a result. Try again, or write this in by hand.");
+}
+
+function sanitize(raw: Record<string, unknown>): GeneratedContent {
+  const summary = cleanString(raw.summary, MAX_SUMMARY_LENGTH);
+  const bulletsList = Array.isArray(raw.bullets) ? raw.bullets : [];
+  const bullets = bulletsList
+    .slice(0, MAX_BULLETS_COUNT)
+    .map((b) => cleanString(b, MAX_BULLET_LENGTH))
+    .filter((b): b is string => !!b);
+  return { summary, bullets };
+}
+
+export class AiContentGenerator implements IContentGenerator {
+  constructor(private readonly ai: Ai) {}
+
+  async generate(
+    profession: string,
+    answers: Record<string, string>,
+    achievements: AchievementEntry[] = [],
+    fullName?: string,
+    title?: string
+  ): Promise<GeneratedContent> {
+    const definition = getProfessionByKey(profession);
+    const professionLabel = definition?.label ?? profession;
+
+    // "Other" has no curated question set — fall back to whatever role can
+    // be pulled from the resume title, same as the old rule-based
+    // implementation's buildOtherSummary, since that's the only signal
+    // available for a profession the model wasn't given a schema for.
+    const roleHint =
+      profession === "other" ? this.roleFromTitle(title) : undefined;
+
+    const answerLines = Object.entries(answers)
+      .filter(([, value]) => truthy(value))
+      .map(([key, value]) => {
+        const question = definition?.questions.find((q) => q.key === key);
+        const label = question?.label ?? key;
+        return `${label}: ${cleanString(value, MAX_ANSWER_VALUE_LENGTH)}`;
+      });
+
+    const achievementLines = achievements.slice(0, MAX_BULLETS_COUNT).map((a, i) => {
+      const parts = [a.challenge && `Challenge: ${cleanString(a.challenge, MAX_ANSWER_VALUE_LENGTH)}`, a.action && `Action: ${cleanString(a.action, MAX_ANSWER_VALUE_LENGTH)}`, a.result && `Result: ${cleanString(a.result, MAX_ANSWER_VALUE_LENGTH)}`].filter(Boolean);
+      return `${i + 1}. ${parts.join(" / ")}`;
+    });
+
+    const userContent = [
+      `Profession: ${roleHint ?? professionLabel}`,
+      fullName && `Name: ${cleanString(fullName, 200)}`,
+      answerLines.length > 0 && `Questionnaire answers:\n${answerLines.join("\n")}`,
+      achievementLines.length > 0 && `Achievement entries:\n${achievementLines.join("\n")}`,
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
+    let response: unknown;
+    try {
+      response = await this.ai.run("@cf/openai/gpt-oss-120b", {
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userContent || `Profession: ${professionLabel}` },
+        ],
+        temperature: 0.5,
+        max_tokens: 1200,
+      });
+    } catch (err) {
+      throw new ContentGenerateError(
+        `Couldn't reach the AI (${err instanceof Error ? err.message : "unknown error"}). Try again, or write this in by hand.`
+      );
+    }
+
+    const parsed = extractParsedJson(response);
+    return sanitize(parsed);
+  }
+
+  /**
+   * Resume titles are typically "{Role} Resume" (see the New Resume page's
+   * default title), so strip a trailing "resume" word to recover just the
+   * role — e.g. "Freelance Photographer Resume" -> "Freelance Photographer".
+   * Returns undefined for a blank or generic ("New Resume") title, same
+   * behavior as the old rule-based implementation.
+   */
+  private roleFromTitle(title: string | undefined): string | undefined {
+    if (!title) return undefined;
+    const stripped = title.trim().replace(/\s*resume\s*$/i, "").trim();
+    if (!stripped || stripped.toLowerCase() === "new") return undefined;
+    return stripped;
+  }
+}
+
+// --- Below: the original deterministic implementation, kept for reference
+// and as a fallback if Workers AI is ever unavailable — no longer wired up
+// by default (see createServices.ts). ---
 
 export class RuleBasedContentGenerator implements IContentGenerator {
   constructor(private readonly roleDescriptions: RoleDescriptionRepository) {}

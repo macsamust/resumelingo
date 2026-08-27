@@ -18,7 +18,7 @@ import { ResumeService } from "./ResumeService";
 import { JobApplicationService } from "./JobApplicationService";
 import { SubscriptionService } from "./SubscriptionService";
 import { AdminService } from "./AdminService";
-import { RuleBasedContentGenerator } from "./ContentGenerator";
+import { AiContentGenerator, IContentGenerator } from "./ContentGenerator";
 import { StripeService } from "./StripeService";
 import { EmailService } from "./EmailService";
 import { ResumeImportService } from "./ResumeImportService";
@@ -53,6 +53,8 @@ export interface Services {
   resumeAnalyticsRepository: ResumeAnalyticsRepository;
   resumeImportService: ResumeImportService;
   achievementGeneratorService: AchievementGeneratorService;
+  /** Real Workers AI call as of Aug 2026 (see ContentGenerator.ts) — was rule-based template logic. Exposed here only for symmetry with the other AI services; ResumeService is the only consumer, wired at construction below. */
+  contentGenerator: IContentGenerator;
   jobApplicationService: JobApplicationService;
   viewDigestService: ViewDigestService;
   /** Real Workers AI call as of Aug 2026 (see CareerCoachGenerator.ts) — was rule-based keyword matching. */
@@ -91,7 +93,7 @@ export function createServices(env: Env): Services {
   // already-set opt-out is harmless.
   const unsubscribeDigestTokenService = new TokenService<UnsubscribeDigestTokenPayload>(env.JWT_SECRET, "180d");
 
-  const contentGenerator = new RuleBasedContentGenerator(roleDescriptionRepository);
+  const contentGenerator = new AiContentGenerator(env.AI);
 
   const emailService = new EmailService(env.RESEND_API_KEY, env.RESEND_FROM_EMAIL);
   const authService = new AuthService(userRepo, tokenService, emailService, env.CLIENT_ORIGIN);
@@ -137,6 +139,7 @@ export function createServices(env: Env): Services {
     resumeAnalyticsRepository,
     resumeImportService,
     achievementGeneratorService,
+    contentGenerator,
     jobApplicationService,
     viewDigestService,
     careerCoachGenerator,
