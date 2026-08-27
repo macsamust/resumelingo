@@ -181,6 +181,32 @@ describe("AuthService.requestPasswordReset", () => {
       expect.stringMatching(/^http:\/\/localhost:5173\/reset-password\?token=[0-9a-f]{64}$/)
     );
   });
+
+  it("still resolves silently even when the Resend send itself fails", async () => {
+    // Regression test: a registered-but-unsendable address used to 500 here
+    // (EmailService.send() throwing a plain Error, uncaught), letting an
+    // attacker distinguish real accounts from fake ones by send failures
+    // alone — the exact oracle this method exists to prevent. See the
+    // catch() added in requestPasswordReset.
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const sendPasswordResetEmail = vi.fn(async () => {
+      throw new Error("Resend API error (403): sandbox domain restriction");
+    });
+    const users = makeUsersMock({
+      findByEmail: vi.fn(async () => makeUserRecord()),
+      setResetToken: vi.fn(async (..._args: unknown[]) => {}),
+    } as never);
+    const service = new AuthService(
+      users,
+      makeTokensMock(),
+      { sendPasswordResetEmail } as unknown as EmailService,
+      "http://localhost:5173"
+    );
+
+    await expect(service.requestPasswordReset("jordan@example.com")).resolves.toBeUndefined();
+    expect(sendPasswordResetEmail).toHaveBeenCalled();
+    consoleErrorSpy.mockRestore();
+  });
 });
 
 describe("AuthService.resetPassword", () => {

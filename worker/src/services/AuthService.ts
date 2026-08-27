@@ -209,6 +209,16 @@ export class AuthService {
    * this becomes an account-enumeration oracle. If the email does match a
    * user, stores a fresh reset token (overwriting any earlier one) and
    * emails a reset link via Resend.
+   *
+   * The send itself is wrapped in a swallowed `.catch()`, same as every
+   * other Resend call site in this file (see sendVerificationEmail's
+   * callers) — EmailService.send() throws a plain Error on a non-ok Resend
+   * response, and without this catch that throw would escape *after* the
+   * reset token is already stored, turning a registered-but-unsendable
+   * address into a 500 instead of the usual silent 200. That discrepancy
+   * would let an attacker distinguish real accounts from fake ones by
+   * Resend send failures alone — the exact oracle this method's "always
+   * resolves silently" contract exists to prevent.
    */
   async requestPasswordReset(email: string): Promise<void> {
     const record = await this.users.findByEmail(email);
@@ -220,7 +230,9 @@ export class AuthService {
     await this.users.setResetToken(record.id, tokenHash, expiresAt);
 
     const resetUrl = `${this.clientOrigin.replace(/\/$/, "")}/reset-password?token=${token}`;
-    await this.emailService.sendPasswordResetEmail(record.email, resetUrl);
+    await this.emailService
+      .sendPasswordResetEmail(record.email, resetUrl)
+      .catch((err) => console.error("Failed to send password reset email", err));
   }
 
   /** Settings-page toggle for the weekly view digest — see UserRepository.setViewDigestOptOut. */
