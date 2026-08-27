@@ -15,3 +15,8 @@ worker/.dev.vars
 !.env.example
 .env.local
 .env.*.local
+
+# Local-only QA working files (not part of the app, kept for personal use)
+ResumeLingo_QA_Kickoff.docx
+ResumeLingo_Test_Plan.xlsx
+~$*.xlsx

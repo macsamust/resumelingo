@@ -4,7 +4,9 @@
  * longer wired up by default); now a real Workers AI call, following the
  * same "answer as structured JSON, tolerate the model's formatting quirks,
  * sanitize before trusting anything" approach as ResumeImportService and
- * AchievementGeneratorService. Topic classification still ends up
+ * AchievementGeneratorService — though this one runs on gpt-oss-120b rather
+ * than those two's llama-3.3-70b-instruct-fp8-fast (see the model call
+ * below for why). Topic classification still ends up deterministic on this
  * deterministic on this side (see sanitizeTopic/TOPIC_LINKS below) even
  * though the model chooses it, so `relatedLinks` can never point anywhere
  * except one of the four known Career Center anchors, regardless of what
@@ -107,13 +109,20 @@ export class AiCareerCoachGenerator implements ICareerCoachGenerator {
 
     let response: unknown;
     try {
-      response = await this.ai.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
+      // gpt-oss-120b, not this app's usual llama-3.3-70b-instruct-fp8-fast
+      // (used by ResumeImportService/AchievementGeneratorService) — chosen
+      // for Career Coach specifically for its stronger reasoning, and (per
+      // Cloudflare's per-token pricing) it's actually cheaper per question
+      // than Llama 3.3 70B despite that, mainly on the output-token rate.
+      // max_tokens is a bit higher than a plain instruct model would need
+      // here, giving headroom for this being a reasoning-tuned model.
+      response = await this.ai.run("@cf/openai/gpt-oss-120b", {
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: userContent },
         ],
         temperature: 0.5,
-        max_tokens: 700,
+        max_tokens: 900,
       });
     } catch (err) {
       throw new CareerCoachGenerateError(
