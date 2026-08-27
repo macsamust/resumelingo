@@ -1,12 +1,14 @@
 /**
- * Rule-based "AI Career Coach" — same "reads like AI, is actually
- * deterministic template logic" approach as ContentGenerator.ts,
- * CoverLetterGenerator.ts, and ThankYouLetterGenerator.ts (see those files
- * for why: no LLM/network call wired into this app, so answering has to
- * stay instant, free to run, and offline-safe). A typed question gets
- * classified into one of three supported topics by keyword matching, then
- * answered from a fixed set of hand-written templates — not a general
- * chatbot, and deliberately honest about that in the "general" fallback.
+ * "AI Career Coach" — was rule-based keyword matching against a fixed set of
+ * hand-written templates (kept below as RuleBasedCareerCoachGenerator, no
+ * longer wired up by default); now a real Workers AI call, following the
+ * same "answer as structured JSON, tolerate the model's formatting quirks,
+ * sanitize before trusting anything" approach as ResumeImportService and
+ * AchievementGeneratorService. Topic classification still ends up
+ * deterministic on this side (see sanitizeTopic/TOPIC_LINKS below) even
+ * though the model chooses it, so `relatedLinks` can never point anywhere
+ * except one of the four known Career Center anchors, regardless of what
+ * the model returns.
  */
 
 export type CareerCoachTopic = "salary" | "interview" | "certifications" | "general";
@@ -18,8 +20,120 @@ export interface CareerCoachAnswer {
 }
 
 export interface ICareerCoachGenerator {
-  answer(question: string, professionLabel?: string, professionKey?: string): CareerCoachAnswer;
+  answer(question: string, professionLabel?: string, professionKey?: string): Promise<CareerCoachAnswer>;
 }
+
+export class CareerCoachGenerateError extends Error {}
+
+const MAX_ANSWER_LENGTH = 3000;
+
+const TOPIC_LINKS: Record<CareerCoachTopic, { label: string; anchor: string }[]> = {
+  salary: [{ label: "Salary Negotiation guide", anchor: "salary-negotiation" }],
+  interview: [{ label: "Interview Tips guide", anchor: "interview-tips" }],
+  certifications: [{ label: "Career Planning guide", anchor: "career-planning" }],
+  general: [{ label: "Browse the Career Center", anchor: "" }],
+};
+
+const SYSTEM_PROMPT = `You are ResumeLingo's AI Career Coach — a focused career-advice assistant for logged-in subscribers, not a general-purpose chatbot. You help with three things specifically: salary negotiation, interview preparation, and professional certifications — plus general career-growth questions (networking, promotions, career planning) that don't fit those three but are still genuinely about someone's job or career.
+
+You're given the user's question and, if known, their profession. Answer directly and practically in a warm, encouraging, concise tone — a few short paragraphs or a short bulleted list, whichever fits the question best. Personalize to the specific question and profession given; don't pad with generic filler that could apply to any question.
+
+If the question isn't actually about careers or jobs at all (e.g. it's asking for code, unrelated personal advice, trivia, or anything outside career coaching), don't answer it — instead, briefly and politely explain that you're focused on career coaching and invite them to ask something in that space instead.
+
+Respond with ONLY a single JSON object (no prose, no markdown code fence) matching exactly this shape:
+{ "topic": "salary" | "interview" | "certifications" | "general", "answer": string }
+
+"topic" is the single best-fitting category for this question — use "general" for legitimate career questions that aren't specifically about salary, interviews, or certifications, and also for off-topic questions you're declining to answer.`;
+
+function truthy(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function cleanString(value: unknown, maxLen: number): string {
+  if (!truthy(value)) return "";
+  return value.trim().slice(0, maxLen);
+}
+
+function sanitizeTopic(value: unknown): CareerCoachTopic {
+  return value === "salary" || value === "interview" || value === "certifications" || value === "general" ? value : "general";
+}
+
+/** Same tolerant-parsing approach as ResumeImportService.parseModelJson — not shared into a common util since the two services' error types/messages differ and each is small enough to stay self-contained. */
+function parseModelJson(text: string): Record<string, unknown> {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = fenced ? fenced[1] : text;
+  const firstBrace = candidate.indexOf("{");
+  const lastBrace = candidate.lastIndexOf("}");
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+    throw new CareerCoachGenerateError("The AI didn't return a recognizable answer. Try asking again.");
+  }
+  try {
+    return JSON.parse(candidate.slice(firstBrace, lastBrace + 1));
+  } catch {
+    console.error("CareerCoachGenerator: JSON.parse failed on model output:", text);
+    throw new CareerCoachGenerateError("The AI's answer couldn't be read. Try asking again.");
+  }
+}
+
+/** Same three response shapes as ResumeImportService.extractParsedJson — see that file's doc comment for why Workers AI needs this tolerance. */
+function extractParsedJson(response: unknown): Record<string, unknown> {
+  const r = response as {
+    response?: unknown;
+    choices?: { message?: { content?: unknown } }[];
+  };
+
+  if (r?.response && typeof r.response === "object") {
+    return r.response as Record<string, unknown>;
+  }
+  if (typeof r?.response === "string" && r.response.trim()) {
+    return parseModelJson(r.response);
+  }
+  const choiceContent = r?.choices?.[0]?.message?.content;
+  if (typeof choiceContent === "string" && choiceContent.trim()) {
+    return parseModelJson(choiceContent);
+  }
+
+  console.error("CareerCoachGenerator: unrecognized Workers AI response shape:", JSON.stringify(response));
+  throw new CareerCoachGenerateError("The AI didn't return an answer. Try asking again.");
+}
+
+export class AiCareerCoachGenerator implements ICareerCoachGenerator {
+  constructor(private readonly ai: Ai) {}
+
+  async answer(question: string, professionLabel?: string): Promise<CareerCoachAnswer> {
+    const userContent = [professionLabel ? `User's profession: ${professionLabel}` : undefined, `Question: ${question}`]
+      .filter(Boolean)
+      .join("\n");
+
+    let response: unknown;
+    try {
+      response = await this.ai.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userContent },
+        ],
+        temperature: 0.5,
+        max_tokens: 700,
+      });
+    } catch (err) {
+      throw new CareerCoachGenerateError(
+        `Couldn't reach the AI Career Coach (${err instanceof Error ? err.message : "unknown error"}). Try again in a moment.`
+      );
+    }
+
+    const parsed = extractParsedJson(response);
+    const topic = sanitizeTopic(parsed.topic);
+    const answer =
+      cleanString(parsed.answer, MAX_ANSWER_LENGTH) || "Sorry, I couldn't come up with an answer for that. Try rephrasing your question.";
+    return { topic, answer, relatedLinks: TOPIC_LINKS[topic] };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Below: the original deterministic implementation, kept for tests/reference
+// and as a fallback that's easy to swap back in (see createServices.ts) if
+// Workers AI ever needs to come out of the loop for this feature again.
+// ---------------------------------------------------------------------------
 
 const SALARY_PATTERN = /salary|compensation|\bpay\b|negotiat|\braise\b|\boffer\b|\bwage/i;
 const INTERVIEW_PATTERN = /interview|behavioral question|tell me about yourself|weakness|strength|star method/i;
@@ -94,7 +208,7 @@ function classify(question: string): CareerCoachTopic {
 }
 
 export class RuleBasedCareerCoachGenerator implements ICareerCoachGenerator {
-  answer(question: string, professionLabel?: string, professionKey?: string): CareerCoachAnswer {
+  async answer(question: string, professionLabel?: string, professionKey?: string): Promise<CareerCoachAnswer> {
     const topic = classify(question);
     switch (topic) {
       case "salary":

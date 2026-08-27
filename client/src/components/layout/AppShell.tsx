@@ -18,7 +18,7 @@ const LINKS = [
   // Premium only — see CareerCoachPage.tsx/CareerCoachController.ts, which
   // enforce the same restriction server-side, so this is just tidying the
   // nav rather than the actual gate.
-  { to: "/career-coach", label: "Career Coach", minTier: "premium" as const },
+  { to: "/career-coach", label: "Ask Poly", minTier: "premium" as const },
 ];
 
 /**

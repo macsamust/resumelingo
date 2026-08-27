@@ -29,12 +29,10 @@ function CareerCoachLocked() {
 }
 
 /**
- * Rule-based Q&A tool, not tied to any resume — see
- * server/src/services/CareerCoachGenerator.ts for why this is deterministic
- * template matching rather than a real LLM call (no network AI dependency
- * anywhere in this app, and it keeps the feature free to run). Conversation
- * history is kept in local state only — nothing is saved server-side, so
- * reopening this page always starts fresh.
+ * AI-backed Q&A tool (Workers AI, see worker/src/services/CareerCoachGenerator.ts's
+ * AiCareerCoachGenerator), not tied to any resume. Conversation history is
+ * kept in local state only — nothing is saved server-side, so reopening this
+ * page always starts fresh.
  */
 export function CareerCoachPage() {
   const { user } = useAuth();
@@ -69,7 +67,7 @@ export function CareerCoachPage() {
   return (
     <AppShell>
       <div className="app-page-head">
-        <h1>Career Coach</h1>
+        <h1>Your Career Coach Poly</h1>
       </div>
       <p className="hero-note" style={{ marginBottom: 20 }}>
         Ask about salary negotiation, interview prep, or which certifications to pursue. Nothing here is saved —

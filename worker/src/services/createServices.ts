@@ -24,6 +24,7 @@ import { EmailService } from "./EmailService";
 import { ResumeImportService } from "./ResumeImportService";
 import { AchievementGeneratorService } from "./AchievementGeneratorService";
 import { ViewDigestService, UnsubscribeDigestTokenPayload } from "./ViewDigestService";
+import { AiCareerCoachGenerator, ICareerCoachGenerator } from "./CareerCoachGenerator";
 
 export interface Services {
   authService: AuthService;
@@ -54,6 +55,8 @@ export interface Services {
   achievementGeneratorService: AchievementGeneratorService;
   jobApplicationService: JobApplicationService;
   viewDigestService: ViewDigestService;
+  /** Real Workers AI call as of Aug 2026 (see CareerCoachGenerator.ts) — was rule-based keyword matching. */
+  careerCoachGenerator: ICareerCoachGenerator;
   /** Verifies the token on GET /api/auth/unsubscribe-digest — kept separate from authService's tokenService since it's a different payload shape/purpose and a much longer expiry. */
   unsubscribeDigestTokenService: TokenService<UnsubscribeDigestTokenPayload>;
 }
@@ -104,6 +107,7 @@ export function createServices(env: Env): Services {
   const resumeImportService = new ResumeImportService(env.AI);
   const achievementGeneratorService = new AchievementGeneratorService(env.AI);
   const jobApplicationService = new JobApplicationService(jobApplicationRepository, resumeRepo, userRepo);
+  const careerCoachGenerator = new AiCareerCoachGenerator(env.AI);
   const viewDigestService = new ViewDigestService(
     userRepo,
     resumeRepo,
@@ -135,6 +139,7 @@ export function createServices(env: Env): Services {
     achievementGeneratorService,
     jobApplicationService,
     viewDigestService,
+    careerCoachGenerator,
     unsubscribeDigestTokenService,
   };
 }
