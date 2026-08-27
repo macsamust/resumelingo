@@ -22,6 +22,8 @@ const ACTION_LABELS: Record<string, string> = {
   "admin.create": "Added admin account",
   "admin.delete": "Removed admin account",
   "admin.revoke_sessions": "Signed out of all sessions",
+  "admin.totp_enable": "Enabled two-factor authentication",
+  "admin.totp_disable": "Disabled two-factor authentication",
   "user.export_csv": "Exported users to CSV",
   "user.bulk_suspend": "Bulk-suspended accounts",
   "user.bulk_unsuspend": "Bulk-unsuspended accounts",

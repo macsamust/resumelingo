@@ -1218,6 +1218,13 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .admin-plan-card textarea { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 13.5px; font-family: inherit; resize: vertical; }
 .admin-save-confirm { color: #166534; font-size: 13px; margin-top: 10px; text-align: center; }
 .admin-new-template { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-bottom: 24px; }
+/* Admin Security page's TOTP setup — secret/URI/backup codes are all
+   fixed-width strings meant to be read carefully or copied, so monospace
+   plus wrapping (rather than truncating or overflowing) keeps them fully
+   visible regardless of panel width. */
+.admin-totp-secret { font-family: monospace; font-size: 13.5px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; word-break: break-all; margin: 0; }
+.admin-totp-uri { font-size: 12px; color: var(--muted); }
+.admin-totp-backup-codes { font-family: monospace; font-size: 14px; line-height: 1.8; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; margin: 0 0 16px; }
 .admin-new-template h2 { font-size: 16px; margin-bottom: 14px; }
 .admin-new-template-row { display: grid; grid-template-columns: 2fr 1fr 100px; gap: 14px; }
 @media (max-width: 960px) {

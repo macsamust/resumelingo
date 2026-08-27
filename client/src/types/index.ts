@@ -272,6 +272,7 @@ export interface AdminAuthUser {
   name: string;
   email: string;
   createdAt: string;
+  totpEnabled: boolean;
 }
 
 /** One row in the admin's user list — an AuthUser plus admin-only fields. */

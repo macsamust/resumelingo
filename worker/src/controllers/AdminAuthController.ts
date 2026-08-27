@@ -1,16 +1,26 @@
 import { Context } from "hono";
 import { AppEnv } from "../middleware/servicesMiddleware";
-import { AdminAuthError } from "../services/AdminService";
+import { AdminAuthError, TotpRequiredError } from "../services/AdminService";
 
 /** Failed attempts from a single IP, across any admin email, before that IP is blocked outright — see AdminAuthController.login. */
 const MAX_IP_FAILURES = 20;
 const IP_WINDOW_MINUTES = 15;
 
 export class AdminAuthController {
+  /**
+   * Two-step client flow when 2FA is enabled: this endpoint is called once
+   * with just email+password, throws TotpRequiredError (handled below,
+   * distinct from AdminAuthError), and the client re-submits the same
+   * request with totpCode added. A missing/wrong 2FA code never counts as
+   * an IP-level failure the way a wrong password does (see the catch
+   * block) — needing to enter a second factor is a normal part of this
+   * flow, not an attack signal, so it shouldn't burn down the IP's attempt
+   * budget the way repeated wrong passwords should.
+   */
   login = async (c: Context<AppEnv>) => {
     const { adminService, adminLoginIpLogRepository } = c.get("services");
     const body = await c.req.json().catch(() => ({}));
-    const { email, password } = body as Record<string, string>;
+    const { email, password, totpCode } = body as Record<string, string>;
     if (!email || !password) {
       return c.json({ error: "email and password are required." }, 400);
     }
@@ -28,9 +38,12 @@ export class AdminAuthController {
     }
 
     try {
-      const { admin, token } = await adminService.login(email, password);
+      const { admin, token } = await adminService.login(email, password, totpCode);
       return c.json({ admin: admin.toPublicJSON(), token });
     } catch (err) {
+      if (err instanceof TotpRequiredError) {
+        return c.json({ error: err.message, reason: "totp_required" }, 401);
+      }
       if (err instanceof AdminAuthError) {
         await adminLoginIpLogRepository.recordFailure(ip);
         await adminLoginIpLogRepository.pruneOlderThan(IP_WINDOW_MINUTES);

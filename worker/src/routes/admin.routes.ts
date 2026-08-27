@@ -41,6 +41,9 @@ admin.delete("/admins/:id", requireAdminAuth, adminManagementController.remove);
 
 const adminSecurityController = new AdminSecurityController();
 admin.post("/security/revoke-sessions", requireAdminAuth, adminSecurityController.revokeSessions);
+admin.post("/security/totp/enroll", requireAdminAuth, adminSecurityController.beginTotpEnroll);
+admin.post("/security/totp/confirm", requireAdminAuth, adminSecurityController.confirmTotpEnroll);
+admin.post("/security/totp/disable", requireAdminAuth, adminSecurityController.disableTotp);
 
 const userController = new AdminUserController();
 admin.get("/users", requireAdminAuth, userController.list);

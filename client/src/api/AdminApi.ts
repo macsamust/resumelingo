@@ -39,7 +39,7 @@ export class AdminApi extends ApiClient {
     super(undefined, "resumelingo_admin_token");
   }
 
-  login(input: { email: string; password: string }) {
+  login(input: { email: string; password: string; totpCode?: string }) {
     return this.post<AdminAuthResponse>("/admin/auth/login", input);
   }
 
@@ -130,6 +130,21 @@ export class AdminApi extends ApiClient {
   /** Signs the calling admin out of every session at once — see worker's AdminSecurityController.revokeSessions. The current session (making this call) is included, so the client should treat this like a logout. */
   revokeSessions() {
     return this.post<{ success: true }>("/admin/security/revoke-sessions", {});
+  }
+
+  /** Step 1 of TOTP enrollment — see worker's AdminService.beginTotpEnrollment. */
+  beginTotpEnroll() {
+    return this.post<{ secret: string; otpauthUri: string }>("/admin/security/totp/enroll", {});
+  }
+
+  /** Step 2 — confirms a code from the authenticator app and returns one-time backup codes (shown to the admin exactly once). */
+  confirmTotpEnroll(code: string) {
+    return this.post<{ backupCodes: string[] }>("/admin/security/totp/confirm", { code });
+  }
+
+  /** Requires the current password again — see worker's AdminService.disableTotp. */
+  disableTotp(password: string) {
+    return this.post<{ success: true }>("/admin/security/totp/disable", { password });
   }
 
   /**
