@@ -36,7 +36,12 @@ export function FuturePremium() {
           <h2>What's coming to Premium</h2>
           <p>We're building toward a complete professional identity platform.</p>
         </div>
-        <div className="resources-grid">
+        {/* Only 2 cards since "Career Portfolio" was pulled (see the comment
+            above) — the shared 4-column .resources-grid (also used by
+            CareerCenter.tsx's 6-card teaser) would otherwise leave 2 cards
+            stranded on the left with a lopsided gap on the right. .future-grid
+            caps it to 2 centered columns instead, just for this section. */}
+        <div className="resources-grid future-grid">
           {FUTURE.map((f) => (
             <div className="resource-card" key={f.title}>
               <span className="future-soon">Coming soon</span>

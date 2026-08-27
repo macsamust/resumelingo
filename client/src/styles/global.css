@@ -129,6 +129,12 @@ section { padding: 84px 0; }
 .resource-card h3 { font-size: 16px; color: var(--navy); margin-bottom: 8px; }
 .resource-card p { font-size: 13.5px; color: var(--muted); }
 .future-soon { position: absolute; top: 16px; right: 16px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--indigo); background: #eef2ff; padding: 3px 9px; border-radius: 999px; }
+/* Just 2 "coming soon" cards (see FuturePremium.tsx) — overrides the shared
+   4-column .resources-grid so they sit centered as a balanced pair instead
+   of hugging the left edge with empty space on the right. The narrow-screen
+   media queries below still target .resources-grid generically, so this
+   still collapses to 1 column on mobile like every other grid on the page. */
+.future-grid { grid-template-columns: repeat(2, minmax(0, 320px)); justify-content: center; }
 
 .stories-bg { background: linear-gradient(180deg, #fff, var(--bg)); border-top: 1px solid var(--border); }
 .stories-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
