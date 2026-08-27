@@ -35,7 +35,9 @@ export function Hero() {
           <div className="hero-mascot">
             <ParrotLogo size={110} decorative={false} />
           </div>
-          <p className="hero-mascot-caption">Meet Poly — short for Polyglot, our resident many-tongued parrot.</p>
+          <p className="hero-mascot-caption">
+            <em>Meet Poly — short for Polyglot, our resident many-tongued parrot.</em>
+          </p>
           <div className="browser-bar">
             <span style={{ background: "#f87171" }}></span>
             <span style={{ background: "#fbbf24" }}></span>
