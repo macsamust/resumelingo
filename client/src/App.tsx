@@ -4,6 +4,7 @@ import { Footer } from "./components/layout/Footer";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { LandingPage } from "./pages/LandingPage";
 import { CareerCenterPage } from "./pages/CareerCenterPage";
+import { HelpPage } from "./pages/HelpPage";
 import { PrivacyPolicyPage } from "./pages/PrivacyPolicyPage";
 import { TermsOfServicePage } from "./pages/TermsOfServicePage";
 import { LoginPage } from "./pages/LoginPage";
@@ -46,6 +47,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/career-center" element={<CareerCenterPage />} />
+        <Route path="/help" element={<HelpPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<TermsOfServicePage />} />
         <Route path="/login" element={<LoginPage />} />

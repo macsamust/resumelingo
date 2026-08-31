@@ -11,7 +11,7 @@ export function Footer() {
               <ParrotLogo size={28} />
               ResumeLingo
             </Link>
-            <p>A web-based resume, hosted in the cloud, shareable with one link — public or private, always yours to update.</p>
+            <p>A web based resume, hosted in the cloud, shareable with one link, public or private, always yours to update.</p>
           </div>
           <div className="footer-col">
             <h4>Product</h4>
@@ -30,6 +30,7 @@ export function Footer() {
             <h4>Account</h4>
             <Link to="/login">Log in</Link>
             <Link to="/signup">Sign up</Link>
+            <Link to="/help">Help &amp; FAQ</Link>
           </div>
           <div className="footer-col">
             <h4>Legal</h4>

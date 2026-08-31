@@ -19,7 +19,7 @@ export function NotFoundPage() {
         <p className="not-found-code">404</p>
         <h1>Page not found</h1>
         <p className="lead">
-          The page you're looking for doesn't exist — it may have been moved, or the link might just have a typo.
+          The page you're looking for doesn't exist. It may have been moved, or the link might just have a typo.
         </p>
         <div className="not-found-actions">
           {user ? (
@@ -35,6 +35,9 @@ export function NotFoundPage() {
             Go back
           </button>
         </div>
+        <p className="hero-note" style={{ marginTop: 20 }}>
+          Think this is a mistake? Email <a href="mailto:support@resumelingo.com">support@resumelingo.com</a>.
+        </p>
       </section>
     </main>
   );
