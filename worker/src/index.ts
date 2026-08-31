@@ -36,6 +36,7 @@ import {
 } from "./services/ResumeService";
 import { ResumeImportError } from "./services/ResumeImportService";
 import { AchievementGenerateError } from "./services/AchievementGeneratorService";
+import { SkillSuggestionAiError } from "./services/SkillSuggestionAiService";
 import { CareerCoachGenerateError } from "./services/CareerCoachGenerator";
 import { ContentGenerateError } from "./services/ContentGenerator";
 import { CoverLetterGenerateError } from "./services/CoverLetterGenerator";
@@ -145,6 +146,8 @@ app.onError((err, c) => {
       : err instanceof ResumeImportError
       ? 502
       : err instanceof AchievementGenerateError
+      ? 502
+      : err instanceof SkillSuggestionAiError
       ? 502
       : err instanceof CareerCoachGenerateError
       ? 502
