@@ -10,7 +10,7 @@ import "./styles/global.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
-      {/* One toast system for the whole app — regular pages (Dashboard,
+      {/* One toast system for the whole app: regular pages (Dashboard,
           Profile, ...) and admin pages both reach it via useToast(). Mounted
           above both auth providers so a toast can still fire from, say, a
           failed logout. */}
