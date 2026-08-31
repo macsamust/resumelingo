@@ -51,7 +51,7 @@
   // here — set them with `npm run secret:jwt` / `npm run secret:resend-key`
   // so they're encrypted rather than committed to git.
   "vars": {
-    "CLIENT_ORIGIN": "https://resumelingo.legumes-postage-9k.workers.dev",
+    "CLIENT_ORIGIN": "https://resumelingo.com",
     // The "from" address for every transactional email (password reset,
     // email verification, the weekly view digest). resumelingo.com is now a
     // Resend-verified sending domain (DKIM/SPF/MX all confirmed, Aug 2026) —
