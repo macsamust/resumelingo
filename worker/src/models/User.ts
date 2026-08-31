@@ -19,6 +19,7 @@ export class User {
   readonly createdAt: string;
   readonly viewDigestOptOut: boolean;
   readonly emailVerified: boolean;
+  readonly paymentFailed: boolean;
 
   constructor(record: UserRecord) {
     this.id = record.id;
@@ -33,6 +34,7 @@ export class User {
     this.createdAt = record.createdAt;
     this.viewDigestOptOut = record.viewDigestOptOut;
     this.emailVerified = record.emailVerified;
+    this.paymentFailed = record.paymentFailed;
   }
 
   get plan() {
@@ -56,6 +58,7 @@ export class User {
       createdAt: this.createdAt,
       viewDigestOptOut: this.viewDigestOptOut,
       emailVerified: this.emailVerified,
+      paymentFailed: this.paymentFailed,
     };
   }
 }

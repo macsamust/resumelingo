@@ -9,7 +9,13 @@ import { SubscriptionTier, UserRecord } from "../types";
  * normalizeBooleans.
  */
 function normalizeBooleans(row: UserRecord): UserRecord {
-  return { ...row, suspended: !!row.suspended, viewDigestOptOut: !!row.viewDigestOptOut, emailVerified: !!row.emailVerified };
+  return {
+    ...row,
+    suspended: !!row.suspended,
+    viewDigestOptOut: !!row.viewDigestOptOut,
+    emailVerified: !!row.emailVerified,
+    paymentFailed: !!row.paymentFailed,
+  };
 }
 
 export class UserRepository extends BaseRepository<UserRecord> {
@@ -58,6 +64,7 @@ export class UserRepository extends BaseRepository<UserRecord> {
       emailVerified: false,
       verificationTokenHash: null,
       verificationTokenExpiresAt: null,
+      paymentFailed: false,
     };
     await this.insertRow(record as unknown as Record<string, unknown>);
     return record;
@@ -330,5 +337,10 @@ export class UserRepository extends BaseRepository<UserRecord> {
       .prepare(`UPDATE users SET subscriptionTier = ?, stripeSubscriptionId = ? WHERE id = ?`)
       .bind(tier, subscriptionId, userId)
       .run();
+  }
+
+  /** Set true on invoice.payment_failed, cleared back to false on the next invoice.paid — see SubscriptionService.handleWebhookEvent. */
+  async setPaymentFailed(userId: string, failed: boolean): Promise<void> {
+    await this.db.prepare(`UPDATE users SET paymentFailed = ? WHERE id = ?`).bind(failed ? 1 : 0, userId).run();
   }
 }

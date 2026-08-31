@@ -47,7 +47,7 @@ export class EmailService {
           <p style="margin: 24px 0;">
             <a href="${resetUrl}" style="background: #4f46e5; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Reset password</a>
           </p>
-          <p style="color: #64748b; font-size: 13px;">If you didn't request this, you can safely ignore this email — your password won't be changed.</p>
+          <p style="color: #64748b; font-size: 13px;">If you didn't request this, you can safely ignore this email. Your password won't be changed.</p>
           <p style="color: #94a3b8; font-size: 12px; word-break: break-all;">Or paste this link into your browser: ${resetUrl}</p>
         </div>
       `,
@@ -68,6 +68,24 @@ export class EmailService {
           </p>
           <p style="color: #64748b; font-size: 13px;">If you didn't create this account or make this change, you can safely ignore this email.</p>
           <p style="color: #94a3b8; font-size: 12px; word-break: break-all;">Or paste this link into your browser: ${verifyUrl}</p>
+        </div>
+      `,
+    });
+  }
+
+  /** Sent from SubscriptionService.handleWebhookEvent's "invoice.payment_failed" case — Stripe already retries the charge on its own schedule, this just makes sure the subscriber knows to update their card instead of finding out only once the subscription actually gets cancelled. */
+  async sendPaymentFailedEmail(to: string, dashboardUrl: string): Promise<void> {
+    await this.send({
+      to,
+      subject: "Your ResumeLingo payment didn't go through",
+      html: `
+        <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
+          <h2 style="margin-bottom: 8px;">We couldn't process your payment</h2>
+          <p>Your card on file was declined for your ResumeLingo subscription renewal. We'll try again automatically over the next several days, but your access may be interrupted if the charge keeps failing.</p>
+          <p style="margin: 24px 0;">
+            <a href="${dashboardUrl}" style="background: #4f46e5; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Update payment method</a>
+          </p>
+          <p style="color: #64748b; font-size: 13px;">Click through to your dashboard and choose "Manage billing" to update your card. If you've already updated it, no action is needed. This will resolve on the next retry.</p>
         </div>
       `,
     });

@@ -4,6 +4,7 @@ import { getPlan } from "../config/subscriptionPlans";
 import { SubscriptionTier } from "../types";
 import { User } from "../models/User";
 import { StripeService } from "./StripeService";
+import { EmailService } from "./EmailService";
 
 /**
  * Same responsibilities as the Node/Express SubscriptionService. One
@@ -19,7 +20,9 @@ export class SubscriptionService {
     private readonly users: UserRepository,
     private readonly stripe: StripeService,
     private readonly professionalPriceId: string | undefined,
-    private readonly premiumPriceId: string | undefined
+    private readonly premiumPriceId: string | undefined,
+    private readonly email: EmailService,
+    private readonly clientOrigin: string
   ) {}
 
   private priceIdFor(tier: SubscriptionTier): string | undefined {
@@ -82,7 +85,7 @@ export class SubscriptionService {
     getPlan(tier); // throws if invalid tier
     const priceId = this.priceIdFor(tier);
     if (!priceId) {
-      throw new Error(`No Stripe price configured for "${tier}" — check STRIPE_PRICE_* secrets.`);
+      throw new Error(`No Stripe price configured for "${tier}". Check STRIPE_PRICE_* secrets.`);
     }
     const customerId = await this.ensureStripeCustomer(user);
     const session = await this.stripe.createCheckoutSession({
@@ -99,7 +102,7 @@ export class SubscriptionService {
   /** Opens Stripe's hosted Billing Portal so a user can update payment info, switch plans, or cancel. */
   async createPortalSession(user: User, origin: string): Promise<string> {
     if (!user.stripeCustomerId) {
-      throw new Error("No billing account yet — subscribe to a paid plan first.");
+      throw new Error("No billing account yet. Subscribe to a paid plan first.");
     }
     const session = await this.stripe.createPortalSession(user.stripeCustomerId, `${origin}/dashboard`);
     return session.url;
@@ -125,6 +128,37 @@ export class SubscriptionService {
     await this.users.applyStripeSubscription(user.id, finalTier, isActive ? subscription.id : null);
   }
 
+  /**
+   * Shared by the invoice.payment_failed / invoice.paid cases above — sets
+   * or clears `users.paymentFailed` and, only when newly failing (not on
+   * every retry, and not on the clearing path), sends a one-off email. Only
+   * acts on subscription invoices (skips one-off invoices, if this app ever
+   * has any) since `paymentFailed` is specifically about renewal charges.
+   */
+  private async notifyPaymentFailure(invoice: Stripe.Invoice, failed: boolean): Promise<void> {
+    if (!invoice.subscription) return;
+    const customerId = typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id;
+    if (!customerId) return;
+    const user = await this.users.findByStripeCustomerId(customerId);
+    if (!user) return; // webhook for a customer we don't recognize — ignore
+
+    const wasAlreadyFailed = user.paymentFailed;
+    await this.users.setPaymentFailed(user.id, failed);
+
+    // Only email on the transition into a failed state — a subsequent
+    // failed retry attempt (still failed, was already failed) shouldn't
+    // re-send the same email on every one of Stripe's retries.
+    if (failed && !wasAlreadyFailed) {
+      await this.email.sendPaymentFailedEmail(user.email, `${this.clientOrigin}/dashboard`).catch((err) => {
+        // Same "never let an email failure break the actual operation"
+        // treatment as everywhere else email is sent from this codebase —
+        // the paymentFailed flag (and thus the in-app banner) is already
+        // set regardless of whether this send succeeds.
+        console.error("Failed to send payment-failed email:", err);
+      });
+    }
+  }
+
   /** Entry point for the Stripe webhook route. See routes/subscription.routes.ts. */
   async handleWebhookEvent(event: Stripe.Event): Promise<void> {
     switch (event.type) {
@@ -148,6 +182,25 @@ export class SubscriptionService {
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         await this.syncSubscription(event.data.object as Stripe.Subscription);
+        break;
+      }
+      // Fires when a subscription renewal charge fails. Stripe retries on
+      // its own schedule (Smart Retries) and eventually fires
+      // customer.subscription.deleted if every retry fails — that already
+      // flips the user back to Starter with no extra work needed here. This
+      // case exists purely so the subscriber finds out *during* the retry
+      // window instead of only once access is actually cut off.
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice;
+        await this.notifyPaymentFailure(invoice, true);
+        break;
+      }
+      // Clears the flag set above once a charge succeeds again — covers
+      // both "the retry worked" and "an unrelated later invoice succeeded,"
+      // either way there's no longer a failure to warn about.
+      case "invoice.paid": {
+        const invoice = event.data.object as Stripe.Invoice;
+        await this.notifyPaymentFailure(invoice, false);
         break;
       }
       default:

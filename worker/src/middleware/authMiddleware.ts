@@ -26,7 +26,7 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
     const payload = await authService.verifyToken(token);
     const user = await authService.getUserById(payload.userId);
     if (!user) return c.json({ error: "User no longer exists." }, 401);
-    if (user.suspended) return c.json({ error: "This account has been suspended. Contact support for help." }, 401);
+    if (user.suspended) return c.json({ error: "This account has been suspended. Contact support at support@resumelingo.com for help." }, 401);
     c.set("user", user);
     await next();
   } catch {

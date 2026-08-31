@@ -54,7 +54,7 @@ function VerifyEmailBanner() {
     <div className="app-banner app-banner-notice">
       <span>
         {sent
-          ? "Verification email sent — check your inbox."
+          ? "Verification email sent. Check your inbox."
           : "Please verify your email address. Check your inbox for a link, or"}
         {!sent && (
           <>
@@ -67,6 +67,31 @@ function VerifyEmailBanner() {
         )}
       </span>
       {error && <span className="app-banner-error">{error}</span>}
+      <button type="button" className="app-banner-dismiss" aria-label="Dismiss" onClick={() => setDismissed(true)}>
+        ×
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Dismissible-per-session nudge shown while `paymentFailed` is true (see
+ * SubscriptionService.handleWebhookEvent's invoice.payment_failed case).
+ * Same "doesn't gate anything, just a nudge" treatment as VerifyEmailBanner
+ * above — Stripe's own retry schedule (not this banner) is what actually
+ * determines whether the subscription eventually lapses, so dismissing this
+ * is safe; it isn't the only warning the subscriber gets (there's also the
+ * payment-failed email sent once when this first happens).
+ */
+function PaymentFailedBanner() {
+  const [dismissed, setDismissed] = useState(false);
+  if (dismissed) return null;
+
+  return (
+    <div className="app-banner app-banner-danger">
+      <span>
+        Your last payment didn't go through. <Link to="/dashboard">Update your payment method</Link> to avoid losing access.
+      </span>
       <button type="button" className="app-banner-dismiss" aria-label="Dismiss" onClick={() => setDismissed(true)}>
         ×
       </button>
@@ -108,6 +133,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
       <div className="app-content">
         {user && !user.emailVerified && <VerifyEmailBanner />}
+        {user && user.paymentFailed && <PaymentFailedBanner />}
         {children}
       </div>
     </div>
