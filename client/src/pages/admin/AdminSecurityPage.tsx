@@ -42,7 +42,7 @@ export function AdminSecurityPage() {
       const result = await adminApi.beginTotpEnroll();
       setEnrollment(result);
     } catch (err) {
-      showToast("error", err instanceof ApiError ? err.message : "Couldn't start two-factor setup.");
+      showToast("error", err instanceof ApiError ? err.message : "Couldn't start two factor setup.");
     } finally {
       setEnrolling(false);
     }
@@ -72,9 +72,9 @@ export function AdminSecurityPage() {
       setTotpEnabled(false);
       setDisablePassword("");
       setConfirmDisable(false);
-      showToast("success", "Two-factor authentication turned off.");
+      showToast("success", "Two factor authentication turned off.");
     } catch (err) {
-      showToast("error", err instanceof ApiError ? err.message : "Couldn't disable two-factor authentication.");
+      showToast("error", err instanceof ApiError ? err.message : "Couldn't disable two factor authentication.");
     } finally {
       setDisabling(false);
     }
@@ -107,7 +107,7 @@ export function AdminSecurityPage() {
         <h2>Sessions</h2>
         <p className="hero-note" style={{ marginBottom: 16 }}>
           Admin sessions expire automatically after 12 hours. If you think a login link or session might have leaked
-          — a shared device, a browser left open somewhere — sign out of every session right now instead of waiting.
+          (a shared device, a browser left open somewhere), sign out of every session right now instead of waiting.
           This immediately invalidates every admin token for your account, including the one you're using right now,
           so you'll need to log back in afterward.
         </p>
@@ -117,12 +117,12 @@ export function AdminSecurityPage() {
       </section>
 
       <section className="admin-new-template">
-        <h2>Two-factor authentication</h2>
+        <h2>Two factor authentication</h2>
 
         {backupCodes ? (
           <>
             <p className="hero-note" style={{ marginBottom: 16 }}>
-              Two-factor authentication is on. Save these one-time backup codes somewhere safe — each works once, in
+              Two factor authentication is on. Save these one time backup codes somewhere safe. Each works once, in
               place of a code from your authenticator app, if you ever lose access to it. This is the only time
               they'll be shown.
             </p>
@@ -134,16 +134,16 @@ export function AdminSecurityPage() {
         ) : totpEnabled ? (
           <>
             <p className="hero-note" style={{ marginBottom: 16 }}>
-              Two-factor authentication is currently on for this account.
+              Two factor authentication is currently on for this account.
             </p>
             <button type="button" className="btn btn-ghost admin-danger" onClick={() => setConfirmDisable(true)}>
-              Turn off two-factor authentication
+              Turn off two factor authentication
             </button>
           </>
         ) : enrollment ? (
           <form onSubmit={onConfirmEnroll}>
             <p className="hero-note" style={{ marginBottom: 12 }}>
-              Scan this into an authenticator app (Google Authenticator, Authy, 1Password, etc.) — either by pasting
+              Scan this into an authenticator app (Google Authenticator, Authy, 1Password, etc.), either by pasting
               the URI below into an "import from link" option, or by entering the secret manually. Then enter the
               6-digit code it shows to finish setup.
             </p>
@@ -180,10 +180,10 @@ export function AdminSecurityPage() {
           <>
             <p className="hero-note" style={{ marginBottom: 16 }}>
               Not currently enabled. Adds a second step at login (a code from an authenticator app) beyond your
-              password — recommended given this console can delete accounts and change billing.
+              password, recommended given this console can delete accounts and change billing.
             </p>
             <button type="button" className="btn btn-primary" onClick={onBeginEnroll} disabled={enrolling}>
-              {enrolling ? "Starting…" : "Set up two-factor authentication"}
+              {enrolling ? "Starting…" : "Set up two factor authentication"}
             </button>
           </>
         )}
@@ -201,8 +201,8 @@ export function AdminSecurityPage() {
       )}
 
       {confirmDisable && (
-        <Modal title="Turn off two-factor authentication" onClose={() => setConfirmDisable(false)} disableDismiss={disabling}>
-          <p className="modal-message">Enter your password to confirm turning off two-factor authentication.</p>
+        <Modal title="Turn off two factor authentication" onClose={() => setConfirmDisable(false)} disableDismiss={disabling}>
+          <p className="modal-message">Enter your password to confirm turning off two factor authentication.</p>
           <div className="field">
             <label>Password</label>
             <input

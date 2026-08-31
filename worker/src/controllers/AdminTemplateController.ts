@@ -27,7 +27,7 @@ export class AdminTemplateController {
     const keyStr = typeof key === "string" || typeof key === "number" ? String(key).trim() : "";
     const templateKey: string = keyStr || slugifyKey(nameStr);
     if (!templateKey) {
-      return c.json({ error: "Could not derive a template key from that name — provide one explicitly." }, 400);
+      return c.json({ error: "Could not derive a template key from that name, provide one explicitly." }, 400);
     }
     const existing = await templateRepository.findByKey(templateKey);
     if (existing) {

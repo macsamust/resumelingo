@@ -74,7 +74,7 @@ export function AdminPlansPage() {
         <h1>Plans & Pricing</h1>
       </div>
       <p className="hero-note admin-plan-warning">
-        Editing a plan here changes what's displayed on the pricing page and dashboard — it does not change what
+        Editing a plan here changes what's displayed on the pricing page and dashboard. It does not change what
         Stripe actually charges. To change the real billed amount for Professional or Premium, update the Price in
         the Stripe dashboard (and the STRIPE_PRICE_* env var if you create a new Price).
       </p>

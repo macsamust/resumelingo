@@ -27,10 +27,10 @@ export class AdminPlanController {
     const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
     const { name, priceMonthly, resumeLimit, features } = body;
     if (priceMonthly !== undefined && (typeof priceMonthly !== "number" || priceMonthly < 0)) {
-      return c.json({ error: "priceMonthly must be a non-negative number." }, 400);
+      return c.json({ error: "priceMonthly must be a nonnegative number." }, 400);
     }
     if (resumeLimit !== undefined && (typeof resumeLimit !== "number" || resumeLimit < -1)) {
-      return c.json({ error: "resumeLimit must be -1 (unlimited) or a non-negative number." }, 400);
+      return c.json({ error: "resumeLimit must be -1 (unlimited) or a nonnegative number." }, 400);
     }
     const updated = await planRepository.update(tier, {
       name: name as string | undefined,

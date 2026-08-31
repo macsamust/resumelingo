@@ -77,14 +77,14 @@ export class AdminService {
     // collapsing into one generic "invalid credentials" message.
     let workingRecord = record;
     if (record.totpEnabled) {
-      if (!totpCode) throw new TotpRequiredError("Two-factor code required.");
+      if (!totpCode) throw new TotpRequiredError("Two factor code required.");
       const result = await this.verifyTotpOrBackupCode(record, totpCode);
       if (!result.valid) {
         // A wrong 2FA code counts toward the same lockout as a wrong
         // password — a 6-digit TOTP code has too small a space (1 in a
         // million) to leave completely unthrottled.
         await this.recordFailure(record);
-        throw new AdminAuthError("Invalid two-factor code.");
+        throw new AdminAuthError("Invalid two factor code.");
       }
       if (result.consumedBackupCode) workingRecord = { ...record, totpBackupCodeHashes: JSON.stringify(result.remainingBackupCodeHashes) };
     }
@@ -156,7 +156,7 @@ export class AdminService {
    */
   async confirmTotpEnrollment(adminId: string, code: string): Promise<string[]> {
     const record = await this.admins.findById(adminId);
-    if (!record?.totpSecret) throw new AdminAuthError("No pending two-factor enrollment for this account.");
+    if (!record?.totpSecret) throw new AdminAuthError("No pending two factor enrollment for this account.");
     if (!(await verifyTotp(record.totpSecret, code))) {
       throw new AdminAuthError("That code didn't match. Check your authenticator app and try again.");
     }

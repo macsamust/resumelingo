@@ -165,6 +165,18 @@ export class AdminUserController {
     const existing = await userRepository.findById(id);
     if (!existing) return c.json({ error: "User not found." }, 404);
 
+    // AuthService.requestPasswordReset() silently no-ops for a suspended
+    // account (correct there — it's the public, unauthenticated
+    // forgot-password endpoint, which must not reveal an account's
+    // suspended status to whoever's asking). This is an authenticated admin
+    // action with no enumeration concern, so it should say so plainly
+    // instead of reporting success for an email that was never sent — an
+    // admin clicking this needs to know to unsuspend the account first, not
+    // see a "sent" toast and assume the user will get it.
+    if (existing.suspended) {
+      return c.json({ error: "This account is suspended, so no reset email was sent. Unsuspend it first, then try again." }, 400);
+    }
+
     // Cooldown reuses the audit log itself (every send is already logged
     // with targetId = user id) rather than a dedicated rate-limit table —
     // stops an admin (or a compromised admin session) from spamming the

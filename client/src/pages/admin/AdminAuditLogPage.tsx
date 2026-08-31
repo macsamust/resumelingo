@@ -22,14 +22,14 @@ const ACTION_LABELS: Record<string, string> = {
   "admin.create": "Added admin account",
   "admin.delete": "Removed admin account",
   "admin.revoke_sessions": "Signed out of all sessions",
-  "admin.totp_enable": "Enabled two-factor authentication",
-  "admin.totp_disable": "Disabled two-factor authentication",
+  "admin.totp_enable": "Enabled two factor authentication",
+  "admin.totp_disable": "Disabled two factor authentication",
   "user.export_csv": "Exported users to CSV",
-  "user.bulk_suspend": "Bulk-suspended accounts",
-  "user.bulk_unsuspend": "Bulk-unsuspended accounts",
-  "user.bulk_delete": "Bulk-deleted accounts",
+  "user.bulk_suspend": "Bulk suspended accounts",
+  "user.bulk_unsuspend": "Bulk unsuspended accounts",
+  "user.bulk_delete": "Bulk deleted accounts",
   "resume.export_csv": "Exported resumes to CSV",
-  "resume.bulk_delete": "Bulk-deleted resumes",
+  "resume.bulk_delete": "Bulk deleted resumes",
   "resume.update": "Edited resume content",
   "resume.delete": "Deleted resume",
 };
@@ -118,7 +118,7 @@ export function AdminAuditLogPage() {
     try {
       const result = await adminApi.verifyAuditLogIntegrity();
       if (result.intact) {
-        showToast("success", "Audit log integrity verified — no tampering detected.");
+        showToast("success", "Audit log integrity verified, no tampering detected.");
       } else {
         showToast("error", `Tampering detected: chain breaks at entry ${result.brokenAt?.id ?? "(unknown)"}.`);
       }
@@ -203,7 +203,7 @@ export function AdminAuditLogPage() {
                   <td className="hero-note">{new Date(e.createdAt).toLocaleString()}</td>
                   <td>{e.adminEmail}</td>
                   <td>{ACTION_LABELS[e.action] ?? e.action}</td>
-                  <td className="hero-note">{e.detail ?? "—"}</td>
+                  <td className="hero-note">{e.detail ?? "None"}</td>
                   <td>
                     <button
                       className="btn btn-ghost btn-sm"
@@ -227,7 +227,7 @@ export function AdminAuditLogPage() {
                           <span className="hero-note">Target type</span> {e.targetType}
                         </li>
                         <li>
-                          <span className="hero-note">Target ID</span> {e.targetId ?? "—"}
+                          <span className="hero-note">Target ID</span> {e.targetId ?? "None"}
                         </li>
                         <li>
                           <span className="hero-note">Timestamp (UTC)</span> {e.createdAt}

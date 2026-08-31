@@ -37,6 +37,22 @@ export function AdminUsersPage() {
   const [exporting, setExporting] = useState(false);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
+  // Which row's "more actions" menu (Suspend/Unsuspend, Delete) is open —
+  // same kebab-menu pattern as DashboardPage's resume cards: Send password
+  // reset stays as the one visible button, the moderation toggle and the
+  // destructive action move behind one trigger instead of three buttons
+  // crowding the row.
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  // Closes an open row menu on any click outside it — trigger/dropdown stop
+  // propagation (see below) so the same click that opens a menu doesn't
+  // immediately close it again. Same pattern as DashboardPage.
+  useEffect(() => {
+    if (!openMenuId) return;
+    const close = () => setOpenMenuId(null);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [openMenuId]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const allOnPageSelected = users.length > 0 && users.every((u) => selected.has(u.id));
@@ -302,13 +318,13 @@ export function AdminUsersPage() {
                   </td>
                   <td>
                     {user.subscriptionTier === "starter" ? (
-                      <span className="hero-note">—</span>
+                      <span className="hero-note">None</span>
                     ) : user.stripeSubscriptionActive ? (
                       <span className="admin-status-tag active" title={user.stripeCustomerId ?? undefined}>
                         Stripe
                       </span>
                     ) : (
-                      <span className="admin-status-tag suspended" title="Paid tier with no active Stripe subscription — set manually by an admin.">
+                      <span className="admin-status-tag suspended" title="Paid tier with no active Stripe subscription, set manually by an admin.">
                         Comped
                       </span>
                     )}
@@ -331,9 +347,6 @@ export function AdminUsersPage() {
                   </td>
                   <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                   <td className="admin-row-actions">
-                    <button className="btn btn-ghost btn-sm" disabled={busyId === user.id} onClick={() => onToggleSuspend(user)}>
-                      {user.suspended ? "Unsuspend" : "Suspend"}
-                    </button>
                     <button
                       className="btn btn-ghost btn-sm"
                       disabled={busyId === user.id || sendingResetId === user.id}
@@ -341,13 +354,41 @@ export function AdminUsersPage() {
                     >
                       {sendingResetId === user.id ? "Sending…" : "Send password reset"}
                     </button>
-                    <button
-                      className="btn btn-ghost btn-sm admin-danger"
-                      disabled={busyId === user.id}
-                      onClick={() => setConfirmDeleteUser(user)}
-                    >
-                      Delete
-                    </button>
+                    <div className="resume-menu">
+                      <button
+                        className="resume-menu-trigger"
+                        disabled={busyId === user.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId((cur) => (cur === user.id ? null : user.id));
+                        }}
+                        aria-label="More actions"
+                        aria-expanded={openMenuId === user.id}
+                      >
+                        &#8942;
+                      </button>
+                      {openMenuId === user.id && (
+                        <div className="resume-menu-dropdown" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => {
+                              setOpenMenuId(null);
+                              onToggleSuspend(user);
+                            }}
+                          >
+                            {user.suspended ? "Unsuspend" : "Suspend"}
+                          </button>
+                          <button
+                            className="danger"
+                            onClick={() => {
+                              setOpenMenuId(null);
+                              setConfirmDeleteUser(user);
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
                 {expandedId === user.id && (

@@ -142,8 +142,8 @@ export function AdminSkillSuggestionsPage() {
         <h1>Skills &amp; Tools Suggestions</h1>
       </div>
       <p className="hero-note admin-plan-warning">
-        These are the "AI-suggested" keyword chips shown in the Edit Resume Skills &amp; Tools picker (Portrait
-        template). They're actually this curated, per-profession list — add, edit, or remove keywords here and the
+        These are the "AI suggested" keyword chips shown in the Edit Resume Skills &amp; Tools picker (Portrait
+        template). They're actually this curated, per-profession list. Add, edit, or remove keywords here and the
         picker updates immediately, no code deploy needed.
       </p>
       {error && <div className="form-error">{error}</div>}

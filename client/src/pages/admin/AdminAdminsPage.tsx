@@ -93,8 +93,8 @@ export function AdminAdminsPage() {
         />
       </div>
       <p className="hero-note admin-plan-warning">
-        Anyone added here gets full access to the entire admin console — every user's data, billing, and every
-        catalog page. There's no role/permission split (yet); this is all-or-nothing access.
+        Anyone added here gets full access to the entire admin console: every user's data, billing, and every
+        catalog page. There's no role/permission split (yet); this is all or nothing access.
       </p>
       {error && <div className="form-error">{error}</div>}
 

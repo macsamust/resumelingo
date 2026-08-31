@@ -68,7 +68,7 @@ export function AdminLoginPage() {
             </>
           ) : (
             <div className="field">
-              <label>Two-factor code</label>
+              <label>Two factor code</label>
               <p className="hero-note" style={{ marginBottom: 10 }}>
                 Enter the 6-digit code from your authenticator app, or one of your backup codes.
               </p>

@@ -263,7 +263,7 @@ export function AdminResumeEditPage() {
 
           <CollapsibleSection title="Template" forceOpen={forceOpen}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
-              The owner's subscription tier still governs which templates are allowed — assigning one their plan
+              The owner's subscription tier still governs which templates are allowed. Assigning one their plan
               doesn't support will be rejected on save. Bump their tier from the Users page first if needed.
             </p>
             <div className="template-choices">
@@ -302,7 +302,7 @@ export function AdminResumeEditPage() {
                 ))}
               </select>
               <p className="hero-note" style={{ marginTop: 6, marginBottom: 0 }}>
-                Password-protected links keep whatever password is already set — this editor doesn't change it.
+                Password protected links keep whatever password is already set. This editor doesn't change it.
               </p>
             </div>
             <p className="hero-note" style={{ marginBottom: 0 }}>
@@ -346,7 +346,7 @@ export function AdminResumeEditPage() {
           <CollapsibleSection title="Generated Summary & Bullets" forceOpen={forceOpen} defaultOpen={false}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
               Direct text overrides, same panel subscribers now have on their own Edit Resume page. Saving here does
-              not set summaryManuallyEdited (that flag is only set from the subscriber's own save action) — so
+              not set summaryManuallyEdited (that flag is only set from the subscriber's own save action), so
               editing Work Experience, Education, or Achievements above and saving will still regenerate this text
               and discard a manual edit made here in the same save; edit either this section or the ones above, not
               both in one save.

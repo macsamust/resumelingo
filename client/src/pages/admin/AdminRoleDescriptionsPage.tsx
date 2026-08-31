@@ -41,8 +41,8 @@ function splitList(value: string): string[] {
 function parseTraitTriples(draft: Draft): { traits: [string, string, string]; keyTraits: [string, string, string] } | string {
   const traits = splitList(draft.traits);
   const keyTraits = splitList(draft.keyTraits);
-  if (traits.length !== 3) return "Traits must be exactly 3 comma-separated phrases.";
-  if (keyTraits.length !== 3) return "Key traits must be exactly 3 comma-separated phrases.";
+  if (traits.length !== 3) return "Traits must be exactly 3 comma separated phrases.";
+  if (keyTraits.length !== 3) return "Key traits must be exactly 3 comma separated phrases.";
   return { traits: [traits[0], traits[1], traits[2]], keyTraits: [keyTraits[0], keyTraits[1], keyTraits[2]] };
 }
 
@@ -200,12 +200,12 @@ export function AdminRoleDescriptionsPage() {
         </h2>
         <div className="admin-new-template-row">
           <div className="field">
-            <label>Profession (leave as "None" for an "Other" sub-category or the fallback)</label>
+            <label>Profession (leave as "None" for an "Other" subcategory or the fallback)</label>
             <select
               value={draft.professionKey}
               onChange={(e) => setEditing({ ...editing, [r.id]: { ...draft, professionKey: e.target.value } })}
             >
-              <option value="">None (keyword-matched / fallback)</option>
+              <option value="">None (keyword matched / fallback)</option>
               {professions.map((p) => (
                 <option key={p.key} value={p.key}>
                   {p.label}
@@ -219,7 +219,7 @@ export function AdminRoleDescriptionsPage() {
           </div>
         </div>
         <div className="field">
-          <label>Keywords (comma-separated — ignored for rows matched to a profession)</label>
+          <label>Keywords (comma separated, ignored for rows matched to a profession)</label>
           <input value={draft.keywords} onChange={(e) => setEditing({ ...editing, [r.id]: { ...draft, keywords: e.target.value } })} />
         </div>
         <div className="field">
@@ -227,7 +227,7 @@ export function AdminRoleDescriptionsPage() {
           <input value={draft.descriptor} onChange={(e) => setEditing({ ...editing, [r.id]: { ...draft, descriptor: e.target.value } })} />
         </div>
         <div className="field">
-          <label>Traits (exactly 3, comma-separated)</label>
+          <label>Traits (exactly 3, comma separated)</label>
           <input value={draft.traits} onChange={(e) => setEditing({ ...editing, [r.id]: { ...draft, traits: e.target.value } })} />
         </div>
         <div className="field">
@@ -235,7 +235,7 @@ export function AdminRoleDescriptionsPage() {
           <input value={draft.outcome} onChange={(e) => setEditing({ ...editing, [r.id]: { ...draft, outcome: e.target.value } })} />
         </div>
         <div className="field">
-          <label>Key traits (exactly 3, comma-separated)</label>
+          <label>Key traits (exactly 3, comma separated)</label>
           <input value={draft.keyTraits} onChange={(e) => setEditing({ ...editing, [r.id]: { ...draft, keyTraits: e.target.value } })} />
         </div>
         <div className="admin-row-actions">
@@ -264,10 +264,10 @@ export function AdminRoleDescriptionsPage() {
         />
       </div>
       <p className="hero-note admin-plan-warning">
-        These build every profession's About-statement voice: "{"{descriptor}"} who combines{" "}
+        These build every profession's About statement voice: "{"{descriptor}"} who combines{" "}
         <strong>trait 1, 2, 3</strong> to <strong>outcome</strong>. Known for <strong>key trait 1, 2, 3</strong>."
-        Reads as AI-generated, but is this curated list. A row matched to a Profession is used for that profession's
-        resumes directly; a row with no Profession is only used under "Other" — matched by keyword against the
+        Reads as AI generated, but is this curated list. A row matched to a Profession is used for that profession's
+        resumes directly; a row with no Profession is only used under "Other", matched by keyword against the
         resume's title, or as the generic fallback when nothing matches.
       </p>
       {error && <div className="form-error">{error}</div>}
@@ -276,9 +276,9 @@ export function AdminRoleDescriptionsPage() {
         <h2>Add a role description</h2>
         <div className="admin-new-template-row">
           <div className="field">
-            <label>Profession (leave as "None" for an "Other" sub-category)</label>
+            <label>Profession (leave as "None" for an "Other" subcategory)</label>
             <select value={newRole.professionKey} onChange={(e) => setNewRole({ ...newRole, professionKey: e.target.value })}>
-              <option value="">None (keyword-matched, "Other" only)</option>
+              <option value="">None (keyword matched, "Other" only)</option>
               {professions.map((p) => (
                 <option key={p.key} value={p.key}>
                   {p.label}
@@ -292,7 +292,7 @@ export function AdminRoleDescriptionsPage() {
           </div>
         </div>
         <div className="field">
-          <label>Keywords (comma-separated, matched against the resume title — ignored if a Profession is set)</label>
+          <label>Keywords (comma separated, matched against the resume title, ignored if a Profession is set)</label>
           <input value={newRole.keywords} onChange={(e) => setNewRole({ ...newRole, keywords: e.target.value })} placeholder="e.g. comedian, comedy" />
         </div>
         <div className="field">
@@ -300,7 +300,7 @@ export function AdminRoleDescriptionsPage() {
           <input value={newRole.descriptor} onChange={(e) => setNewRole({ ...newRole, descriptor: e.target.value })} required />
         </div>
         <div className="field">
-          <label>Traits (exactly 3, comma-separated)</label>
+          <label>Traits (exactly 3, comma separated)</label>
           <input
             value={newRole.traits}
             onChange={(e) => setNewRole({ ...newRole, traits: e.target.value })}
@@ -313,7 +313,7 @@ export function AdminRoleDescriptionsPage() {
           <input value={newRole.outcome} onChange={(e) => setNewRole({ ...newRole, outcome: e.target.value })} required />
         </div>
         <div className="field">
-          <label>Key traits (exactly 3, comma-separated)</label>
+          <label>Key traits (exactly 3, comma separated)</label>
           <input
             value={newRole.keyTraits}
             onChange={(e) => setNewRole({ ...newRole, keyTraits: e.target.value })}
@@ -341,7 +341,7 @@ export function AdminRoleDescriptionsPage() {
 
           {otherRows.length > 0 && (
             <>
-              <h2 style={{ marginTop: 32 }}>"Other" sub-categories &amp; fallback</h2>
+              <h2 style={{ marginTop: 32 }}>"Other" subcategories &amp; fallback</h2>
               <div className="admin-role-description-list">{otherRows.map(renderRow)}</div>
             </>
           )}
@@ -352,7 +352,7 @@ export function AdminRoleDescriptionsPage() {
           title="Delete role description"
           message={`Delete the "${confirmDelete.category}" role description?${
             confirmDelete.isFallback
-              ? " This is the generic fallback used when no keyword matches — deleting it may leave some 'Other' resumes without a summary voice."
+              ? " This is the generic fallback used when no keyword matches. Deleting it may leave some 'Other' resumes without a summary voice."
               : ""
           }`}
           confirmLabel="Delete"
