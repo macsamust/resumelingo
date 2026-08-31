@@ -329,6 +329,7 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     family: "photo-sidebar-underline", headerVariant: "banner-center",
     accent: "#131c33", accentSoft: "#cda869", font: SERIF_ELEGANT,
     flow: "summary-first", summaryLabel: "Profile", bulletsLabel: "Highlights",
+    languageProficiencyMeter: true,
   },
 
   // Circular photo beside the name/title, a colored banner header, then a
