@@ -181,13 +181,17 @@ section { padding: 84px 0; }
    they're locked out of. */
 .template-pill-tier { width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
 .template-pill-tier-starter { background: #6b7280; }
-/* Not amber/orange — that hue is already spoken for by the green/amber/red
-   ATS-score and resume-strength bands elsewhere (DashboardPage.tsx's
-   strengthTagClass, .ats-pass/.ats-fail), and this pill can also carry the
-   green "ATS" tag right next to it, so amber here would misread as a
-   pass/warn/fail signal instead of a neutral tier marker. */
-.template-pill-tier-professional { background: #2563eb; }
-.template-pill-tier-premium { background: #c026d3; }
+.template-pill-tier-professional { background: #c026d3; }
+/* Reuses Boardroom's own gold accent (accentSoft: "#c9a55c" in
+   templateStyles.ts) rather than a generic amber/gold, so "Premium" reads as
+   the same gold the app already uses for its one gold-branded template
+   instead of an arbitrary new color. Sits close to the amber hue the
+   green/amber/red ATS-score bands use elsewhere (DashboardPage.tsx's
+   strengthTagClass, .ats-pass/.ats-fail) — acceptable here since gold/premium
+   branding is a stronger, more expected association for this dot than the
+   ATS-score meaning would be, but worth knowing if it ever reads ambiguous
+   next to the green "ATS" tag on the same pill. */
+.template-pill-tier-premium { background: #c9a55c; }
 /* "ATS" tag — shown when the template's layout family is on
    atsCheck.ts's ATS_SAFE_FAMILIES allowlist, so someone can weigh
    parser-friendliness before picking a template instead of only finding out
