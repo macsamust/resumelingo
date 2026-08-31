@@ -1403,7 +1403,9 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .admin-sortable-th.active .admin-sort-arrow { opacity: 1; }
 .admin-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
 .admin-table tr:last-child td { border-bottom: none; }
-.admin-table input, .admin-table select { padding: 6px 8px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13.5px; width: 100%; }
+.admin-table input:not([type="checkbox"]), .admin-table select { padding: 6px 8px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13.5px; width: 100%; }
+/* Row-select checkboxes (Users/Resumes bulk actions) — excluded from the rule above, which forced padding/border/width:100% onto every <input>, distorting a checkbox into a stretched blank box instead of a normal native checkbox. */
+.admin-table input[type="checkbox"] { width: 16px; height: 16px; margin: 0; cursor: pointer; }
 .admin-sort-input { width: 64px !important; }
 .admin-row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .admin-save-all-row { display: flex; justify-content: flex-end; margin: 0 0 12px; }
