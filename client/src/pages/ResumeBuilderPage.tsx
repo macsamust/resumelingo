@@ -296,7 +296,7 @@ export function ResumeBuilderPage() {
             </div>
           </CollapsibleSection>
 
-          <CollapsibleSection title="2. Choose a template" forceOpen={forceOpen}>
+          <CollapsibleSection title="2. Choose a template" forceOpen={forceOpen} defaultOpen={true}>
             <div className="template-choices">
               {templates.map((t) => {
                 const locked = !!user && !canUseTemplate(user.subscriptionTier, t.category);

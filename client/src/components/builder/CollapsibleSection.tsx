@@ -9,7 +9,15 @@ export interface ForceOpenSignal {
 interface CollapsibleSectionProps {
   title: string;
   children: ReactNode;
-  /** Whether the section starts open. Defaults to true so existing behavior (everything visible) is unchanged until the user collapses something. */
+  /**
+   * Whether the section starts open. If not given, this defaults to
+   * whether `complete` is set at all (see below) — i.e. every "required"
+   * section that shows a green check/red minus glyph starts expanded, and
+   * every optional section without one starts collapsed. That's meant to
+   * be the standard for every section across every template, not something
+   * each call site has to remember to set correctly, so only pass this
+   * explicitly to deviate from that rule.
+   */
   defaultOpen?: boolean;
   /** Optional broadcast signal (e.g. from an "Expand all"/"Collapse all" control) that overrides the section's own open/closed state whenever it changes. */
   forceOpen?: ForceOpenSignal;
@@ -26,8 +34,8 @@ interface CollapsibleSectionProps {
 }
 
 /** A titled, collapsible block used to group each part of the resume editor (Details, Sharing, Work Experience, ...) so long forms are easier to navigate. */
-export function CollapsibleSection({ title, children, defaultOpen = true, forceOpen, complete }: CollapsibleSectionProps) {
-  const [open, setOpen] = useState(defaultOpen);
+export function CollapsibleSection({ title, children, defaultOpen, forceOpen, complete }: CollapsibleSectionProps) {
+  const [open, setOpen] = useState(defaultOpen ?? complete !== undefined);
 
   // useLayoutEffect (not useEffect) so a forced open is applied synchronously
   // before the browser paints — a caller like ResumeEditPage's

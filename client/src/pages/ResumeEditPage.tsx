@@ -966,7 +966,7 @@ export function ResumeEditPage() {
             </div>
           </CollapsibleSection>
 
-          <CollapsibleSection title="Template" forceOpen={forceOpen} defaultOpen={false}>
+          <CollapsibleSection title="Template" forceOpen={forceOpen}>
             <div className="template-choices">
               {templates.map((t) => {
                 const locked = !!user && !canUseTemplate(user.subscriptionTier, t.category);
@@ -1037,7 +1037,7 @@ export function ResumeEditPage() {
             </CollapsibleSection>
           )}
 
-          <CollapsibleSection title="Sharing" forceOpen={forceOpen} defaultOpen={false}>
+          <CollapsibleSection title="Sharing" forceOpen={forceOpen}>
             <div className="field">
               <label>Link visibility</label>
               <select value={visibility} onChange={(e) => setVisibility(e.target.value as LinkVisibility)}>
@@ -1113,7 +1113,7 @@ export function ResumeEditPage() {
             <EducationEditor education={education} onChange={setEducation} schoolSuggestions={schoolSuggestions} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Languages" forceOpen={forceOpen} defaultOpen={false}>
+          <CollapsibleSection title="Languages" forceOpen={forceOpen}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
               Optional: list any languages you speak and how fluently.
             </p>
@@ -1160,7 +1160,7 @@ export function ResumeEditPage() {
             />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Generated Summary & Bullets" forceOpen={forceOpen} defaultOpen={false}>
+          <CollapsibleSection title="Generated Summary & Bullets" forceOpen={forceOpen}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
               Your Objective/Summary/Profile text and top bullets are written by AI from your profession, answers,
               and achievements above. Don't love the wording? Click Regenerate for a new take, or edit the text
@@ -1206,14 +1206,13 @@ export function ResumeEditPage() {
             </div>
           </CollapsibleSection>
 
-          <CollapsibleSection title="Awards" forceOpen={forceOpen} defaultOpen={false}>
+          <CollapsibleSection title="Awards" forceOpen={forceOpen}>
             <AwardsEditor awards={awards} onChange={setAwards} />
           </CollapsibleSection>
 
           <CollapsibleSection
             title="Additional Details"
             forceOpen={forceOpen}
-            defaultOpen={professionHasQuestions}
             complete={professionHasQuestions ? sectionProgress.additionalDetails : undefined}
           >
             {professionDetail && (
@@ -1226,7 +1225,7 @@ export function ResumeEditPage() {
           </CollapsibleSection>
 
           {canUseReferences && (
-            <CollapsibleSection title="References" forceOpen={forceOpen} defaultOpen={false}>
+            <CollapsibleSection title="References" forceOpen={forceOpen}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
                 Adds a References section to your public resume link. Off by default: nothing appears until you
                 turn this on and add at least one reference.
@@ -1268,7 +1267,7 @@ export function ResumeEditPage() {
 
           {isPremium && (
             <div id="ats-check-section">
-              <CollapsibleSection title="ATS Check" forceOpen={forceOpen} defaultOpen={false}>
+              <CollapsibleSection title="ATS Check" forceOpen={forceOpen}>
                 <p className="hero-note" style={{ marginBottom: 16 }}>
                   An ATS (Applicant Tracking System) is the software many employers use to scan and rank resumes
                   before a person ever sees them. This check scores your resume's structure and compares it against a
@@ -1360,7 +1359,7 @@ export function ResumeEditPage() {
           )}
 
           {isPremium && (
-            <CollapsibleSection title="Recruiter Mode" forceOpen={forceOpen} defaultOpen={false}>
+            <CollapsibleSection title="Recruiter Mode" forceOpen={forceOpen}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
                 Adds a candidate summary card to the top of your public resume link: skills (pulled automatically
                 from your resume), availability, clearance, location, work authorization, expected salary, and
@@ -1442,7 +1441,7 @@ export function ResumeEditPage() {
           )}
 
           {isPremium && selectedTemplateIsPremium && (
-            <CollapsibleSection title="Cover Letter" forceOpen={forceOpen} defaultOpen={false}>
+            <CollapsibleSection title="Cover Letter" forceOpen={forceOpen}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
                 Generates a tailored AI cover letter alongside this resume. Off by default, turn this on to have one
                 written and kept in sync automatically.
@@ -1476,7 +1475,7 @@ export function ResumeEditPage() {
           )}
 
           {canUseVersionHistory && (
-            <CollapsibleSection title="Version History" forceOpen={forceOpen} defaultOpen={false}>
+            <CollapsibleSection title="Version History" forceOpen={forceOpen}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
                 A version is saved automatically every time you edit and save this resume. Restore any of the last
                 10 to undo changes.

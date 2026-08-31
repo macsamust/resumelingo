@@ -233,7 +233,7 @@ export function AdminResumeEditPage() {
             </button>
           </div>
 
-          <CollapsibleSection title="Info" forceOpen={forceOpen}>
+          <CollapsibleSection title="Info" forceOpen={forceOpen} defaultOpen={true}>
             <div className="field">
               <label>Full name</label>
               <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
@@ -261,7 +261,7 @@ export function AdminResumeEditPage() {
             </label>
           </CollapsibleSection>
 
-          <CollapsibleSection title="Template" forceOpen={forceOpen}>
+          <CollapsibleSection title="Template" forceOpen={forceOpen} defaultOpen={true}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
               The owner's subscription tier still governs which templates are allowed. Assigning one their plan
               doesn't support will be rejected on save. Bump their tier from the Users page first if needed.
@@ -281,7 +281,7 @@ export function AdminResumeEditPage() {
           </CollapsibleSection>
 
           {usesSkillsAndTools && (
-            <CollapsibleSection title="Skills & Tools" forceOpen={forceOpen}>
+            <CollapsibleSection title="Skills & Tools" forceOpen={forceOpen} defaultOpen={true}>
               <SkillsAndToolsEditor
                 professionKey={resume.profession}
                 professionLabel={resume.professionLabel}
@@ -291,7 +291,7 @@ export function AdminResumeEditPage() {
             </CollapsibleSection>
           )}
 
-          <CollapsibleSection title="Sharing" forceOpen={forceOpen}>
+          <CollapsibleSection title="Sharing" forceOpen={forceOpen} defaultOpen={true}>
             <div className="field">
               <label>Link visibility</label>
               <select value={visibility} onChange={(e) => setVisibility(e.target.value as LinkVisibility)}>
@@ -310,11 +310,11 @@ export function AdminResumeEditPage() {
             </p>
           </CollapsibleSection>
 
-          <CollapsibleSection title="Work Experience" forceOpen={forceOpen}>
+          <CollapsibleSection title="Work Experience" forceOpen={forceOpen} defaultOpen={true}>
             <ExperienceEditor experience={experience} onChange={setExperience} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Education" forceOpen={forceOpen}>
+          <CollapsibleSection title="Education" forceOpen={forceOpen} defaultOpen={true}>
             <EducationEditor education={education} onChange={setEducation} />
           </CollapsibleSection>
 
@@ -326,7 +326,7 @@ export function AdminResumeEditPage() {
             <LanguagesEditor languages={languages} onChange={setLanguages} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Highlights & Key Achievements" forceOpen={forceOpen}>
+          <CollapsibleSection title="Highlights & Key Achievements" forceOpen={forceOpen} defaultOpen={true}>
             <label className="checkbox-field" style={{ marginBottom: 16 }}>
               <input
                 type="checkbox"
