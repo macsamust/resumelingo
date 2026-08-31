@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { CollapsibleSection, ForceOpenSignal } from "../components/builder/CollapsibleSection";
@@ -814,29 +814,19 @@ export function ResumeEditPage() {
   }
 
   /**
-   * "View resume" opens the public page in a new tab (target="_blank") while
-   * this tab stays open and mounted — so it can't fall back on the
-   * beforeunload warning, and it doesn't get to just wait for the normal
-   * on-blur autosave either. The field the person was just typing in only
-   * blurs at the same moment this link is clicked, which schedules the
-   * usual 400ms-debounced autosave — but that timer now has to survive this
-   * tab losing focus/foreground to the newly-opened one, competing against
-   * that new tab's own near-instant fetch of the (still old) public resume
-   * data. In practice the debounced save often loses that race, so the new
-   * tab shows stale data — e.g. a just-typed language name missing, only
-   * the blank row it was added as. Explicitly flushing an immediate save
-   * here, right on click, fires our own save request at the same moment the
-   * new tab starts loading, well before its own request would go out
-   * (opening a tab, then loading its JS, then it calling the API is always
-   * slower than one PUT request already in flight) — so the public page one
-   * click later actually reflects what was just typed.
+   * Immediately flushes any pending edit to the server (bypassing the
+   * normal 400ms blur debounce), used both by that debounce itself and by
+   * onViewResume below. Returns the in-flight save promise so a caller that
+   * needs to know when it's actually done (onViewResume) can wait on it —
+   * plain blur-triggered callers just let it run in the background.
+   * No-op (returns undefined) when there's nothing to save.
    */
   const flushPendingAutosave = () => {
     if (autosaveTimeoutRef.current) clearTimeout(autosaveTimeoutRef.current);
-    if (savingInFlightRef.current || saving || !isDirty || !id || pendingDraft) return;
+    if (savingInFlightRef.current || saving || !isDirty || !id || pendingDraft) return undefined;
     savingInFlightRef.current = true;
     setAutoSaveState("saving");
-    persist()
+    return persist()
       .then(() => {
         setAutoSaveState("saved");
         setTimeout(() => setAutoSaveState((s) => (s === "saved" ? "idle" : s)), 3000);
@@ -845,6 +835,38 @@ export function ResumeEditPage() {
       .finally(() => {
         savingInFlightRef.current = false;
       });
+  };
+
+  /**
+   * "View resume" opens the public page in a new tab while this tab stays
+   * open and mounted — so it can't fall back on the beforeunload warning,
+   * and a plain target="_blank" link firing flushPendingAutosave in
+   * parallel with the browser's own navigation was a genuine race: the new
+   * tab's fetch of the public resume could (and, in practice, sometimes
+   * did) complete before our save finished landing, showing stale data —
+   * e.g. a just-picked dropdown value missing until a manual "Save changes"
+   * click. Fixed by not letting the browser navigate on its own at all:
+   * open a blank tab synchronously, right in this click handler (so it
+   * still counts as a direct response to the user's gesture and isn't
+   * blocked as a popup), then only point that already-open tab at the
+   * public URL once any pending save has actually finished — so the tab
+   * shows a brief blank/loading state instead of stale content. `win.opener
+   * = null` replicates rel="noopener" (severing the new tab's back-
+   * reference to this page) despite not using window.open's own noopener
+   * flag, which would otherwise make `win` itself unusable for the
+   * deferred navigation below.
+   */
+  const onViewResume = (e: MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const url = `/r/${resume.slug}`;
+    const win = window.open("", "_blank");
+    if (win) win.opener = null;
+    const navigate = () => {
+      if (win) win.location.href = url;
+    };
+    const pendingSave = flushPendingAutosave();
+    if (pendingSave) pendingSave.finally(navigate);
+    else navigate();
   };
 
   const scrollToAtsCheck = () => {
@@ -871,13 +893,7 @@ export function ResumeEditPage() {
       <div className="app-page-head">
         <h1 id="edit-resume-title">Edit Resume</h1>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <a
-            href={`/r/${resume.slug}`}
-            target="_blank"
-            rel="noreferrer"
-            className="btn btn-ghost"
-            onClick={flushPendingAutosave}
-          >
+          <a href={`/r/${resume.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost" onClick={onViewResume}>
             View resume
           </a>
           <button className="btn btn-ghost" onClick={onDelete}>
