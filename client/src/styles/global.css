@@ -169,7 +169,15 @@ section { padding: 84px 0; }
 .dash-tile p { font-size: 13.5px; font-weight: 600; color: var(--navy-light); }
 
 .template-pills { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-.template-pills span, .template-pill { display: inline-flex; align-items: center; background: #fff; border: 1px solid var(--border); padding: 9px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--navy-light); cursor: pointer; white-space: nowrap; }
+/* white-space left at its normal-wrap default (not nowrap) — a long name
+   (Government Contractor, Military Transition, ATS Optimized) needs to be
+   able to wrap to a second line rather than get clipped by the grid
+   column's width. Safe to allow now that the ATS indicator is a fixed-size
+   dot (see .template-pill-ats-dot) instead of the old variable-length "ATS"
+   text tag, which is what actually caused the earlier overflow — a wrapped
+   two-line pill with just a name is fine; a wrapped two-line pill with a
+   trailing text tag was not. */
+.template-pills span, .template-pill { display: inline-flex; align-items: center; background: #fff; border: 1px solid var(--border); padding: 9px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--navy-light); cursor: pointer; text-align: center; }
 .template-pill.active { border-color: var(--indigo); color: var(--indigo); background: #eef2ff; }
 .template-pill.locked { cursor: not-allowed; opacity: .55; }
 .template-pill.locked.active { border-color: var(--border); color: var(--navy-light); background: #fff; }
