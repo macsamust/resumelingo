@@ -46,7 +46,7 @@ export class SubscriptionController {
       return c.json({ error: "Invalid subscription tier." }, 400);
     }
     if (tier !== SubscriptionTier.Starter) {
-      return c.json({ error: "Paid tiers must be purchased through checkout — use POST /api/subscriptions/checkout." }, 400);
+      return c.json({ error: "Paid tiers must be purchased through checkout, use POST /api/subscriptions/checkout." }, 400);
     }
     const updated = await subscriptionService.changeTier(user.id, tier as SubscriptionTier);
     return c.json({ user: updated.toPublicJSON() });
@@ -81,19 +81,34 @@ export class SubscriptionController {
    * are always available.
    */
   webhook = async (c: Context<AppEnv>) => {
-    const { subscriptionService, stripeService, stripeWebhookSecret } = c.get("services");
+    const { subscriptionService, stripeService, stripeWebhookSecrets } = c.get("services");
     const signature = c.req.header("stripe-signature");
     if (!signature) {
       return c.json({ error: "Missing stripe-signature header." }, 400);
     }
-    if (!stripeWebhookSecret) {
-      console.error("STRIPE_WEBHOOK_SECRET is not set — rejecting webhook.");
+    if (stripeWebhookSecrets.length === 0) {
+      console.error("Neither STRIPE_WEBHOOK_SECRET nor STRIPE_WEBHOOK_SECRET_TEST is set — rejecting webhook.");
+      return c.json({ error: "Webhook not configured." }, 500);
+    }
+    // Checked separately from (and before) signature verification below —
+    // otherwise a missing STRIPE_SECRET_KEY throws from inside
+    // constructWebhookEvent's requireClient() call, gets caught by the same
+    // catch block as an actual bad signature, and reports the exact same
+    // "Invalid webhook signature" error either way. That ambiguity is
+    // exactly what made a real incident (STRIPE_WEBHOOK_SECRET mismatched
+    // with this endpoint's test-mode signing secret) harder to diagnose from
+    // Stripe's dashboard than it needed to be.
+    if (!stripeService.isConfigured()) {
+      console.error("STRIPE_SECRET_KEY is not set — rejecting webhook.");
       return c.json({ error: "Webhook not configured." }, 500);
     }
     const rawBody = await c.req.text();
     let event;
     try {
-      event = await stripeService.constructWebhookEvent(rawBody, signature, stripeWebhookSecret);
+      // Tries every configured secret (live-mode first, then test-mode) —
+      // see StripeService.constructWebhookEvent and Env.STRIPE_WEBHOOK_SECRET_TEST
+      // for why this Worker needs more than one.
+      event = await stripeService.constructWebhookEvent(rawBody, signature, stripeWebhookSecrets);
     } catch (err) {
       console.error("Stripe webhook signature verification failed:", err);
       return c.json({ error: "Invalid webhook signature." }, 400);

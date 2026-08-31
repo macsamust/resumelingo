@@ -24,6 +24,7 @@ import { StripeService } from "./StripeService";
 import { EmailService } from "./EmailService";
 import { ResumeImportService } from "./ResumeImportService";
 import { AchievementGeneratorService } from "./AchievementGeneratorService";
+import { SkillSuggestionAiService } from "./SkillSuggestionAiService";
 import { ViewDigestService, UnsubscribeDigestTokenPayload } from "./ViewDigestService";
 import { AiCareerCoachGenerator, ICareerCoachGenerator } from "./CareerCoachGenerator";
 
@@ -33,8 +34,14 @@ export interface Services {
   subscriptionService: SubscriptionService;
   adminService: AdminService;
   stripeService: StripeService;
-  /** Passed through directly for the webhook route, which needs it before it can even attempt signature verification — see SubscriptionController.webhook. */
-  stripeWebhookSecret: string | undefined;
+  /**
+   * Every configured Stripe webhook signing secret (live + test mode — see
+   * Env.STRIPE_WEBHOOK_SECRET/STRIPE_WEBHOOK_SECRET_TEST), passed through
+   * directly for the webhook route, which needs to know before it can even
+   * attempt signature verification — see SubscriptionController.webhook and
+   * StripeService.constructWebhookEvent.
+   */
+  stripeWebhookSecrets: string[];
   templateRepository: TemplateRepository;
   planRepository: PlanRepository;
   skillSuggestionRepository: SkillSuggestionRepository;
@@ -54,6 +61,8 @@ export interface Services {
   resumeAnalyticsRepository: ResumeAnalyticsRepository;
   resumeImportService: ResumeImportService;
   achievementGeneratorService: AchievementGeneratorService;
+  /** Real Workers AI call, additive to the curated skill_suggestions catalog — see SkillSuggestionAiService.ts. */
+  skillSuggestionAiService: SkillSuggestionAiService;
   /** Real Workers AI call as of Aug 2026, wrapped with a rule-based fallback for AI outages (see ContentGeneratorWithFallback in ContentGenerator.ts) — was bare rule-based template logic. Exposed here only for symmetry with the other AI services; ResumeService is the only consumer, wired at construction below. */
   contentGenerator: IContentGenerator;
   jobApplicationService: JobApplicationService;
@@ -127,11 +136,14 @@ export function createServices(env: Env): Services {
     userRepo,
     stripeService,
     env.STRIPE_PRICE_PROFESSIONAL,
-    env.STRIPE_PRICE_PREMIUM
+    env.STRIPE_PRICE_PREMIUM,
+    emailService,
+    env.CLIENT_ORIGIN
   );
   const adminService = new AdminService(adminRepo, adminTokenService, env.ADMIN_EMAIL, env.ADMIN_PASSWORD);
   const resumeImportService = new ResumeImportService(env.AI);
   const achievementGeneratorService = new AchievementGeneratorService(env.AI);
+  const skillSuggestionAiService = new SkillSuggestionAiService(env.AI);
   const jobApplicationService = new JobApplicationService(jobApplicationRepository, resumeRepo, userRepo);
   const careerCoachGenerator = new AiCareerCoachGenerator(env.AI);
   const viewDigestService = new ViewDigestService(
@@ -149,7 +161,9 @@ export function createServices(env: Env): Services {
     subscriptionService,
     adminService,
     stripeService,
-    stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET,
+    stripeWebhookSecrets: [env.STRIPE_WEBHOOK_SECRET, env.STRIPE_WEBHOOK_SECRET_TEST].filter(
+      (secret): secret is string => !!secret
+    ),
     templateRepository,
     planRepository,
     skillSuggestionRepository,
@@ -163,6 +177,7 @@ export function createServices(env: Env): Services {
     resumeAnalyticsRepository,
     resumeImportService,
     achievementGeneratorService,
+    skillSuggestionAiService,
     contentGenerator,
     jobApplicationService,
     viewDigestService,

@@ -5,7 +5,7 @@
   "scripts": {
     "predev": "npm install --prefix ../shared && npm run build --prefix ../shared",
     "dev": "wrangler dev",
-    "predeploy": "npm install --prefix ../shared && npm run build --prefix ../shared",
+    "predeploy": "npm install --prefix ../shared && npm run build --prefix ../shared && npm install --prefix ../client && npm run build --prefix ../client",
     "deploy": "wrangler deploy",
     "db:create": "wrangler d1 create resumelingo-db",
     "db:migrate:local": "wrangler d1 migrations apply resumelingo-db --local",
@@ -13,6 +13,7 @@
     "secret:jwt": "wrangler secret put JWT_SECRET",
     "secret:stripe-key": "wrangler secret put STRIPE_SECRET_KEY",
     "secret:stripe-webhook": "wrangler secret put STRIPE_WEBHOOK_SECRET",
+    "secret:stripe-webhook-test": "wrangler secret put STRIPE_WEBHOOK_SECRET_TEST",
     "secret:stripe-price-professional": "wrangler secret put STRIPE_PRICE_PROFESSIONAL",
     "secret:stripe-price-premium": "wrangler secret put STRIPE_PRICE_PREMIUM",
     "secret:resend-key": "wrangler secret put RESEND_API_KEY",

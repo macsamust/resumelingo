@@ -21,7 +21,18 @@ export interface Env {
   ADMIN_PASSWORD?: string;
   /** Stripe billing (Phase 4) — see services/StripeService.ts and SubscriptionService.ts. All optional so the app still runs without billing configured. */
   STRIPE_SECRET_KEY?: string;
+  /** Live-mode webhook endpoint's signing secret ("production-sophisticated-harmony" in the Stripe Dashboard). */
   STRIPE_WEBHOOK_SECRET?: string;
+  /**
+   * Test-mode webhook endpoint's signing secret ("upbeat-serenity" in the
+   * Stripe Dashboard) — a separate value from STRIPE_WEBHOOK_SECRET even
+   * though both endpoints point at this same Worker. Stripe issues a
+   * distinct signing secret per endpoint *per mode*, so one secret can't
+   * verify both; see SubscriptionController.webhook, which tries both in
+   * turn. Optional, same as STRIPE_WEBHOOK_SECRET — omit if this Worker
+   * never needs to handle Stripe test-mode traffic.
+   */
+  STRIPE_WEBHOOK_SECRET_TEST?: string;
   STRIPE_PRICE_PROFESSIONAL?: string;
   STRIPE_PRICE_PREMIUM?: string;
   /** Resend (email) — see services/EmailService.ts. Optional so the app still runs without it configured; password reset requests will just fail until it's set. */

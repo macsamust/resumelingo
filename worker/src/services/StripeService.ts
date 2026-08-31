@@ -37,6 +37,21 @@ export class StripeService {
     return this.client;
   }
 
+  /**
+   * Lets callers (currently just SubscriptionController.webhook) tell "Stripe
+   * isn't configured at all" apart from "Stripe rejected this specific
+   * request" *before* doing anything else — constructWebhookEvent routes
+   * through requireClient() too, but that throw was previously only visible
+   * inside a catch block shared with actual signature-verification failures,
+   * so a missing STRIPE_SECRET_KEY and a genuinely bad/mismatched
+   * STRIPE_WEBHOOK_SECRET produced the exact same "Invalid webhook
+   * signature" response — indistinguishable from Stripe's dashboard, and a
+   * real source of lost time diagnosing which one it actually was.
+   */
+  isConfigured(): boolean {
+    return this.client !== null;
+  }
+
   createCustomer(input: { email: string; name: string; userId: string }) {
     return this.requireClient().customers.create({
       email: input.email,
@@ -70,8 +85,28 @@ export class StripeService {
     });
   }
 
-  /** Verifies the `stripe-signature` header against the raw request body. Async — see class doc comment for why. */
-  async constructWebhookEvent(rawBody: string, signature: string, webhookSecret: string): Promise<Stripe.Event> {
-    return this.requireClient().webhooks.constructEventAsync(rawBody, signature, webhookSecret);
+  /**
+   * Verifies the `stripe-signature` header against the raw request body.
+   * Async — see class doc comment for why. Takes a *list* of candidate
+   * secrets, not one: this single Worker/URL receives webhooks from both
+   * Stripe's live-mode and test-mode endpoints (see Env.STRIPE_WEBHOOK_SECRET
+   * / STRIPE_WEBHOOK_SECRET_TEST), and Stripe issues each endpoint its own
+   * distinct signing secret even though they share a URL. Tries each in
+   * turn — a signature only ever matches the one secret that actually
+   * signed it, so this is equivalent to knowing up front which mode sent
+   * the request, without needing to inspect the payload first. Throws the
+   * *last* secret's error if every candidate fails, so the logged error at
+   * least reflects a real verification attempt rather than an empty list.
+   */
+  async constructWebhookEvent(rawBody: string, signature: string, webhookSecrets: string[]): Promise<Stripe.Event> {
+    let lastError: unknown;
+    for (const secret of webhookSecrets) {
+      try {
+        return await this.requireClient().webhooks.constructEventAsync(rawBody, signature, secret);
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    throw lastError ?? new Error("No Stripe webhook secret configured.");
   }
 }
