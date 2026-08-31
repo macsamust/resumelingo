@@ -3,9 +3,9 @@ import { catalogApi } from "../../api";
 import { TemplateDefinition } from "../../types";
 
 const FALLBACK_TEMPLATES = [
-  "Executive", "Modern", "Classic", "Government", "Federal", "Technical", "Creative",
+  "Executive", "Modern", "Classic", "Govt", "Federal", "Technical", "Creative",
   "Minimalist", "Consulting", "Military Transition", "Corporate", "Startup",
-  "Healthcare", "Academic", "Government Contractor",
+  "Healthcare", "Academic", "Govt Contractor",
 ];
 
 export function Templates() {
