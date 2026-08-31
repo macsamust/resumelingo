@@ -128,6 +128,19 @@ export interface TemplateStyle {
    * other template can flip this on later without new plumbing.
    */
   languageProficiencyMeter?: boolean;
+  /**
+   * Overrides the color of the Languages section's name text and filled
+   * proficiency dots (both together, so they stay coordinated) — defaults
+   * to the standard muted navy name / template accent-colored dots (see
+   * global.css's .tpl-languages-name and .tpl-languages-dot.is-filled) when
+   * unset. Added for "Emblem" at the person's request: its own accent is
+   * navy, but the person wanted the Languages entries specifically in dark
+   * red, independent of the template's main accent color. Web preview and
+   * public resume page only — the downloadable PDF export deliberately uses
+   * one plain, consistent layout across every template (see pdfExport.ts's
+   * header comment) and doesn't vary color by template at all.
+   */
+  languagesAccent?: string;
 }
 
 const SERIF_ELEGANT = `'Playfair Display', Georgia, 'Times New Roman', serif`;
@@ -329,7 +342,7 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     family: "photo-sidebar-underline", headerVariant: "banner-center",
     accent: "#131c33", accentSoft: "#cda869", font: SERIF_ELEGANT,
     flow: "summary-first", summaryLabel: "Profile", bulletsLabel: "Highlights",
-    languageProficiencyMeter: true,
+    languageProficiencyMeter: true, languagesAccent: "#991b1b",
   },
 
   // Circular photo beside the name/title, a colored banner header, then a

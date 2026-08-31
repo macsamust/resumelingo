@@ -763,7 +763,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
    not tier-gated, unlike Skills & Tools above. A plain list, one language
    per line, name plus its proficiency level. */
 .tpl-languages-list { list-style: none; font-size: 13px; color: var(--navy-light); line-height: 1.7; margin: 0; }
-.tpl-languages-name { font-weight: 600; color: var(--navy); }
+.tpl-languages-name { font-weight: 600; color: var(--languages-accent, var(--navy)); }
 .tpl-languages-proficiency { color: var(--muted); }
 /* Optional 5-dot fluency meter next to a language's name/proficiency text
    (see TemplateStyle.languageProficiencyMeter) — purely decorative
@@ -771,7 +771,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
    rather than needing its own label. */
 .tpl-languages-meter { display: inline-flex; gap: 4px; margin-left: 8px; vertical-align: middle; }
 .tpl-languages-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); display: inline-block; }
-.tpl-languages-dot.is-filled { background: var(--tpl-accent); }
+.tpl-languages-dot.is-filled { background: var(--languages-accent, var(--tpl-accent)); }
 
 /* Skills & Tools picker (Edit Resume, Portrait template only — see
    components/builder/SkillsAndToolsEditor.tsx). Available suggestions are

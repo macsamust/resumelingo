@@ -452,7 +452,10 @@ export function ResumePreview({
   const languagesBlock = namedLanguages.length > 0 && (
     <div className="tpl-section">
       {sectionLabel("Languages")}
-      <ul className="tpl-languages-list">
+      <ul
+        className="tpl-languages-list"
+        style={style.languagesAccent ? ({ "--languages-accent": style.languagesAccent } as CSSProperties) : undefined}
+      >
         {namedLanguages.map((l, i) => (
           <li key={i}>
             <span className="tpl-languages-name">{l.language}</span>
