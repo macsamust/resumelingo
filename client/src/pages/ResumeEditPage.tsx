@@ -23,6 +23,7 @@ import { canUseVisibility, VISIBILITY_LABEL, VISIBILITY_MIN_TIER } from "../util
 import { getTemplateStyle } from "../config/templateStyles";
 import { buildResumeTextBlob, isAtsSafeFamily, matchKeywords, runHealthChecks } from "../utils/atsCheck";
 import { CLEARANCE_OPTIONS, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
+import { withClearanceQuestion } from "../config/clearanceQuestion";
 import { generateId } from "../utils/id";
 import { clearDraft, loadDraft, ResumeDraft, saveDraft } from "../utils/resumeDraft";
 import {
@@ -456,10 +457,19 @@ export function ResumeEditPage() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
 
-  // Whether this profession actually has any Additional Details questions —
-  // some professions don't, in which case that section's progress dot is
-  // omitted entirely rather than showing as permanently "incomplete".
-  const professionHasQuestions = !!professionDetail && professionDetail.questions.length > 0;
+  // The profession's own Additional Details questions, plus the Govt
+  // Contractor template's Clearance Level question when that template is
+  // selected — see config/clearanceQuestion.ts.
+  const additionalQuestions = useMemo(
+    () => withClearanceQuestion(professionDetail?.questions ?? [], templateKey),
+    [professionDetail, templateKey]
+  );
+
+  // Whether there are actually any Additional Details questions to show —
+  // some profession/template combinations have none, in which case that
+  // section's progress dot is omitted entirely rather than showing as
+  // permanently "incomplete".
+  const professionHasQuestions = additionalQuestions.length > 0;
 
   // Drives both the per-section progress glyphs (CollapsibleSection's
   // `complete` prop) and the "X of Y sections complete" summary near the
@@ -479,7 +489,7 @@ export function ResumeEditPage() {
       (a) => a.challenge.trim() !== "" || a.action.trim() !== "" || a.result.trim() !== ""
     );
     const additionalDetails = professionHasQuestions
-      ? professionDetail!.questions.some((q) => (answers[q.key] ?? "").trim() !== "")
+      ? additionalQuestions.some((q) => (answers[q.key] ?? "").trim() !== "")
       : false;
 
     const required = [info, workExperience, educationDone, achievementsDone];
@@ -505,7 +515,7 @@ export function ResumeEditPage() {
     education,
     achievements,
     professionHasQuestions,
-    professionDetail,
+    additionalQuestions,
     answers,
     usesSkillsAndTools,
   ]);
@@ -1215,9 +1225,9 @@ export function ResumeEditPage() {
             forceOpen={forceOpen}
             complete={professionHasQuestions ? sectionProgress.additionalDetails : undefined}
           >
-            {professionDetail && (
+            {additionalQuestions.length > 0 && (
               <DynamicQuestionForm
-                questions={professionDetail.questions}
+                questions={additionalQuestions}
                 answers={answers}
                 onChange={(key, value) => setAnswers((prev) => ({ ...prev, [key]: value }))}
               />

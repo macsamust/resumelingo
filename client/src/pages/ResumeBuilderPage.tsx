@@ -17,6 +17,7 @@ import { ImportedResumeData } from "../api/ResumeImportApi";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL } from "../utils/templateAccess";
 import { getTemplateStyle } from "../config/templateStyles";
+import { withClearanceQuestion } from "../config/clearanceQuestion";
 import {
   AchievementEntry,
   AwardEntry,
@@ -138,6 +139,13 @@ export function ResumeBuilderPage() {
       requiredTotal: required.length,
     };
   }, [fullName, contactEmail, title, experience, education, achievements]);
+
+  // Same profession-plus-Govt-Contractor-template merge as ResumeEditPage —
+  // see config/clearanceQuestion.ts.
+  const additionalQuestions = useMemo(
+    () => withClearanceQuestion(professionDetail?.questions ?? [], templateKey),
+    [professionDetail, templateKey]
+  );
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -375,9 +383,9 @@ export function ResumeBuilderPage() {
             <p className="hero-note" style={{ marginBottom: 16 }}>
               Optional: a few profession specific prompts to help sharpen your summary.
             </p>
-            {professionDetail && (
+            {additionalQuestions.length > 0 && (
               <DynamicQuestionForm
-                questions={professionDetail.questions}
+                questions={additionalQuestions}
                 answers={answers}
                 onChange={(key, value) => setAnswers((prev) => ({ ...prev, [key]: value }))}
               />
