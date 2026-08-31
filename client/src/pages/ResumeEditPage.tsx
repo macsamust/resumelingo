@@ -977,7 +977,7 @@ export function ResumeEditPage() {
                 // color- and (for the dot) aria-hidden-only — so someone
                 // relying on a screen reader, or who hasn't learned what the
                 // dot colors mean, still gets tier + ATS info via the title.
-                const tierNote = `${TIER_LABEL[tier]} template.${atsSafe ? " ATS friendly (single-column layout)." : ""}`;
+                const tierNote = `${TIER_LABEL[tier]} template.${atsSafe ? " ATS friendly (single column layout)." : ""}`;
                 return (
                   <span
                     key={t.key}
