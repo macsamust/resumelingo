@@ -188,6 +188,12 @@ export function AdminUsersPage() {
     }
   };
 
+  /**
+   * Exports every user matching the current search — the full filtered
+   * result set, not just the page on screen. For a report of specific
+   * hand-picked accounts instead, check their rows and use "Export
+   * selected" in the bulk action bar (onExportSelected below).
+   */
   const onExport = async () => {
     setExporting(true);
     try {
@@ -195,6 +201,19 @@ export function AdminUsersPage() {
       downloadBlob(blob, `users-${new Date().toISOString().slice(0, 10)}.csv`);
     } catch (err) {
       showToast("error", err instanceof ApiError ? err.message : "Couldn't export users.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  /** Custom-report export: only the rows the admin has checked, regardless of search/sort. */
+  const onExportSelected = async () => {
+    setExporting(true);
+    try {
+      const blob = await adminApi.exportUsersCsv({ ids: Array.from(selected), sortKey: sort.key, sortDirection: sort.direction });
+      downloadBlob(blob, `users-selected-${new Date().toISOString().slice(0, 10)}.csv`);
+    } catch (err) {
+      showToast("error", err instanceof ApiError ? err.message : "Couldn't export the selected users.");
     } finally {
       setExporting(false);
     }
@@ -251,6 +270,9 @@ export function AdminUsersPage() {
       {selected.size > 0 && (
         <div className="admin-bulk-bar">
           <span className="hero-note">{selected.size} selected</span>
+          <button className="btn btn-ghost btn-sm" type="button" disabled={exporting} onClick={onExportSelected}>
+            {exporting ? "Exporting…" : "Export selected"}
+          </button>
           <button className="btn btn-ghost btn-sm" type="button" disabled={bulkBusy} onClick={() => onBulkSuspend(true)}>
             Suspend selected
           </button>

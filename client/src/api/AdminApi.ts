@@ -164,12 +164,19 @@ export class AdminApi extends ApiClient {
     return this.get<{ users: AdminUserSummary[]; total: number; page: number; pageSize: number }>(`/admin/users?${qs}`);
   }
 
-  /** Full filtered result set (not just the current page) as a CSV Blob. */
-  exportUsersCsv(params: { q?: string; sortKey: string; sortDirection: "asc" | "desc" }) {
+  /**
+   * Full filtered result set (not just the current page) as a CSV Blob —
+   * or, when `ids` is given, exactly that hand-picked set of accounts (the
+   * Users page's "check some rows, then Export CSV" custom report). `ids`
+   * takes priority over `q` server-side; see
+   * UserRepository.findAllWithResumeCountsMatching.
+   */
+  exportUsersCsv(params: { q?: string; ids?: string[]; sortKey: string; sortDirection: "asc" | "desc" }) {
     const qs = new URLSearchParams({
       sortKey: params.sortKey,
       sortDirection: params.sortDirection,
       ...(params.q ? { q: params.q } : {}),
+      ...(params.ids && params.ids.length > 0 ? { ids: params.ids.join(",") } : {}),
     });
     return this.getBlob(`/admin/users/export?${qs}`);
   }

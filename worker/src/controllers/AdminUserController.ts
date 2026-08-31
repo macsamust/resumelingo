@@ -56,18 +56,23 @@ export class AdminUserController {
   };
 
   /**
-   * Exports every user matching the current search/sort as CSV — the full
-   * filtered result set, not just the page on screen (see
-   * UserRepository.findAllWithResumeCountsMatching). Logged in the audit
-   * trail since this hands an admin a downloadable file of user PII
-   * (emails, tiers, billing status).
+   * Exports users as CSV — either every user matching the current
+   * search/sort (the full filtered result set, not just the page on
+   * screen), or, when the admin has checked specific rows on the Users
+   * page, exactly that hand-picked set (a "custom report") via `ids`. See
+   * UserRepository.findAllWithResumeCountsMatching for how the two modes
+   * are distinguished. Logged in the audit trail either way, since this
+   * hands an admin a downloadable file of user PII (emails, tiers, billing
+   * status).
    */
   exportCsv = async (c: Context<AppEnv>) => {
     const { userRepository, adminAuditLogRepository } = c.get("services");
     const q = c.req.query("q") ?? undefined;
+    const idsParam = c.req.query("ids") ?? undefined;
+    const ids = idsParam ? idsParam.split(",").filter(Boolean) : undefined;
     const sortKey = c.req.query("sortKey") ?? "name";
     const sortDirection = c.req.query("sortDirection") === "desc" ? "desc" : "asc";
-    const records = await userRepository.findAllWithResumeCountsMatching({ q, sortKey, sortDirection });
+    const records = await userRepository.findAllWithResumeCountsMatching({ q, ids, sortKey, sortDirection });
 
     const rows = records.map((record) => {
       const user = new User(record);
@@ -100,7 +105,9 @@ export class AdminUserController {
     await adminAuditLogRepository.log(c.get("admin")!, {
       action: "user.export_csv",
       targetType: "user",
-      detail: `Exported ${rows.length} user${rows.length === 1 ? "" : "s"}${q ? ` matching "${q}"` : ""}`,
+      detail: `Exported ${rows.length} user${rows.length === 1 ? "" : "s"}${
+        ids && ids.length > 0 ? " (custom selection)" : q ? ` matching "${q}"` : ""
+      }`,
     });
 
     c.header("Content-Type", "text/csv; charset=utf-8");

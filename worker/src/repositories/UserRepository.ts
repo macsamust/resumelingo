@@ -257,19 +257,37 @@ export class UserRepository extends BaseRepository<UserRecord> {
    * the whole filtered result set rather than just the page currently on
    * screen. Capped at 5,000 rows so a very large, unfiltered export can't
    * blow past D1/Worker response limits.
+   *
+   * `ids`, when given, restricts the export to exactly those accounts —
+   * the admin Users page's "select rows via checkbox, then Export CSV"
+   * custom-report flow (see AdminUsersPage's selected state and
+   * AdminUserController.exportCsv). Takes priority over `q`: an explicit
+   * row selection is a stronger signal of intent than the text search that
+   * was used to find those rows in the first place, so it isn't
+   * re-filtered by it.
    */
   async findAllWithResumeCountsMatching(params: {
     q?: string;
+    ids?: string[];
     sortKey: string;
     sortDirection: "asc" | "desc";
     limit?: number;
   }): Promise<(UserRecord & { resumeCount: number; lastActivityAt: string | null })[]> {
     const q = params.q?.trim();
-    const where = q ? `WHERE u.name LIKE ? OR u.email LIKE ?` : "";
-    const likeArgs = q ? [`%${q}%`, `%${q}%`] : [];
+    const ids = params.ids?.filter((id) => id.trim() !== "");
     const orderColumn = UserRepository.SORT_COLUMNS[params.sortKey] ?? UserRepository.SORT_COLUMNS.name;
     const orderDir = params.sortDirection === "desc" ? "DESC" : "ASC";
     const limit = Math.min(5000, Math.max(1, params.limit ?? 5000));
+
+    let where = "";
+    let whereArgs: string[] = [];
+    if (ids && ids.length > 0) {
+      where = `WHERE u.id IN (${ids.map(() => "?").join(",")})`;
+      whereArgs = ids;
+    } else if (q) {
+      where = `WHERE u.name LIKE ? OR u.email LIKE ?`;
+      whereArgs = [`%${q}%`, `%${q}%`];
+    }
 
     const { results } = await this.db
       .prepare(
@@ -281,7 +299,7 @@ export class UserRepository extends BaseRepository<UserRecord> {
          ORDER BY ${orderColumn} ${orderDir}
          LIMIT ?`
       )
-      .bind(...likeArgs, limit)
+      .bind(...whereArgs, limit)
       .all<UserRecord & { resumeCount: number; lastActivityAt: string | null }>();
 
     return results.map((row) => ({ ...normalizeBooleans(row), resumeCount: row.resumeCount, lastActivityAt: row.lastActivityAt }));
