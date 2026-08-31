@@ -8,16 +8,16 @@ export function Hero() {
         <div>
           <span className="eyebrow">Not a resume builder. A living career profile.</span>
           <h1>
-            Your resume, reimagined as a <span>living, cloud-hosted professional identity</span>.
+            Your resume, reimagined as a <span>living, cloud hosted professional identity</span>.
           </h1>
           <p className="lead">
             ResumeLingo interviews you about your profession, uses AI to turn your answers into polished,
-            achievement-driven bullets, and publishes it all to one link that's always current — no more
+            achievement driven bullets, and publishes it all to one link that's always current. No more
             emailing five different PDFs.
           </p>
           <div className="hero-actions">
             <Link to="/signup" className="btn btn-primary">
-              Create your resume
+              Get started
             </Link>
             <a href="#how" className="btn btn-ghost">
               See how it works
@@ -36,7 +36,7 @@ export function Hero() {
             <ParrotLogo size={110} decorative={false} />
           </div>
           <p className="hero-mascot-caption">
-            <em>Meet Poly — short for Polyglot, our resident many-tongued parrot.</em>
+            <em>Meet Poly, short for Polyglot, our resident many tongued parrot.</em>
           </p>
           <div className="browser-bar">
             <span style={{ background: "#f87171" }}></span>

@@ -24,7 +24,7 @@
 // TODO.md.
 const FUTURE = [
   { tag: "Networking", title: "Digital business card", body: "Scan a QR code for instant access to your resume." },
-  { tag: "Video", title: "Video introduction", body: "A one-minute video introduction — recruiters love this." },
+  { tag: "Video", title: "Video introduction", body: "A one-minute video introduction. Recruiters love this." },
 ];
 
 export function FuturePremium() {

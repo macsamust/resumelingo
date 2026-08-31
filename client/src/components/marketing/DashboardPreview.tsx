@@ -19,7 +19,7 @@ export function DashboardPreview() {
         <div className="section-head">
           <span className="section-tag">Account dashboard</span>
           <h2>Everything lives on one dashboard</h2>
-          <p>After login, subscribers land here — their whole career story at a glance.</p>
+          <p>After login, subscribers land here: their whole career story at a glance.</p>
         </div>
         <div className="dashboard-grid">
           {TILES.map((tile) => (

@@ -20,7 +20,7 @@ export function ResumeAnalyticsPanel({ analytics }: { analytics: ResumeAnalytics
     <div className="builder-panel" style={{ marginTop: 36, marginBottom: 36 }}>
       <h2>Resume Analytics</h2>
       <p className="hero-note" style={{ marginBottom: 20 }}>
-        A closer look across all of your resumes — updates automatically as you edit and share them.
+        A closer look across all of your resumes, updated automatically as you edit and share them.
       </p>
 
       <div className="analytics-section">
@@ -91,7 +91,7 @@ export function ResumeAnalyticsPanel({ analytics }: { analytics: ResumeAnalytics
         <div className="analytics-section">
           <h3 className="analytics-subhead">Keywords you keep missing</h3>
           <p className="hero-note" style={{ marginBottom: 10 }}>
-            Most-repeated words from job descriptions you've pasted into ATS Check that your resumes don't cover yet.
+            Most repeated words from job descriptions you've pasted into ATS Check that your resumes don't cover yet.
           </p>
           <div className="ats-keyword-chips">
             {recurringMissingKeywords.map((k) => (

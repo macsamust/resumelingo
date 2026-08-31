@@ -84,6 +84,7 @@ export function NotificationBell({ recentViews }: { recentViews: RecentView[] })
           setOpen((v) => !v);
         }}
         aria-label={`${recentViews.length} recent resume view${recentViews.length === 1 ? "" : "s"}`}
+        title="Recent views of your Recruiter Mode resumes"
       >
         <span aria-hidden="true">&#128276;</span>
         <span className="notification-bell-badge">{recentViews.length}</span>
@@ -94,7 +95,7 @@ export function NotificationBell({ recentViews }: { recentViews: RecentView[] })
           style={{ top: position.top, left: position.left, width: position.width }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="notification-bell-header">Recent views</div>
+          <div className="notification-bell-header">Recent Recruiter Mode views</div>
           <ul className="notification-bell-list">
             {recentViews.map((v, i) => (
               <li key={`${v.resumeId}-${v.viewedAt}-${i}`}>

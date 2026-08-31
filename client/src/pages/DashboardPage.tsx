@@ -172,9 +172,6 @@ export function DashboardPage() {
           <h1>
             {user ? `Welcome${isFirstVisit ? "" : " back"}, ${user.name.split(" ")[0]}` : "Dashboard"}
           </h1>
-          <p className="hero-note">
-            <Link to="/profile">View profile</Link>
-          </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           {summary && <NotificationBell recentViews={summary.recentViews} />}
@@ -191,7 +188,7 @@ export function DashboardPage() {
       )}
       {checkoutStatus === "cancelled" && (
         <div className="empty-state" style={{ marginBottom: 24 }}>
-          Checkout was cancelled — your plan hasn't changed.
+          Checkout was cancelled. Your plan hasn't changed.
         </div>
       )}
 
@@ -215,7 +212,7 @@ export function DashboardPage() {
         <div className="dash-tile">
           <div className="dash-icon">⚙️</div>
           <p>
-            {summary.subscription.planName} —{" "}
+            {summary.subscription.planName}:{" "}
             {summary.subscription.unlimited ? "Unlimited" : `${summary.subscription.remaining} left`}
           </p>
         </div>
@@ -243,7 +240,7 @@ export function DashboardPage() {
       <h2 style={{ marginBottom: showViewsAndStrengthTiles && mostViewed ? 4 : 16 }}>My Resumes</h2>
       {showViewsAndStrengthTiles && mostViewed && (
         <p className="hero-note" style={{ marginBottom: 16 }}>
-          "{mostViewed.title}" is your most-viewed resume, with {mostViewed.viewCount} view
+          "{mostViewed.title}" is your most viewed resume, with {mostViewed.viewCount} view
           {mostViewed.viewCount === 1 ? "" : "s"}.
         </p>
       )}
@@ -347,7 +344,7 @@ export function DashboardPage() {
           <p className="hero-note" style={{ marginBottom: 16 }}>
             {isProfessional
               ? "Premium adds curated job search resources, resume tips, and subscriber success stories."
-              : "Professional adds view/strength tracking, career articles, and in-dashboard subscription management. Premium adds curated job search resources, resume tips, and subscriber success stories on top of that."}
+              : "Professional adds view/strength tracking, career articles, and in dashboard subscription management. Premium adds curated job search resources, resume tips, and subscriber success stories on top of that."}
           </p>
           <Link to="/#pricing" className="btn btn-primary">
             See plans
@@ -448,7 +445,7 @@ export function DashboardPage() {
       {cloneSourceResume && (
         <TextPromptDialog
           title="Clone resume"
-          message="Give the cloned resume a unique title — this also becomes its public link."
+          message="Give the cloned resume a unique title. This also becomes its public link."
           label="Title"
           defaultValue={`${cloneSourceResume.title} (Copy)`}
           confirmLabel="Clone"

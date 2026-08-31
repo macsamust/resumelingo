@@ -24,7 +24,7 @@ export function Templates() {
         <div className="section-head">
           <span className="section-tag">Templates</span>
           <h2>A template for every field</h2>
-          <p>Switch anytime and preview instantly — no rebuilding required.</p>
+          <p>Switch anytime and preview instantly, no rebuilding required.</p>
         </div>
         <div className="template-pills">
           {templates

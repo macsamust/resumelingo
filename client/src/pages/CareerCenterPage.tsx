@@ -27,19 +27,19 @@ export const TOPICS: CareerTopic[] = [
     title: "Resume Tips",
     updated: "August 2026",
     intro:
-      "Hiring in 2026 has shifted from \"where have you worked\" to \"what can you do, and how fast can you learn.\" The strongest resumes are clean, skills-forward, and built around measurable impact rather than a list of duties.",
+      "Hiring in 2026 has shifted from \"where have you worked\" to \"what can you do, and how fast can you learn.\" The strongest resumes are clean, skills forward, and built around measurable impact rather than a list of duties.",
     tips: [
-      "Lead every bullet with a result, not a task — quantify what changed (revenue, time saved, error rate, customer satisfaction) rather than just describing what you were responsible for.",
-      "Mirror the language in the job posting for your skills and tools, and back it up with a dedicated Skills section — most ATS platforms now weight that section more heavily than skills mentioned only inside job bullets.",
-      "Use a single-column layout with standard section headings (Experience, Education, Skills) — heavily designed templates with columns, tables, or graphics often parse incorrectly in ATS software.",
-      "Don't force everything onto one page if you have 5+ years of relevant experience — ATS systems score every page equally, and a cramped one-pager reads worse than a clean two-pager.",
-      "Skip the purely AI-generated bullet list. Recruiters increasingly flag generic, overly-polished phrasing that isn't backed by specifics — use AI to tighten your own draft, not to write it from scratch.",
-      "Never hide keywords in white or zero-opacity text to game the ATS — modern parsers detect the trick, and getting caught can auto-flag your application as fraudulent instead of boosting your score.",
+      "Lead every bullet with a result, not a task: quantify what changed (revenue, time saved, error rate, customer satisfaction) rather than just describing what you were responsible for.",
+      "Mirror the language in the job posting for your skills and tools, and back it up with a dedicated Skills section. Most ATS platforms now weight that section more heavily than skills mentioned only inside job bullets.",
+      "Use a single column layout with standard section headings (Experience, Education, Skills). Heavily designed templates with columns, tables, or graphics often parse incorrectly in ATS software.",
+      "Don't force everything onto one page if you have 5+ years of relevant experience. ATS systems score every page equally, and a cramped one pager reads worse than a clean two pager.",
+      "Skip the purely AI generated bullet list. Recruiters increasingly flag generic, overly polished phrasing that isn't backed by specifics. Use AI to tighten your own draft, not to write it from scratch.",
+      "Never hide keywords in white or zero-opacity text to game the ATS. Modern parsers detect the trick, and getting caught can auto-flag your application as fraudulent instead of boosting your score.",
     ],
     sources: [
-      { label: "2026 resumes: what employers look for — Indeed Flex", url: "https://indeedflex.com/blog/for-flexers/2026-resumes-what-employers-look-for/" },
-      { label: "18 Resume Tips for 2026 — Final Round AI", url: "https://www.finalroundai.com/blog/resume-tips-2026" },
-      { label: "16 Top Resume Tips to Help You Land a Job in 2026 — Coursera", url: "https://www.coursera.org/articles/resume-tips" },
+      { label: "2026 resumes: what employers look for, Indeed Flex", url: "https://indeedflex.com/blog/for-flexers/2026-resumes-what-employers-look-for/" },
+      { label: "18 Resume Tips for 2026, Final Round AI", url: "https://www.finalroundai.com/blog/resume-tips-2026" },
+      { label: "16 Top Resume Tips to Help You Land a Job in 2026, Coursera", url: "https://www.coursera.org/articles/resume-tips" },
     ],
   },
   {
@@ -48,18 +48,18 @@ export const TOPICS: CareerTopic[] = [
     title: "Interview Tips",
     updated: "August 2026",
     intro:
-      "Interviews are leaning harder on real-time problem-solving and behavioral evidence over rehearsed answers — but the fundamentals of structuring a clear, specific answer still decide most outcomes.",
+      "Interviews are leaning harder on real time problem solving and behavioral evidence over rehearsed answers, but the fundamentals of structuring a clear, specific answer still decide most outcomes.",
     tips: [
-      "Use the STAR method (Situation, Task, Action, Result) for behavioral questions — it keeps your answer concrete instead of drifting into generalities.",
-      "Prepare a 60–90 second answer to \"tell me about yourself\" using a Present → Past → Future structure — it's asked in the vast majority of interviews and sets the tone for everything after it.",
-      "Have one honest, non-critical weakness ready, paired with what you're actively doing about it — a rehearsed \"I work too hard\" answer reads as evasive.",
-      "First impressions form fast — many interviewers form an initial read in the first couple of minutes, so treat your opening small talk and framing as part of the interview, not a warm-up.",
-      "Expect scenario-based and AI-adjacent questions (how you'd use AI tools, how you'd handle an ambiguous problem) in addition to classic behavioral prompts — prepare one story about adapting to a new tool or process.",
+      "Use the STAR method (Situation, Task, Action, Result) for behavioral questions. It keeps your answer concrete instead of drifting into generalities.",
+      "Prepare a 60–90 second answer to \"tell me about yourself\" using a Present → Past → Future structure. It's asked in the vast majority of interviews and sets the tone for everything after it.",
+      "Have one honest, noncritical weakness ready, paired with what you're actively doing about it. A rehearsed \"I work too hard\" answer reads as evasive.",
+      "First impressions form fast. Many interviewers form an initial read in the first couple of minutes, so treat your opening small talk and framing as part of the interview, not a warmup.",
+      "Expect scenario based and AI adjacent questions (how you'd use AI tools, how you'd handle an ambiguous problem) in addition to classic behavioral prompts. Prepare one story about adapting to a new tool or process.",
     ],
     sources: [
-      { label: "25 Common Interview Questions & Answers — Resume-Now", url: "https://www.resume-now.com/job-resources/interviews/interview-questions-and-answers" },
-      { label: "Top 10 Interview Questions and Answers — The Interview Guys", url: "https://blog.theinterviewguys.com/top-10-job-interview-questions-and-answers/" },
-      { label: "Job Interview Tips and Tricks 2026 — Qwyse", url: "https://www.qwyse.com/hub/learn/job-interview-tips-and-tricks-in-2026-how-to-prepare-and-answer-to-get-hired/" },
+      { label: "25 Common Interview Questions & Answers, Resume-Now", url: "https://www.resume-now.com/job-resources/interviews/interview-questions-and-answers" },
+      { label: "Top 10 Interview Questions and Answers, The Interview Guys", url: "https://blog.theinterviewguys.com/top-10-job-interview-questions-and-answers/" },
+      { label: "Job Interview Tips and Tricks 2026, Qwyse", url: "https://www.qwyse.com/hub/learn/job-interview-tips-and-tricks-in-2026-how-to-prepare-and-answer-to-get-hired/" },
     ],
   },
   {
@@ -68,18 +68,18 @@ export const TOPICS: CareerTopic[] = [
     title: "Salary Negotiation",
     updated: "August 2026",
     intro:
-      "Negotiating is expected, not confrontational — over 70% of hiring managers budget for it. Pay transparency has also gone mainstream in 2026, with many postings now showing a salary range up front, giving you a stronger starting baseline. The leverage you have is highest the moment an offer is made, before you've accepted anything.",
+      "Negotiating is expected, not confrontational. Over 70% of hiring managers budget for it. Pay transparency has also gone mainstream in 2026, with many postings now showing a salary range up front, giving you a stronger starting baseline. The leverage you have is highest the moment an offer is made, before you've accepted anything.",
     tips: [
-      "Research your number using Glassdoor, Payscale, and LinkedIn Salary, and check the posted pay range on the job listing itself — most roles now publish one, and it's a more direct anchor than any survey site.",
-      "Wait for the offer stage to negotiate — once an offer is on the table, the employer has already decided you're the right person for the role, which is your strongest leverage point.",
-      "Make the case, don't just state the number — briefly connect your ask to specific strengths and what the employer gains from your track record; candidates who counter with a clear, data-backed rationale tend to see meaningfully larger increases than those who counter with a number alone.",
-      "If base salary is fixed, negotiate the rest — signing bonus, extra PTO, remote/hybrid flexibility, equity, professional development budget, relocation support, or an earlier performance review all carry real value.",
-      "Know your floor going in, and be willing to walk away if an offer can't meet it — a number you'll resent in six months isn't worth taking under pressure.",
+      "Research your number using Glassdoor, Payscale, and LinkedIn Salary, and check the posted pay range on the job listing itself. Most roles now publish one, and it's a more direct anchor than any survey site.",
+      "Wait for the offer stage to negotiate. Once an offer is on the table, the employer has already decided you're the right person for the role, which is your strongest leverage point.",
+      "Make the case, don't just state the number. Briefly connect your ask to specific strengths and what the employer gains from your track record; candidates who counter with a clear, data backed rationale tend to see meaningfully larger increases than those who counter with a number alone.",
+      "If base salary is fixed, negotiate the rest: signing bonus, extra PTO, remote/hybrid flexibility, equity, professional development budget, relocation support, or an earlier performance review all carry real value.",
+      "Know your floor going in, and be willing to walk away if an offer can't meet it. A number you'll resent in six months isn't worth taking under pressure.",
     ],
     sources: [
-      { label: "How To Negotiate Salary After a Job Offer — Indeed", url: "https://www.indeed.com/career-advice/pay-salary/how-to-negotiate-salary" },
-      { label: "How to Negotiate Salary: 3 Winning Strategies — Harvard Law PON", url: "https://www.pon.harvard.edu/daily/salary-negotiations/negotiate-salary-3-winning-strategies/" },
-      { label: "How to Negotiate Salary During Your Job Search — Robert Half", url: "https://www.roberthalf.com/us/en/insights/career-development/how-to-negotiate-salary-after-getting-job-offer" },
+      { label: "How To Negotiate Salary After a Job Offer, Indeed", url: "https://www.indeed.com/career-advice/pay-salary/how-to-negotiate-salary" },
+      { label: "How to Negotiate Salary: 3 Winning Strategies, Harvard Law PON", url: "https://www.pon.harvard.edu/daily/salary-negotiations/negotiate-salary-3-winning-strategies/" },
+      { label: "How to Negotiate Salary During Your Job Search, Robert Half", url: "https://www.roberthalf.com/us/en/insights/career-development/how-to-negotiate-salary-after-getting-job-offer" },
     ],
   },
   {
@@ -90,16 +90,16 @@ export const TOPICS: CareerTopic[] = [
     intro:
       "Careers are less linear than they used to be, and titles matter less than the skills and visibility you build along the way. The advice that holds up: get good, get seen, and get sponsored.",
     tips: [
-      "Build the skill set of the role one level above yours — it signals readiness before a title change is even on the table.",
-      "Create visibility for your work through documentation, updates, and clear communication — good work that nobody hears about doesn't move careers.",
-      "Find a sponsor, not just a mentor — a mentor gives advice, but a sponsor advocates for you in rooms you're not in, which is what actually moves careers from good to exceptional.",
-      "Prioritize AI fluency alongside your core craft — the number of roles that explicitly require it has grown roughly sevenfold since 2023, and workers with strong AI skills are commanding noticeably higher pay than peers in the same role without them.",
-      "Define what success means to you specifically, on your own terms, rather than defaulting to the next obvious title — it keeps you moving toward something you actually want.",
+      "Build the skill set of the role one level above yours. It signals readiness before a title change is even on the table.",
+      "Create visibility for your work through documentation, updates, and clear communication. Good work that nobody hears about doesn't move careers.",
+      "Find a sponsor, not just a mentor. A mentor gives advice, but a sponsor advocates for you in rooms you're not in, which is what actually moves careers from good to exceptional.",
+      "Prioritize AI fluency alongside your core craft. The number of roles that explicitly require it has grown roughly sevenfold since 2023, and workers with strong AI skills are commanding noticeably higher pay than peers in the same role without them.",
+      "Define what success means to you specifically, on your own terms, rather than defaulting to the next obvious title. It keeps you moving toward something you actually want.",
     ],
     sources: [
-      { label: "101 Best Career Tips From Industry Experts — Novorésumé", url: "https://novoresume.com/career-blog/career-tips" },
-      { label: "Workplace Trends For 2026: Preparing For The New Labor Market Reality — Ivy Exec", url: "https://ivyexec.com/career-advice/2026/workplace-trends-for-2026-preparing-for-the-new-labor-market-reality" },
-      { label: "50 Best Pieces of Career Advice — CareerAddict", url: "https://www.careeraddict.com/career-success-tips" },
+      { label: "101 Best Career Tips From Industry Experts, Novorésumé", url: "https://novoresume.com/career-blog/career-tips" },
+      { label: "Workplace Trends For 2026: Preparing For The New Labor Market Reality, Ivy Exec", url: "https://ivyexec.com/career-advice/2026/workplace-trends-for-2026-preparing-for-the-new-labor-market-reality" },
+      { label: "50 Best Pieces of Career Advice, CareerAddict", url: "https://www.careeraddict.com/career-success-tips" },
     ],
   },
   {
@@ -110,16 +110,16 @@ export const TOPICS: CareerTopic[] = [
     intro:
       "Promotions go to people who are already doing pieces of the next job, and who've made sure their manager knows it. Waiting quietly for recognition rarely works.",
     tips: [
-      "Master your current role first — consistently excellent, on-time work in your existing job is the baseline, not a bonus, for being considered for the next one.",
-      "Tie your work explicitly to business outcomes — revenue, efficiency, customer satisfaction, or cost savings are the language decision-makers respond to.",
-      "Tell your manager what you want, directly and privately — ambiguity about your goals means they can't advocate for you even if they'd like to.",
+      "Master your current role first. Consistently excellent, on time work in your existing job is the baseline, not a bonus, for being considered for the next one.",
+      "Tie your work explicitly to business outcomes: revenue, efficiency, customer satisfaction, or cost savings are the language decision makers respond to.",
+      "Tell your manager what you want, directly and privately. Ambiguity about your goals means they can't advocate for you even if they'd like to.",
       "Volunteer for stretch assignments that build visible new skills, especially ones that show you can lead or motivate others.",
-      "Ask your manager for a regular, explicit check-in on what's standing between you and the next level — vague annual reviews aren't enough to course-correct in time.",
+      "Ask your manager for a regular, explicit check-in on what's standing between you and the next level. Vague annual reviews aren't enough to course correct in time.",
     ],
     sources: [
-      { label: "How To Get Promoted at Work: 9 Effective Strategies — Indeed", url: "https://www.indeed.com/career-advice/career-development/how-to-get-promoted-at-work" },
-      { label: "How to Get Promoted at Work: 11 Tips — Built In", url: "https://builtin.com/articles/how-to-get-promoted" },
-      { label: "How To Get Promoted at Work: The Ultimate Guide — 300 Hours", url: "https://300hours.com/how-to-get-promoted-at-work/" },
+      { label: "How To Get Promoted at Work: 9 Effective Strategies, Indeed", url: "https://www.indeed.com/career-advice/career-development/how-to-get-promoted-at-work" },
+      { label: "How to Get Promoted at Work: 11 Tips, Built In", url: "https://builtin.com/articles/how-to-get-promoted" },
+      { label: "How To Get Promoted at Work: The Ultimate Guide, 300 Hours", url: "https://300hours.com/how-to-get-promoted-at-work/" },
     ],
   },
   {
@@ -128,19 +128,19 @@ export const TOPICS: CareerTopic[] = [
     title: "Career Planning",
     updated: "August 2026",
     intro:
-      "Rigid 5- and 10-year plans age poorly when roles and skills shift this fast. The more durable approach is a short-horizon plan you revisit often.",
+      "Rigid 5 and 10 year plans age poorly when roles and skills shift this fast. The more durable approach is a short horizon plan you revisit often.",
     tips: [
-      "Run an honest skills audit — both technical skills and transferable ones like communication, stakeholder management, and learning agility.",
-      "Define a direction for the next one to three years without needing every step mapped out — clarity of direction matters more than a rigid route.",
+      "Run an honest skills audit, both technical skills and transferable ones like communication, stakeholder management, and learning agility.",
+      "Define a direction for the next one to three years without needing every step mapped out. Clarity of direction matters more than a rigid route.",
       "Turn that direction into a structured plan with specific goals and timelines you can actually check yourself against.",
-      "Plan month to month, not just annually — a monthly cadence lets you adapt to a fast-moving job market instead of working off a plan that's stale by June.",
-      "Build in time for rest and boundaries on purpose — a plan that assumes no downtime is a plan you'll abandon under the first sign of burnout.",
-      "Expect skills-based hiring to keep gaining ground — most employers now hire off demonstrated skills rather than degrees alone, so your plan should track projects and outcomes you can point to, not just job titles.",
+      "Plan month to month, not just annually. A monthly cadence lets you adapt to a fast moving job market instead of working off a plan that's stale by June.",
+      "Build in time for rest and boundaries on purpose. A plan that assumes no downtime is a plan you'll abandon under the first sign of burnout.",
+      "Expect skills based hiring to keep gaining ground. Most employers now hire off demonstrated skills rather than degrees alone, so your plan should track projects and outcomes you can point to, not just job titles.",
     ],
     sources: [
-      { label: "Preparing for a Career Change: Step-by-Step Guide — Coursera", url: "https://www.coursera.org/articles/career-change" },
-      { label: "Workplace trends for 2026: AI, human skills and job market predictions — GMAC", url: "https://www.gmac.com/resources/learners/business-careers/career-planning/workplace-trends-job-market-predictions" },
-      { label: "Career Planning Guide 2026 — Dinjob", url: "https://dinjob.com/blog/article/career-planning-guide-how-to-choose-change-and-grow-your-career/" },
+      { label: "Preparing for a Career Change: Step by Step Guide, Coursera", url: "https://www.coursera.org/articles/career-change" },
+      { label: "Workplace trends for 2026: AI, human skills and job market predictions, GMAC", url: "https://www.gmac.com/resources/learners/business-careers/career-planning/workplace-trends-job-market-predictions" },
+      { label: "Career Planning Guide 2026, Dinjob", url: "https://dinjob.com/blog/article/career-planning-guide-how-to-choose-change-and-grow-your-career/" },
     ],
   },
   {
@@ -151,17 +151,17 @@ export const TOPICS: CareerTopic[] = [
     intro:
       "The most effective networkers treat it as an ongoing habit, not an occasional event. A little consistent effort beats an occasional big push every time.",
     tips: [
-      "Combine digital and in-person — connect online first and deepen it in person, or meet in person and maintain it digitally afterward. Neither alone works as well.",
-      "Optimize for quality over quantity — one connection who genuinely knows your work is worth far more than a hundred surface-level LinkedIn adds.",
+      "Combine digital and in person: connect online first and deepen it in person, or meet in person and maintain it digitally afterward. Neither alone works as well.",
+      "Optimize for quality over quantity. One connection who genuinely knows your work is worth far more than a hundred surface level LinkedIn adds.",
       "Set specific goals for networking activity, like meeting three new contacts in your field this month, rather than treating it as a vague ongoing obligation.",
-      "Practice active listening and ask genuinely curious questions — the strongest relationships form around attention, not self-promotion.",
-      "Aim for short, regular engagement — roughly 30 minutes a day of intentional outreach and conversation tends to outperform an occasional multi-hour push.",
-      "Take the numbers seriously — a large share of jobs are still filled through personal connections rather than public postings, and most high-earning professionals credit their network as core to their career success.",
+      "Practice active listening and ask genuinely curious questions. The strongest relationships form around attention, not self-promotion.",
+      "Aim for short, regular engagement. Roughly 30 minutes a day of intentional outreach and conversation tends to outperform an occasional multihour push.",
+      "Take the numbers seriously. A large share of jobs are still filled through personal connections rather than public postings, and most high earning professionals credit their network as core to their career success.",
     ],
     sources: [
-      { label: "6 Simple Networking Tips to Support Your Career Growth — Harvard Business School Online", url: "https://online.hbs.edu/blog/post/professional-networking-tips" },
-      { label: "9 Networking Tips to Expand Your Network — Coursera", url: "https://www.coursera.org/articles/networking-tips" },
-      { label: "How To Build A Strong Professional Network And Advance Your Career — Forbes", url: "https://www.forbes.com/sites/tracybrower/2026/03/24/a-successful-career-needs-a-strong-network-heres-how-to-build-one/" },
+      { label: "6 Simple Networking Tips to Support Your Career Growth, Harvard Business School Online", url: "https://online.hbs.edu/blog/post/professional-networking-tips" },
+      { label: "9 Networking Tips to Expand Your Network, Coursera", url: "https://www.coursera.org/articles/networking-tips" },
+      { label: "How To Build A Strong Professional Network And Advance Your Career, Forbes", url: "https://www.forbes.com/sites/tracybrower/2026/03/24/a-successful-career-needs-a-strong-network-heres-how-to-build-one/" },
     ],
   },
   {
@@ -172,17 +172,17 @@ export const TOPICS: CareerTopic[] = [
     intro:
       "Recruiters are triaging a lot of noise. Being easy to find, easy to understand at a glance, and specific in outreach is what actually gets a response.",
     tips: [
-      "Keep your LinkedIn headline specific — lead with your expertise and tools rather than just a job title, so a recruiter understands your value in one glance.",
-      "List at least five to ten relevant skills on your profile and get a few endorsed — profiles with a complete skills section surface far more often in recruiter searches than sparse ones.",
-      "Turn on \"Open to Work\" visible only to recruiters, not your full network, if you're job searching while employed — it keeps your search active without alerting your current employer's network.",
-      "Skip generic outreach — mention something specific (recent company news, a hiring manager's recent post, a concrete team challenge) to show real research and interest.",
-      "Ask for referrals wherever you can — recruiters and hiring managers trust a referral far more than a cold application, and it's consistently the fastest path to a first conversation.",
-      "Respond quickly and professionally, even to roles that aren't a fit — recruiters remember candidates who were easy to work with for the next opportunity.",
+      "Keep your LinkedIn headline specific. Lead with your expertise and tools rather than just a job title, so a recruiter understands your value in one glance.",
+      "List at least five to ten relevant skills on your profile and get a few endorsed. Profiles with a complete skills section surface far more often in recruiter searches than sparse ones.",
+      "Turn on \"Open to Work\" visible only to recruiters, not your full network, if you're job searching while employed. It keeps your search active without alerting your current employer's network.",
+      "Skip generic outreach. Mention something specific (recent company news, a hiring manager's recent post, a concrete team challenge) to show real research and interest.",
+      "Ask for referrals wherever you can. Recruiters and hiring managers trust a referral far more than a cold application, and it's consistently the fastest path to a first conversation.",
+      "Respond quickly and professionally, even to roles that aren't a fit. Recruiters remember candidates who were easy to work with for the next opportunity.",
     ],
     sources: [
-      { label: "15 Expert Tips for Working with a Recruiter — TopResume", url: "https://topresume.com/career-advice/5-tips-for-effectively-working-with-a-recruiter" },
-      { label: "Insider Tips to Find and Connect With Recruiters — Boston University Questrom", url: "https://questromfeld.bu.edu/blog/2026/03/12/insider-tips-to-find-and-connect-with-recruiters/" },
-      { label: "How to Get Recruiters to Notice You — Scope Recruiting", url: "https://www.scoperecruiting.com/blog/how-to-actually-get-recruiters-to-notice-you" },
+      { label: "15 Expert Tips for Working with a Recruiter, TopResume", url: "https://topresume.com/career-advice/5-tips-for-effectively-working-with-a-recruiter" },
+      { label: "Insider Tips to Find and Connect With Recruiters, Boston University Questrom", url: "https://questromfeld.bu.edu/blog/2026/03/12/insider-tips-to-find-and-connect-with-recruiters/" },
+      { label: "How to Get Recruiters to Notice You, Scope Recruiting", url: "https://www.scoperecruiting.com/blog/how-to-actually-get-recruiters-to-notice-you" },
     ],
   },
   {
@@ -191,18 +191,18 @@ export const TOPICS: CareerTopic[] = [
     title: "Industry News",
     updated: "August 2026",
     intro:
-      "The job market is shifting from the strongly candidate-driven conditions of a few years ago toward a more balanced, more AI-influenced hiring process — and the outlook is moving month to month, so treat any single stat as a snapshot rather than the full picture.",
+      "The job market is shifting from the strongly candidate driven conditions of a few years ago toward a more balanced, more AI influenced hiring process, and the outlook is moving month to month, so treat any single stat as a snapshot rather than the full picture.",
     tips: [
-      "Read hiring forecasts as directional, not fixed — NACE's spring 2026 update lifted its projected increase in new-college-grad hiring to +5.6%, better than the more cautious outlook floated earlier in the year, so conditions have room to improve as the year goes on.",
-      "AI is now standard in recruiting — most companies use it somewhere in their hiring process, from resume screening to video-interview analysis, and skills-based hiring (weighing what you can do over where you went to school) is now used by roughly 70% of employers, up from 65% a year earlier.",
-      "Entry-level hiring is under particular pressure — recent graduate unemployment has been running above the national average, and a meaningful share of postings are inactive \"ghost jobs,\" so treat any single rejection as noisy signal, not a verdict.",
-      "AI literacy is becoming a baseline expectation across industries, not just in technical roles — building even light familiarity with common AI tools in your field is worth the time.",
-      "More employers are sourcing candidates through social platforms, not just traditional job boards — an active, well-kept professional profile is doing more sourcing work than it used to.",
+      "Read hiring forecasts as directional, not fixed. NACE's spring 2026 update lifted its projected increase in new college grad hiring to +5.6%, better than the more cautious outlook floated earlier in the year, so conditions have room to improve as the year goes on.",
+      "AI is now standard in recruiting. Most companies use it somewhere in their hiring process, from resume screening to video interview analysis, and skills based hiring (weighing what you can do over where you went to school) is now used by roughly 70% of employers, up from 65% a year earlier.",
+      "Entry level hiring is under particular pressure. Recent graduate unemployment has been running above the national average, and a meaningful share of postings are inactive \"ghost jobs,\" so treat any single rejection as noisy signal, not a verdict.",
+      "AI literacy is becoming a baseline expectation across industries, not just in technical roles. Building even light familiarity with common AI tools in your field is worth the time.",
+      "More employers are sourcing candidates through social platforms, not just traditional job boards. An active, well kept professional profile is doing more sourcing work than it used to.",
     ],
     sources: [
-      { label: "10 Trends Driving The Job Market — Forbes", url: "https://www.forbes.com/sites/bryanrobinson/2026/05/07/10-trends-driving-the-job-market-2026-graduates-need-to-know/" },
-      { label: "2026 Job Outlook — Spring Update — NACE", url: "https://www.naceweb.org/research/reports/2026/job-outlook/spring-update/" },
-      { label: "How hiring trends are changing in 2026 — Robert Half", url: "https://www.roberthalf.com/us/en/insights/landing-job/why-hiring-trends-may-be-better-than-they-appear" },
+      { label: "10 Trends Driving The Job Market, Forbes", url: "https://www.forbes.com/sites/bryanrobinson/2026/05/07/10-trends-driving-the-job-market-2026-graduates-need-to-know/" },
+      { label: "2026 Job Outlook, Spring Update, NACE", url: "https://www.naceweb.org/research/reports/2026/job-outlook/spring-update/" },
+      { label: "How hiring trends are changing in 2026, Robert Half", url: "https://www.roberthalf.com/us/en/insights/landing-job/why-hiring-trends-may-be-better-than-they-appear" },
     ],
   },
 ];
@@ -268,8 +268,8 @@ export function CareerCenterPage() {
             <span className="section-tag">Career Center</span>
             <h1>Everything you need between resumes and offers</h1>
             <p>
-              Current, practical guidance across the whole job search and career growth journey — pulled together
-              from the field's most-cited career sites and refreshed as hiring trends shift.
+              Current, practical guidance across the whole job search and career growth journey, pulled together
+              from the field's most cited career sites and refreshed as hiring trends shift.
             </p>
           </div>
           <nav className="career-toc" aria-label="Career Center topics">

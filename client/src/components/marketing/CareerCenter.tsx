@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 /** Exported so the Premium dashboard's "Job Search Resources" section can reuse this same list rather than duplicating it. */
 export const RESOURCES = [
-  { tag: "Resume tips", title: "Profession-aligned advice", body: "Guidance on what to highlight, written for your specific field.", anchor: "resume-tips" },
+  { tag: "Resume tips", title: "Profession aligned advice", body: "Guidance on what to highlight, written for your specific field.", anchor: "resume-tips" },
   { tag: "Interview tips", title: "Interview prep", body: "What to expect and how to answer, by role and industry.", anchor: "interview-tips" },
   { tag: "Compensation", title: "Salary negotiation", body: "Practical guidance for negotiating pay and benefits with confidence.", anchor: "salary-negotiation" },
   { tag: "Career advice", title: "Career & promotion advice", body: "Advice on promotions, career pivots, and long-term planning.", anchor: "career-advice" },
@@ -17,7 +17,7 @@ export function CareerCenter() {
         <div className="section-head">
           <span className="section-tag">Career Center</span>
           <h2>Built into Professional and Premium</h2>
-          <p>Resume tips, interview prep, salary negotiation, and more — included with any Professional or Premium subscription.</p>
+          <p>Resume tips, interview prep, salary negotiation, and more, included with any Professional or Premium subscription.</p>
         </div>
         <div className="resources-grid">
           {RESOURCES.map((r) => (

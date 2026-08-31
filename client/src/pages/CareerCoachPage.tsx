@@ -70,8 +70,8 @@ export function CareerCoachPage() {
         <h1>Your Career Coach Poly</h1>
       </div>
       <p className="hero-note" style={{ marginBottom: 20 }}>
-        Ask about salary negotiation, interview prep, or which certifications to pursue. Nothing here is saved —
-        reopening this page starts a fresh conversation.
+        Ask about salary negotiation, interview prep, or which certifications to pursue. Nothing here is saved.
+        Reopening this page starts a fresh conversation.
       </p>
       {error && <div className="form-error">{error}</div>}
 

@@ -36,16 +36,16 @@ const TOPIC_LINKS: Record<CareerCoachTopic, { label: string; anchor: string }[]>
   general: [{ label: "Browse the Career Center", anchor: "" }],
 };
 
-const SYSTEM_PROMPT = `You are ResumeLingo's AI Career Coach — a focused career-advice assistant for logged-in subscribers, not a general-purpose chatbot. You help with three things specifically: salary negotiation, interview preparation, and professional certifications — plus general career-growth questions (networking, promotions, career planning) that don't fit those three but are still genuinely about someone's job or career.
+const SYSTEM_PROMPT = `You are ResumeLingo's AI Career Coach, a focused career-advice assistant for logged-in subscribers, not a general-purpose chatbot. You help with three things specifically: salary negotiation, interview preparation, and professional certifications, plus general career-growth questions (networking, promotions, career planning) that don't fit those three but are still genuinely about someone's job or career.
 
-You're given the user's question and, if known, their profession. Answer directly and practically in a warm, encouraging, concise tone — a few short paragraphs or a short bulleted list, whichever fits the question best. Personalize to the specific question and profession given; don't pad with generic filler that could apply to any question.
+You're given the user's question and, if known, their profession. Answer directly and practically in a warm, encouraging, concise tone: a few short paragraphs or a short bulleted list, whichever fits the question best. Personalize to the specific question and profession given; don't pad with generic filler that could apply to any question.
 
-If the question isn't actually about careers or jobs at all (e.g. it's asking for code, unrelated personal advice, trivia, or anything outside career coaching), don't answer it — instead, briefly and politely explain that you're focused on career coaching and invite them to ask something in that space instead.
+If the question isn't actually about careers or jobs at all (e.g. it's asking for code, unrelated personal advice, trivia, or anything outside career coaching), don't answer it. Instead, briefly and politely explain that you're focused on career coaching and invite them to ask something in that space instead.
 
 Respond with ONLY a single JSON object (no prose, no markdown code fence) matching exactly this shape:
 { "topic": "salary" | "interview" | "certifications" | "general", "answer": string }
 
-"topic" is the single best-fitting category for this question — use "general" for legitimate career questions that aren't specifically about salary, interviews, or certifications, and also for off-topic questions you're declining to answer.`;
+"topic" is the single best-fitting category for this question. Use "general" for legitimate career questions that aren't specifically about salary, interviews, or certifications, and also for off-topic questions you're declining to answer.`;
 
 function truthy(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
@@ -156,22 +156,22 @@ const CERTIFICATION_SUGGESTIONS: Record<string, string[]> = {
     "Certified Kubernetes Administrator (CKA)",
   ],
   nurse: ["Basic Life Support (BLS)", "Advanced Cardiac Life Support (ACLS)", "A specialty certification matching your unit (e.g. CCRN for critical care)"],
-  teacher: ["State teaching license/endorsement renewal", "National Board Certification", "A subject-specific credential (e.g. TESOL for ESL)"],
+  teacher: ["State teaching license/endorsement renewal", "National Board Certification", "A subject specific credential (e.g. TESOL for ESL)"],
   executive: ["An executive leadership program (e.g. an Advanced Management Program)", "A board readiness or corporate governance certification"],
   "project-manager": ["PMP (Project Management Professional)", "Certified ScrumMaster (CSM)", "PRINCE2 Foundation"],
   "government-contractor": ["A relevant DAWIA or FAC-C certification for your role", "Security+ if you're in a cleared IT role"],
-  military: ["A civilian-equivalent credential for your MOS (check your branch's COOL program)", "PMP or Six Sigma if you're moving into a management-track civilian role"],
+  military: ["A civilian equivalent credential for your MOS (check your branch's COOL program)", "PMP or Six Sigma if you're moving into a management track civilian role"],
   sales: ["A CRM platform certification (e.g. Salesforce Certified Sales Cloud Consultant)", "Certified Sales Professional (CSP)"],
   marketing: ["Google Analytics / Google Ads certification", "HubSpot Inbound Marketing Certification"],
-  construction: ["OSHA 30", "A trade-specific license or certification for your specialty"],
+  construction: ["OSHA 30", "A trade specific license or certification for your specialty"],
 };
 
 function salaryAnswer(): string {
   return [
-    "Research your number from a few sources — Glassdoor, levels.fyi or Payscale, and the pay range on the job posting itself if one's listed (most now include one).",
-    "Let the employer name a number first if you can. Once an offer is on the table, they've already decided you're right for the role — that's your strongest leverage point.",
+    "Research your number from a few sources: Glassdoor, levels.fyi or Payscale, and the pay range on the job posting itself if one's listed (most now include one).",
+    "Let the employer name a number first if you can. Once an offer is on the table, they've already decided you're right for the role. That's your strongest leverage point.",
     "Anchor slightly above your real target, not at it, so there's room to negotiate down without landing below what you actually want.",
-    "If the base salary is fixed, negotiate the rest — signing bonus, extra PTO, remote/hybrid flexibility, or an earlier performance review can all carry real value.",
+    "If the base salary is fixed, negotiate the rest: signing bonus, extra PTO, remote/hybrid flexibility, or an earlier performance review can all carry real value.",
   ].join("\n\n");
 }
 
@@ -186,10 +186,10 @@ function interviewAnswer(rawQuestion: string): string {
 
   return [
     intro,
-    "Situation — set the scene in one or two sentences: what was the context.",
-    "Task — what you were specifically responsible for or trying to achieve.",
-    "Action — the steps YOU took, in some detail. This is the part interviewers weigh most heavily.",
-    "Result — what happened, ideally with a number attached (time saved, revenue, error rate, team impact).",
+    "Situation: set the scene in one or two sentences: what was the context.",
+    "Task: what you were specifically responsible for or trying to achieve.",
+    "Action: the steps YOU took, in some detail. This is the part interviewers weigh most heavily.",
+    "Result: what happened, ideally with a number attached (time saved, revenue, error rate, team impact).",
     "Keep the whole answer to 60–90 seconds out loud, and practice it once or twice so it doesn't sound rehearsed when you actually say it.",
   ].join("\n\n");
 }
@@ -203,8 +203,8 @@ function certificationsAnswer(professionLabel?: string, professionKey?: string):
     return [intro, ...suggestions.map((s) => `• ${s}`)].join("\n");
   }
   return [
-    "Look at 3–5 job postings for the role you want next and note which certifications keep showing up under \"preferred qualifications\" — that's usually a stronger, more current signal than any generic list.",
-    "Prioritize certifications tied to a specific tool or platform you'd actually use day to day over broad ones — they're faster to earn and easier for a hiring manager to see the direct relevance of.",
+    "Look at 3–5 job postings for the role you want next and note which certifications keep showing up under \"preferred qualifications\". That's usually a stronger, more current signal than any generic list.",
+    "Prioritize certifications tied to a specific tool or platform you'd actually use day to day over broad ones. They're faster to earn and easier for a hiring manager to see the direct relevance of.",
     "Check whether your current employer offers reimbursement for exam fees or study time before paying out of pocket.",
   ].join("\n\n");
 }
@@ -243,7 +243,7 @@ export class RuleBasedCareerCoachGenerator implements ICareerCoachGenerator {
         return {
           topic: "general",
           answer:
-            "I can help most with salary negotiation, interview prep, and certification suggestions right now. Try rephrasing your question around one of those — or browse the Career Center for broader guidance on networking, promotions, and career planning.",
+            "I can help most with salary negotiation, interview prep, and certification suggestions right now. Try rephrasing your question around one of those, or browse the Career Center for broader guidance on networking, promotions, and career planning.",
           relatedLinks: [{ label: "Browse the Career Center", anchor: "" }],
         };
     }
