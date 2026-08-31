@@ -26,6 +26,15 @@ export function DynamicQuestionForm({ questions, answers, onChange }: Props) {
               placeholder={q.placeholder}
               onChange={(e) => onChange(q.key, e.target.value)}
             />
+          ) : q.type === "select" ? (
+            <select value={answers[q.key] || ""} onChange={(e) => onChange(q.key, e.target.value)}>
+              <option value="">Select…</option>
+              {(q.options ?? []).map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
           ) : (
             <input
               type={q.type === "number" ? "number" : "text"}

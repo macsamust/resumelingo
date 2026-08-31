@@ -33,8 +33,10 @@ export interface ThankYouScenarioOption {
 export interface ProfessionQuestion {
   key: string;
   label: string;
-  type: "text" | "textarea" | "list" | "number";
+  type: "text" | "textarea" | "list" | "number" | "select";
   placeholder?: string;
+  /** Required, and only meaningful, when type is "select" — the dropdown's options in display order. */
+  options?: string[];
 }
 
 export interface ProfessionSummary {

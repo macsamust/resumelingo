@@ -141,6 +141,21 @@ export interface TemplateStyle {
    * header comment) and doesn't vary color by template at all.
    */
   languagesAccent?: string;
+  /**
+   * Renders a full-width, template-accent-colored banner ("Security
+   * Clearance: Secret") directly above the Summary/Profile section,
+   * full-bleed across the resume panel like the executive-banner family's
+   * header rather than a small pill — added for "Govt Contractor" at the
+   * person's request, so an active clearance is immediately visible rather
+   * than buried in the Additional Details list further down. Only renders
+   * when the resume actually has a clearanceLevel answer (see
+   * ResumePreview.tsx's `securityClearance` prop) — no banner at all for a
+   * blank/unanswered clearance question. Web preview and public resume
+   * page only, same as languagesAccent above — the PDF export's Additional
+   * Details list already includes the clearance level as plain text, which
+   * is consistent with its one-plain-layout-for-every-template premise.
+   */
+  clearanceBanner?: boolean;
 }
 
 const SERIF_ELEGANT = `'Playfair Display', Georgia, 'Times New Roman', serif`;
@@ -249,6 +264,7 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     family: "cv-academic",
     accent: "#0369a1", accentSoft: "#e0f2fe", font: SANS_TECHNICAL,
     flow: "bullets-first", summaryLabel: "Profile", bulletsLabel: "Contract Accomplishments",
+    clearanceBanner: true,
   },
 
   // Minimal / whitespace-forward.

@@ -73,7 +73,12 @@ export const PROFESSIONS: ProfessionDefinition[] = [
     key: "government-contractor",
     label: "Government Contractor",
     questions: [
-      { key: "clearanceLevel", label: "Clearance Level", type: "text" },
+      {
+        key: "clearanceLevel",
+        label: "Clearance Level",
+        type: "select",
+        options: ["Public Trust", "L", "Q", "SAP", "Confidential", "Secret", "Top Secret", "Top Secret (SCI)"],
+      },
       { key: "agenciesSupported", label: "Agencies Supported", type: "list" },
       { key: "contractVehicles", label: "Contract Vehicles", type: "list" },
       { key: "certifications", label: "Certifications", type: "list" },

@@ -1544,6 +1544,7 @@ export function ResumeEditPage() {
             skillsAndTools={skillsAndTools}
             showSkillsAndTools={usesSkillsAndTools}
             languages={languages}
+            securityClearance={answers.clearanceLevel}
           />
         </div>
       </form>

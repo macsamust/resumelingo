@@ -808,6 +808,15 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .tpl-executive-banner .tpl-header {
   background: var(--tpl-accent); color: #fff; margin: -28px -28px 24px; padding: 30px 28px;
 }
+
+/* Full-width "Security Clearance: X" banner (see TemplateStyle.clearanceBanner)
+   — same full-bleed treatment as the executive-banner header above, but sits
+   mid-body, directly above Summary/Profile, instead of replacing the header.
+   Only rendered when there's an actual clearance answer to show. */
+.tpl-clearance-banner {
+  background: var(--tpl-accent); color: #fff; margin: 0 -28px 24px; padding: 12px 28px;
+  text-align: center; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .05em;
+}
 .tpl-executive-banner .tpl-header h2 { color: #fff; }
 .tpl-executive-banner .tpl-header .tpl-role { color: rgba(255, 255, 255, .8); margin-bottom: 0; }
 .tpl-executive-banner.tpl-banner-center .tpl-header { text-align: center; }

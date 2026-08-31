@@ -426,6 +426,7 @@ export function PublicResumePage() {
         showSkillsAndTools={resume.template?.category === "premium"}
         languages={resume.languages}
         hideFooterContact={hasTrailingContent}
+        securityClearance={resume.answers.clearanceLevel}
       />
       {(() => {
         if (answerEntries.length === 0) return null;

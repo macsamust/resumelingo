@@ -405,6 +405,7 @@ export function ResumeBuilderPage() {
           education={education}
           awards={awards}
           showSkillsAndTools={selectedTemplateIsPremium}
+          securityClearance={answers.clearanceLevel}
         />
       </form>
     </AppShell>

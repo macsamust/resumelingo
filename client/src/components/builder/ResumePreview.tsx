@@ -42,6 +42,15 @@ interface Props {
    * content to push the footer past.
    */
   hideFooterContact?: boolean;
+  /**
+   * The resume's "Clearance Level" Additional Details answer (see
+   * professions.ts's government-contractor question), if any — drives the
+   * full-width clearance banner above Summary/Profile on templates with
+   * TemplateStyle.clearanceBanner set. A dedicated prop rather than the
+   * whole `answers` map, since this is the only answer any template
+   * renders directly rather than via the generic Additional Details list.
+   */
+  securityClearance?: string;
 }
 
 /**
@@ -224,6 +233,7 @@ export function ResumePreview({
   showSkillsAndTools = false,
   languages = [],
   hideFooterContact = false,
+  securityClearance,
 }: Props) {
   const style = getTemplateStyle(templateKey ?? "modern");
   const cssVars = {
@@ -287,6 +297,12 @@ export function ResumePreview({
       <span className="tpl-section-label-text">{text}</span>
       <span className="tpl-section-rule" aria-hidden="true" />
     </span>
+  );
+
+  // See TemplateStyle.clearanceBanner's doc comment — full-width, only
+  // rendered when both the template opts in and there's an actual answer.
+  const clearanceBannerBlock = style.clearanceBanner && securityClearance?.trim() && (
+    <div className="tpl-clearance-banner">Security Clearance: {securityClearance.trim()}</div>
   );
 
   const summaryBlock = (
@@ -489,6 +505,7 @@ export function ResumePreview({
   // "Boardroom") — it otherwise renders near the end, in the tail below.
   const orderedSections = (
     <>
+      {clearanceBannerBlock}
       {summaryBlock}
       {style.skillsAfterSummary && skillsAndToolsBlock}
       {experienceBlock}
@@ -528,6 +545,7 @@ export function ResumePreview({
     );
     const mainContent = (
       <div className="tpl-main">
+        {clearanceBannerBlock}
         {summaryBlock}
         {experienceBlock}
         {bulletsBlock}
@@ -586,6 +604,7 @@ export function ResumePreview({
           <div className="tpl-timeline-body">
             <div className="tpl-timeline-side">
               {sidebarContact}
+              {clearanceBannerBlock}
               {summaryBlock}
               {educationBlock}
             </div>
@@ -636,6 +655,7 @@ export function ResumePreview({
           </div>
           <div className="tpl-photo-body">
             <div className="tpl-photo-main">
+              {clearanceBannerBlock}
               {summaryBlock}
               {experienceBlock}
               {bulletsBlock}
@@ -701,6 +721,7 @@ export function ResumePreview({
           </div>
           <div className="tpl-corner-body">
             <div className="tpl-corner-side">
+              {clearanceBannerBlock}
               {summaryBlock}
               {contactList}
               {educationBlock}
@@ -772,6 +793,7 @@ export function ResumePreview({
               {languagesBlock}
             </div>
             <div className="tpl-mono-main">
+              {clearanceBannerBlock}
               {summaryBlock}
               {experienceBlock}
               {bulletsBlock}
