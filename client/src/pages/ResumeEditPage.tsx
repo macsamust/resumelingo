@@ -966,7 +966,7 @@ export function ResumeEditPage() {
             </div>
           </CollapsibleSection>
 
-          <CollapsibleSection title="Template" forceOpen={forceOpen}>
+          <CollapsibleSection title="Template" forceOpen={forceOpen} defaultOpen={false}>
             <div className="template-choices">
               {templates.map((t) => {
                 const locked = !!user && !canUseTemplate(user.subscriptionTier, t.category);
@@ -1213,6 +1213,7 @@ export function ResumeEditPage() {
           <CollapsibleSection
             title="Additional Details"
             forceOpen={forceOpen}
+            defaultOpen={professionHasQuestions}
             complete={professionHasQuestions ? sectionProgress.additionalDetails : undefined}
           >
             {professionDetail && (
