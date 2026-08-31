@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { getTemplateStyle } from "../../config/templateStyles";
 import { AchievementEntry, AwardEntry, EducationEntry, LanguageEntry, SkillOrTool, WorkExperienceEntry } from "../../types";
 import { groupAchievementsByExperience } from "../../utils/starBullet";
+import { PROFICIENCY_MAX_LEVEL, proficiencyLevel } from "../../utils/languageProficiency";
 
 interface Props {
   fullName?: string;
@@ -29,6 +30,18 @@ interface Props {
   showSkillsAndTools?: boolean;
   /** Optional "Languages" section — not tier-gated, unlike Skills & Tools. Omitted entirely (no empty section) when empty. */
   languages?: LanguageEntry[];
+  /**
+   * For templates with contactInFooter set (see TemplateStyle) only: skips
+   * this component's own footer-contact block. Used by PublicResumePage
+   * when the resume also has trailing "Additional Details"/"References"
+   * cards (its own siblings, rendered after this component, outside
+   * .preview-panel) — it renders an equivalent footer itself, after that
+   * trailing content, using the exported buildContactLine helper, instead
+   * of leaving this component's copy sitting above it mid-page. No effect
+   * for templates without contactInFooter, or when there's no trailing
+   * content to push the footer past.
+   */
+  hideFooterContact?: boolean;
 }
 
 /**
@@ -66,9 +79,104 @@ export function sortAwards(entries: AwardEntry[]): AwardEntry[] {
   return [...entries].sort((a, b) => ((a.date || "") < (b.date || "") ? 1 : (a.date || "") > (b.date || "") ? -1 : 0));
 }
 
+/**
+ * Profession-question keys whose content duplicates the "Tools" half of the
+ * Skills & Tools picker (see SkillsAndToolsEditor.tsx and skill_suggestions'
+ * "tool" category) — Project Manager/Marketing/Business Professional's
+ * "Tools Used", Sales's "CRM Tools", Nurse's "Electronic Medical Record
+ * Systems", Teacher's "Classroom Technology", Construction's "Equipment
+ * Operated", Software Engineer's "Cloud Platforms". See config/professions.ts.
+ */
+export const TOOL_DUPLICATE_ANSWER_KEYS = new Set([
+  "toolsUsed",
+  "crmTools",
+  "emrSystems",
+  "classroomTechnology",
+  "equipmentOperated",
+  "cloudPlatforms",
+]);
+
+/**
+ * Filters a resume's raw answers down to what "Additional Details" should
+ * show: blank answers dropped (existing behavior), plus — when the Skills &
+ * Tools section actually has at least one tool chip selected — any answer in
+ * TOOL_DUPLICATE_ANSWER_KEYS, so a Premium-template resume doesn't show the
+ * same tools twice (once as a "Tools Used"-style answer, once as Skills &
+ * Tools chips). Left alone on non-Premium templates and on Premium resumes
+ * that haven't picked any tool chips yet, since Skills & Tools isn't showing
+ * anything for these keys to duplicate in either case. Shared by
+ * PublicResumePage's on-screen card, its plain-text export, and
+ * pdfExport.ts's PDF export.
+ */
+export function filterAnswerEntries(answers: Record<string, string>, skillsAndTools: SkillOrTool[] | undefined): [string, string][] {
+  const hasToolChips = (skillsAndTools ?? []).some((s) => s.category === "tool");
+  return Object.entries(answers).filter(([key, value]) => {
+    if (!value || !value.trim()) return false;
+    if (hasToolChips && TOOL_DUPLICATE_ANSWER_KEYS.has(key)) return false;
+    return true;
+  });
+}
+
 /** Adds https:// to a LinkedIn URL typed without a protocol, so the link always resolves. */
 function withProtocol(url: string): string {
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
+/**
+ * Builds the header contact line (email/phone/LinkedIn, joined by
+ * separator) — extracted out of ResumePreview's body so PublicResumePage
+ * can render an equivalent footer contact line of its own, outside
+ * .preview-panel entirely, for templates with contactInFooter set (see
+ * TemplateStyle) whose resume also has trailing "Additional Details" or
+ * "References" cards: those need the footer to land after that trailing
+ * content instead of at the end of the resume panel, which ResumePreview
+ * itself has no visibility into (that content is PublicResumePage's own
+ * sibling cards, not part of what ResumePreview renders) — see this
+ * component's hideFooterContact prop.
+ */
+export function buildContactLine(input: {
+  contactEmail?: string;
+  contactPhone?: string;
+  contactLinkedIn?: string;
+  separator?: string;
+}): JSX.Element | false {
+  const { contactEmail, contactPhone, contactLinkedIn, separator = " · " } = input;
+  const contactItems: { key: string; node: JSX.Element }[] = [];
+  if (contactEmail) {
+    contactItems.push({
+      key: "email",
+      node: (
+        <a href={`mailto:${contactEmail}`} className="tpl-contact-link">
+          {contactEmail}
+        </a>
+      ),
+    });
+  }
+  if (contactPhone) {
+    contactItems.push({ key: "phone", node: <span>{contactPhone}</span> });
+  }
+  if (contactLinkedIn) {
+    contactItems.push({
+      key: "linkedin",
+      node: (
+        <a href={withProtocol(contactLinkedIn)} target="_blank" rel="noreferrer" className="tpl-contact-link">
+          {contactLinkedIn}
+        </a>
+      ),
+    });
+  }
+  return (
+    contactItems.length > 0 && (
+      <p className="tpl-contact">
+        {contactItems.map((item, i) => (
+          <span key={item.key}>
+            {i > 0 && <span className="tpl-contact-sep">{separator}</span>}
+            {item.node}
+          </span>
+        ))}
+      </p>
+    )
+  );
 }
 
 /** First + last initials (e.g. "Elvira Montanez" -> "EM") for the "photo-banner-sidebar" family's avatar badge — shown when the resume has no uploaded photo. */
@@ -115,6 +223,7 @@ export function ResumePreview({
   skillsAndTools = [],
   showSkillsAndTools = false,
   languages = [],
+  hideFooterContact = false,
 }: Props) {
   const style = getTemplateStyle(templateKey ?? "modern");
   const cssVars = {
@@ -127,6 +236,11 @@ export function ResumePreview({
 
   // Contact line: email and LinkedIn are hyperlinked (LinkedIn spelled out as
   // its full URL rather than a plain "LinkedIn" label); phone is plain text.
+  // contactItems itself (the raw array) is still needed here, separately
+  // from contactLine below — the sidebar/photo-banner-sidebar/etc. family
+  // branches further down build their own contact layouts directly from
+  // this array (icon list, grid, etc.) rather than the single joined
+  // paragraph buildContactLine produces.
   const contactItems: { key: string; node: JSX.Element }[] = [];
   if (contactEmail) {
     contactItems.push({
@@ -151,25 +265,38 @@ export function ResumePreview({
       ),
     });
   }
-  const contactLine = contactItems.length > 0 && (
-    <p className="tpl-contact">
-      {contactItems.map((item, i) => (
-        <span key={item.key}>
-          {i > 0 && <span className="tpl-contact-sep"> · </span>}
-          {item.node}
-        </span>
-      ))}
-    </p>
+  // The single-column family's joined "email · phone · linkedin" paragraph
+  // — see buildContactLine's doc comment for why it's a shared, exported
+  // helper rather than computed inline (PublicResumePage reuses it for the
+  // footer-contact card).
+  const contactLine = buildContactLine({ contactEmail, contactPhone, contactLinkedIn, separator: style.contactSeparator });
+
+  // A section label's flanking rule (see the "ats-optimized" rules in
+  // global.css) is two real spans, not ::before/::after pseudo-elements —
+  // hidden by default (display: none) for every other template, shown only
+  // for ats-optimized. Real DOM elements instead of pseudo-elements so the
+  // flex-line trick can't silently fail to inherit/cascade the way a
+  // pseudo-element occasionally can depending on browser/build quirks; also
+  // just easier to inspect/debug than a generated box. Used by every
+  // section this family renders (Summary, Experience, Education,
+  // Achievements, Skills & Tools, Awards, Languages) so the rule is
+  // guaranteed consistent across all of them.
+  const sectionLabel = (text: string) => (
+    <span className="tpl-section-label">
+      <span className="tpl-section-rule" aria-hidden="true" />
+      <span className="tpl-section-label-text">{text}</span>
+      <span className="tpl-section-rule" aria-hidden="true" />
+    </span>
   );
 
   const summaryBlock = (
     <div className="tpl-section">
-      <span className="tpl-section-label">{style.summaryLabel}</span>
+      {sectionLabel(style.summaryLabel)}
       {summary ? (
         <p className="preview-summary">{summary}</p>
       ) : (
         <p className="preview-summary" style={{ color: "var(--muted)", fontStyle: "italic" }}>
-          Your AI-generated summary will appear here once you save.
+          Your AI generated summary will appear here once you save.
         </p>
       )}
     </div>
@@ -185,7 +312,7 @@ export function ResumePreview({
   const bulletsBlock = combineExperienceFormat
     ? (grouped!.unlinked.length > 0 && (
         <div className="tpl-section">
-          <span className="tpl-section-label">{style.bulletsLabel}</span>
+          {sectionLabel(style.bulletsLabel)}
           <ul className="preview-bullets">
             {grouped!.unlinked.map((b, i) => (
               <li key={i}>{b}</li>
@@ -195,7 +322,7 @@ export function ResumePreview({
       ))
     : bullets.length > 0 && (
         <div className="tpl-section">
-          <span className="tpl-section-label">{style.bulletsLabel}</span>
+          {sectionLabel(style.bulletsLabel)}
           <ul className="preview-bullets">
             {bullets.map((b, i) => (
               <li key={i}>{b}</li>
@@ -207,7 +334,7 @@ export function ResumePreview({
   const sortedExperience = experience.length > 0 ? sortByDateRange(experience) : [];
   const experienceBlock = sortedExperience.length > 0 && (
     <div className="tpl-section">
-      <span className="tpl-section-label">Experience</span>
+      {sectionLabel(style.experienceLabel ?? "Experience")}
       <div className="tpl-experience-list">
         {sortedExperience.map((job, i) => {
           const jobBullets = combineExperienceFormat && job.id ? grouped!.byExperienceId[job.id] ?? [] : [];
@@ -243,7 +370,7 @@ export function ResumePreview({
   const sortedEducation = education.length > 0 ? sortByDateRange(education) : [];
   const educationBlock = sortedEducation.length > 0 && (
     <div className="tpl-section">
-      <span className="tpl-section-label">Education</span>
+      {sectionLabel(style.educationLabel ?? "Education")}
       <div className="tpl-experience-list">
         {sortedEducation.map((school, i) => (
           <div className="tpl-experience-item" key={i}>
@@ -264,15 +391,19 @@ export function ResumePreview({
     </div>
   );
 
-  const sortedAwards = awards.length > 0 ? sortAwards(awards) : [];
+  // Same "blank row was never meant to be published" filter as Languages
+  // above — a title-less award only exists from an unfinished "+ Add award"
+  // click or an edit that never actually saved.
+  const namedAwards = awards.filter((a) => a.title.trim());
+  const sortedAwards = namedAwards.length > 0 ? sortAwards(namedAwards) : [];
   const awardsBlock = sortedAwards.length > 0 && (
     <div className="tpl-section">
-      <span className="tpl-section-label">{style.awardsLabel ?? "Awards"}</span>
+      {sectionLabel(style.awardsLabel ?? "Awards")}
       <div className="tpl-experience-list">
         {sortedAwards.map((award, i) => (
           <div className="tpl-experience-item" key={i}>
             <div className="tpl-experience-head">
-              <span className="tpl-experience-title">{award.title || "Untitled award"}</span>
+              <span className="tpl-experience-title">{award.title}</span>
               <span className="tpl-experience-dates">{formatMonth(award.date)}</span>
             </div>
             {award.issuer && <div className="tpl-experience-company">{award.issuer}</div>}
@@ -291,35 +422,51 @@ export function ResumePreview({
   // section in the builder.
   const skills = skillsAndTools.filter((s) => s.category === "skill");
   const tools = skillsAndTools.filter((s) => s.category === "tool");
+  const skillsSeparator = style.skillsSeparator ?? ", ";
   const skillsAndToolsBlock = showSkillsAndTools && skillsAndTools.length > 0 && (
     <div className="tpl-section">
-      <span className="tpl-section-label">Skills &amp; Tools</span>
+      {sectionLabel("Skills & Tools")}
       {skills.length > 0 && (
         <div className="tpl-skills-tools-group">
           <span className="tpl-skills-tools-group-label">{style.skillsLabel ?? "Skills"}</span>
-          <p className="tpl-skills-tools-list">{skills.map((s) => s.label).join(", ")}</p>
+          <p className="tpl-skills-tools-list">{skills.map((s) => s.label).join(skillsSeparator)}</p>
         </div>
       )}
       {skills.length > 0 && tools.length > 0 && <div className="tpl-skills-tools-divider" />}
       {tools.length > 0 && (
         <div className="tpl-skills-tools-group">
           <span className="tpl-skills-tools-group-label">{style.toolsLabel ?? "Tools"}</span>
-          <p className="tpl-skills-tools-list">{tools.map((s) => s.label).join(", ")}</p>
+          <p className="tpl-skills-tools-list">{tools.map((s) => s.label).join(skillsSeparator)}</p>
         </div>
       )}
     </div>
   );
 
-  // Optional, not tier-gated (unlike Skills & Tools) — omitted entirely when
-  // empty, same "no empty section" rule every other block here follows.
-  const languagesBlock = languages.length > 0 && (
+  // A blank-language row (added via "+ Add language" but never filled in,
+  // or an in-progress edit that never actually saved) is filtered out
+  // rather than shown as "Untitled language" — it was never meant to be
+  // published. Optional section overall, not tier-gated (unlike Skills &
+  // Tools) — omitted entirely when there's nothing left, same "no empty
+  // section" rule every other block here follows.
+  const namedLanguages = languages.filter((l) => l.language.trim());
+  const languagesBlock = namedLanguages.length > 0 && (
     <div className="tpl-section">
-      <span className="tpl-section-label">Languages</span>
+      {sectionLabel("Languages")}
       <ul className="tpl-languages-list">
-        {languages.map((l, i) => (
+        {namedLanguages.map((l, i) => (
           <li key={i}>
-            <span className="tpl-languages-name">{l.language || "Untitled language"}</span>
-            {l.proficiency && <span className="tpl-languages-proficiency"> — {l.proficiency}</span>}
+            <span className="tpl-languages-name">{l.language}</span>
+            {l.proficiency && <span className="tpl-languages-proficiency">, {l.proficiency}</span>}
+            {style.languageProficiencyMeter && l.proficiency && (
+              <span className="tpl-languages-meter" aria-hidden="true">
+                {Array.from({ length: PROFICIENCY_MAX_LEVEL }, (_, dotIndex) => (
+                  <span
+                    key={dotIndex}
+                    className={`tpl-languages-dot ${dotIndex < proficiencyLevel(l.proficiency) ? "is-filled" : ""}`}
+                  />
+                ))}
+              </span>
+            )}
           </li>
         ))}
       </ul>
@@ -330,12 +477,19 @@ export function ResumePreview({
   // "flow" (which now only controls section label tone, not order):
   // Summary always leads, Experience and Education follow in that order,
   // then the achievement bullets, with Awards closing out the resume as
-  // supplementary, capstone content.
+  // supplementary, capstone content. Education is left out here (rendered
+  // separately, later, between Skills & Tools and Languages) only for
+  // templates with educationAfterSkills set — currently just "ATS
+  // Optimized," at the person's request — every other template keeps this
+  // standard order. Skills & Tools is similarly pulled forward, right after
+  // Summary, only for templates with skillsAfterSummary set (currently just
+  // "Boardroom") — it otherwise renders near the end, in the tail below.
   const orderedSections = (
     <>
       {summaryBlock}
+      {style.skillsAfterSummary && skillsAndToolsBlock}
       {experienceBlock}
-      {educationBlock}
+      {!style.educationAfterSkills && educationBlock}
       {bulletsBlock}
     </>
   );
@@ -698,20 +852,43 @@ export function ResumePreview({
   // global.css) plus bannerAlign are what actually make them look distinct.
   const family = style.family;
   const bannerClass = family === "executive-banner" && style.bannerAlign === "center" ? "tpl-banner-center" : "";
+  const accentNameClass = style.accentName ? "tpl-accent-name" : "";
+  const cornerAccentClass = style.cornerAccent ? "tpl-corner-accent" : "";
+  // Splits off just the first word of the name to color it via
+  // firstNameAccent (Government) — falls back to the plain string
+  // untouched for every template that doesn't set it, and for a
+  // single-word name (nothing to split off).
+  let fullNameNode: string | JSX.Element | undefined = fullName;
+  if (style.firstNameAccent && fullName) {
+    const spaceIndex = fullName.indexOf(" ");
+    if (spaceIndex !== -1) {
+      fullNameNode = (
+        <>
+          <span style={{ color: style.firstNameAccent }}>{fullName.slice(0, spaceIndex)}</span>
+          {fullName.slice(spaceIndex)}
+        </>
+      );
+    }
+  }
   return (
     <div className="preview-col">
       {templateTag}
-      <div className={`preview-panel tpl-${family} ${bannerClass}`} style={cssVars}>
+      <div
+        className={`preview-panel tpl-${family} tpl-key-${templateKey ?? "modern"} ${bannerClass} ${accentNameClass} ${cornerAccentClass}`}
+        style={cssVars}
+      >
         <div className="tpl-header">
-          {fullName && <p className="tpl-fullname">{fullName}</p>}
+          {fullName && <p className="tpl-fullname">{fullNameNode}</p>}
           <h2>{heading}</h2>
-          {contactLine}
+          {!style.contactInFooter && contactLine}
         </div>
         {style.badge && <span className="tpl-badge">{style.badge}</span>}
         {orderedSections}
-        {skillsAndToolsBlock}
+        {!style.skillsAfterSummary && skillsAndToolsBlock}
         {awardsBlock}
+        {style.educationAfterSkills && educationBlock}
         {languagesBlock}
+        {style.contactInFooter && !hideFooterContact && contactLine && <div className="tpl-footer-contact">{contactLine}</div>}
       </div>
     </div>
   );

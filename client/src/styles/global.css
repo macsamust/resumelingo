@@ -169,11 +169,32 @@ section { padding: 84px 0; }
 .dash-tile p { font-size: 13.5px; font-weight: 600; color: var(--navy-light); }
 
 .template-pills { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-.template-pills span, .template-pill { background: #fff; border: 1px solid var(--border); padding: 9px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--navy-light); cursor: pointer; }
+.template-pills span, .template-pill { display: inline-flex; align-items: center; background: #fff; border: 1px solid var(--border); padding: 9px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--navy-light); cursor: pointer; }
 .template-pill.active { border-color: var(--indigo); color: var(--indigo); background: #eef2ff; }
 .template-pill.locked { cursor: not-allowed; opacity: .55; }
 .template-pill.locked.active { border-color: var(--border); color: var(--navy-light); background: #fff; }
 .template-pill-lock { margin-left: 6px; font-size: 11px; }
+/* Small colored dot before the template name, one per subscription tier a
+   template can require — same tier ranking as utils/templateAccess.ts's
+   CATEGORY_MIN_TIER — so someone can tell "included in my plan" vs. "this is
+   my one premium pick" for templates they can already use, not just the ones
+   they're locked out of. */
+.template-pill-tier { width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
+.template-pill-tier-starter { background: #6b7280; }
+/* Not amber/orange — that hue is already spoken for by the green/amber/red
+   ATS-score and resume-strength bands elsewhere (DashboardPage.tsx's
+   strengthTagClass, .ats-pass/.ats-fail), and this pill can also carry the
+   green "ATS" tag right next to it, so amber here would misread as a
+   pass/warn/fail signal instead of a neutral tier marker. */
+.template-pill-tier-professional { background: #2563eb; }
+.template-pill-tier-premium { background: #c026d3; }
+/* "ATS" tag — shown when the template's layout family is on
+   atsCheck.ts's ATS_SAFE_FAMILIES allowlist, so someone can weigh
+   parser-friendliness before picking a template instead of only finding out
+   afterward via the ATS Check section. Plain colored text rather than a
+   nested pill/background — a second rounded shape inside the pill's own
+   rounded edge visually overflowed it, especially near the right corner. */
+.template-pill-ats { font-size: 10px; font-weight: 700; letter-spacing: .02em; color: #0f6e56; margin-left: 7px; }
 
 footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 /* Privacy Policy / Terms of Service (PrivacyPolicyPage.tsx/TermsOfServicePage.tsx)
@@ -463,6 +484,8 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   padding: 12px 16px; border-radius: 10px; font-size: 13.5px; margin-bottom: 20px;
 }
 .app-banner-notice { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+/* AppShell's "payment failed" banner — red instead of amber, same palette as .job-app-banner-limit, since a declined renewal charge is more urgent than the email-verification nudge. */
+.app-banner-danger { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
 .app-banner-link {
   background: none; border: none; padding: 0; font: inherit; font-weight: 700; color: #1d4ed8; cursor: pointer;
 }
@@ -591,6 +614,21 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
    .hero-note so it doesn't compete with real field labels. */
 .field-hint { font-size: 12px; color: var(--muted); font-style: italic; margin: 6px 0 0; }
 
+/* "+ Add challenge & result for more impact" (AchievementEditor.tsx) —
+   collapsed default state for the two optional CAR fields, sitting where
+   those fields would otherwise be. Left-aligned, full-width, dashed border
+   so it reads as "click to reveal more of this row" rather than a generic
+   ghost button/action. The .field-hint child (reused as-is) wraps onto its
+   own line below the toggle label instead of the inline margin-top spacing
+   it normally gets after a textarea. */
+.achievement-more-toggle {
+  display: block; width: 100%; text-align: left; font-family: inherit; font-size: 13.5px; font-weight: 600;
+  color: var(--indigo); background: transparent; border: 1.5px dashed var(--border); border-radius: 10px;
+  padding: 10px 14px; margin-bottom: 16px; cursor: pointer;
+}
+.achievement-more-toggle:hover { border-color: var(--indigo); }
+.achievement-more-toggle .field-hint { display: block; margin-top: 3px; font-weight: 400; }
+
 /* "Copy from another resume" control (CopyFromResume.tsx) — sits above the
    row list in Work Experience/Education. Only rendered at all when the user
    has another resume with something in that section to offer. */
@@ -667,6 +705,10 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 /* Small colored marker anchoring each section label — a second, lighter
    touch of delineation alongside the divider above. */
 .tpl-section-label::before { content: ""; width: 6px; height: 6px; border-radius: 1.5px; background: var(--tpl-accent); flex-shrink: 0; }
+/* Flanking-rule spans (see ResumePreview.tsx's sectionLabel()) — present in
+   the DOM for every template but hidden by default; only ats-optimized
+   (see its rules further down) switches them on. */
+.tpl-section-rule { display: none; }
 .tpl-section .preview-summary, .tpl-section .preview-bullets { margin-bottom: 0; }
 
 /* Chronological work history — one entry per job, most recent/current first
@@ -702,6 +744,13 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .tpl-languages-list { list-style: none; font-size: 13px; color: var(--navy-light); line-height: 1.7; margin: 0; }
 .tpl-languages-name { font-weight: 600; color: var(--navy); }
 .tpl-languages-proficiency { color: var(--muted); }
+/* Optional 5-dot fluency meter next to a language's name/proficiency text
+   (see TemplateStyle.languageProficiencyMeter) — purely decorative
+   reinforcement of the text already there, so it's aria-hidden in the JSX
+   rather than needing its own label. */
+.tpl-languages-meter { display: inline-flex; gap: 4px; margin-left: 8px; vertical-align: middle; }
+.tpl-languages-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); display: inline-block; }
+.tpl-languages-dot.is-filled { background: var(--tpl-accent); }
 
 /* Skills & Tools picker (Edit Resume, Portrait template only — see
    components/builder/SkillsAndToolsEditor.tsx). Available suggestions are
@@ -717,6 +766,13 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 }
 .skill-picker-chip:hover { border-color: var(--indigo); }
 .skill-picker-chip.selected { background: #eef2ff; color: var(--indigo); border-color: #eef2ff; }
+/* AI-suggested chips (see SkillsAndToolsEditor.tsx's "Suggest more with AI")
+   — dashed border distinguishes a model-generated, title-tailored keyword
+   from the curated per-profession ones above it in the same group, without
+   needing a separate section. Selected state matches the curated chips'
+   exactly, so once picked it reads identically either way. */
+.skill-picker-chip-ai { border-style: dashed; }
+.skill-picker-chip-ai.selected { border-style: solid; }
 .skill-picker-selected-chip {
   display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600;
   padding: 6px 10px 6px 12px; border-radius: 999px; background: var(--navy); color: #fff; border: none;
@@ -737,6 +793,74 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .tpl-executive-banner .tpl-header .tpl-contact { color: rgba(255, 255, 255, .85); margin-top: 10px; }
 .tpl-executive-banner .tpl-header .tpl-contact-link { color: #fff; }
 .tpl-executive-banner .tpl-header .tpl-contact-sep { color: rgba(255, 255, 255, .6); }
+
+/* accentName (Boardroom): just the name picks up the template's accentSoft
+   tone instead of the family's default white — title/contact stay white so
+   only the name itself reads as a deliberate gold-on-navy accent. */
+.tpl-executive-banner.tpl-accent-name .tpl-header .tpl-fullname { color: var(--tpl-accent-soft); }
+
+/* cornerAccent (Boardroom): a small accentSoft-colored triangle clipped into
+   the banner's top right corner, purely decorative. position: relative +
+   overflow: hidden on the header (already accent-colored and edge-to-edge
+   via its negative margins above) keeps the triangle contained instead of
+   spilling past the panel's rounded corners. */
+.tpl-executive-banner.tpl-corner-accent .tpl-header { position: relative; overflow: hidden; }
+.tpl-executive-banner.tpl-corner-accent .tpl-header::after {
+  content: ""; position: absolute; top: 0; right: 0; width: 90px; height: 90px;
+  background: var(--tpl-accent-soft); clip-path: polygon(100% 0, 0 0, 100% 100%);
+}
+
+/* boardroom: section labels center, drop their dot marker, switch to a sans
+   typeface (contrasting with the serif body/banner), and pick up a
+   full-width underline of their own — a plain rule directly beneath each
+   heading rather than the flanking-rule style ats-optimized uses (see
+   .tpl-section-rule, left off/hidden here since this template doesn't use
+   it). .tpl-section-label is already a block-level flex container (the
+   `display: flex` on a <span> forces it), so a border-bottom on it spans
+   the same width Summary/Skills/etc. already do. */
+.tpl-key-boardroom .tpl-section-label::before { display: none; }
+.tpl-key-boardroom .tpl-section-label {
+  justify-content: center;
+  font-family: 'IBM Plex Sans', 'Segoe UI', Roboto, sans-serif;
+  font-weight: 400;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+/* Resume title (h2 — the job title line under the name, e.g. "Executive
+   Director") drops to a small, light-weight line instead of the browser's
+   default bold h2. font-weight: 400 only genuinely renders thin because
+   index.html now loads Playfair Display's actual 400 face — it previously
+   only loaded 600/700/800, so "unbold" was silently falling back to the
+   nearest loaded weight (600) and barely looked different. The person's
+   full name goes the same direction (also 400, same font-availability
+   reasoning) but reads formal instead of plain thanks to the much wider
+   letter-spacing and all caps. */
+.tpl-key-boardroom .tpl-header h2 { font-weight: 400; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
+.tpl-key-boardroom .tpl-fullname { font-weight: 400; letter-spacing: .36em; text-transform: uppercase; }
+/* Contact line moves out of the banner header (see ResumePreview.tsx's
+   contactInFooter) and down to a small, centered, plain-text footer instead
+   — a thin rule separates it from Education/whatever section precedes it,
+   and its colors go back to the light-mode defaults since it's no longer
+   sitting on the navy banner background. */
+.tpl-key-boardroom .tpl-footer-contact {
+  margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border);
+  text-align: center;
+}
+/* Plain accentSoft gold (#c9a55c) reads fine on the dark navy banner but
+   fails contrast on this white footer — roughly 2.2:1, well under the
+   4.5:1 normal-text minimum, so straight gold text would be hard to read
+   here. Using a deepened/darkened gold instead (~5:1 on white) so it still
+   reads as "gold," just legible at this small size. */
+.tpl-key-boardroom .tpl-footer-contact .tpl-contact { margin: 0; color: #8a6a1f; font-weight: 400; letter-spacing: .02em; }
+.tpl-key-boardroom .tpl-footer-contact .tpl-contact-link { color: #8a6a1f; }
+.tpl-key-boardroom .tpl-footer-contact .tpl-contact-sep { color: #8a6a1f; opacity: .6; }
+/* No gold (accentSoft) separators here — the grey border-bottom under each
+   section label above is already the divider; the between-section hairline
+   (.tpl-section + .tpl-section) and the Skills/Tools sub-group rule both
+   default to the template's accent-soft color, which for Boardroom is a
+   gold tone, so both are switched off to avoid a second, differently-
+   colored divider stacked on top of the grey one. */
+.tpl-key-boardroom .tpl-section + .tpl-section { border-top: none; }
+.tpl-key-boardroom .tpl-skills-tools-divider { display: none; }
 
 /* sidebar: two-column, colored sidebar carries name/role, main column carries content.
    Overrides .preview-panel's own padding to 0 (rather than fighting it with a negative
@@ -770,6 +894,83 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .tpl-centered-serif .tpl-header .tpl-contact { text-align: center; }
 .tpl-centered-serif .tpl-badge { display: block; width: fit-content; margin: -8px auto 16px; }
 .tpl-centered-serif .tpl-section-label { justify-content: center; }
+
+/* ats-optimized: shares the centered-serif family/layout above (scoped via
+   tpl-key-ats-optimized rather than the family class, so classic/government/
+   federal — the other centered-serif templates — are untouched), but with
+   its own plainer, more traditional-ATS-resume-style header and section
+   headings:
+     - the resume title (h2 — the person's job title line, not their name)
+       drops to a small, unbold, letter-spaced caps line instead of a bold
+       heading, so the name stays the only visually "loud" element.
+     - section labels lose the small square marker and instead get a sans
+       typeface (contrasting with the serif body font) plus a thin rule
+       flanking both sides of the text, evoking a classic "— SECTION —"
+       divider instead of a bullet-anchored label. */
+.tpl-key-ats-optimized .tpl-header h2 {
+  font-size: 12.5px; font-weight: 400; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+}
+/* centered-serif's shared header rule (see .tpl-centered-serif .tpl-header
+   above) reads as a solid black line right above Summary at this
+   template's gray/near-black accent color — dropped here so the header
+   just ends in whitespace instead. */
+.tpl-key-ats-optimized .tpl-header { border-bottom: none; }
+.tpl-key-ats-optimized .tpl-contact-sep { margin: 0 4px; }
+/* No hairline between sections here — the flanking-rule section labels
+   above are already enough visual separation on their own; a second line
+   right above them read as redundant clutter. Margin/padding stay so the
+   vertical rhythm between sections doesn't collapse once the line's gone. */
+.tpl-key-ats-optimized .tpl-section + .tpl-section { border-top: none; }
+/* Every .tpl-section-label (Summary, Experience, Education, Achievements,
+   Skills & Tools, Awards, Languages) now renders via ResumePreview.tsx's
+   sectionLabel() helper, which always includes two .tpl-section-rule spans
+   flanking the text — real DOM elements, not ::before/::after
+   pseudo-elements. They're hidden globally by default (below, right after
+   the base .tpl-section-label rules) and only switched on here, so this
+   template's flanking-rule look can't depend on a pseudo-element
+   surviving some cascade/build quirk; every section gets the identical
+   two <span>s, so there's nothing left to differ between them. */
+.tpl-key-ats-optimized .tpl-section-label::before { display: none; }
+.tpl-key-ats-optimized .tpl-section-label {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  letter-spacing: .16em; gap: 14px;
+}
+.tpl-key-ats-optimized .tpl-section-rule { display: block; height: 1px; min-width: 16px; background: var(--tpl-accent-soft); flex: 1 1 0%; }
+
+/* government: shares the centered-serif family/layout above (scoped via
+   tpl-key-government, like ats-optimized, so classic/federal/ats-optimized —
+   the other centered-serif templates — are untouched). Moves the header to
+   a left name/title block beside a right-aligned contact block instead of
+   the family's centered stack, and moves every section label into a
+   fixed-width left gutter beside its content — plain muted caps, no dot
+   marker — instead of a colored label sitting above the content. */
+.tpl-key-government .tpl-header {
+  display: grid; grid-template-columns: 1fr auto; column-gap: 20px; align-items: start;
+  text-align: left; border-bottom: 1px solid var(--border);
+}
+.tpl-key-government .tpl-header .tpl-fullname { grid-column: 1; text-align: left; }
+/* Resume title (h2 — the job title line, e.g. "Program Analyst") drops to a
+   small, unbold, muted line in a plainer sans instead of the family's
+   default bold heading, at the person's request, so the name stays the
+   loudest thing in the header instead of competing with the title. */
+.tpl-key-government .tpl-header h2 {
+  grid-column: 1; text-align: left;
+  font-size: 13px; font-weight: 400; color: var(--muted);
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  margin-top: 2px;
+}
+/* Contact block — "\n"-separated (see templateStyles.ts's contactSeparator)
+   plus pre-line here turns those newlines into three real stacked lines
+   (email / phone / LinkedIn) instead of one dot-joined line, at the
+   person's request for something cleaner than a single row of text. */
+.tpl-key-government .tpl-header .tpl-contact {
+  grid-column: 2; grid-row: 1 / span 2; text-align: right; margin: 0;
+  white-space: pre-line; line-height: 1.8;
+}
+.tpl-key-government .tpl-section { display: grid; grid-template-columns: 120px 1fr; column-gap: 16px; align-items: start; }
+.tpl-key-government .tpl-section-label { justify-content: flex-start; text-align: left; color: var(--muted); }
+.tpl-key-government .tpl-section-label::before { display: none; }
+.tpl-key-government .tpl-section + .tpl-section { border-top-color: var(--border); }
 
 /* cv-academic: left-aligned, small-caps uppercase role line like a CV masthead */
 .tpl-cv-academic .tpl-header { border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 18px; }
@@ -1038,6 +1239,30 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .public-resume-card:last-child { margin-bottom: 0; }
 .public-resume-details { padding: 32px 44px; }
 .public-resume-details-heading { font-size: 18px; color: var(--navy); margin-bottom: 4px; }
+/* "Additional Details"/"References" render as their own sibling cards
+   below <ResumePreview> (see PublicResumePage.tsx), outside .preview-panel
+   entirely — so they don't inherit --tpl-accent (only set inline on
+   .preview-panel itself, not shared across sibling elements) or any other
+   per-template styling on their own. This brings Boardroom's version in
+   line with the rest of its headers (Summary, Skills & Tools, Education,
+   etc. — see .tpl-key-boardroom .tpl-section-label above); the accent
+   color is hardcoded to Boardroom's own #1f2f3d for the same reason. */
+.tpl-key-boardroom .public-resume-details-heading {
+  font-family: 'IBM Plex Sans', 'Segoe UI', Roboto, sans-serif;
+  font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+  color: #1f2f3d; text-align: center; margin-bottom: 12px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+/* .answer-key/.answer-value are shared with the Recruiter Mode card's
+   Location/Availability fields (unscoped, see the comment on the base
+   rules below), so this override is scoped to .tpl-key-boardroom
+   specifically rather than changing the shared base rule — otherwise it'd
+   also affect that unrelated recruiter card. Playfair Display to match the
+   resume's own body font (style.font, set on .preview-panel — this card
+   sits outside that element so it never inherited it), rather than the
+   page's plain default font. */
+.tpl-key-boardroom .answer-key { font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; }
+.tpl-key-boardroom .answer-value { font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; }
 /* Deterministic statement under the "Candidate Summary" heading — see
    server's utils/candidateSummary.ts. Sits above the location/availability
    answer-grid, same section, same visual weight as .preview-summary. */

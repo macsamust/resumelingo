@@ -1,6 +1,7 @@
 import { KeyboardEvent } from "react";
 import { LanguageEntry } from "../../types";
 import { duplicateItem, moveItem } from "../../utils/listEditing";
+import { PROFICIENCY_SCALE } from "../../utils/languageProficiency";
 import { EmptyRowExample } from "./EmptyRowExample";
 
 const EXAMPLE_FIELDS = [
@@ -8,14 +9,8 @@ const EXAMPLE_FIELDS = [
   { label: "Proficiency", value: "Full Professional Proficiency" },
 ];
 
-/** Standard ILR-style scale, most fluent first — same wording resumes conventionally use, so this doesn't need to be freehand. */
-const PROFICIENCY_OPTIONS = [
-  "Native or Bilingual Proficiency",
-  "Full Professional Proficiency",
-  "Professional Working Proficiency",
-  "Limited Working Proficiency",
-  "Elementary Proficiency",
-];
+/** Standard ILR-style scale, most fluent first — same wording resumes conventionally use, so this doesn't need to be freehand. Shared with ResumePreview.tsx/pdfExport.ts's proficiency-dot meter — see utils/languageProficiency.ts. */
+const PROFICIENCY_OPTIONS = PROFICIENCY_SCALE;
 
 interface Props {
   languages: LanguageEntry[];

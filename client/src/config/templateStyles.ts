@@ -36,14 +36,38 @@ export interface TemplateStyle {
   flow: Flow;
   summaryLabel: string;
   bulletsLabel: string;
+  /** Overrides the Work Experience section's label — defaults to "Experience" (see ResumePreview.tsx). Added for "ATS Optimized," whose whole premise is using the exact section wording an ATS parser is trained to recognize ("Work Experience"), rather than every other template's shorter default. */
+  experienceLabel?: string;
+  /** Overrides the Education section's label — defaults to "Education" (see ResumePreview.tsx). */
+  educationLabel?: string;
   /** Overrides the Awards section's label — defaults to "Awards" (see ResumePreview.tsx). */
   awardsLabel?: string;
   /** Overrides the Skills & Tools section's two group labels — default to "Skills"/"Tools" (see ResumePreview.tsx). */
   skillsLabel?: string;
   toolsLabel?: string;
+  /**
+   * A short label rendered on the resume itself (via .tpl-badge — inside
+   * .preview-panel, so unlike templateTag it's real content: it appears on
+   * the public resume link and gets included in what a recruiter actually
+   * sees). Reserve this for something true of the *candidate* that belongs
+   * on the document — "Veteran" (military-transition) is the one case that
+   * qualifies, since plenty of real resumes self-identify that way for
+   * veteran-hiring programs. Do NOT use this for anything describing the
+   * *template* itself (a layout style, an ATS-safety claim, a tone like
+   * "Fast Moving") — that's metadata about a choice made in the builder,
+   * not something the candidate is asserting about themselves, and it reads
+   * strangely showing up verbatim on a document sent to an employer. The
+   * template's own name (shown via templateTag, builder-only — see its doc
+   * comment — and via the template picker's tier/ATS tags in
+   * ResumeEditPage.tsx) is where that kind of description belongs instead.
+   */
   badge?: string;
   sideAlign?: "left" | "right"; // sidebar family only
   bannerAlign?: "left" | "center"; // executive-banner family only
+  /** executive-banner family only — colors just the name (not the title/contact line, which stay white) in the template's accentSoft tone instead of white, for a gold-on-navy look. */
+  accentName?: boolean;
+  /** executive-banner family only — a small diagonal accentSoft-colored triangle clipped into the banner's top right corner, purely decorative (web preview/public page only; the PDF export builds its own plain layout and never reads this). */
+  cornerAccent?: boolean;
   /**
    * photo-sidebar-underline family only:
    *   - "banner" wraps the header text in a solid accent-color block with a
@@ -55,6 +79,55 @@ export interface TemplateStyle {
    *     with no uploaded-photo emphasis (see "emblem").
    */
   headerVariant?: "banner" | "banner-center";
+  /** Overrides the header contact line's separator — defaults to " · " (see ResumePreview.tsx's contactLine). Added for "ATS Optimized," which uses " | " to match the plain, parser-friendly punctuation real ATS-safe resumes tend to use instead of a typographic dot. */
+  contactSeparator?: string;
+  /** Overrides the Skills & Tools section's within-group keyword separator — defaults to ", " (see ResumePreview.tsx's skillsAndToolsBlock). Added for "ATS Optimized," matching its " | " contactSeparator instead of comma-separated prose. */
+  skillsSeparator?: string;
+  /**
+   * Single-column family (centered-serif/cv-academic/minimal-clean/
+   * executive-banner) only: moves Education out of its usual place right
+   * after Experience/before the achievement bullets, rendering it instead
+   * between Skills & Tools and Languages, near the end of the resume. Added
+   * for "ATS Optimized" at the person's request — every other template
+   * keeps the standard Summary/Experience/Education/Achievements order (see
+   * ResumePreview.tsx's orderedSections).
+   */
+  educationAfterSkills?: boolean;
+  /**
+   * Single-column family only: moves Skills & Tools out of its usual place
+   * near the end of the resume, rendering it instead right after the
+   * Summary section, before Experience. Added for "Boardroom" at the
+   * person's request.
+   */
+  skillsAfterSummary?: boolean;
+  /**
+   * Single-column family only: renders the header contact line (email,
+   * phone, city/state, LinkedIn) as a small centered line at the very
+   * bottom of the resume instead of inside the header — added for
+   * "Boardroom," whose banner header is meant to carry only the name and
+   * title, with contact details tucked away as a footer instead of
+   * competing for attention up top.
+   */
+  contactInFooter?: boolean;
+  /**
+   * Colors just the first word of the person's full name in this hex value,
+   * leaving the rest of the name in its normal color — added for
+   * "Government" at the person's request, so the name reads with a
+   * deliberate accent even though the template otherwise keeps a muted,
+   * traditional palette. Single-column family only (see ResumePreview.tsx's
+   * fullNameNode).
+   */
+  firstNameAccent?: string;
+  /**
+   * Shows a 5-dot proficiency meter next to each Languages entry, alongside
+   * (not instead of) the existing "Language, Proficiency" text — see
+   * ResumePreview.tsx's languagesBlock and utils/languageProficiency.ts's
+   * proficiencyLevel. Off by default so every template's Languages section
+   * is unchanged unless explicitly opted in — added for "Government" at the
+   * person's request, but not tied to any one family/font/etc., so any
+   * other template can flip this on later without new plumbing.
+   */
+  languageProficiencyMeter?: boolean;
 }
 
 const SERIF_ELEGANT = `'Playfair Display', Georgia, 'Times New Roman', serif`;
@@ -90,7 +163,7 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
   consulting: {
     family: "executive-banner", bannerAlign: "left",
     accent: "#4f46e5", accentSoft: "#eef2ff", font: SANS_CORPORATE,
-    flow: "bullets-first", summaryLabel: "Profile", bulletsLabel: "Impact & Results", badge: "Metrics-Driven",
+    flow: "bullets-first", summaryLabel: "Profile", bulletsLabel: "Impact & Results",
   },
   "military-transition": {
     family: "executive-banner", bannerAlign: "center",
@@ -107,12 +180,12 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
   technical: {
     family: "sidebar", sideAlign: "left",
     accent: "#0d9488", accentSoft: "#ccfbf1", font: SANS_TECHNICAL,
-    flow: "bullets-first", summaryLabel: "Summary", bulletsLabel: "Technical Contributions", badge: "Skills-Forward",
+    flow: "bullets-first", summaryLabel: "Summary", bulletsLabel: "Technical Contributions",
   },
   startup: {
     family: "sidebar", sideAlign: "right",
     accent: "#ea580c", accentSoft: "#ffedd5", font: SANS_GEOMETRIC,
-    flow: "bullets-first", summaryLabel: "Bio", bulletsLabel: "Wins", badge: "Fast-Moving",
+    flow: "bullets-first", summaryLabel: "Bio", bulletsLabel: "Wins",
   },
   creative: {
     family: "sidebar", sideAlign: "right",
@@ -126,15 +199,31 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     accent: "#1e293b", accentSoft: "#e2e8f0", font: SERIF_TRADITIONAL,
     flow: "summary-first", summaryLabel: "Objective", bulletsLabel: "Experience Highlights",
   },
+  // Restyled toward a plain left-gutter-labeled layout (muted uppercase
+  // section labels beside their content, split name/contact header) rather
+  // than Federal's centered "— SECTION —" traditional-serif look — not
+  // every government/public-sector resume needs to match USAJOBS format
+  // specifically, so this stays the more general-purpose option. See
+  // .tpl-key-government in global.css for the actual layout overrides;
+  // family/accent/flow stay centered-serif so it's still on
+  // atsCheck.ts's ATS_SAFE_FAMILIES list.
   government: {
     family: "centered-serif",
-    accent: "#1e3a8a", accentSoft: "#dbeafe", font: SERIF_TRADITIONAL,
+    accent: "#1e3a8a", accentSoft: "#dbeafe", font: SANS_CORPORATE,
     flow: "summary-first", summaryLabel: "Qualifications Summary", bulletsLabel: "Relevant Experience",
+    firstNameAccent: "#991b1b",
+    // "\n" rather than a joined " · "/" | " string — paired with
+    // .tpl-key-government .tpl-contact's white-space: pre-line in global.css,
+    // this puts email/phone/LinkedIn each on their own line instead of one
+    // dot-separated line, at the person's request for a cleaner contact
+    // block. Safe to reuse contactSeparator for this since buildContactLine
+    // just inserts it as literal text between items either way.
+    contactSeparator: "\n",
   },
   federal: {
     family: "centered-serif",
     accent: "#0f172a", accentSoft: "#e2e8f0", font: SERIF_TRADITIONAL,
-    flow: "summary-first", summaryLabel: "Qualifications Summary", bulletsLabel: "Duties & Accomplishments", badge: "USAJOBS Format",
+    flow: "summary-first", summaryLabel: "Qualifications Summary", bulletsLabel: "Duties & Accomplishments",
   },
 
   // Academic / credentialed — dense, left-aligned, small-caps section labels.
@@ -146,7 +235,7 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
   "government-contractor": {
     family: "cv-academic",
     accent: "#0369a1", accentSoft: "#e0f2fe", font: SANS_TECHNICAL,
-    flow: "bullets-first", summaryLabel: "Profile", bulletsLabel: "Contract Accomplishments", badge: "Clearance Ready",
+    flow: "bullets-first", summaryLabel: "Profile", bulletsLabel: "Contract Accomplishments",
   },
 
   // Minimal / whitespace-forward.
@@ -158,7 +247,7 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
   healthcare: {
     family: "minimal-clean",
     accent: "#0d9488", accentSoft: "#f0fdfa", font: SERIF_LITERARY,
-    flow: "summary-first", summaryLabel: "Clinical Summary", bulletsLabel: "Clinical Highlights", badge: "Clinical",
+    flow: "summary-first", summaryLabel: "Clinical Summary", bulletsLabel: "Clinical Highlights",
   },
 
   // Full-width name/role banner over a contact-and-profile sidebar, with an
@@ -252,6 +341,41 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     accent: "#16324a", accentSoft: "#e7f3f3", font: SANS_MODERN,
     flow: "summary-first", summaryLabel: "Profile", bulletsLabel: "Highlights",
     awardsLabel: "Workshops & Training", skillsLabel: "Hard Skills", toolsLabel: "Soft Skills",
+  },
+
+  // Reuses the executive-banner structure (full-bleed centered banner header,
+  // single column below — same family as "executive"/"military-transition")
+  // with its own darker slate-navy-and-warm-gold palette and "Profile
+  // Summary"/"Work Experience" section wording, for a more formal, upscale
+  // take on the same layout aimed squarely at senior/board level roles.
+  boardroom: {
+    family: "executive-banner", bannerAlign: "center",
+    accent: "#1f2f3d", accentSoft: "#c9a55c", font: SERIF_ELEGANT,
+    flow: "summary-first", summaryLabel: "Profile Summary", bulletsLabel: "Key Achievements",
+    experienceLabel: "Work Experience",
+    accentName: true, cornerAccent: true,
+    contactSeparator: " | ", contactInFooter: true, educationAfterSkills: true, skillsAfterSummary: true,
+  },
+
+  // Deliberately the plainest template in the lineup — single column
+  // (centered-serif family, already the layout ResumeEditPage's ATS Check
+  // scores as parser safe, see client/src/utils/atsCheck.ts's
+  // ATS_SAFE_FAMILIES), a neutral gray accent instead of a bold color, no
+  // badge, and the exact section wording ("Summary," "Work Experience,"
+  // "Education") an ATS parser is trained to recognize rather than each
+  // other template's more creative relabeling. Font is still a refined
+  // serif (font choice is purely visual — a Worker never reads it, and it
+  // has zero effect on how an ATS actually parses the underlying text) to
+  // read as a polished, traditional resume rather than a stripped down one.
+  // "Professional Skills"/"Technical Skills" splits Skills & Tools the way
+  // a plain two column skills block on a real ATS friendly resume usually
+  // reads.
+  "ats-optimized": {
+    family: "centered-serif",
+    accent: "#374151", accentSoft: "#e5e7eb", font: SERIF_LITERARY,
+    flow: "summary-first", summaryLabel: "Summary", bulletsLabel: "Key Achievements",
+    experienceLabel: "Work Experience", skillsLabel: "Professional Skills", toolsLabel: "Technical Skills",
+    contactSeparator: " | ", skillsSeparator: " | ", educationAfterSkills: true,
   },
 };
 

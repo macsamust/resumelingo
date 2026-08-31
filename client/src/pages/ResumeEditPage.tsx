@@ -21,7 +21,7 @@ import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL } from "../utils/templateAccess";
 import { canUseVisibility, VISIBILITY_LABEL, VISIBILITY_MIN_TIER } from "../utils/visibilityAccess";
 import { getTemplateStyle } from "../config/templateStyles";
-import { buildResumeTextBlob, matchKeywords, runHealthChecks } from "../utils/atsCheck";
+import { buildResumeTextBlob, isAtsSafeFamily, matchKeywords, runHealthChecks } from "../utils/atsCheck";
 import { CLEARANCE_OPTIONS, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
 import { generateId } from "../utils/id";
 import { clearDraft, loadDraft, ResumeDraft, saveDraft } from "../utils/resumeDraft";
@@ -745,24 +745,40 @@ export function ResumeEditPage() {
 
   const handleFormBlur = () => {
     if (autosaveTimeoutRef.current) clearTimeout(autosaveTimeoutRef.current);
-    autosaveTimeoutRef.current = setTimeout(async () => {
-      if (savingInFlightRef.current || saving || !isDirty || !id || pendingDraft) return;
-      savingInFlightRef.current = true;
-      setAutoSaveState("saving");
-      try {
-        await persist();
-        setAutoSaveState("saved");
-        setTimeout(() => setAutoSaveState((s) => (s === "saved" ? "idle" : s)), 3000);
-      } catch {
-        setAutoSaveState("error");
-      } finally {
-        savingInFlightRef.current = false;
-      }
-    }, 400);
+    // Debounced (unlike flushPendingAutosave's immediate save below, used
+    // when a click is about to take the person somewhere their typed change
+    // needs to already be visible) — a plain blur while staying on this page
+    // doesn't need to win a race against anything, so waiting briefly here
+    // avoids firing a save on every single field-to-field tab press.
+    autosaveTimeoutRef.current = setTimeout(flushPendingAutosave, 400);
   };
+
+  // Always holds this render's latest save-relevant values, read from the
+  // unmount cleanup below — that cleanup only runs once (empty dep array),
+  // so without this it would forever see the very first render's stale
+  // isDirty/id/buildSavePayload rather than whatever was true right before
+  // the person navigated away.
+  const latestSaveStateRef = useRef({ isDirty, id, pendingDraft, buildSavePayload });
+  latestSaveStateRef.current = { isDirty, id, pendingDraft, buildSavePayload };
 
   useEffect(() => () => {
     if (autosaveTimeoutRef.current) clearTimeout(autosaveTimeoutRef.current);
+    // Clicking "View resume" is covered by flushPendingAutosave firing
+    // directly on click (that link opens a new tab and leaves this page
+    // mounted, so there's no unmount to hook into). But every OTHER way of
+    // leaving this page — "Back to dashboard", the navbar, browser back —
+    // is a normal in-app navigation that unmounts this component right
+    // away, which used to just cancel the pending debounced autosave above
+    // outright, silently dropping whatever was just typed (e.g. a language
+    // name) if the person navigated away before that timer fired. Firing a
+    // final save here instead, straight through the API rather than
+    // persist() (whose setResume/setIsDirty calls would warn about setting
+    // state on an unmounted component), means the edit survives even when
+    // nobody waited around for the debounce or clicked "Save changes".
+    const { isDirty, id, pendingDraft, buildSavePayload } = latestSaveStateRef.current;
+    if (isDirty && id && !pendingDraft) {
+      resumeApi.update(id, buildSavePayload()).catch(() => {});
+    }
   }, []);
 
   const onDelete = async () => {
@@ -787,12 +803,56 @@ export function ResumeEditPage() {
     );
   }
 
+  /**
+   * "View resume" opens the public page in a new tab (target="_blank") while
+   * this tab stays open and mounted — so it can't fall back on the
+   * beforeunload warning, and it doesn't get to just wait for the normal
+   * on-blur autosave either. The field the person was just typing in only
+   * blurs at the same moment this link is clicked, which schedules the
+   * usual 400ms-debounced autosave — but that timer now has to survive this
+   * tab losing focus/foreground to the newly-opened one, competing against
+   * that new tab's own near-instant fetch of the (still old) public resume
+   * data. In practice the debounced save often loses that race, so the new
+   * tab shows stale data — e.g. a just-typed language name missing, only
+   * the blank row it was added as. Explicitly flushing an immediate save
+   * here, right on click, fires our own save request at the same moment the
+   * new tab starts loading, well before its own request would go out
+   * (opening a tab, then loading its JS, then it calling the API is always
+   * slower than one PUT request already in flight) — so the public page one
+   * click later actually reflects what was just typed.
+   */
+  const flushPendingAutosave = () => {
+    if (autosaveTimeoutRef.current) clearTimeout(autosaveTimeoutRef.current);
+    if (savingInFlightRef.current || saving || !isDirty || !id || pendingDraft) return;
+    savingInFlightRef.current = true;
+    setAutoSaveState("saving");
+    persist()
+      .then(() => {
+        setAutoSaveState("saved");
+        setTimeout(() => setAutoSaveState((s) => (s === "saved" ? "idle" : s)), 3000);
+      })
+      .catch(() => setAutoSaveState("error"))
+      .finally(() => {
+        savingInFlightRef.current = false;
+      });
+  };
+
   const scrollToAtsCheck = () => {
     setForceOpen({ open: true, token: Date.now() });
     // Let the section actually expand before scrolling to it, otherwise a
     // just-opened section's height isn't accounted for in the scroll target.
+    // A single rAF fires right after the browser's next paint, but that
+    // paint can still show the section collapsed if CollapsibleSection's own
+    // state update hasn't been committed yet — landing the scroll short
+    // (e.g. at Work Experience instead of ATS Check) on the first click, and
+    // only reaching it on a second click once things had caught up. Nesting
+    // a second rAF waits one more frame, by which point CollapsibleSection's
+    // now-synchronous (useLayoutEffect-based) open state is guaranteed to
+    // have painted, so the scroll target's height is the real, expanded one.
     requestAnimationFrame(() => {
-      document.getElementById("ats-check-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      requestAnimationFrame(() => {
+        document.getElementById("ats-check-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
     });
   };
 
@@ -801,7 +861,13 @@ export function ResumeEditPage() {
       <div className="app-page-head">
         <h1 id="edit-resume-title">Edit Resume</h1>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <a href={`/r/${resume.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost">
+          <a
+            href={`/r/${resume.slug}`}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-ghost"
+            onClick={flushPendingAutosave}
+          >
             View resume
           </a>
           <button className="btn btn-ghost" onClick={onDelete}>
@@ -812,7 +878,7 @@ export function ResumeEditPage() {
       {error && <div className="form-error">{error}</div>}
       {pendingDraft && (
         <div className="draft-restore-banner">
-          <span>You have unsaved changes from earlier — restore them?</span>
+          <span>You have unsaved changes from earlier. Restore them?</span>
           <span className="draft-restore-banner-actions">
             <button type="button" className="draft-restore-banner-restore" onClick={restoreDraft}>
               Restore
@@ -833,7 +899,7 @@ export function ResumeEditPage() {
             <p className={`autosave-indicator ${autoSaveState === "error" ? "is-error" : ""}`} role="status" aria-live="polite">
               {autoSaveState === "saving" && "Saving…"}
               {autoSaveState === "saved" && "All changes saved"}
-              {autoSaveState === "error" && "Couldn't autosave — click Save changes to retry"}
+              {autoSaveState === "error" && "Couldn't autosave, click Save changes to retry"}
             </p>
           )}
 
@@ -904,7 +970,14 @@ export function ResumeEditPage() {
             <div className="template-choices">
               {templates.map((t) => {
                 const locked = !!user && !canUseTemplate(user.subscriptionTier, t.category);
-                const upgradeHint = `Upgrade to ${TIER_LABEL[CATEGORY_MIN_TIER[t.category]]} to use this template.`;
+                const tier = CATEGORY_MIN_TIER[t.category];
+                const upgradeHint = `Upgrade to ${TIER_LABEL[tier]} to use this template.`;
+                const atsSafe = isAtsSafeFamily(getTemplateStyle(t.key).family);
+                // Text fallback for the tier dot/ATS tag, which are otherwise
+                // color- and (for the dot) aria-hidden-only — so someone
+                // relying on a screen reader, or who hasn't learned what the
+                // dot colors mean, still gets tier + ATS info via the title.
+                const tierNote = `${TIER_LABEL[tier]} template.${atsSafe ? " ATS friendly (single-column layout)." : ""}`;
                 return (
                   <span
                     key={t.key}
@@ -912,9 +985,11 @@ export function ResumeEditPage() {
                     onClick={() => {
                       if (!locked) setTemplateKey(t.key);
                     }}
-                    title={locked ? `${upgradeHint} ${t.description}` : t.description}
+                    title={locked ? `${upgradeHint} ${t.description}` : `${tierNote} ${t.description}`}
                   >
+                    <span className={`template-pill-tier template-pill-tier-${tier}`} aria-hidden="true" />
                     {t.name}
+                    {atsSafe && <span className="template-pill-ats">ATS</span>}
                     {locked && (
                       <span className="template-pill-lock" aria-hidden="true">
                         🔒
@@ -929,7 +1004,7 @@ export function ResumeEditPage() {
           {usesSkillsAndTools && (
             <CollapsibleSection title="Skills & Tools" forceOpen={forceOpen} complete={sectionProgress.skills}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
-                Available on every Premium template. Click a suggested keyword to add it — skills and tools are
+                Available on every Premium template. Click a suggested keyword to add it. Skills and tools are
                 grouped separately in both the picker and the resume itself.
               </p>
               <SkillsAndToolsEditor
@@ -937,6 +1012,9 @@ export function ResumeEditPage() {
                 professionLabel={professionDetail?.label ?? resume.professionLabel}
                 value={skillsAndTools}
                 onChange={setSkillsAndTools}
+                resumeTitle={title}
+                answers={answers}
+                canUseAi={canUseAiAssist}
               />
             </CollapsibleSection>
           )}
@@ -950,14 +1028,14 @@ export function ResumeEditPage() {
                   return (
                     <option key={v} value={v} disabled={locked}>
                       {VISIBILITY_LABEL[v]}
-                      {locked ? ` — requires ${TIER_LABEL[VISIBILITY_MIN_TIER[v]]}` : ""}
+                      {locked ? ` (requires ${TIER_LABEL[VISIBILITY_MIN_TIER[v]]})` : ""}
                     </option>
                   );
                 })}
               </select>
               <p className="hero-note" style={{ marginTop: 6, marginBottom: 0 }}>
                 Starter plans get public links only. Professional adds private links, and Premium adds
-                password-protected links.
+                password protected links.
               </p>
             </div>
             {visibility === "password" && (
@@ -975,12 +1053,12 @@ export function ResumeEditPage() {
                   />
                   <p className="hero-note" style={{ marginTop: 6, marginBottom: 0 }}>
                     {accessPasswordExpiresAt
-                      ? "After this time, the link stops working — even with the correct password."
+                      ? "After this time, the link stops working, even with the correct password."
                       : "Leave blank for a link that never expires."}
                   </p>
                   {resume.accessPasswordExpiresAt && new Date(resume.accessPasswordExpiresAt).getTime() < Date.now() && (
                     <p className="form-error" style={{ marginTop: 8, marginBottom: 0 }}>
-                      This link's expiration has already passed — it's currently deactivated.
+                      This link's expiration has already passed. It's currently deactivated.
                     </p>
                   )}
                 </div>
@@ -1019,15 +1097,15 @@ export function ResumeEditPage() {
 
           <CollapsibleSection title="Languages" forceOpen={forceOpen} defaultOpen={false}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
-              Optional — list any languages you speak and how fluently.
+              Optional: list any languages you speak and how fluently.
             </p>
             <LanguagesEditor languages={languages} onChange={setLanguages} />
           </CollapsibleSection>
 
           <CollapsibleSection title="Highlights & Key Achievements" forceOpen={forceOpen} complete={sectionProgress.achievements}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
-              Add a quick one-line bullet, or describe a challenge, what you did, and the result for a more detailed,
-              structured accomplishment — both turn into resume bullets. Mainly populated by "Import an existing
+              Add a quick one line bullet, or describe a challenge, what you did, and the result for a more detailed,
+              structured accomplishment; both turn into resume bullets. Mainly populated by "Import an existing
               resume," but editable here too.
             </p>
             <label className="checkbox-field" style={{ marginBottom: 16 }}>
@@ -1042,7 +1120,19 @@ export function ResumeEditPage() {
               canGenerate={canUseAiAssist}
               professionLabel={professionDetail?.label ?? resume.professionLabel}
               jobTitle={experience[0]?.title || undefined}
-              onGenerated={(generated) => setAchievements((prev) => [...prev, ...generated])}
+              onGenerated={(generated) =>
+                setAchievements((prev) => [
+                  ...prev,
+                  // When "Combine Work Experience with Achievements" is on, land generated
+                  // bullets nested under the most recent job (same one used for jobTitle
+                  // above) instead of the flat "unlinked" bucket — otherwise every generated
+                  // achievement silently skips the nesting the person just turned on, and
+                  // has to be re-linked by hand via AchievementEditor's job dropdown.
+                  ...(combineExperienceFormat && experience[0]?.id
+                    ? generated.map((a) => ({ ...a, experienceId: experience[0].id }))
+                    : generated),
+                ])
+              }
             />
             <AchievementEditor
               achievements={achievements}
@@ -1056,12 +1146,12 @@ export function ResumeEditPage() {
             <p className="hero-note" style={{ marginBottom: 16 }}>
               Your Objective/Summary/Profile text and top bullets are written by AI from your profession, answers,
               and achievements above. Don't love the wording? Click Regenerate for a new take, or edit the text
-              directly below — once saved, an edit stays exactly as you write it and won't get regenerated when you
-              update Work Experience, Achievements, or the fields above, until you reset it back to auto-generated.
+              directly below. Once saved, an edit stays exactly as you write it and won't get regenerated when you
+              update Work Experience, Achievements, or the fields above, until you reset it back to autogenerated.
             </p>
             {summaryManuallyEdited && (
               <p className="hero-note" style={{ marginBottom: 16, color: "var(--color-accent, #6b5bd6)" }}>
-                Manually edited — no longer updates automatically.
+                Manually edited, no longer updates automatically.
               </p>
             )}
             {summaryError && <div className="form-error">{summaryError}</div>}
@@ -1074,7 +1164,7 @@ export function ResumeEditPage() {
               {combineExperienceFormat && (
                 <p className="hero-note" style={{ marginBottom: 8 }}>
                   "Combine Work Experience with Achievements" is on above, so your resume shows bullets nested under
-                  each job (from Achievements) instead of this flat list — these bullets will still save, but won't
+                  each job (from Achievements) instead of this flat list. These bullets will still save, but won't
                   appear anywhere until that checkbox is turned off.
                 </p>
               )}
@@ -1093,7 +1183,7 @@ export function ResumeEditPage() {
                   to undo a hand-edit, so there was no way to just ask for a
                   fresh AI attempt on an untouched resume. */}
               <button type="button" className="btn btn-ghost" onClick={regenerateSummary} disabled={summarySaving}>
-                {summarySaving ? "Regenerating…" : summaryManuallyEdited ? "Reset to auto-generated" : "Regenerate"}
+                {summarySaving ? "Regenerating…" : summaryManuallyEdited ? "Reset to autogenerated" : "Regenerate"}
               </button>
             </div>
           </CollapsibleSection>
@@ -1119,7 +1209,7 @@ export function ResumeEditPage() {
           {canUseReferences && (
             <CollapsibleSection title="References" forceOpen={forceOpen} defaultOpen={false}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
-                Adds a References section to your public resume link. Off by default — nothing appears until you
+                Adds a References section to your public resume link. Off by default: nothing appears until you
                 turn this on and add at least one reference.
               </p>
               <label className="checkbox-field">
@@ -1168,7 +1258,7 @@ export function ResumeEditPage() {
                 <div className="ats-score-row">
                   <div className="ats-score-value">{healthCheck.score}%</div>
                   <p className="hero-note" style={{ margin: 0 }}>
-                    Health Score — how well this resume's structure holds up to an ATS parser.
+                    Health Score: how well this resume's structure holds up to an ATS parser.
                   </p>
                 </div>
                 <ul className="ats-checklist">
@@ -1201,7 +1291,7 @@ export function ResumeEditPage() {
                         %
                       </div>
                       <p className="hero-note" style={{ margin: 0 }}>
-                        Job Match — matched {keywordMatch.matched.length} of{" "}
+                        Job Match: matched {keywordMatch.matched.length} of{" "}
                         {keywordMatch.matched.length + keywordMatch.missing.length} top keywords from this job
                         description.
                       </p>
@@ -1222,7 +1312,7 @@ export function ResumeEditPage() {
                       <div className="ats-keyword-group">
                         <div className="ats-keyword-group-label">
                           Missing from your resume
-                          {usesSkillsAndTools && <span className="hero-note"> — click one to add it to Skills & Tools</span>}
+                          {usesSkillsAndTools && <span className="hero-note">, click one to add it to Skills & Tools</span>}
                         </div>
                         <div className="ats-keyword-chips">
                           {keywordMatch.missing.map((k) =>
@@ -1253,7 +1343,7 @@ export function ResumeEditPage() {
           {isPremium && (
             <CollapsibleSection title="Recruiter Mode" forceOpen={forceOpen} defaultOpen={false}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
-                Adds a candidate summary card to the top of your public resume link — skills (pulled automatically
+                Adds a candidate summary card to the top of your public resume link: skills (pulled automatically
                 from your resume), availability, clearance, location, work authorization, expected salary, and
                 remote preference. Every field below is optional and stays off until you turn this on.
               </p>
@@ -1335,7 +1425,7 @@ export function ResumeEditPage() {
           {isPremium && selectedTemplateIsPremium && (
             <CollapsibleSection title="Cover Letter" forceOpen={forceOpen} defaultOpen={false}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
-                Generates a tailored AI cover letter alongside this resume. Off by default — turn this on to have one
+                Generates a tailored AI cover letter alongside this resume. Off by default, turn this on to have one
                 written and kept in sync automatically.
               </p>
               <label className="checkbox-field">
@@ -1354,7 +1444,7 @@ export function ResumeEditPage() {
                     </p>
                   ) : (
                     <p className="hero-note" style={{ marginTop: 16 }}>
-                      Your AI-generated cover letter will appear here after you save.
+                      Your AI generated cover letter will appear here after you save.
                     </p>
                   )}
                   <p className="hero-note" style={{ marginTop: 12, marginBottom: 0 }}>
@@ -1369,7 +1459,7 @@ export function ResumeEditPage() {
           {canUseVersionHistory && (
             <CollapsibleSection title="Version History" forceOpen={forceOpen} defaultOpen={false}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
-                A version is saved automatically every time you edit and save this resume — restore any of the last
+                A version is saved automatically every time you edit and save this resume. Restore any of the last
                 10 to undo changes.
               </p>
               {id && <VersionHistoryPanel resumeId={id} />}

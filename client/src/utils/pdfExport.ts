@@ -1,8 +1,9 @@
 import { jsPDF } from "jspdf";
 import { PublicResume, ReferenceEntry } from "../types";
-import { formatMonth, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
+import { filterAnswerEntries, formatMonth, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
 import { groupAchievementsByExperience } from "./starBullet";
 import { getTemplateStyle } from "../config/templateStyles";
+import { PROFICIENCY_MAX_LEVEL, proficiencyLevel } from "./languageProficiency";
 
 /**
  * True, downloadable PDF export — real selectable/searchable text laid out
@@ -108,6 +109,45 @@ class ResumePdfWriter {
     this.y += amount;
   }
 
+  /**
+   * Same as body(), plus a small row of drawn (not text-character) dots
+   * appended after the last line, filled up to `level` out of `maxLevel` —
+   * the PDF equivalent of ResumePreview.tsx's .tpl-languages-dot meter (see
+   * TemplateStyle.languageProficiencyMeter). Real drawn circles rather than
+   * Unicode dot characters mixed into the text run, so they can't be
+   * mis-read as stray glyphs by an ATS text extractor — this export's whole
+   * premise is staying plain, parseable text (see this file's header
+   * comment). No-op back to plain text if level is 0 (a proficiency string
+   * that doesn't match the known scale — see proficiencyLevel).
+   */
+  languageLine(text: string, level: number, maxLevel: number): void {
+    if (level <= 0) {
+      this.body(text);
+      return;
+    }
+    this.doc.setFont(FONT, "normal");
+    this.doc.setFontSize(10.5);
+    const dotRadius = 1.6;
+    const dotGap = 5;
+    const dotsWidth = maxLevel * dotGap + 6;
+    const lines: string[] = this.doc.splitTextToSize(text, this.contentWidth - dotsWidth);
+    lines.forEach((line, i) => {
+      this.ensureSpace(LINE_HEIGHT);
+      this.doc.text(line, PAGE_MARGIN, this.y);
+      if (i === lines.length - 1) {
+        let dotX = PAGE_MARGIN + this.doc.getTextWidth(line) + 8 + dotRadius;
+        const dotY = this.y - 3;
+        for (let d = 0; d < maxLevel; d++) {
+          this.doc.setDrawColor(180);
+          this.doc.setFillColor(d < level ? 30 : 255, d < level ? 58 : 255, d < level ? 138 : 255);
+          this.doc.circle(dotX, dotY, dotRadius, "FD");
+          dotX += dotGap;
+        }
+      }
+      this.y += LINE_HEIGHT;
+    });
+  }
+
   save(filename: string): void {
     this.doc.save(filename);
   }
@@ -201,26 +241,40 @@ export function downloadResumePdf(resume: PublicResume): void {
     w.spacer();
   }
 
-  const awards = resume.awards?.length ? sortAwards(resume.awards) : [];
+  // Same "blank row was never meant to be published" filter as
+  // ResumePreview.tsx/PublicResumePage.tsx — a title-less award only exists
+  // from an unfinished "+ Add award" click or an edit that never saved.
+  const namedAwards = (resume.awards ?? []).filter((a) => a.title.trim());
+  const awards = namedAwards.length > 0 ? sortAwards(namedAwards) : [];
   if (awards.length > 0) {
     w.sectionHeading("Awards");
     for (const award of awards) {
-      w.entryTitle(`${award.title || "Untitled award"}${award.issuer ? `, ${award.issuer}` : ""} (${formatMonth(award.date)})`);
+      w.entryTitle(`${award.title}${award.issuer ? `, ${award.issuer}` : ""} (${formatMonth(award.date)})`);
       if (award.description) w.body(award.description);
     }
     w.spacer();
   }
 
-  const languages = resume.languages ?? [];
+  // Filters out a blank-language row rather than falling back to "Untitled
+  // language" — see the matching filter in ResumePreview.tsx/
+  // PublicResumePage.tsx for why: it's a leftover "+ Add language" row that
+  // was never filled in, not something meant to appear on the resume.
+  const languages = (resume.languages ?? []).filter((l) => l.language.trim());
   if (languages.length > 0) {
     w.sectionHeading("Languages");
+    const languageMeterEnabled = getTemplateStyle(resume.templateKey).languageProficiencyMeter;
     for (const lang of languages) {
-      w.body(`${lang.language || "Untitled language"}${lang.proficiency ? ` — ${lang.proficiency}` : ""}`);
+      const text = `${lang.language}${lang.proficiency ? `, ${lang.proficiency}` : ""}`;
+      if (languageMeterEnabled && lang.proficiency) {
+        w.languageLine(text, proficiencyLevel(lang.proficiency), PROFICIENCY_MAX_LEVEL);
+      } else {
+        w.body(text);
+      }
     }
     w.spacer();
   }
 
-  const answerEntries = Object.entries(resume.answers).filter(([, v]) => v && v.trim());
+  const answerEntries = filterAnswerEntries(resume.answers, resume.skillsAndTools);
   if (answerEntries.length > 0) {
     w.sectionHeading("Additional Details");
     for (const [key, value] of answerEntries) {
@@ -237,7 +291,7 @@ export function downloadResumePdf(resume: PublicResume): void {
       w.entryTitle(`${ref.name || "Untitled reference"}${roleLine ? `, ${roleLine}` : ""}`);
       const contactLine2 = [ref.email, ref.phone].filter(Boolean).join("   |   ");
       if (contactLine2) w.body(contactLine2);
-      const detailLine = [ref.affiliation, formatReferenceDateRange(ref)].filter(Boolean).join(" — ");
+      const detailLine = [ref.affiliation, formatReferenceDateRange(ref)].filter(Boolean).join(", ");
       if (detailLine) w.body(detailLine);
       w.spacer(4);
     }
