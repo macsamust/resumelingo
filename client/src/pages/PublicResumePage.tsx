@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, catalogApi } from "../api";
 import { PublicResume, ReferenceEntry } from "../types";
-import { formatMonth, ResumePreview, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
+import { buildContactLine, filterAnswerEntries, formatMonth, ResumePreview, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
 import { CLEARANCE_OPTIONS, recruiterOptionLabel, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
 import { groupAchievementsByExperience } from "../utils/starBullet";
 import { PublicResumeSkeleton } from "../components/common/PublicResumeSkeleton";
@@ -107,21 +107,29 @@ function resumeToPlainText(resume: PublicResume): string {
     lines.push("");
   }
 
-  const awards = resume.awards?.length ? sortAwards(resume.awards) : [];
+  // Same "blank row was never meant to be published" filter as Languages
+  // below — a title-less award only exists from an unfinished "+ Add award"
+  // click or an edit that never actually saved.
+  const namedAwards = (resume.awards ?? []).filter((a) => a.title.trim());
+  const awards = namedAwards.length > 0 ? sortAwards(namedAwards) : [];
   if (awards.length > 0) {
     lines.push("AWARDS");
     for (const award of awards) {
-      lines.push(`${award.title || "Untitled award"}${award.issuer ? `, ${award.issuer}` : ""} (${formatMonth(award.date)})`);
+      lines.push(`${award.title}${award.issuer ? `, ${award.issuer}` : ""} (${formatMonth(award.date)})`);
       if (award.description) lines.push(award.description);
     }
     lines.push("");
   }
 
-  const languages = resume.languages ?? [];
+  // Filters out a blank-language row rather than falling back to "Untitled
+  // language" — a row like this only exists from clicking "+ Add language"
+  // and not filling it in (or an in-progress edit that never got saved), not
+  // from anything the subscriber actually meant to publish.
+  const languages = (resume.languages ?? []).filter((l) => l.language.trim());
   if (languages.length > 0) {
     lines.push("LANGUAGES");
     for (const lang of languages) {
-      lines.push(`${lang.language || "Untitled language"}${lang.proficiency ? ` — ${lang.proficiency}` : ""}`);
+      lines.push(`${lang.language}${lang.proficiency ? `, ${lang.proficiency}` : ""}`);
     }
     lines.push("");
   }
@@ -130,7 +138,7 @@ function resumeToPlainText(resume: PublicResume): string {
   // Certifications, Years Experience for a Software Engineer resume) — the
   // same "Additional Details" content shown below the resume on screen and
   // in print, included here too so the text export isn't missing it.
-  const answerEntries = Object.entries(resume.answers).filter(([, v]) => v && v.trim());
+  const answerEntries = filterAnswerEntries(resume.answers, resume.skillsAndTools);
   if (answerEntries.length > 0) {
     lines.push("ADDITIONAL DETAILS");
     for (const [key, value] of answerEntries) {
@@ -153,7 +161,7 @@ function resumeToPlainText(resume: PublicResume): string {
       lines.push(`${ref.name || "Untitled reference"}${roleLine ? `, ${roleLine}` : ""}`);
       const contactLine = [ref.email, ref.phone].filter(Boolean).join("  |  ");
       if (contactLine) lines.push(contactLine);
-      const detailLine = [ref.affiliation, formatReferenceDateRange(ref)].filter(Boolean).join(" — ");
+      const detailLine = [ref.affiliation, formatReferenceDateRange(ref)].filter(Boolean).join(", ");
       if (detailLine) lines.push(detailLine);
       lines.push("");
     }
@@ -237,7 +245,7 @@ export function PublicResumePage() {
         if (err instanceof ApiError && err.status === 403 && err.reason === "private") {
           // Private/owner-only resumes have no password to enter — asking for
           // one would send the visitor into a form they can never satisfy.
-          setError("This resume is private. Only the owner can view it — sign in as the owner to access it.");
+          setError("This resume is private. Only the owner can view it. Sign in as the owner to access it.");
         } else if (err instanceof ApiError && err.status === 403 && err.reason === "expired") {
           // Expired password-protected links are deactivated outright — no
           // password prompt, since no password would work at this point.
@@ -271,7 +279,7 @@ export function PublicResumePage() {
       <div className="auth-page">
         <div className="auth-card">
           <h1>Password required</h1>
-          <p className="sub">This resume is password-protected.</p>
+          <p className="sub">This resume is password protected.</p>
           <form onSubmit={onSubmitPassword}>
             <div className="field">
               <label>Password</label>
@@ -303,6 +311,15 @@ export function PublicResumePage() {
     const filename = `${(resume.title || "resume").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "resume"}.txt`;
     downloadTextFile(filename, resumeToPlainText(resume));
   };
+
+  // Needed up here (not just inside the "Additional Details" card's own IIFE
+  // below) because ResumePreview's hideFooterContact prop has to know
+  // whether there's trailing content to push the footer past before it
+  // renders at all — see buildContactLine/hideFooterContact's doc comments
+  // in ResumePreview.tsx for the full reasoning.
+  const answerEntries = filterAnswerEntries(resume.answers, resume.skillsAndTools);
+  const hasTrailingContent = answerEntries.length > 0 || (resume.references?.length ?? 0) > 0;
+  const templateStyle = getTemplateStyle(resume.templateKey);
 
   return (
     <div className="public-resume-page">
@@ -408,12 +425,12 @@ export function PublicResumePage() {
         skillsAndTools={resume.skillsAndTools}
         showSkillsAndTools={resume.template?.category === "premium"}
         languages={resume.languages}
+        hideFooterContact={hasTrailingContent}
       />
       {(() => {
-        const answerEntries = Object.entries(resume.answers).filter(([, v]) => v && v.trim());
         if (answerEntries.length === 0) return null;
         return (
-          <div className="public-resume-card public-resume-details">
+          <div className={`public-resume-card public-resume-details tpl-key-${resume.templateKey ?? "modern"}`}>
             <h2 className="public-resume-details-heading">Additional Details</h2>
             <div className="answer-grid">
               {answerEntries.map(([key, value]) => (
@@ -427,9 +444,21 @@ export function PublicResumePage() {
         );
       })()}
       {resume.references?.length > 0 && (
-        <div className="public-resume-card public-resume-details">
+        <div className={`public-resume-card public-resume-details tpl-key-${resume.templateKey ?? "modern"}`}>
           <h2 className="public-resume-details-heading">References</h2>
           <ReferencesGrid references={resume.references} />
+        </div>
+      )}
+      {templateStyle.contactInFooter && hasTrailingContent && (
+        <div className={`tpl-key-${resume.templateKey ?? "modern"}`}>
+          <div className="tpl-footer-contact">
+            {buildContactLine({
+              contactEmail: resume.contactEmail,
+              contactPhone: resume.contactPhone,
+              contactLinkedIn: resume.contactLinkedIn,
+              separator: templateStyle.contactSeparator,
+            })}
+          </div>
         </div>
       )}
     </div>

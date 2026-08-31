@@ -29,7 +29,7 @@ export interface AchievementGenerateRequest {
 
 export class AchievementGenerateError extends Error {}
 
-const SYSTEM_PROMPT = `You help someone write resume bullet points when they don't know where to start. You're given their profession/role and a short list of keywords or rough phrases describing things they did — not a real resume, just fragments. Turn each keyword/phrase into one polished, action-oriented resume bullet.
+const SYSTEM_PROMPT = `You help someone write resume bullet points when they don't know where to start. You're given their profession/role and a short list of keywords or rough phrases describing things they did, not a real resume, just fragments. Turn each keyword/phrase into one polished, action-oriented resume bullet.
 
 Respond with ONLY a single JSON object (no prose, no markdown code fence) matching exactly this shape:
 { "achievements": [{ "action": string }] }
@@ -37,10 +37,10 @@ Respond with ONLY a single JSON object (no prose, no markdown code fence) matchi
 Rules:
 - Generate one achievement bullet per distinct keyword/phrase given, in the same order, up to 8 total. If fewer than 8 keywords were given, return that many bullets, not 8.
 - Each bullet should start with a strong action verb and read like a real resume bullet.
-- Never invent a specific number, percentage, dollar amount, team size, or timeframe that isn't already in the user's own words. If they gave a number, use it as given. If they didn't, either write the bullet without any quantification, or insert a bracketed placeholder like [X%] or [X hours] for the user to fill in themselves — never state an invented figure as fact.
+- Never invent a specific number, percentage, dollar amount, team size, or timeframe that isn't already in the user's own words. If they gave a number, use it as given. If they didn't, either write the bullet without any quantification, or insert a bracketed placeholder like [X%] or [X hours] for the user to fill in themselves. Never state an invented figure as fact.
 - Never invent a company name, job title, employer, or product name that wasn't given.
 - Keep each bullet to one sentence.
-- These are starting points the user will review and personalize, not finished claims — write them so they read naturally, but don't overstate or fabricate anything beyond what the keyword actually says.`;
+- These are starting points the user will review and personalize, not finished claims. Write them so they read naturally, but don't overstate or fabricate anything beyond what the keyword actually says.`;
 
 function truthy(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;

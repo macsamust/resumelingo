@@ -112,7 +112,7 @@ function suggestImprovements(resumes: Resume[]): string[] {
     if (resume.generatedBullets.length < 3) suggestions.add("Add more achievements to generate additional bullets.");
     if (!resume.answers["certifications"]) suggestions.add("Add certifications relevant to your field.");
   }
-  if (suggestions.size === 0) suggestions.add("Your resumes look strong — check the Career Center for interview prep.");
+  if (suggestions.size === 0) suggestions.add("Your resumes look strong. Check the Career Center for interview prep.");
   return Array.from(suggestions);
 }
 
