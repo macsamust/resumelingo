@@ -18,7 +18,7 @@ export function DynamicQuestionForm({ questions, answers, onChange }: Props) {
         <div className="field" key={q.key}>
           <label>
             {q.label}
-            {q.type === "list" ? " (comma-separated)" : ""}
+            {q.type === "list" ? " (comma separated)" : ""}
           </label>
           {q.type === "textarea" ? (
             <textarea

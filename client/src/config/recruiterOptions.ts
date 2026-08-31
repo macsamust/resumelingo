@@ -23,7 +23,7 @@ export const WORK_AUTHORIZATION_OPTIONS: RecruiterOption[] = [
   { value: "", label: "Not specified" },
   { value: "us-citizen", label: "U.S. Citizen" },
   { value: "green-card", label: "Green Card / Permanent Resident" },
-  { value: "no-sponsorship-needed", label: "Authorized to work — no sponsorship needed" },
+  { value: "no-sponsorship-needed", label: "Authorized to work, no sponsorship needed" },
   { value: "visa-sponsorship-needed", label: "Visa sponsorship needed" },
   { value: "other", label: "Other" },
 ];
@@ -32,7 +32,7 @@ export const REMOTE_PREFERENCE_OPTIONS: RecruiterOption[] = [
   { value: "", label: "Not specified" },
   { value: "remote", label: "Remote" },
   { value: "hybrid", label: "Hybrid" },
-  { value: "onsite", label: "On-site" },
+  { value: "onsite", label: "On site" },
   { value: "flexible", label: "Flexible" },
 ];
 

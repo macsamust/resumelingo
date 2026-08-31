@@ -19,10 +19,10 @@ export class AchievementGenerateController {
       keywords?: unknown;
     };
     if (typeof keywords !== "string" || !keywords.trim()) {
-      return c.json({ error: "Add a few keywords first — nothing to generate from." }, 400);
+      return c.json({ error: "Add a few keywords first, nothing to generate from." }, 400);
     }
     if (keywords.length > MAX_KEYWORDS_LENGTH) {
-      return c.json({ error: `That's too long (limit is ${MAX_KEYWORDS_LENGTH.toLocaleString()} characters) — try trimming it down to a shorter list.` }, 400);
+      return c.json({ error: `That's too long (limit is ${MAX_KEYWORDS_LENGTH.toLocaleString()} characters). Try trimming it down to a shorter list.` }, 400);
     }
 
     const { achievementGeneratorService } = c.get("services");

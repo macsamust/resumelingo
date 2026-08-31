@@ -30,7 +30,7 @@ const MAX_FIELD_LENGTH = 300;
  * two fixed lines the same way RuleBasedCoverLetterGenerator (below) always
  * did.
  */
-const SYSTEM_PROMPT = `You write the body of a professional cover letter — NOT the salutation ("Dear Hiring Manager,") or the sign-off ("Sincerely, {name}"), which are added separately. You're given the person's target role, profession, their resume's own About/Summary statement, and (optionally) their most recent job title/company.
+const SYSTEM_PROMPT = `You write the body of a professional cover letter, NOT the salutation ("Dear Hiring Manager,") or the sign-off ("Sincerely, {name}"), which are added separately. You're given the person's target role, profession, their resume's own About/Summary statement, and (optionally) their most recent job title/company.
 
 Respond with ONLY a single JSON object (no prose, no markdown code fence) matching exactly this shape:
 { "paragraphs": string[] }
@@ -38,8 +38,8 @@ Respond with ONLY a single JSON object (no prose, no markdown code fence) matchi
 Rules:
 - Write 2-3 short paragraphs, first person ("I"), warm but professional tone.
 - Open by expressing interest in the given role, weaving in the given summary so the letter reads consistently with the resume it accompanies.
-- If a most-recent job title/company is given, mention it naturally in the second paragraph as relevant background — but never invent a company, title, achievement, or number that wasn't given.
-- Close with a short paragraph welcoming the opportunity to discuss further and thanking them for their time — do not include "Sincerely" or the person's name, that's added separately.
+- If a most-recent job title/company is given, mention it naturally in the second paragraph as relevant background, but never invent a company, title, achievement, or number that wasn't given.
+- Close with a short paragraph welcoming the opportunity to discuss further and thanking them for their time. Do not include "Sincerely" or the person's name, that's added separately.
 - Never invent any fact (employer, dates, metrics, certifications) beyond what's given in the profession, role, summary, or most-recent-role fields.
 - Never mention that this was AI-generated.`;
 

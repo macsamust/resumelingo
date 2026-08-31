@@ -8,7 +8,7 @@ const EXAMPLE_FIELDS = [
   { label: "Award title", value: "Employee of the Year" },
   { label: "Issuing organization", value: "Acme Corp" },
   { label: "Date received", value: "Dec 2023" },
-  { label: "Description", value: "Awarded to the top-performing engineer company-wide" },
+  { label: "Description", value: "Awarded to the top performing engineer company wide" },
 ];
 
 interface Props {
@@ -76,7 +76,7 @@ export function AwardsEditor({ awards, onChange }: Props) {
             <input
               value={entry.description ?? ""}
               onChange={(e) => updateEntry(index, { description: e.target.value })}
-              placeholder="e.g. Awarded to the top-performing engineer company-wide"
+              placeholder="e.g. Awarded to the top performing engineer company wide"
             />
           </div>
           <div className="experience-row-actions">

@@ -47,7 +47,7 @@ async function extractDocxText(file: File): Promise<string> {
 /** Extracts plain text from an uploaded resume file. Supports .pdf, .docx, and .txt. Throws ResumeImportExtractError with a message safe to show the user for anything else (unsupported type, empty/unreadable file, oversized upload). */
 export async function extractResumeText(file: File): Promise<string> {
   if (file.size > MAX_FILE_BYTES) {
-    throw new ResumeImportExtractError("That file is too large — resumes should be well under 8MB.");
+    throw new ResumeImportExtractError("That file is too large. Resumes should be well under 8MB.");
   }
 
   const ext = extensionOf(file);
@@ -61,21 +61,21 @@ export async function extractResumeText(file: File): Promise<string> {
       text = await file.text();
     } else if (ext === "doc") {
       throw new ResumeImportExtractError(
-        "Old-format .doc files aren't supported — please save it as .docx or .pdf and try again."
+        "Old format .doc files aren't supported. Please save it as .docx or .pdf and try again."
       );
     } else {
-      throw new ResumeImportExtractError("Unsupported file type — please upload a PDF, Word (.docx), or plain text resume.");
+      throw new ResumeImportExtractError("Unsupported file type. Please upload a PDF, Word (.docx), or plain text resume.");
     }
   } catch (err) {
     if (err instanceof ResumeImportExtractError) throw err;
     throw new ResumeImportExtractError(
-      `Couldn't read that file (${err instanceof Error ? err.message : "unknown error"}). It may be corrupted, scanned/image-only, or password-protected.`
+      `Couldn't read that file (${err instanceof Error ? err.message : "unknown error"}). It may be corrupted, scanned/image-only, or password protected.`
     );
   }
 
   if (!text.trim()) {
     throw new ResumeImportExtractError(
-      "No readable text was found in that file — it may be a scanned image rather than real text."
+      "No readable text was found in that file. It may be a scanned image rather than real text."
     );
   }
   return text;

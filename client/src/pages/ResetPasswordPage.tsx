@@ -34,7 +34,7 @@ export function ResetPasswordPage() {
       <div className="auth-page">
         <div className="auth-card">
           <h1>Reset your password</h1>
-          <div className="form-error">This reset link is missing its token — please use the link from your email.</div>
+          <div className="form-error">This reset link is missing its token. Please use the link from your email.</div>
           <p className="form-footnote">
             <Link to="/forgot-password">Request a new link</Link>
           </p>
@@ -78,7 +78,7 @@ export function ResetPasswordPage() {
                   minLength={8}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Re-enter your new password"
+                  placeholder="Reenter your new password"
                 />
               </div>
               <button className="btn btn-primary btn-block" type="submit" disabled={submitting}>

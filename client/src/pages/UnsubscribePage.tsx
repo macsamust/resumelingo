@@ -35,7 +35,7 @@ export function UnsubscribePage() {
       <div className="auth-page">
         <div className="auth-card">
           <h1>Unsubscribe</h1>
-          <div className="form-error">This unsubscribe link is missing its token — please use the link from your email.</div>
+          <div className="form-error">This unsubscribe link is missing its token. Please use the link from your email.</div>
         </div>
       </div>
     );
@@ -46,7 +46,7 @@ export function UnsubscribePage() {
       <div className="auth-card">
         <h1>Weekly resume digest</h1>
         {done ? (
-          <p className="sub">You've been unsubscribed from the weekly resume view digest. You can re-enable it anytime from your Profile page.</p>
+          <p className="sub">You've been unsubscribed from the weekly resume view digest. You can reenable it anytime from your Profile page.</p>
         ) : (
           <>
             <p className="sub">Stop receiving the weekly email summarizing views on your resumes?</p>

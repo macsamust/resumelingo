@@ -37,18 +37,18 @@ const MAX_BULLETS_COUNT = 12;
 const MAX_BULLET_LENGTH = 400;
 const MAX_ANSWER_VALUE_LENGTH = 300;
 
-const SYSTEM_PROMPT = `You write resume content — an About/Summary statement and a list of bullet points — from a person's profession, their answers to a short intake questionnaire, and (when given) specific Challenge/Action/Result achievement entries in their own words.
+const SYSTEM_PROMPT = `You write resume content (an About/Summary statement and a list of bullet points) from a person's profession, their answers to a short intake questionnaire, and (when given) specific Challenge/Action/Result achievement entries in their own words.
 
 Respond with ONLY a single JSON object (no prose, no markdown code fence) matching exactly this shape:
 { "summary": string, "bullets": string[] }
 
 Rules:
-- The summary is a single short paragraph (2-4 sentences) written in third person, resume-voice (no "I"), describing the person's profession, experience level, and standout strengths — the kind of statement that sits at the top of a resume under the person's name.
+- The summary is a single short paragraph (2-4 sentences) written in third person, resume-voice (no "I"), describing the person's profession, experience level, and standout strengths: the kind of statement that sits at the top of a resume under the person's name.
 - Never invent a specific number, percentage, dollar amount, team size, employer, certification, or timeframe that isn't already present in the given answers or achievements. If years of experience is given, use it. If it isn't, don't guess a number.
-- Prefer building bullets from the given Achievement entries (challenge/action/result) when present — one bullet per achievement, action-led (start with a strong past-tense verb), weaving in the challenge and result when given. If no achievements are given, build bullets from the questionnaire answers instead, describing how the listed skills/tools/experience were applied.
-- Each bullet is one sentence, action-led, and reads like a real resume bullet — not a restatement of the raw answer text.
+- Prefer building bullets from the given Achievement entries (challenge/action/result) when present: one bullet per achievement, action-led (start with a strong past-tense verb), weaving in the challenge and result when given. If no achievements are given, build bullets from the questionnaire answers instead, describing how the listed skills/tools/experience were applied.
+- Each bullet is one sentence, action-led, and reads like a real resume bullet, not a restatement of the raw answer text.
 - Return at most 10 bullets. Skip questionnaire fields that are blank or clearly not resume-relevant (e.g. a profile URL).
-- Never mention that this was AI-generated, and never include meta-commentary — only the summary and bullets themselves.`;
+- Never mention that this was AI-generated, and never include meta-commentary. Only the summary and bullets themselves.`;
 
 function truthy(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
@@ -269,11 +269,11 @@ export class RuleBasedContentGenerator implements IContentGenerator {
 
     const description = await this.roleDescriptions.findByProfessionKey(profession);
     if (!description) {
-      return `Results-driven ${professionLabel} with ${years}${skillClause}, known for translating requirements into measurable outcomes and consistently exceeding expectations.`;
+      return `Results driven ${professionLabel} with ${years}${skillClause}, known for translating requirements into measurable outcomes and consistently exceeding expectations.`;
     }
 
     const { descriptor, traits, outcome, keyTraits } = description;
-    return `Results-driven ${professionLabel} with ${years}${skillClause}, ${descriptor} who combines ${traits[0]}, ${traits[1]}, and ${traits[2]} to ${outcome}. Known for ${keyTraits[0]}, ${keyTraits[1]}, and ${keyTraits[2]}.`;
+    return `Results driven ${professionLabel} with ${years}${skillClause}, ${descriptor} who combines ${traits[0]}, ${traits[1]}, and ${traits[2]} to ${outcome}. Known for ${keyTraits[0]}, ${keyTraits[1]}, and ${keyTraits[2]}.`;
   }
 
   /**

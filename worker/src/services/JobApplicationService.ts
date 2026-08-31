@@ -24,7 +24,7 @@ export class JobApplicationTooLargeError extends Error {}
 
 export function assertJobApplicationSizeOk(notes: string | undefined, link: string | undefined): void {
   if (notes && notes.length > MAX_NOTES_LENGTH) {
-    throw new JobApplicationTooLargeError(`Notes are too long — please keep them under ${MAX_NOTES_LENGTH.toLocaleString()} characters.`);
+    throw new JobApplicationTooLargeError(`Notes are too long. Please keep them under ${MAX_NOTES_LENGTH.toLocaleString()} characters.`);
   }
   if (link && link.length > MAX_LINK_LENGTH) {
     throw new JobApplicationTooLargeError("That link is too long.");
@@ -95,7 +95,7 @@ export class JobApplicationService {
     if (input.resumeId) await this.assertResumeOwned(userId, input.resumeId);
     const count = await this.applications.countForUser(userId);
     if (count >= MAX_APPLICATIONS_PER_USER) {
-      throw new JobApplicationLimitError(`You've reached the ${MAX_APPLICATIONS_PER_USER}-application limit — remove an old one to add another.`);
+      throw new JobApplicationLimitError(`You've reached the ${MAX_APPLICATIONS_PER_USER} application limit. Remove an old one to add another.`);
     }
     return this.applications.create({ ...input, userId });
   }

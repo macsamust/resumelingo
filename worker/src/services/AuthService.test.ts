@@ -24,6 +24,7 @@ function makeUserRecord(overrides: Partial<UserRecord> = {}): UserRecord {
     emailVerified: true,
     verificationTokenHash: null,
     verificationTokenExpiresAt: null,
+    paymentFailed: false,
     ...overrides,
   };
 }
@@ -110,7 +111,7 @@ describe("AuthService.login", () => {
     } as never);
     const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
     await expect(service.login("jordan@example.com", "correct-password")).rejects.toThrow(
-      "This account has been suspended. Contact support for help."
+      "This account has been suspended. Contact support at support@resumelingo.com for help."
     );
   });
 
@@ -237,7 +238,7 @@ describe("AuthService.updateProfile", () => {
     const users = makeUsersMock({ findById: vi.fn(async () => makeUserRecord({ suspended: true })) } as never);
     const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
     await expect(service.updateProfile("user-1", { name: "New Name" })).rejects.toThrow(
-      "This account has been suspended. Contact support for help."
+      "This account has been suspended. Contact support at support@resumelingo.com for help."
     );
   });
 

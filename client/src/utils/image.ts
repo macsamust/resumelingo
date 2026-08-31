@@ -16,7 +16,7 @@ export async function fileToResizedDataUrl(file: File): Promise<string> {
     throw new Error("Please choose an image file.");
   }
   if (file.size > MAX_RAW_FILE_BYTES) {
-    throw new ImageTooLargeError("That image is too large — please choose one under 8MB.");
+    throw new ImageTooLargeError("That image is too large. Please choose one under 8MB.");
   }
 
   const dataUrl = await readFileAsDataUrl(file);

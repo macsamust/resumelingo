@@ -118,7 +118,7 @@ export class AuthService {
     const matches = await bcrypt.compare(password, record.passwordHash);
     if (!matches) throw new AuthError("Invalid email or password.");
 
-    if (record.suspended) throw new AuthError("This account has been suspended. Contact support for help.");
+    if (record.suspended) throw new AuthError("This account has been suspended. Contact support at support@resumelingo.com for help.");
 
     const user = new User(record);
     const token = await this.tokens.sign({ userId: user.id, email: user.email });
@@ -157,7 +157,7 @@ export class AuthService {
   ): Promise<User> {
     const current = await this.users.findById(userId);
     if (!current) throw new AuthError("User not found.");
-    if (current.suspended) throw new AuthError("This account has been suspended. Contact support for help.");
+    if (current.suspended) throw new AuthError("This account has been suspended. Contact support at support@resumelingo.com for help.");
 
     let email: string | undefined;
     let emailChanged = false;

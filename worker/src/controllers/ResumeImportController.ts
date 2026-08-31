@@ -15,7 +15,7 @@ export class ResumeImportController {
     const body = await c.req.json().catch(() => ({}));
     const { text } = (body ?? {}) as { text?: unknown };
     if (typeof text !== "string" || !text.trim()) {
-      return c.json({ error: "Resume text is required — nothing to import." }, 400);
+      return c.json({ error: "Resume text is required, nothing to import." }, 400);
     }
     if (text.length > MAX_TEXT_LENGTH) {
       return c.json({ error: `That file's text is too long (limit is ${MAX_TEXT_LENGTH.toLocaleString()} characters).` }, 400);

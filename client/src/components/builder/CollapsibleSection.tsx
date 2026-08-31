@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useLayoutEffect, useState } from "react";
 
 /** Bumping `token` re-applies `open` to every section listening for it — see the "Expand all"/"Collapse all" link in ResumeEditPage. */
 export interface ForceOpenSignal {
@@ -29,7 +29,15 @@ interface CollapsibleSectionProps {
 export function CollapsibleSection({ title, children, defaultOpen = true, forceOpen, complete }: CollapsibleSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
 
-  useEffect(() => {
+  // useLayoutEffect (not useEffect) so a forced open is applied synchronously
+  // before the browser paints — a caller like ResumeEditPage's
+  // scrollToAtsCheck relies on the section already being expanded (correct
+  // final height) by the time its post-click scrollIntoView runs. With a
+  // plain useEffect, that scroll could fire against the still-collapsed
+  // layout (deferred effects run after paint), landing short of the target
+  // on the first click and only reaching it on a second click once state had
+  // caught up.
+  useLayoutEffect(() => {
     if (forceOpen) setOpen(forceOpen.open);
     // Only react when the signal actually changes (its token), not on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps

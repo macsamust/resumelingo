@@ -160,6 +160,8 @@ export interface AuthUser {
   viewDigestOptOut: boolean;
   /** Whether the current email address has been confirmed — see AppShell's "verify your email" banner. Doesn't gate any feature; it's a nudge, not an access control. */
   emailVerified: boolean;
+  /** Set when Stripe reports a failed subscription-renewal charge, cleared on the next successful one — see AppShell's "update your payment method" banner. Same "nudge, not a gate" treatment as emailVerified; Stripe's own retry schedule is what actually determines whether the subscription eventually gets cancelled. */
+  paymentFailed: boolean;
 }
 
 export interface Resume {

@@ -96,6 +96,8 @@ export interface UserRecord {
   /** Same hashed-token-only pattern as resetTokenHash/resetTokenExpiresAt — never store the raw token. Both null when no verification is pending. */
   verificationTokenHash: string | null;
   verificationTokenExpiresAt: string | null;
+  /** Set when Stripe reports a failed subscription-renewal charge (invoice.payment_failed) and cleared again on the next successful charge (invoice.paid) — see SubscriptionService.handleWebhookEvent. Doesn't gate anything itself; AppShell shows a dismissible "update your payment method" banner while true, same treatment as emailVerified. If it's never cleared, Stripe's own retry schedule eventually cancels the subscription (customer.subscription.deleted), which already flips subscriptionTier back to starter independently of this flag. */
+  paymentFailed: boolean;
 }
 
 /**

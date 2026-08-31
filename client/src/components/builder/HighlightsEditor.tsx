@@ -19,7 +19,7 @@ const BLANK_ENTRY: AchievementEntry = {
 
 /** Label shown in the "which job" dropdown for one work experience entry — same as AchievementEditor's. */
 function experienceLabel(entry: WorkExperienceEntry): string {
-  if (entry.company && entry.title) return `${entry.title} — ${entry.company}`;
+  if (entry.company && entry.title) return `${entry.title}, ${entry.company}`;
   return entry.company || entry.title || "Untitled role";
 }
 
@@ -57,7 +57,7 @@ export function HighlightsEditor({ achievements, onChange, experience, showJobLi
     <div className="experience-editor">
       {achievements.length === 0 && (
         <p className="hero-note" style={{ marginBottom: 12 }}>
-          One bullet per line — e.g. "Led the rebuild of the shipment-tracking service, cutting p95 latency from
+          One bullet per line, e.g. "Led the rebuild of the shipment tracking service, cutting p95 latency from
           1200ms to 180ms."
         </p>
       )}

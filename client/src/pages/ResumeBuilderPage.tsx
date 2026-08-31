@@ -347,8 +347,8 @@ export function ResumeBuilderPage() {
             complete={sectionProgress.achievements}
           >
             <p className="hero-note" style={{ marginBottom: 16 }}>
-              Add a quick one-line bullet, or describe a challenge, what you did, and the result for a more detailed,
-              structured accomplishment — both turn into resume bullets.
+              Add a quick one line bullet, or describe a challenge, what you did, and the result for a more detailed,
+              structured accomplishment; both turn into resume bullets.
             </p>
             <AchievementGeneratorPanel
               canGenerate={canUseAiAssist}
@@ -366,14 +366,14 @@ export function ResumeBuilderPage() {
 
           <CollapsibleSection title="6. Awards" forceOpen={forceOpen} defaultOpen={false}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
-              Optional — you can always add these later from the Edit Resume page.
+              Optional: you can always add these later from the Edit Resume page.
             </p>
             <AwardsEditor awards={awards} onChange={setAwards} />
           </CollapsibleSection>
 
           <CollapsibleSection title="7. Answer a few questions" forceOpen={forceOpen} defaultOpen={false}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
-              Optional — a few profession-specific prompts to help sharpen your summary.
+              Optional: a few profession specific prompts to help sharpen your summary.
             </p>
             {professionDetail && (
               <DynamicQuestionForm

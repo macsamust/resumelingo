@@ -51,7 +51,7 @@ export function VersionHistoryPanel({ resumeId }: { resumeId: string }) {
   if (error) return <p className="form-error">{error}</p>;
   if (!versions) return <p className="hero-note">Loading version history…</p>;
   if (versions.length === 0) {
-    return <p className="hero-note">No past versions yet — one is saved automatically every time you edit and save this resume.</p>;
+    return <p className="hero-note">No past versions yet. One is saved automatically every time you edit and save this resume.</p>;
   }
 
   return (

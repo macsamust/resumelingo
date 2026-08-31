@@ -98,7 +98,7 @@ export function MonthYearField({ label, value, onChange, disabled }: Props) {
           <span className={value ? "month-year-value" : "month-year-placeholder"}>{displayLabel}</span>
         </summary>
         <div className="month-year-panel">
-          <select aria-label={`${label} — month`} value={month} onChange={(e) => onMonthChange(e.target.value)}>
+          <select aria-label={`${label} month`} value={month} onChange={(e) => onMonthChange(e.target.value)}>
             <option value="" disabled>
               Month
             </option>
@@ -108,7 +108,7 @@ export function MonthYearField({ label, value, onChange, disabled }: Props) {
               </option>
             ))}
           </select>
-          <select aria-label={`${label} — year`} value={year} onChange={(e) => onYearChange(e.target.value)}>
+          <select aria-label={`${label} year`} value={year} onChange={(e) => onYearChange(e.target.value)}>
             <option value="" disabled>
               Year
             </option>

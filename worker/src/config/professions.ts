@@ -120,6 +120,25 @@ export const PROFESSIONS: ProfessionDefinition[] = [
     ],
   },
   {
+    // Sits between the named professions above and the "Other" catch-all
+    // below — for general corporate/office roles (operations, HR, finance,
+    // administration, business analysis, coordination) that don't fit
+    // Executive (too senior-specific), Sales/Marketing/Project Manager (too
+    // function-specific), but also aren't vague enough to need "Other"'s
+    // fully generic question set. Question set mirrors the breadth of
+    // Sales/Marketing/Project Manager rather than "Other"'s bare minimum.
+    key: "business-professional",
+    label: "Business Professional",
+    questions: [
+      { key: "functionalArea", label: "Functional Area", type: "text", placeholder: "e.g. Operations, HR, Finance, Business Analysis" },
+      { key: "toolsUsed", label: "Tools Used", type: "list", placeholder: "Excel, Salesforce, SAP, Tableau" },
+      { key: "certifications", label: "Certifications", type: "list", placeholder: "e.g. Six Sigma, SHRM-CP, CPA" },
+      { key: "processImprovements", label: "Process Improvements", type: "textarea", placeholder: "Efficiency gains, cost savings, or workflow changes you led" },
+      { key: "crossFunctionalWork", label: "Cross Functional Collaboration", type: "textarea" },
+      { key: "yearsExperience", label: "Years of Experience", type: "number" },
+    ],
+  },
+  {
     // Catch-all for professions not covered above. Work Experience, Education,
     // Awards, and Key Achievements are already universal sections on every
     // resume regardless of profession, so this question set only adds the

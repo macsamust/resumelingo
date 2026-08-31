@@ -1,10 +1,15 @@
+import { useState } from "react";
 import { AchievementEntry, WorkExperienceEntry } from "../../types";
 import { duplicateItem, moveItem } from "../../utils/listEditing";
 import { EmptyRowExample } from "./EmptyRowExample";
 
+// Action first, matching the real form's field order below — it's the one
+// field a bullet actually needs (see AchievementEditor's doc comment), so
+// the example leads with it too instead of the C-A-R framework's usual
+// Challenge-first order.
 const EXAMPLE_FIELDS = [
-  { label: "Challenge", value: "Signups were dropping off 40% of the way through onboarding" },
   { label: "Action", value: "Redesigned the onboarding flow and cut it from 8 steps to 3" },
+  { label: "Challenge", value: "Signups were dropping off 40% of the way through onboarding" },
   { label: "Result", value: "A 25% increase in completed signups within one quarter" },
 ];
 
@@ -26,7 +31,7 @@ const BLANK_ENTRY: AchievementEntry = {
 
 /** Label shown in the "which job" dropdown for one work experience entry. */
 function experienceLabel(entry: WorkExperienceEntry): string {
-  if (entry.company && entry.title) return `${entry.title} — ${entry.company}`;
+  if (entry.company && entry.title) return `${entry.title}, ${entry.company}`;
   return entry.company || entry.title || "Untitled role";
 }
 
@@ -48,8 +53,34 @@ function hasNumber(text: string): boolean {
  * bullets built from raw profession Q&A answers. Same add/remove pattern as
  * ExperienceEditor, but no dates — an achievement is a single accomplishment,
  * not a role held over time.
+ *
+ * Only Action is shown by default (Challenge/Result collapsed behind a
+ * toggle) — of the three, it's the only one that reads as a complete
+ * sentence on its own (see ContentGenerator.toStarBullet: Challenge/Result
+ * alone read like fragments, "In response to X." / "Resulting in Y."), so
+ * it's the only field someone actually needs to fill in to get a real
+ * bullet. Challenge/Result auto-reveal (and stay revealed) the moment
+ * either has content, so an existing achievement that already used them —
+ * or a resume loaded with data already in those fields — is never hidden
+ * behind a click.
  */
 export function AchievementEditor({ achievements, onChange, experience, showJobLink }: Props) {
+  // Indices the person has explicitly expanded via "+ Add challenge &
+  // result." Index-keyed, same identity convention as the rest of this
+  // component's move/duplicate/remove (achievements have no stable id) —
+  // see isExpanded below for why that's safe even across a reorder: an
+  // entry with real Challenge/Result content always shows regardless of
+  // this set, so the only thing that can look "off" after a move is a
+  // still-empty row's toggle state, never a loss of visible data.
+  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const toggleExpanded = (index: number) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+
   const updateEntry = (index: number, patch: Partial<AchievementEntry>) => {
     onChange(achievements.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)));
   };
@@ -80,34 +111,57 @@ export function AchievementEditor({ achievements, onChange, experience, showJobL
             </div>
           )}
           <div className="field">
-            <label>Challenge — what problem existed?</label>
-            <textarea
-              value={entry.challenge}
-              onChange={(e) => updateEntry(index, { challenge: e.target.value })}
-              placeholder="e.g. Signups were dropping off 40% of the way through onboarding"
-            />
-          </div>
-          <div className="field">
-            <label>Action — what did you do?</label>
+            <label>Action: what did you do?</label>
             <textarea
               value={entry.action}
               onChange={(e) => updateEntry(index, { action: e.target.value })}
               placeholder="e.g. Redesigned the onboarding flow and cut it from 8 steps to 3"
             />
           </div>
-          <div className="field">
-            <label>Result — what changed because of it?</label>
-            <textarea
-              value={entry.result}
-              onChange={(e) => updateEntry(index, { result: e.target.value })}
-              placeholder="e.g. A 25% increase in completed signups within one quarter"
-            />
-            {entry.result.trim() !== "" && !hasNumber(entry.result) && (
-              <p className="field-hint">
-                Tip: a number makes this land harder — e.g. "25%", "3 weeks", "$40k", "2x".
-              </p>
-            )}
-          </div>
+          {(() => {
+            const hasContent = entry.challenge.trim() !== "" || entry.result.trim() !== "";
+            const isExpanded = hasContent || expanded.has(index);
+            if (!isExpanded) {
+              return (
+                <button type="button" className="achievement-more-toggle" onClick={() => toggleExpanded(index)}>
+                  + Add challenge &amp; result for more impact
+                  <span className="field-hint">
+                    e.g. "Signups were dropping off 40%" → "...a 25% increase in completed signups"
+                  </span>
+                </button>
+              );
+            }
+            return (
+              <>
+                <div className="field">
+                  <label>Challenge (optional): what problem existed?</label>
+                  <textarea
+                    value={entry.challenge}
+                    onChange={(e) => updateEntry(index, { challenge: e.target.value })}
+                    placeholder="e.g. Signups were dropping off 40% of the way through onboarding"
+                  />
+                </div>
+                <div className="field">
+                  <label>Result (optional): what changed because of it?</label>
+                  <textarea
+                    value={entry.result}
+                    onChange={(e) => updateEntry(index, { result: e.target.value })}
+                    placeholder="e.g. A 25% increase in completed signups within one quarter"
+                  />
+                  {entry.result.trim() !== "" && !hasNumber(entry.result) && (
+                    <p className="field-hint">
+                      Tip: a number makes this land harder, e.g. "25%", "3 weeks", "$40k", "2x".
+                    </p>
+                  )}
+                </div>
+                {!hasContent && (
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => toggleExpanded(index)}>
+                    − Hide challenge &amp; result
+                  </button>
+                )}
+              </>
+            );
+          })()}
           <div className="experience-row-actions">
             <button
               type="button"

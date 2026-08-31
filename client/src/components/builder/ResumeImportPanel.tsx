@@ -82,7 +82,7 @@ export function ResumeImportPanel({ canImport, onImported }: Props) {
       <h2>Import an existing resume</h2>
       <p className="hero-note" style={{ marginBottom: 12 }}>
         Upload a resume (PDF, Word .docx, or plain text) and AI will pull your work history, education, and skills
-        into the form below — review and edit everything before saving.
+        into the form below. Review and edit everything before saving.
       </p>
       <input
         ref={inputRef}
@@ -100,7 +100,7 @@ export function ResumeImportPanel({ canImport, onImported }: Props) {
       {status === "analyzing" && (
         <div className="import-status" role="status" aria-live="polite">
           <span className="spinner-ring" aria-hidden="true" />
-          Analyzing your resume with AI — this can take up to 30 seconds…
+          Analyzing your resume with AI, this can take up to 30 seconds…
         </div>
       )}
       {status === "error" && error && (

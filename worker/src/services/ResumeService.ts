@@ -63,7 +63,7 @@ const MAX_PHOTO_DATA_URL_LENGTH = 2_000_000;
 
 export function assertPhotoSizeOk(photoUrl: string | undefined): void {
   if (photoUrl && photoUrl.length > MAX_PHOTO_DATA_URL_LENGTH) {
-    throw new PhotoTooLargeError("That photo is too large — please use a smaller image.");
+    throw new PhotoTooLargeError("That photo is too large. Please use a smaller image.");
   }
 }
 
@@ -85,16 +85,16 @@ export class GeneratedContentTooLargeError extends Error {}
 export function assertGeneratedContentSizeOk(generatedSummary: string | undefined, generatedBullets: string[] | undefined): void {
   if (generatedSummary && generatedSummary.length > MAX_GENERATED_SUMMARY_LENGTH) {
     throw new GeneratedContentTooLargeError(
-      `Summary text is too long — please keep it under ${MAX_GENERATED_SUMMARY_LENGTH.toLocaleString()} characters.`
+      `Summary text is too long. Please keep it under ${MAX_GENERATED_SUMMARY_LENGTH.toLocaleString()} characters.`
     );
   }
   if (generatedBullets) {
     if (generatedBullets.length > MAX_GENERATED_BULLETS_COUNT) {
-      throw new GeneratedContentTooLargeError(`Too many bullets — please keep it under ${MAX_GENERATED_BULLETS_COUNT}.`);
+      throw new GeneratedContentTooLargeError(`Too many bullets. Please keep it under ${MAX_GENERATED_BULLETS_COUNT}.`);
     }
     if (generatedBullets.some((b) => b.length > MAX_GENERATED_BULLET_LENGTH)) {
       throw new GeneratedContentTooLargeError(
-        `One of your bullets is too long — please keep each under ${MAX_GENERATED_BULLET_LENGTH} characters.`
+        `One of your bullets is too long. Please keep each under ${MAX_GENERATED_BULLET_LENGTH} characters.`
       );
     }
   }
@@ -550,8 +550,8 @@ export class ResumeService {
     if (!resume.isAccessibleBy(requestingUserId, password)) {
       throw new ResumeAccessError(
         resume.visibility === LinkVisibility.PasswordProtected
-          ? "This resume is password-protected."
-          : "This resume is private — only the owner can view it.",
+          ? "This resume is password protected."
+          : "This resume is private. Only the owner can view it.",
         resume.visibility === LinkVisibility.PasswordProtected ? "password" : "private"
       );
     }

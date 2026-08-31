@@ -163,7 +163,7 @@ export function ProfilePage() {
               disabled={savingDigest}
               onChange={(e) => onToggleDigest(e.target.checked)}
             />
-            <span>Weekly resume view digest — a Monday summary of how many views your resumes got that week.</span>
+            <span>Weekly resume view digest: a Monday summary of how many views your resumes got that week.</span>
           </label>
         </div>
       )}

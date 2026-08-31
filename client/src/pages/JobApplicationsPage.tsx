@@ -233,7 +233,7 @@ export function JobApplicationsPage() {
         </span>
       </div>
       <p className="hero-note" style={{ marginBottom: 20 }}>
-        Track which resume you sent where, and what happened after — Clone a resume per target role, then log the
+        Track which resume you sent where, and what happened after. Clone a resume per target role, then log the
         application here to keep it all in one place.
       </p>
       {error && <div className="form-error">{error}</div>}
@@ -241,15 +241,15 @@ export function JobApplicationsPage() {
       {nearLimit && (
         <div className={`job-app-banner ${atLimit ? "job-app-banner-limit" : "job-app-banner-warning"}`}>
           {atLimit
-            ? `You've reached the ${limit}-application limit — remove one (or clean up old ones below) before adding another.`
-            : `You're at ${applications.length} of ${limit} tracked applications — worth cleaning up old ones before you hit the limit.`}
+            ? `You've reached the ${limit}-application limit. Remove one (or clean up old ones below) before adding another.`
+            : `You're at ${applications.length} of ${limit} tracked applications, worth cleaning up old ones before you hit the limit.`}
         </div>
       )}
 
       {staleCount > 0 && (
         <div className="job-app-banner">
           <span>
-            {staleCount} application{staleCount === 1 ? " is" : "s are"} older than 12 months — probably safe to clean up.
+            {staleCount} application{staleCount === 1 ? " is" : "s are"} older than 12 months, probably safe to clean up.
           </span>
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => setConfirmingCleanup(true)}>
             Clean up old applications
@@ -322,7 +322,7 @@ export function JobApplicationsPage() {
       {loading ? (
         <p className="hero-note">Loading…</p>
       ) : applications.length === 0 ? (
-        <p className="hero-note">No applications logged yet — add one above once you've sent a resume out.</p>
+        <p className="hero-note">No applications logged yet. Add one above once you've sent a resume out.</p>
       ) : (
         <div className="job-app-list">
           {visible.map((a) => {

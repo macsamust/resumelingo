@@ -21,7 +21,7 @@ export function VerifyEmailPage() {
   useEffect(() => {
     if (!token) {
       setStatus("error");
-      setError("This verification link is missing its token — please use the link from your email.");
+      setError("This verification link is missing its token. Please use the link from your email.");
       return;
     }
     authApi

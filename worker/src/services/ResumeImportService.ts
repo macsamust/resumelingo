@@ -80,13 +80,13 @@ Respond with ONLY a single JSON object (no prose, no markdown code fence) matchi
 Rules:
 - Include every job/role mentioned, even ones described only in a paragraph with no clear header, and even short contract/part-time gigs.
 - "current" is true only for a role/program explicitly ongoing (e.g. "present"); endDate must be null in that case.
-- If a date can't be determined precisely, leave it as "" rather than guessing — but add a short note to "notes" explaining what's missing (e.g. "Education start date wasn't stated for University of Wisconsin–Madison").
-- Categorize concrete programming languages/methodologies as "skill" and named platforms/software/tools as "tool" — this is a judgment call, do your best.
+- If a date can't be determined precisely, leave it as "" rather than guessing, but add a short note to "notes" explaining what's missing (e.g. "Education start date wasn't stated for University of Wisconsin–Madison").
+- Categorize concrete programming languages/methodologies as "skill" and named platforms/software/tools as "tool". This is a judgment call, do your best.
 - Never invent a company, school, date, or accomplishment that isn't supported by the text.
 - If something in the source is ambiguous or a judgment call (e.g. whether a short freelance gig counts as a real job), include it but add a one-sentence note explaining the call you made.
-- "achievements" is a list of 3-8 resume bullet points pulled from anywhere in the text (bullet points under a job, or accomplishments described in prose). For each one:
-  - "action" is REQUIRED — a single ordinary resume bullet sentence the way it would actually appear on a resume (e.g. "Led the rebuild of the shipment-tracking service, cutting p95 API latency from 1200ms to 180ms"). Lightly tighten wording, but don't invent numbers/metrics that aren't in the source.
-  - "challenge" and "result" are OPTIONAL and should almost always be left as "". Only fill them in if the source text itself clearly and separately describes a problem/situation ("challenge") and a distinct outcome ("result") as separate ideas — do NOT force every bullet into this shape, and do NOT split a single natural sentence into pieces just to fill the fields. When in doubt, leave both blank and put everything into "action".
+- "achievements" is a list of resume bullet points pulled from anywhere in the text (bullet points under a job, or accomplishments described in prose). If the source already has one or more dedicated bulleted sections of accomplishments (e.g. "Areas of Strength," "Core Competencies," "Key Achievements," "Highlights," or similar, whether or not they're grouped under sub-headers), include EVERY bullet from those sections — the person already curated each one, so do not summarize, merge, or drop any to fit a small count. If accomplishments are only described loosely in prose with no dedicated bullet list, use judgment and produce the 3-8 strongest, most concrete bullets instead. Across the whole resume, do not exceed 20 achievements total (if there are genuinely more than 20 source bullets, keep the 20 strongest). For each one:
+  - "action" is REQUIRED: a single ordinary resume bullet sentence the way it would actually appear on a resume (e.g. "Led the rebuild of the shipment-tracking service, cutting p95 API latency from 1200ms to 180ms"). Lightly tighten wording, but don't invent numbers/metrics that aren't in the source.
+  - "challenge" and "result" are OPTIONAL and should almost always be left as "". Only fill them in if the source text itself clearly and separately describes a problem/situation ("challenge") and a distinct outcome ("result") as separate ideas. Do NOT force every bullet into this shape, and do NOT split a single natural sentence into pieces just to fill the fields. When in doubt, leave both blank and put everything into "action".
   - "company" should be the exact company name (matching one of the "experience" entries' "company" field) this achievement belongs to, if it's clearly tied to one job. Leave it "" if it's not clearly tied to a specific job (e.g. a general skill or cross-role accomplishment).
   - Do not duplicate something already fully captured by an "awards" entry.`;
 
@@ -289,10 +289,15 @@ export class ResumeImportService {
         // Without this, Workers AI's default output cap (commonly a few
         // hundred tokens) truncates the JSON mid-object for anything but a
         // trivially short resume — which is exactly what a "result couldn't
-        // be read" JSON.parse failure looks like. 4096 comfortably covers a
+        // be read" JSON.parse failure looks like. 6144 comfortably covers a
         // full multi-job resume's worth of structured output within this
-        // model's context window.
-        max_tokens: 4096,
+        // model's context window, including up to 20 achievement bullets
+        // (raised from 4096 once the achievements instruction above stopped
+        // capping at 8 — a resume whose accomplishments are already a
+        // dedicated bulleted list, e.g. "Areas of Strength," can now surface
+        // every one of up to 20 bullets instead of being capped to 8, and
+        // the JSON payload for that is meaningfully bigger).
+        max_tokens: 6144,
       });
     } catch (err) {
       throw new ResumeImportError(

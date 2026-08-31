@@ -40,7 +40,7 @@ export function SignupPage() {
     <div className="auth-page">
       <div className="auth-card">
         <h1>Create your resume</h1>
-        <p className="sub">Start free with one resume — upgrade anytime.</p>
+        <p className="sub">Start free with one resume, upgrade anytime.</p>
         {error && <div className="form-error">{error}</div>}
         <form onSubmit={onSubmit}>
           <div className="field">

@@ -22,9 +22,9 @@ export const VISIBILITY_MIN_TIER: Record<LinkVisibility, SubscriptionTier> = {
 };
 
 export const VISIBILITY_LABEL: Record<LinkVisibility, string> = {
-  public: "Public — anyone with the link",
-  private: "Private — owner only",
-  password: "Password-protected",
+  public: "Public, anyone with the link",
+  private: "Private, owner only",
+  password: "Password protected",
 };
 
 /** Whether a subscriber at `tier` is allowed to select/keep a resume link set to `visibility`. */
