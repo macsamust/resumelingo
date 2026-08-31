@@ -988,8 +988,8 @@ export function ResumeEditPage() {
                     title={locked ? `${upgradeHint} ${t.description}` : `${tierNote} ${t.description}`}
                   >
                     <span className={`template-pill-tier template-pill-tier-${tier}`} aria-hidden="true" />
+                    {atsSafe && <span className="template-pill-ats-dot" aria-hidden="true" />}
                     {t.name}
-                    {atsSafe && <span className="template-pill-ats">ATS</span>}
                     {locked && (
                       <span className="template-pill-lock" aria-hidden="true">
                         🔒
@@ -998,6 +998,24 @@ export function ResumeEditPage() {
                   </span>
                 );
               })}
+            </div>
+            <div className="template-legend">
+              <span>
+                <span className="template-pill-tier template-pill-tier-starter" aria-hidden="true" />
+                Starter
+              </span>
+              <span>
+                <span className="template-pill-tier template-pill-tier-professional" aria-hidden="true" />
+                Professional
+              </span>
+              <span>
+                <span className="template-pill-tier template-pill-tier-premium" aria-hidden="true" />
+                Premium
+              </span>
+              <span>
+                <span className="template-pill-ats-dot" aria-hidden="true" />
+                ATS friendly
+              </span>
             </div>
           </CollapsibleSection>
 

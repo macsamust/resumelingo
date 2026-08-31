@@ -169,7 +169,7 @@ section { padding: 84px 0; }
 .dash-tile p { font-size: 13.5px; font-weight: 600; color: var(--navy-light); }
 
 .template-pills { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-.template-pills span, .template-pill { display: inline-flex; align-items: center; background: #fff; border: 1px solid var(--border); padding: 9px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--navy-light); cursor: pointer; }
+.template-pills span, .template-pill { display: inline-flex; align-items: center; background: #fff; border: 1px solid var(--border); padding: 9px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--navy-light); cursor: pointer; white-space: nowrap; }
 .template-pill.active { border-color: var(--indigo); color: var(--indigo); background: #eef2ff; }
 .template-pill.locked { cursor: not-allowed; opacity: .55; }
 .template-pill.locked.active { border-color: var(--border); color: var(--navy-light); background: #fff; }
@@ -192,13 +192,22 @@ section { padding: 84px 0; }
    ATS-score meaning would be, but worth knowing if it ever reads ambiguous
    next to the green "ATS" tag on the same pill. */
 .template-pill-tier-premium { background: #c9a55c; }
-/* "ATS" tag — shown when the template's layout family is on
+/* ATS-friendly dot — shown when the template's layout family is on
    atsCheck.ts's ATS_SAFE_FAMILIES allowlist, so someone can weigh
    parser-friendliness before picking a template instead of only finding out
-   afterward via the ATS Check section. Plain colored text rather than a
-   nested pill/background — a second rounded shape inside the pill's own
-   rounded edge visually overflowed it, especially near the right corner. */
-.template-pill-ats { font-size: 10px; font-weight: 700; letter-spacing: .02em; color: #0f6e56; margin-left: 7px; }
+   afterward via the ATS Check section. A fixed-size dot (same convention as
+   .template-pill-tier, grouped right next to it) rather than an "ATS" text
+   tag — the text version's variable length could push a longer template
+   name past the grid cell's minimum width, wrapping to a second line that
+   visually overflowed the pill's rounded corners. */
+.template-pill-ats-dot { width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; background: #16a34a; }
+/* Legend for the dots above — tier meaning isn't self-evident from color
+   alone (see template-pill-tier's own comment), and now there are two kinds
+   of dot on the same pill, so this spells out all four in one place rather
+   than relying only on each pill's hover title. */
+.template-legend { display: flex; flex-wrap: wrap; gap: 18px; margin-top: -10px; margin-bottom: 20px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+.template-legend span { display: inline-flex; align-items: center; }
+.template-legend .template-pill-tier, .template-legend .template-pill-ats-dot { margin-right: 6px; }
 
 footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 /* Privacy Policy / Terms of Service (PrivacyPolicyPage.tsx/TermsOfServicePage.tsx)
