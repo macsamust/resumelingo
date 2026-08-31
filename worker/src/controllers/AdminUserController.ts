@@ -34,12 +34,17 @@ export class AdminUserController {
       sortKey,
       sortDirection,
     });
-    const users = records.map(({ resumeCount, ...record }) => {
+    const users = records.map(({ resumeCount, lastActivityAt, ...record }) => {
       const user = new User(record);
       return {
         ...user.toPublicJSON(),
         suspended: user.suspended,
         resumeCount,
+        // Most recent resumes.updatedAt across everything this user owns —
+        // there's no login tracking (auth is stateless JWT, no sessions
+        // table), so this is the closest real signal of "still using the
+        // product" we have. Null for an account with zero resumes.
+        lastActivityAt,
         // Lets the admin tell a real paying subscriber apart from a
         // manually-comped tier change at a glance — a paid tier with no
         // stripeSubscriptionId means an admin set it directly, not Stripe.
@@ -75,6 +80,7 @@ export class AdminUserController {
         suspended: user.suspended,
         stripeCustomerId: user.stripeCustomerId ?? "",
         stripeSubscriptionActive: !!user.stripeSubscriptionId,
+        lastActivityAt: record.lastActivityAt ?? "",
         createdAt: user.createdAt,
       };
     });
@@ -87,6 +93,7 @@ export class AdminUserController {
       { key: "suspended", header: "Suspended" },
       { key: "stripeCustomerId", header: "Stripe Customer ID" },
       { key: "stripeSubscriptionActive", header: "Stripe Subscription Active" },
+      { key: "lastActivityAt", header: "Last Activity" },
       { key: "createdAt", header: "Joined" },
     ]);
 

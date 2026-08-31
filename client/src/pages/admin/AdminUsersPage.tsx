@@ -12,7 +12,7 @@ import { downloadBlob } from "../../utils/downloadBlob";
 const TIER_OPTIONS: SubscriptionTier[] = ["starter", "professional", "premium"];
 const PAGE_SIZE = 25;
 
-type UserSortKey = "name" | "email" | "subscriptionTier" | "resumeCount" | "suspended" | "createdAt";
+type UserSortKey = "name" | "email" | "subscriptionTier" | "resumeCount" | "suspended" | "createdAt" | "lastActivityAt";
 
 export function AdminUsersPage() {
   const { showToast } = useToast();
@@ -271,7 +271,7 @@ export function AdminUsersPage() {
         </div>
       )}
       {loading ? (
-        <AdminTableSkeleton columns={9} />
+        <AdminTableSkeleton columns={10} />
       ) : (
         <table className="admin-table">
           <thead>
@@ -285,6 +285,7 @@ export function AdminUsersPage() {
               <th>Billing</th>
               <SortableHeader label="Resumes" sortKey="resumeCount" sort={sort} onSort={onSort} />
               <SortableHeader label="Status" sortKey="suspended" sort={sort} onSort={onSort} />
+              <SortableHeader label="Last Activity" sortKey="lastActivityAt" sort={sort} onSort={onSort} />
               <SortableHeader label="Joined" sortKey="createdAt" sort={sort} onSort={onSort} />
               <th></th>
             </tr>
@@ -345,6 +346,13 @@ export function AdminUsersPage() {
                       {user.suspended ? "Suspended" : "Active"}
                     </span>
                   </td>
+                  <td>
+                    {user.lastActivityAt ? (
+                      new Date(user.lastActivityAt).toLocaleDateString()
+                    ) : (
+                      <span className="hero-note">Never</span>
+                    )}
+                  </td>
                   <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                   <td className="admin-row-actions">
                     <button
@@ -393,7 +401,7 @@ export function AdminUsersPage() {
                 </tr>
                 {expandedId === user.id && (
                   <tr className="admin-expanded-row" key={`${user.id}-detail`}>
-                    <td colSpan={9}>
+                    <td colSpan={10}>
                       {!resumesById[user.id] ? (
                         <ul className="admin-resume-list">
                           {[0, 1].map((i) => (
@@ -422,7 +430,7 @@ export function AdminUsersPage() {
             ))}
             {users.length === 0 && (
               <tr>
-                <td colSpan={9} className="hero-note">
+                <td colSpan={10} className="hero-note">
                   {query ? `No users match "${query}".` : "No users yet."}
                 </td>
               </tr>

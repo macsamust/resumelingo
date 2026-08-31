@@ -292,6 +292,8 @@ export interface AdminUserSummary {
   stripeCustomerId: string | null;
   /** True only if Stripe confirmed an active subscription (see SubscriptionService.syncSubscription). A paid tier with this false means an admin set the tier manually, not a real Stripe subscription. */
   stripeSubscriptionActive: boolean;
+  /** Most recent resumes.updatedAt across everything this user owns — there's no login tracking (stateless JWT auth), so this is the closest available signal of ongoing product use. Null for an account with zero resumes. */
+  lastActivityAt: string | null;
 }
 
 /**

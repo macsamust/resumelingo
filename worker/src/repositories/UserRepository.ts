@@ -199,6 +199,7 @@ export class UserRepository extends BaseRepository<UserRecord> {
     resumeCount: "resumeCount",
     suspended: "u.suspended",
     createdAt: "u.createdAt",
+    lastActivityAt: "lastActivityAt",
   };
 
   /**
@@ -216,7 +217,7 @@ export class UserRepository extends BaseRepository<UserRecord> {
     q?: string;
     sortKey: string;
     sortDirection: "asc" | "desc";
-  }): Promise<{ users: (UserRecord & { resumeCount: number })[]; total: number }> {
+  }): Promise<{ users: (UserRecord & { resumeCount: number; lastActivityAt: string | null })[]; total: number }> {
     const page = Math.max(1, params.page);
     const pageSize = Math.min(200, Math.max(1, params.pageSize));
     const offset = (page - 1) * pageSize;
@@ -233,7 +234,7 @@ export class UserRepository extends BaseRepository<UserRecord> {
 
     const { results } = await this.db
       .prepare(
-        `SELECT u.*, COUNT(r.id) as resumeCount
+        `SELECT u.*, COUNT(r.id) as resumeCount, MAX(r."updatedAt") as lastActivityAt
          FROM users u
          LEFT JOIN resumes r ON r."userId" = u.id
          ${where}
@@ -242,10 +243,10 @@ export class UserRepository extends BaseRepository<UserRecord> {
          LIMIT ? OFFSET ?`
       )
       .bind(...likeArgs, pageSize, offset)
-      .all<UserRecord & { resumeCount: number }>();
+      .all<UserRecord & { resumeCount: number; lastActivityAt: string | null }>();
 
     return {
-      users: results.map((row) => ({ ...normalizeBooleans(row), resumeCount: row.resumeCount })),
+      users: results.map((row) => ({ ...normalizeBooleans(row), resumeCount: row.resumeCount, lastActivityAt: row.lastActivityAt })),
       total: countRow?.count ?? 0,
     };
   }
@@ -262,7 +263,7 @@ export class UserRepository extends BaseRepository<UserRecord> {
     sortKey: string;
     sortDirection: "asc" | "desc";
     limit?: number;
-  }): Promise<(UserRecord & { resumeCount: number })[]> {
+  }): Promise<(UserRecord & { resumeCount: number; lastActivityAt: string | null })[]> {
     const q = params.q?.trim();
     const where = q ? `WHERE u.name LIKE ? OR u.email LIKE ?` : "";
     const likeArgs = q ? [`%${q}%`, `%${q}%`] : [];
@@ -272,7 +273,7 @@ export class UserRepository extends BaseRepository<UserRecord> {
 
     const { results } = await this.db
       .prepare(
-        `SELECT u.*, COUNT(r.id) as resumeCount
+        `SELECT u.*, COUNT(r.id) as resumeCount, MAX(r."updatedAt") as lastActivityAt
          FROM users u
          LEFT JOIN resumes r ON r."userId" = u.id
          ${where}
@@ -281,9 +282,9 @@ export class UserRepository extends BaseRepository<UserRecord> {
          LIMIT ?`
       )
       .bind(...likeArgs, limit)
-      .all<UserRecord & { resumeCount: number }>();
+      .all<UserRecord & { resumeCount: number; lastActivityAt: string | null }>();
 
-    return results.map((row) => ({ ...normalizeBooleans(row), resumeCount: row.resumeCount }));
+    return results.map((row) => ({ ...normalizeBooleans(row), resumeCount: row.resumeCount, lastActivityAt: row.lastActivityAt }));
   }
 
   /** Total account count, and how many joined in the last N days — powers the admin dashboard's "Users" tile. */
