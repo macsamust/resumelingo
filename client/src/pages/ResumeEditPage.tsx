@@ -15,6 +15,7 @@ import { ReferencesEditor } from "../components/builder/ReferencesEditor";
 import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { ResumePreview } from "../components/builder/ResumePreview";
 import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
+import { Modal } from "../components/common/Modal";
 import { VersionHistoryPanel } from "../components/common/VersionHistoryPanel";
 import { ApiError, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
@@ -109,6 +110,8 @@ export function ResumeEditPage() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [forceOpen, setForceOpen] = useState<ForceOpenSignal | undefined>(undefined);
+  /** Whether the "Expand" modal (a larger copy of the sidebar's live preview) is open. */
+  const [previewExpanded, setPreviewExpanded] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   // The user's other resumes (this one excluded) — powers "Copy from
   // another resume" in Work Experience/Education and the Company/Title/
@@ -888,6 +891,34 @@ export function ResumeEditPage() {
     });
   };
 
+  // Built once and rendered in two places (the sidebar's own scrollable
+  // preview column, and — when previewExpanded — a larger copy inside
+  // Modal) rather than duplicating the same prop list twice.
+  const previewElement = (
+    <ResumePreview
+      fullName={fullName}
+      contactEmail={contactEmail}
+      contactPhone={contactPhone}
+      contactLinkedIn={contactLinkedIn}
+      photoUrl={photoUrl}
+      title={title}
+      professionLabel={professionDetail?.label ?? resume.professionLabel}
+      templateKey={templateKey}
+      templateName={templates.find((t) => t.key === templateKey)?.name}
+      summary={resume.generatedSummary}
+      bullets={resume.generatedBullets}
+      experience={experience}
+      education={education}
+      awards={awards}
+      achievements={achievements}
+      combineExperienceFormat={combineExperienceFormat}
+      skillsAndTools={skillsAndTools}
+      showSkillsAndTools={usesSkillsAndTools}
+      languages={languages}
+      securityClearance={answers.clearanceLevel}
+    />
+  );
+
   return (
     <AppShell>
       <div className="app-page-head">
@@ -1515,65 +1546,57 @@ export function ResumeEditPage() {
           </button>
         </div>
 
-        <div className="preview-col">
-          {isPremium && (
-            <div className="ats-mini-card">
-              <div className="ats-mini-head">
-                <span>
-                  ATS check
-                  <span className="info-tooltip" tabIndex={0}>
-                    <span className="info-tooltip-icon" aria-hidden="true">?</span>
-                    <span className="info-tooltip-bubble" role="tooltip">
-                      This check scores your resume's structure and compares it against a job description's
-                      keywords, so you can see how it's likely to hold up.
+        <div className="preview-col preview-col-scrollable">
+          <div className="preview-col-head">
+            <span>Live preview</span>
+            <button type="button" className="preview-expand-btn" onClick={() => setPreviewExpanded(true)}>
+              <span aria-hidden="true">⤢</span> Expand
+            </button>
+          </div>
+          <div className="preview-col-scroll">
+            {isPremium && (
+              <div className="ats-mini-card">
+                <div className="ats-mini-head">
+                  <span>
+                    ATS check
+                    <span className="info-tooltip" tabIndex={0}>
+                      <span className="info-tooltip-icon" aria-hidden="true">?</span>
+                      <span className="info-tooltip-bubble" role="tooltip">
+                        This check scores your resume's structure and compares it against a job description's
+                        keywords, so you can see how it's likely to hold up.
+                      </span>
                     </span>
                   </span>
-                </span>
-                <span className="ats-mini-score">{healthCheck.score}%</span>
+                  <span className="ats-mini-score">{healthCheck.score}%</span>
+                </div>
+                <ul className="ats-mini-list">
+                  {healthCheck.items.slice(0, 3).map((item) => (
+                    <li key={item.id} className={item.passed ? "ats-pass" : "ats-fail"}>
+                      <span aria-hidden="true">{item.passed ? "✓" : "✗"}</span> {item.label}
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href="#ats-check-section"
+                  className="ats-mini-link"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToAtsCheck();
+                  }}
+                >
+                  See full ATS Check ↓
+                </a>
               </div>
-              <ul className="ats-mini-list">
-                {healthCheck.items.slice(0, 3).map((item) => (
-                  <li key={item.id} className={item.passed ? "ats-pass" : "ats-fail"}>
-                    <span aria-hidden="true">{item.passed ? "✓" : "✗"}</span> {item.label}
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="#ats-check-section"
-                className="ats-mini-link"
-                onClick={(e) => {
-                  e.preventDefault();
-                  scrollToAtsCheck();
-                }}
-              >
-                See full ATS Check ↓
-              </a>
-            </div>
-          )}
-          <ResumePreview
-            fullName={fullName}
-            contactEmail={contactEmail}
-            contactPhone={contactPhone}
-            contactLinkedIn={contactLinkedIn}
-            photoUrl={photoUrl}
-            title={title}
-            professionLabel={professionDetail?.label ?? resume.professionLabel}
-            templateKey={templateKey}
-            templateName={templates.find((t) => t.key === templateKey)?.name}
-            summary={resume.generatedSummary}
-            bullets={resume.generatedBullets}
-            experience={experience}
-            education={education}
-            awards={awards}
-            achievements={achievements}
-            combineExperienceFormat={combineExperienceFormat}
-            skillsAndTools={skillsAndTools}
-            showSkillsAndTools={usesSkillsAndTools}
-            languages={languages}
-            securityClearance={answers.clearanceLevel}
-          />
+            )}
+            {previewElement}
+          </div>
         </div>
       </form>
+      {previewExpanded && (
+        <Modal title="Live preview" wide onClose={() => setPreviewExpanded(false)}>
+          {previewElement}
+        </Modal>
+      )}
       <p className="form-footnote">
         <Link to="/dashboard">← Back to dashboard</Link>
       </p>

@@ -678,6 +678,35 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .empty-row-example-field-value { font-size: 13.5px; color: var(--navy-light); font-style: italic; }
 
 .preview-col { position: sticky; top: 90px; }
+/*
+ * Edit Resume-only modifier (see ResumeEditPage.tsx) — adds a pinned
+ * "Live preview" header with an expand button, and makes the resume itself
+ * scroll independently within the column instead of the whole page having
+ * to scroll past it. Deliberately a separate modifier class rather than
+ * changing .preview-col itself: New Resume, admin resume edit, and the
+ * thank-you letter page all reuse bare .preview-col without this inner
+ * head/scroll split, and giving .preview-col itself a hard overflow:hidden
+ * would silently clip their content with no way to reach the rest of it.
+ *
+ * Flex column with only .preview-col-scroll scrolling (not .preview-col-head
+ * or the column as a whole) is the same "pinned header, scrolling body"
+ * shape used for Modal's wide variant below — min-height: 0 on the flex
+ * child is required for it to actually respect the sibling header's height
+ * and scroll, rather than just growing to fit its content.
+ */
+.preview-col-scrollable { display: flex; flex-direction: column; max-height: calc(100vh - 110px); }
+.preview-col-head {
+  display: flex; align-items: center; justify-content: space-between; flex: 0 0 auto;
+  margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--muted);
+}
+.preview-col-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.preview-expand-btn {
+  display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px;
+  border: 1.5px solid var(--indigo); border-radius: 8px; background: #eef2ff; color: var(--indigo);
+  cursor: pointer; font-size: 12px; font-weight: 700; text-transform: none; letter-spacing: normal;
+}
+.preview-expand-btn:hover { background: var(--indigo); color: #fff; }
 .preview-panel { position: static; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 28px; overflow: hidden; }
 .preview-template-tag { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; padding: 4px 10px; border-radius: 999px; background: var(--tpl-accent-soft, #eef2ff); color: var(--tpl-accent, var(--indigo)); margin-bottom: 10px; }
 .preview-panel h2 { font-size: 20px; color: var(--navy); margin-bottom: 4px; }
@@ -1579,8 +1608,16 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   background: #fff; border-radius: 16px; padding: 26px; width: 100%; max-width: 440px;
   box-shadow: 0 30px 60px -20px rgba(15,23,42,.45); animation: modal-pop-in .15s ease;
 }
-/* Wider variant for content that doesn't fit the default confirm-dialog width, e.g. a full resume template preview. */
-.modal-panel-wide { max-width: 760px; max-height: 88vh; overflow-y: auto; }
+/* Wider variant for content that doesn't fit the default confirm-dialog
+   width, e.g. a full resume preview. Flex column with only .modal-body
+   scrolling (not the whole panel) so .modal-head stays pinned at the top
+   instead of scrolling away with it, and so tall content is reliably
+   reachable — min-height: 0 is required for a flex child to actually
+   respect its sibling's height and scroll, rather than just growing to fit
+   its content and pushing the bottom out of reach. */
+.modal-panel-wide { max-width: 760px; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; }
+.modal-panel-wide .modal-head { flex: 0 0 auto; }
+.modal-panel-wide .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .modal-head h2 { font-size: 19px; color: var(--navy); }
 .modal-close {
