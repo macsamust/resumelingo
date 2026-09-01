@@ -677,7 +677,22 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .empty-row-example-field-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .02em; margin-bottom: 2px; }
 .empty-row-example-field-value { font-size: 13.5px; color: var(--navy-light); font-style: italic; }
 
-.preview-col { position: sticky; top: 90px; }
+/* max-height + overflow-y so a long resume (or a long form pushing the page
+   well past one screen) never scrolls the sticky preview out of view
+   entirely — it now scrolls independently within its own pinned column
+   instead. Shared by every page that reuses this column (Edit Resume, New
+   Resume, admin resume edit, thank-you letter). */
+.preview-col { position: sticky; top: 90px; max-height: calc(100vh - 110px); overflow-y: auto; }
+.preview-col-head {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--muted);
+}
+.preview-expand-btn {
+  display: flex; align-items: center; justify-content: center; width: 26px; height: 26px;
+  border: 1.5px solid var(--border); border-radius: 8px; background: #fff; color: var(--indigo);
+  cursor: pointer; font-size: 14px; line-height: 1;
+}
+.preview-expand-btn:hover { background: var(--bg); }
 .preview-panel { position: static; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 28px; overflow: hidden; }
 .preview-template-tag { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; padding: 4px 10px; border-radius: 999px; background: var(--tpl-accent-soft, #eef2ff); color: var(--tpl-accent, var(--indigo)); margin-bottom: 10px; }
 .preview-panel h2 { font-size: 20px; color: var(--navy); margin-bottom: 4px; }

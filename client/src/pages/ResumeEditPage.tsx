@@ -15,6 +15,7 @@ import { ReferencesEditor } from "../components/builder/ReferencesEditor";
 import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { ResumePreview } from "../components/builder/ResumePreview";
 import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
+import { Modal } from "../components/common/Modal";
 import { VersionHistoryPanel } from "../components/common/VersionHistoryPanel";
 import { ApiError, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
@@ -109,6 +110,8 @@ export function ResumeEditPage() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [forceOpen, setForceOpen] = useState<ForceOpenSignal | undefined>(undefined);
+  /** Whether the "Expand preview" modal (a larger copy of the sidebar's live preview) is open. */
+  const [previewExpanded, setPreviewExpanded] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   // The user's other resumes (this one excluded) — powers "Copy from
   // another resume" in Work Experience/Education and the Company/Title/
@@ -888,6 +891,39 @@ export function ResumeEditPage() {
     });
   };
 
+  // Built once and rendered in two places (the sidebar's own scrollable
+  // .preview-col, and — when previewExpanded — a larger copy inside Modal)
+  // rather than duplicating the same prop list twice. A long resume in a
+  // long form used to mean the sticky sidebar preview scrolled out of view
+  // entirely; .preview-col now scrolls independently (see global.css) so it
+  // never leaves the screen, and this expand button is for when someone
+  // wants to actually look at the whole thing at a readable size instead of
+  // the cramped sidebar column.
+  const previewElement = (
+    <ResumePreview
+      fullName={fullName}
+      contactEmail={contactEmail}
+      contactPhone={contactPhone}
+      contactLinkedIn={contactLinkedIn}
+      photoUrl={photoUrl}
+      title={title}
+      professionLabel={professionDetail?.label ?? resume.professionLabel}
+      templateKey={templateKey}
+      templateName={templates.find((t) => t.key === templateKey)?.name}
+      summary={resume.generatedSummary}
+      bullets={resume.generatedBullets}
+      experience={experience}
+      education={education}
+      awards={awards}
+      achievements={achievements}
+      combineExperienceFormat={combineExperienceFormat}
+      skillsAndTools={skillsAndTools}
+      showSkillsAndTools={usesSkillsAndTools}
+      languages={languages}
+      securityClearance={answers.clearanceLevel}
+    />
+  );
+
   return (
     <AppShell>
       <div className="app-page-head">
@@ -1550,30 +1586,26 @@ export function ResumeEditPage() {
               </a>
             </div>
           )}
-          <ResumePreview
-            fullName={fullName}
-            contactEmail={contactEmail}
-            contactPhone={contactPhone}
-            contactLinkedIn={contactLinkedIn}
-            photoUrl={photoUrl}
-            title={title}
-            professionLabel={professionDetail?.label ?? resume.professionLabel}
-            templateKey={templateKey}
-            templateName={templates.find((t) => t.key === templateKey)?.name}
-            summary={resume.generatedSummary}
-            bullets={resume.generatedBullets}
-            experience={experience}
-            education={education}
-            awards={awards}
-            achievements={achievements}
-            combineExperienceFormat={combineExperienceFormat}
-            skillsAndTools={skillsAndTools}
-            showSkillsAndTools={usesSkillsAndTools}
-            languages={languages}
-            securityClearance={answers.clearanceLevel}
-          />
+          <div className="preview-col-head">
+            <span>Live preview</span>
+            <button
+              type="button"
+              className="preview-expand-btn"
+              onClick={() => setPreviewExpanded(true)}
+              aria-label="Expand preview"
+              title="Expand preview"
+            >
+              ⤢
+            </button>
+          </div>
+          {previewElement}
         </div>
       </form>
+      {previewExpanded && (
+        <Modal title="Live preview" wide onClose={() => setPreviewExpanded(false)}>
+          {previewElement}
+        </Modal>
+      )}
       <p className="form-footnote">
         <Link to="/dashboard">← Back to dashboard</Link>
       </p>
