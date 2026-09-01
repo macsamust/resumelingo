@@ -21,11 +21,18 @@ export const CLEARANCE_QUESTION: ProfessionQuestion = {
  * Merges a profession's own Additional Details questions with
  * CLEARANCE_QUESTION when the Govt Contractor template is selected, deduped
  * by key so a resume that's *also* on the Government Contractor profession
- * doesn't get the question listed twice.
+ * doesn't get the question listed twice. Inserted directly above a
+ * "certifications" question when the profession has one (matching the
+ * Government Contractor profession's own question order — Clearance Level
+ * leads, Certifications trails), otherwise at the very front, rather than
+ * simply appended at the end where it could land below Certifications for
+ * professions whose own list ends with it.
  */
 export function withClearanceQuestion(questions: ProfessionQuestion[], templateKey: string | undefined): ProfessionQuestion[] {
-  if (templateKey === "government-contractor" && !questions.some((q) => q.key === CLEARANCE_QUESTION.key)) {
-    return [...questions, CLEARANCE_QUESTION];
+  if (templateKey !== "government-contractor" || questions.some((q) => q.key === CLEARANCE_QUESTION.key)) {
+    return questions;
   }
-  return questions;
+  const certIndex = questions.findIndex((q) => q.key === "certifications");
+  const insertAt = certIndex === -1 ? 0 : certIndex;
+  return [...questions.slice(0, insertAt), CLEARANCE_QUESTION, ...questions.slice(insertAt)];
 }
