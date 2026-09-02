@@ -35,7 +35,7 @@ export function ResumeBuilderPage() {
   const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
   const [professionKey, setProfessionKey] = useState("");
   const [professionDetail, setProfessionDetail] = useState<ProfessionDefinition | null>(null);
-  const [templateKey, setTemplateKey] = useState("modern");
+  const [templateKey, setTemplateKey] = useState("classic");
   const [fullName, setFullName] = useState(user?.name ?? "");
   const [contactEmail, setContactEmail] = useState(user?.email ?? "");
   const [contactPhone, setContactPhone] = useState("");
