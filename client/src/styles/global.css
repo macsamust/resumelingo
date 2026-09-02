@@ -623,6 +623,13 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .info-tooltip-icon:hover + .info-tooltip-bubble {
   opacity: 1; visibility: visible;
 }
+/* The ATS mini-card's tooltip sits right at the top of .preview-col-scroll
+   (see ResumeEditPage.tsx), which now clips overflow for the scrollable
+   live preview frame — opening upward left almost no room before hitting
+   that clipped edge, so the bubble barely showed. Opens downward here
+   instead, into the rest of the scrollable area below it. */
+.ats-mini-head .info-tooltip-bubble { bottom: auto; top: calc(100% + 8px); }
+.ats-mini-head .info-tooltip-bubble::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: var(--navy); }
 .experience-remove { padding: 6px 12px; font-size: 12.5px; }
 /* Move Up/Down/Duplicate/Remove row for each entry in a list editor
    (Experience, Education, Awards, Key Achievements, References) — see
