@@ -13,7 +13,7 @@ import { SkillsAndToolsEditor } from "../components/builder/SkillsAndToolsEditor
 import { LanguagesEditor } from "../components/builder/LanguagesEditor";
 import { ReferencesEditor } from "../components/builder/ReferencesEditor";
 import { PhotoUploader } from "../components/builder/PhotoUploader";
-import { ResumePreview } from "../components/builder/ResumePreview";
+import { isRealContactValue, ResumePreview } from "../components/builder/ResumePreview";
 import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
 import { Modal } from "../components/common/Modal";
 import { VersionHistoryPanel } from "../components/common/VersionHistoryPanel";
@@ -196,9 +196,19 @@ export function ResumeEditPage() {
         const r = resumeRes.resume;
         setResume(r);
         setFullName(r.fullName);
-        setContactEmail(r.contactEmail);
-        setContactPhone(r.contactPhone);
-        setContactLinkedIn(r.contactLinkedIn);
+        // Filters out placeholder-looking values (e.g. a resume whose
+        // contactLinkedIn literally held "[LinkedIn URL — optional]",
+        // copied verbatim from a source document's own unfilled form field
+        // during AI import — see ResumeImportService's import-time guard
+        // and ResumePreview's matching render-time one). Without this, the
+        // edit form would keep re-populating that bad text from D1 on every
+        // load even after the person deletes it, since deleting only clears
+        // local state until a save actually persists the empty value back —
+        // sanitizing here means the field starts genuinely empty, so the
+        // very next autosave corrects the stored value for good.
+        setContactEmail(isRealContactValue(r.contactEmail) ? r.contactEmail : "");
+        setContactPhone(isRealContactValue(r.contactPhone) ? r.contactPhone : "");
+        setContactLinkedIn(isRealContactValue(r.contactLinkedIn) ? r.contactLinkedIn : "");
         setPhotoUrl(r.photoUrl);
         setTitle(r.title);
         setTemplateKey(r.templateKey);

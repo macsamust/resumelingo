@@ -9,7 +9,7 @@ import { AchievementEditor } from "../../components/builder/AchievementEditor";
 import { SkillsAndToolsEditor } from "../../components/builder/SkillsAndToolsEditor";
 import { LanguagesEditor } from "../../components/builder/LanguagesEditor";
 import { PhotoUploader } from "../../components/builder/PhotoUploader";
-import { ResumePreview } from "../../components/builder/ResumePreview";
+import { isRealContactValue, ResumePreview } from "../../components/builder/ResumePreview";
 import { ConfirmDialog } from "../../components/common/ConfirmDialog";
 import { useToast } from "../../components/common/Toast";
 import { adminApi, ApiError, catalogApi } from "../../api";
@@ -108,9 +108,14 @@ export function AdminResumeEditPage() {
         setOwnerName(resumeRes.ownerName);
         setOwnerEmail(resumeRes.ownerEmail);
         setFullName(r.fullName);
-        setContactEmail(r.contactEmail);
-        setContactPhone(r.contactPhone);
-        setContactLinkedIn(r.contactLinkedIn);
+        // See ResumeEditPage's identical guard: filters out placeholder-
+        // looking values (e.g. "[LinkedIn URL — optional]" copied verbatim
+        // from a source document during AI import) so this form starts
+        // genuinely empty rather than re-populating stale bracket text from
+        // D1 on every load — the next save then persists the correction.
+        setContactEmail(isRealContactValue(r.contactEmail) ? r.contactEmail : "");
+        setContactPhone(isRealContactValue(r.contactPhone) ? r.contactPhone : "");
+        setContactLinkedIn(isRealContactValue(r.contactLinkedIn) ? r.contactLinkedIn : "");
         setPhotoUrl(r.photoUrl);
         setTitle(r.title);
         setTemplateKey(r.templateKey);
