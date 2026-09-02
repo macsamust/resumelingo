@@ -25,6 +25,8 @@ function makeUserRecord(overrides: Partial<UserRecord> = {}): UserRecord {
     verificationTokenHash: null,
     verificationTokenExpiresAt: null,
     paymentFailed: false,
+    cancelAtPeriodEnd: false,
+    currentPeriodEnd: null,
     ...overrides,
   };
 }

@@ -100,6 +100,10 @@ export interface UserRecord {
   verificationTokenExpiresAt: string | null;
   /** Set when Stripe reports a failed subscription-renewal charge (invoice.payment_failed) and cleared again on the next successful charge (invoice.paid) — see SubscriptionService.handleWebhookEvent. Doesn't gate anything itself; AppShell shows a dismissible "update your payment method" banner while true, same treatment as emailVerified. If it's never cleared, Stripe's own retry schedule eventually cancels the subscription (customer.subscription.deleted), which already flips subscriptionTier back to starter independently of this flag. */
   paymentFailed: boolean;
+  /** True once a paid subscription has been told to cancel at the end of the current billing period (see SubscriptionService.cancelSubscription) — the person keeps their tier/access until then rather than losing it immediately. Cleared back to false by resumeSubscription, or once the period actually ends and the webhook syncs the account back to Starter. */
+  cancelAtPeriodEnd: boolean;
+  /** ISO timestamp of the current paid period's end, mirrored from Stripe's subscription.current_period_end — null for a Starter (free) account or before Stripe has reported one. Shown to the person as "access until <date>" when cancelAtPeriodEnd is true. */
+  currentPeriodEnd: string | null;
 }
 
 /**

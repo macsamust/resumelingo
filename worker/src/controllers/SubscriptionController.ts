@@ -73,6 +73,30 @@ export class SubscriptionController {
     return c.json({ url });
   };
 
+  /** Self-service "Cancel subscription" (Profile page) — cancels at the end of the current billing period, not immediately. */
+  cancel = async (c: Context<AppEnv>) => {
+    const { subscriptionService } = c.get("services");
+    const user = c.get("user")!;
+    try {
+      const updated = await subscriptionService.cancelSubscription(user);
+      return c.json({ user: updated.toPublicJSON() });
+    } catch (err) {
+      return c.json({ error: err instanceof Error ? err.message : "Unable to cancel subscription." }, 400);
+    }
+  };
+
+  /** Undoes a pending cancellation while the current period hasn't ended yet. */
+  resume = async (c: Context<AppEnv>) => {
+    const { subscriptionService } = c.get("services");
+    const user = c.get("user")!;
+    try {
+      const updated = await subscriptionService.resumeSubscription(user);
+      return c.json({ user: updated.toPublicJSON() });
+    } catch (err) {
+      return c.json({ error: err instanceof Error ? err.message : "Unable to resume subscription." }, 400);
+    }
+  };
+
   /**
    * Stripe webhook receiver. Reads the *raw* request body via `c.req.text()`
    * to verify the `stripe-signature` header — Hono, unlike Express, never

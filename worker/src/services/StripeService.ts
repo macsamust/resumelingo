@@ -86,6 +86,22 @@ export class StripeService {
   }
 
   /**
+   * Schedules a subscription to cancel at the end of the current billing
+   * period rather than immediately, so the person keeps access through what
+   * they already paid for. This is the self-service "Cancel subscription"
+   * button on the Profile page — distinct from createPortalSession above,
+   * which hands the person off to Stripe's own hosted billing UI.
+   */
+  cancelSubscription(subscriptionId: string) {
+    return this.requireClient().subscriptions.update(subscriptionId, { cancel_at_period_end: true });
+  }
+
+  /** Undoes cancelSubscription — clears the scheduled cancellation so the subscription keeps renewing. */
+  resumeSubscription(subscriptionId: string) {
+    return this.requireClient().subscriptions.update(subscriptionId, { cancel_at_period_end: false });
+  }
+
+  /**
    * Verifies the `stripe-signature` header against the raw request body.
    * Async — see class doc comment for why. Takes a *list* of candidate
    * secrets, not one: this single Worker/URL receives webhooks from both

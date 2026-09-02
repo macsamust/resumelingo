@@ -20,6 +20,8 @@ export class User {
   readonly viewDigestOptOut: boolean;
   readonly emailVerified: boolean;
   readonly paymentFailed: boolean;
+  readonly cancelAtPeriodEnd: boolean;
+  readonly currentPeriodEnd: string | null;
 
   constructor(record: UserRecord) {
     this.id = record.id;
@@ -35,6 +37,8 @@ export class User {
     this.viewDigestOptOut = record.viewDigestOptOut;
     this.emailVerified = record.emailVerified;
     this.paymentFailed = record.paymentFailed;
+    this.cancelAtPeriodEnd = record.cancelAtPeriodEnd;
+    this.currentPeriodEnd = record.currentPeriodEnd;
   }
 
   get plan() {
@@ -59,6 +63,8 @@ export class User {
       viewDigestOptOut: this.viewDigestOptOut,
       emailVerified: this.emailVerified,
       paymentFailed: this.paymentFailed,
+      cancelAtPeriodEnd: this.cancelAtPeriodEnd,
+      currentPeriodEnd: this.currentPeriodEnd,
     };
   }
 }

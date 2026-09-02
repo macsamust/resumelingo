@@ -1,5 +1,5 @@
 import { ApiClient } from "./ApiClient";
-import { DashboardSummary, ProfessionDefinition, ProfessionSummary, PublicResume, SkillSuggestion, SubscriptionPlan, TemplateDefinition } from "../types";
+import { AuthUser, DashboardSummary, ProfessionDefinition, ProfessionSummary, PublicResume, SkillSuggestion, SubscriptionPlan, TemplateDefinition } from "../types";
 
 /** Read-mostly catalog + dashboard + public endpoints, grouped since none need dedicated state. */
 export class CatalogApi extends ApiClient {
@@ -37,6 +37,16 @@ export class CatalogApi extends ApiClient {
   /** Opens Stripe's hosted Billing Portal (manage payment method, switch plan, cancel). */
   billingPortal() {
     return this.post<{ url: string }>("/subscriptions/portal");
+  }
+
+  /** Self-service "Cancel subscription" (Profile page) — cancels at the end of the current billing period, not immediately. */
+  cancelSubscription() {
+    return this.post<{ user: AuthUser }>("/subscriptions/cancel");
+  }
+
+  /** Undoes a pending cancellation while the current period hasn't ended yet. */
+  resumeSubscription() {
+    return this.post<{ user: AuthUser }>("/subscriptions/resume");
   }
 
   dashboardSummary() {

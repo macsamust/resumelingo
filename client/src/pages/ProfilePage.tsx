@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { AppShell } from "../components/layout/AppShell";
+import { ConfirmDialog } from "../components/common/ConfirmDialog";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, authApi, catalogApi } from "../api";
 import { ProfessionSummary } from "../types";
@@ -28,6 +29,11 @@ export function ProfilePage() {
 
   const [digestError, setDigestError] = useState<string | null>(null);
   const [savingDigest, setSavingDigest] = useState(false);
+
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [resumingSubscription, setResumingSubscription] = useState(false);
+  const [resumeError, setResumeError] = useState<string | null>(null);
 
   useEffect(() => {
     catalogApi.listProfessions().then((res) => setProfessions(res.professions)).catch(() => setProfessions([]));
@@ -76,6 +82,30 @@ export function ProfilePage() {
       setDigestError(err instanceof ApiError ? err.message : "Something went wrong saving your email preferences.");
     } finally {
       setSavingDigest(false);
+    }
+  };
+
+  const onCancelSubscription = async () => {
+    setCancelError(null);
+    try {
+      const { user: updated } = await catalogApi.cancelSubscription();
+      updateUser(updated);
+      setShowCancelConfirm(false);
+    } catch (err) {
+      setCancelError(err instanceof ApiError ? err.message : "Something went wrong cancelling your subscription.");
+    }
+  };
+
+  const onResumeSubscription = async () => {
+    setResumeError(null);
+    setResumingSubscription(true);
+    try {
+      const { user: updated } = await catalogApi.resumeSubscription();
+      updateUser(updated);
+    } catch (err) {
+      setResumeError(err instanceof ApiError ? err.message : "Something went wrong resuming your subscription.");
+    } finally {
+      setResumingSubscription(false);
     }
   };
 
@@ -166,6 +196,46 @@ export function ProfilePage() {
             <span>Weekly resume view digest: a Monday summary of how many views your resumes got that week.</span>
           </label>
         </div>
+      )}
+
+      {(user.subscriptionTier === "professional" || user.subscriptionTier === "premium") && (
+        <div className="builder-panel" style={{ maxWidth: 520, marginTop: 28 }}>
+          <h2>Subscription</h2>
+          {cancelError && <div className="form-error">{cancelError}</div>}
+          {resumeError && <div className="form-error">{resumeError}</div>}
+          {user.cancelAtPeriodEnd ? (
+            <>
+              <p className="modal-message">
+                Your subscription is set to cancel
+                {user.currentPeriodEnd ? ` on ${new Date(user.currentPeriodEnd).toLocaleDateString()}` : " at the end of the current billing period"}.
+                You'll keep {user.plan.name} access until then.
+              </p>
+              <button className="btn btn-primary btn-block" onClick={onResumeSubscription} disabled={resumingSubscription}>
+                {resumingSubscription ? "Resuming…" : "Resume subscription"}
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="modal-message">
+                You're on the {user.plan.name} plan, billed monthly. Cancelling keeps your access through the end of the current billing period.
+              </p>
+              <button className="btn btn-ghost btn-block" onClick={() => setShowCancelConfirm(true)}>
+                Cancel subscription
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {showCancelConfirm && (
+        <ConfirmDialog
+          title="Cancel subscription"
+          message={`You'll keep ${user.plan.name} access until the end of your current billing period, then your account moves to the free Starter plan. Continue?`}
+          confirmLabel="Cancel subscription"
+          danger
+          onConfirm={onCancelSubscription}
+          onCancel={() => setShowCancelConfirm(false)}
+        />
       )}
     </AppShell>
   );

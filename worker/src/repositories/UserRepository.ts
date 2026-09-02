@@ -15,6 +15,7 @@ function normalizeBooleans(row: UserRecord): UserRecord {
     viewDigestOptOut: !!row.viewDigestOptOut,
     emailVerified: !!row.emailVerified,
     paymentFailed: !!row.paymentFailed,
+    cancelAtPeriodEnd: !!row.cancelAtPeriodEnd,
   };
 }
 
@@ -65,6 +66,8 @@ export class UserRepository extends BaseRepository<UserRecord> {
       verificationTokenHash: null,
       verificationTokenExpiresAt: null,
       paymentFailed: false,
+      cancelAtPeriodEnd: false,
+      currentPeriodEnd: null,
     };
     await this.insertRow(record as unknown as Record<string, unknown>);
     return record;
@@ -350,11 +353,38 @@ export class UserRepository extends BaseRepository<UserRecord> {
     await this.db.prepare(`UPDATE users SET stripeCustomerId = ? WHERE id = ?`).bind(customerId, userId).run();
   }
 
-  /** Applied only from the Stripe webhook (see SubscriptionService.handleWebhookEvent) — the single source of truth for paid tiers. */
-  async applyStripeSubscription(userId: string, tier: SubscriptionTier, subscriptionId: string | null): Promise<void> {
+  /**
+   * Applied only from the Stripe webhook (see SubscriptionService.syncSubscription)
+   * — the single source of truth for paid tiers. Also mirrors
+   * cancel_at_period_end/current_period_end from the same Stripe subscription
+   * object, so a person's account reflects a scheduled (not yet effective)
+   * cancellation, not just "still active" vs. "gone."
+   */
+  async applyStripeSubscription(
+    userId: string,
+    tier: SubscriptionTier,
+    subscriptionId: string | null,
+    cancelAtPeriodEnd: boolean,
+    currentPeriodEnd: string | null
+  ): Promise<void> {
     await this.db
-      .prepare(`UPDATE users SET subscriptionTier = ?, stripeSubscriptionId = ? WHERE id = ?`)
-      .bind(tier, subscriptionId, userId)
+      .prepare(`UPDATE users SET subscriptionTier = ?, stripeSubscriptionId = ?, cancelAtPeriodEnd = ?, currentPeriodEnd = ? WHERE id = ?`)
+      .bind(tier, subscriptionId, cancelAtPeriodEnd ? 1 : 0, currentPeriodEnd, userId)
+      .run();
+  }
+
+  /**
+   * Sets cancelAtPeriodEnd/currentPeriodEnd immediately after a self-service
+   * cancel/resume call to Stripe (see SubscriptionService.cancelSubscription/
+   * resumeSubscription) — Stripe's own subscription.updated webhook will
+   * apply the identical values moments later via applyStripeSubscription
+   * above, but updating here too means the person's own request reflects
+   * the change right away instead of waiting on a webhook round-trip.
+   */
+  async setCancelAtPeriodEnd(userId: string, cancelAtPeriodEnd: boolean, currentPeriodEnd: string | null): Promise<void> {
+    await this.db
+      .prepare(`UPDATE users SET cancelAtPeriodEnd = ?, currentPeriodEnd = ? WHERE id = ?`)
+      .bind(cancelAtPeriodEnd ? 1 : 0, currentPeriodEnd, userId)
       .run();
   }
 

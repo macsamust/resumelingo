@@ -164,6 +164,10 @@ export interface AuthUser {
   emailVerified: boolean;
   /** Set when Stripe reports a failed subscription-renewal charge, cleared on the next successful one — see AppShell's "update your payment method" banner. Same "nudge, not a gate" treatment as emailVerified; Stripe's own retry schedule is what actually determines whether the subscription eventually gets cancelled. */
   paymentFailed: boolean;
+  /** True once a paid subscription has been scheduled to cancel at the end of the current billing period — see ProfilePage's "Cancel subscription" section. The person keeps their tier/access until currentPeriodEnd. */
+  cancelAtPeriodEnd: boolean;
+  /** ISO timestamp of the current paid period's end, mirrored from Stripe — null for a Starter (free) account or before Stripe has reported one. */
+  currentPeriodEnd: string | null;
 }
 
 export interface Resume {

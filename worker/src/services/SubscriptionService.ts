@@ -125,7 +125,51 @@ export class SubscriptionService {
 
     const isActive = subscription.status === "active" || subscription.status === "trialing";
     const finalTier = isActive ? tier : SubscriptionTier.Starter;
-    await this.users.applyStripeSubscription(user.id, finalTier, isActive ? subscription.id : null);
+    // Mirror Stripe's own cancel_at_period_end/current_period_end so the
+    // account reflects a scheduled (not yet effective) cancellation rather
+    // than only knowing "active" vs. "gone" — cleared automatically once the
+    // subscription actually ends (isActive false) since there's nothing left
+    // pending to show.
+    const cancelAtPeriodEnd = isActive && subscription.cancel_at_period_end;
+    const currentPeriodEnd = isActive && subscription.current_period_end
+      ? new Date(subscription.current_period_end * 1000).toISOString()
+      : null;
+    await this.users.applyStripeSubscription(user.id, finalTier, isActive ? subscription.id : null, cancelAtPeriodEnd, currentPeriodEnd);
+  }
+
+  /**
+   * Self-service "Cancel subscription" (Profile page) — schedules
+   * cancellation at the end of the current billing period via Stripe rather
+   * than cancelling immediately, so the person keeps access through what
+   * they already paid for. Updates our own row right away too (see
+   * UserRepository.setCancelAtPeriodEnd's doc comment for why that's not
+   * redundant with the webhook that follows).
+   */
+  async cancelSubscription(user: User): Promise<User> {
+    if (!user.stripeSubscriptionId) {
+      throw new Error("No active subscription to cancel.");
+    }
+    const subscription = await this.stripe.cancelSubscription(user.stripeSubscriptionId);
+    const currentPeriodEnd = subscription.current_period_end
+      ? new Date(subscription.current_period_end * 1000).toISOString()
+      : null;
+    await this.users.setCancelAtPeriodEnd(user.id, true, currentPeriodEnd);
+    const record = await this.users.findById(user.id);
+    return new User(record!);
+  }
+
+  /** Undoes cancelSubscription while the period hasn't ended yet — the subscription keeps renewing as normal. */
+  async resumeSubscription(user: User): Promise<User> {
+    if (!user.stripeSubscriptionId) {
+      throw new Error("No subscription to resume.");
+    }
+    const subscription = await this.stripe.resumeSubscription(user.stripeSubscriptionId);
+    const currentPeriodEnd = subscription.current_period_end
+      ? new Date(subscription.current_period_end * 1000).toISOString()
+      : null;
+    await this.users.setCancelAtPeriodEnd(user.id, false, currentPeriodEnd);
+    const record = await this.users.findById(user.id);
+    return new User(record!);
   }
 
   /**
