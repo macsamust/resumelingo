@@ -141,14 +141,45 @@ export function ProfilePage() {
               ))}
             </select>
           </div>
-          <div className="field">
-            <label>Subscription plan</label>
-            <input value={user.plan.name} disabled />
-          </div>
           <button className="btn btn-primary btn-block" type="submit" disabled={savingProfile}>
             {savingProfile ? "Saving…" : "Save changes"}
           </button>
         </form>
+      </div>
+
+      <div className="builder-panel" style={{ maxWidth: 520, marginBottom: 28 }}>
+        <h2>Subscription</h2>
+        <div className="field">
+          <label>Subscription plan</label>
+          <input value={user.plan.name} disabled />
+        </div>
+        {(user.subscriptionTier === "professional" || user.subscriptionTier === "premium") && (
+          <>
+            {cancelError && <div className="form-error">{cancelError}</div>}
+            {resumeError && <div className="form-error">{resumeError}</div>}
+            {user.cancelAtPeriodEnd ? (
+              <>
+                <p className="modal-message">
+                  Your subscription is set to cancel
+                  {user.currentPeriodEnd ? ` on ${new Date(user.currentPeriodEnd).toLocaleDateString()}` : " at the end of the current billing period"}.
+                  You'll keep {user.plan.name} access until then.
+                </p>
+                <button className="btn btn-primary btn-block" onClick={onResumeSubscription} disabled={resumingSubscription}>
+                  {resumingSubscription ? "Resuming…" : "Resume subscription"}
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="modal-message">
+                  Billed monthly. Cancelling keeps your access through the end of the current billing period.
+                </p>
+                <button className="btn btn-ghost btn-block" onClick={() => setShowCancelConfirm(true)}>
+                  Cancel subscription
+                </button>
+              </>
+            )}
+          </>
+        )}
       </div>
 
       <div className="builder-panel" style={{ maxWidth: 520 }}>
@@ -195,35 +226,6 @@ export function ProfilePage() {
             />
             <span>Weekly resume view digest: a Monday summary of how many views your resumes got that week.</span>
           </label>
-        </div>
-      )}
-
-      {(user.subscriptionTier === "professional" || user.subscriptionTier === "premium") && (
-        <div className="builder-panel" style={{ maxWidth: 520, marginTop: 28 }}>
-          <h2>Subscription</h2>
-          {cancelError && <div className="form-error">{cancelError}</div>}
-          {resumeError && <div className="form-error">{resumeError}</div>}
-          {user.cancelAtPeriodEnd ? (
-            <>
-              <p className="modal-message">
-                Your subscription is set to cancel
-                {user.currentPeriodEnd ? ` on ${new Date(user.currentPeriodEnd).toLocaleDateString()}` : " at the end of the current billing period"}.
-                You'll keep {user.plan.name} access until then.
-              </p>
-              <button className="btn btn-primary btn-block" onClick={onResumeSubscription} disabled={resumingSubscription}>
-                {resumingSubscription ? "Resuming…" : "Resume subscription"}
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="modal-message">
-                You're on the {user.plan.name} plan, billed monthly. Cancelling keeps your access through the end of the current billing period.
-              </p>
-              <button className="btn btn-ghost btn-block" onClick={() => setShowCancelConfirm(true)}>
-                Cancel subscription
-              </button>
-            </>
-          )}
         </div>
       )}
 
