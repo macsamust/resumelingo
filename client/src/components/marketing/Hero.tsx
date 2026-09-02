@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ParrotLogo } from "../brand/ParrotLogo";
+import { PolyAvatar } from "../brand/PolyAvatar";
 
 export function Hero() {
   return (
@@ -27,13 +27,17 @@ export function Hero() {
         </div>
         <div className="hero-visual">
           {/* Poly, the ResumeLingo mascot — stands alone here with no adjacent
-              brand text, so it gets a real alt/title (see ParrotLogo's
+              brand text, so it gets a real alt/title (see PolyAvatar's
               `decorative` prop) instead of being hidden from screen readers.
               The name/backstory lives here as real, visible copy (readable
               on mobile, announced to screen readers) rather than only in the
-              image's hover tooltip, which neither of those reach. */}
+              image's hover tooltip, which neither of those reach. Uses the
+              full-body PolyAvatar rather than ParrotLogo's flat head-only
+              mark — this is exactly the kind of standalone "hero" moment
+              PolyAvatar was built for (see its doc comment), where the logo
+              mark alone reads as sparse once it's the sole visual focus. */}
           <div className="hero-mascot">
-            <ParrotLogo size={110} decorative={false} />
+            <PolyAvatar size={130} decorative={false} />
           </div>
           <p className="hero-mascot-caption">
             <em>Meet Poly, short for Polyglot, our resident many tongued parrot.</em>
