@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
+import { ParrotLogo } from "../components/brand/ParrotLogo";
 import { ConfirmDialog } from "../components/common/ConfirmDialog";
 import { useToast } from "../components/common/Toast";
 import { useAuth } from "../context/AuthContext";
@@ -55,8 +56,15 @@ function JobApplicationsLocked() {
         <h1>Job Applications</h1>
       </div>
       <div className="empty-state">
-        <p>Job application tracking is a Professional/Premium feature. Upgrade your plan to start tracking where you've applied.</p>
-        <Link to="/dashboard" className="btn btn-primary">
+        <div className="poly-row" style={{ justifyContent: "center" }}>
+          <div className="poly-avatar-slot">
+            <ParrotLogo size={40} decorative={false} />
+          </div>
+          <p style={{ margin: 0 }}>
+            I can help you track applications, but that's a Professional/Premium perk. Upgrade to start tracking where you've applied.
+          </p>
+        </div>
+        <Link to="/dashboard" className="btn btn-primary" style={{ marginTop: 16 }}>
           Upgrade my plan
         </Link>
       </div>

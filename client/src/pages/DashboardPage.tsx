@@ -13,6 +13,7 @@ import { RESOURCES as CAREER_RESOURCES } from "../components/marketing/CareerCen
 import { STORIES as SUCCESS_STORIES } from "../components/marketing/SuccessStories";
 import { TOPICS as CAREER_TOPICS } from "./CareerCenterPage";
 import { NotificationBell } from "../components/dashboard/NotificationBell";
+import { PolyAvatar } from "../components/brand/PolyAvatar";
 import { formatRelativeTime } from "../utils/time";
 
 // "Job Search Resources" pulls the topics not already covered by the
@@ -245,8 +246,14 @@ export function DashboardPage() {
         </p>
       )}
       {summary.myResumes.length === 0 ? (
-        <div className="empty-state" style={{ marginBottom: isPremium ? 36 : 0 }}>
-          You don't have any resumes yet. <Link to="/resumes/new">Create your first one</Link>.
+        <div className="empty-state poly-hero" style={{ marginBottom: isPremium ? 36 : 0 }}>
+          <PolyAvatar size={96} />
+          <p style={{ margin: 0 }}>
+            Hey, I'm Poly. You don't have any resumes yet — let's build your first one.
+          </p>
+          <Link to="/resumes/new" className="btn btn-primary">
+            Create your first resume
+          </Link>
         </div>
       ) : (
         <div className="resume-list-grid" style={{ marginBottom: isPremium ? 36 : 0 }}>

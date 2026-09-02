@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
+import { ParrotLogo } from "../components/brand/ParrotLogo";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, thankYouLetterApi } from "../api";
 import { ThankYouScenario, ThankYouScenarioOption } from "../types";
@@ -32,8 +33,13 @@ function ThankYouLetterLocked() {
         <h1>Thank-You Letter</h1>
       </div>
       <div className="empty-state">
-        <p>AI thank-you letters are a Premium feature. Upgrade your plan to write one.</p>
-        <Link to="/dashboard" className="btn btn-primary">
+        <div className="poly-row" style={{ justifyContent: "center" }}>
+          <div className="poly-avatar-slot">
+            <ParrotLogo size={40} decorative={false} />
+          </div>
+          <p style={{ margin: 0 }}>I'd love to help you write one, but AI thank-you letters are a Premium feature. Upgrade your plan to write one.</p>
+        </div>
+        <Link to="/dashboard" className="btn btn-primary" style={{ marginTop: 16 }}>
           Upgrade my plan
         </Link>
       </div>

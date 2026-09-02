@@ -20,8 +20,8 @@ function CareerCoachLocked() {
         <h1>Ask Poly</h1>
       </div>
       <div className="empty-state">
-        <div className="coach-answer-row" style={{ justifyContent: "center" }}>
-          <div className="coach-answer-avatar">
+        <div className="poly-row" style={{ justifyContent: "center" }}>
+          <div className="poly-avatar-slot">
             <ParrotLogo size={40} decorative={false} />
           </div>
           <p style={{ margin: 0 }}>I'm Poly, your AI Career Coach — but I'm a Premium perk. Upgrade your plan and I'll start answering.</p>
@@ -91,11 +91,11 @@ export function CareerCoachPage() {
 
       <div className="coach-thread">
         {exchanges.length === 0 && !asking && (
-          <div className="coach-answer-row">
-            <div className="coach-answer-avatar">
+          <div className="poly-row">
+            <div className="poly-avatar-slot">
               <ParrotLogo size={32} decorative={false} />
             </div>
-            <p className="hero-note coach-answer-body" style={{ fontStyle: "italic" }}>
+            <p className="hero-note poly-body" style={{ fontStyle: "italic" }}>
               Hey, I'm Poly — pick a question above, or type your own below, and I'll help you work through it.
             </p>
           </div>
@@ -103,11 +103,11 @@ export function CareerCoachPage() {
         {exchanges.map((ex, i) => (
           <div className="coach-exchange" key={i}>
             <p className="coach-question">{ex.question}</p>
-            <div className="coach-answer coach-answer-row">
-              <div className="coach-answer-avatar">
+            <div className="coach-answer poly-row">
+              <div className="poly-avatar-slot">
                 <ParrotLogo size={32} decorative={false} />
               </div>
-              <div className="coach-answer-body">
+              <div className="poly-body">
                 <p style={{ whiteSpace: "pre-line" }}>{ex.answer.answer}</p>
                 {ex.answer.relatedLinks.length > 0 && (
                   <p className="coach-related-links">
@@ -123,7 +123,7 @@ export function CareerCoachPage() {
           </div>
         ))}
         {asking && (
-          <div className="hero-note coach-thinking">
+          <div className="hero-note poly-thinking">
             <ParrotLogo size={24} decorative={false} />
             <span>Poly is thinking…</span>
           </div>
