@@ -17,6 +17,7 @@ import { ImportedResumeData } from "../api/ResumeImportApi";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL } from "../utils/templateAccess";
 import { getTemplateStyle } from "../config/templateStyles";
+import { isAtsSafeFamily } from "../utils/atsCheck";
 import { withClearanceQuestion } from "../config/clearanceQuestion";
 import {
   AchievementEntry,
@@ -308,7 +309,14 @@ export function ResumeBuilderPage() {
             <div className="template-choices">
               {templates.map((t) => {
                 const locked = !!user && !canUseTemplate(user.subscriptionTier, t.category);
-                const upgradeHint = `Upgrade to ${TIER_LABEL[CATEGORY_MIN_TIER[t.category]]} to use this template.`;
+                const tier = CATEGORY_MIN_TIER[t.category];
+                const upgradeHint = `Upgrade to ${TIER_LABEL[tier]} to use this template.`;
+                const atsSafe = isAtsSafeFamily(getTemplateStyle(t.key).family);
+                // Text fallback for the tier dot/ATS tag, which are otherwise
+                // color- and (for the dot) aria-hidden-only — so someone
+                // relying on a screen reader, or who hasn't learned what the
+                // dot colors mean, still gets tier + ATS info via the title.
+                const tierNote = `${TIER_LABEL[tier]} template.${atsSafe ? " ATS friendly (single column layout)." : ""}`;
                 return (
                   <span
                     key={t.key}
@@ -316,8 +324,10 @@ export function ResumeBuilderPage() {
                     onClick={() => {
                       if (!locked) setTemplateKey(t.key);
                     }}
-                    title={locked ? `${upgradeHint} ${t.description}` : t.description}
+                    title={locked ? `${upgradeHint} ${t.description}` : `${tierNote} ${t.description}`}
                   >
+                    <span className={`template-pill-tier template-pill-tier-${tier}`} aria-hidden="true" />
+                    {atsSafe && <span className="template-pill-ats-dot" aria-hidden="true" />}
                     {t.name}
                     {locked && (
                       <span className="template-pill-lock" aria-hidden="true">
@@ -327,6 +337,24 @@ export function ResumeBuilderPage() {
                   </span>
                 );
               })}
+            </div>
+            <div className="template-legend">
+              <span>
+                <span className="template-pill-tier template-pill-tier-starter" aria-hidden="true" />
+                Starter
+              </span>
+              <span>
+                <span className="template-pill-tier template-pill-tier-professional" aria-hidden="true" />
+                Professional
+              </span>
+              <span>
+                <span className="template-pill-tier template-pill-tier-premium" aria-hidden="true" />
+                Premium
+              </span>
+              <span>
+                <span className="template-pill-ats-dot" aria-hidden="true" />
+                ATS friendly
+              </span>
             </div>
             {usesPhoto && <PhotoUploader value={photoUrl} onChange={setPhotoUrl} />}
             {selectedTemplateIsPremium && (
