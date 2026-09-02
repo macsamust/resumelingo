@@ -46,7 +46,7 @@ export const TOPICS: CareerTopic[] = [
     id: "interview-tips",
     tag: "02",
     title: "Interview Tips",
-    updated: "August 2026",
+    updated: "September 2026",
     intro:
       "Interviews are leaning harder on real time problem solving and behavioral evidence over rehearsed answers, but the fundamentals of structuring a clear, specific answer still decide most outcomes.",
     tips: [
@@ -54,11 +54,12 @@ export const TOPICS: CareerTopic[] = [
       "Prepare a 60–90 second answer to \"tell me about yourself\" using a Present → Past → Future structure. It's asked in the vast majority of interviews and sets the tone for everything after it.",
       "Have one honest, noncritical weakness ready, paired with what you're actively doing about it. A rehearsed \"I work too hard\" answer reads as evasive.",
       "First impressions form fast. Many interviewers form an initial read in the first couple of minutes, so treat your opening small talk and framing as part of the interview, not a warmup.",
+      "Live, real time conversation is carrying more weight than take-home tests or written exercises this year, since it's the one format where an interviewer can watch how you actually reason rather than whether you can paste a prompt into an AI tool. Practice thinking out loud, not just landing on a correct answer.",
       "Expect scenario based and AI adjacent questions (how you'd use AI tools, how you'd handle an ambiguous problem) in addition to classic behavioral prompts. Prepare one story about adapting to a new tool or process.",
     ],
     sources: [
       { label: "25 Common Interview Questions & Answers, Resume-Now", url: "https://www.resume-now.com/job-resources/interviews/interview-questions-and-answers" },
-      { label: "Top 10 Interview Questions and Answers, The Interview Guys", url: "https://blog.theinterviewguys.com/top-10-job-interview-questions-and-answers/" },
+      { label: "Engineering Interview Trends for 2026: What AI Is Changing, Karat", url: "https://karat.com/engineering-interview-trends-2026/" },
       { label: "Job Interview Tips and Tricks 2026, Qwyse", url: "https://www.qwyse.com/hub/learn/job-interview-tips-and-tricks-in-2026-how-to-prepare-and-answer-to-get-hired/" },
     ],
   },
@@ -86,19 +87,19 @@ export const TOPICS: CareerTopic[] = [
     id: "career-advice",
     tag: "04",
     title: "Career Advice",
-    updated: "August 2026",
+    updated: "September 2026",
     intro:
       "Careers are less linear than they used to be, and titles matter less than the skills and visibility you build along the way. The advice that holds up: get good, get seen, and get sponsored.",
     tips: [
       "Build the skill set of the role one level above yours. It signals readiness before a title change is even on the table.",
       "Create visibility for your work through documentation, updates, and clear communication. Good work that nobody hears about doesn't move careers.",
       "Find a sponsor, not just a mentor. A mentor gives advice, but a sponsor advocates for you in rooms you're not in, which is what actually moves careers from good to exceptional.",
-      "Prioritize AI fluency alongside your core craft. The number of roles that explicitly require it has grown roughly sevenfold since 2023, and workers with strong AI skills are commanding noticeably higher pay than peers in the same role without them.",
+      "Prioritize AI fluency alongside your core craft. Workers with strong AI skills are now commanding roughly a 62% wage premium over peers in the same role without them, according to a global analysis of job postings, up from about 57% a year earlier, and the gap widens the further along you are in your career.",
       "Define what success means to you specifically, on your own terms, rather than defaulting to the next obvious title. It keeps you moving toward something you actually want.",
     ],
     sources: [
       { label: "101 Best Career Tips From Industry Experts, Novorésumé", url: "https://novoresume.com/career-blog/career-tips" },
-      { label: "Workplace Trends For 2026: Preparing For The New Labor Market Reality, Ivy Exec", url: "https://ivyexec.com/career-advice/2026/workplace-trends-for-2026-preparing-for-the-new-labor-market-reality" },
+      { label: "The AI Salary Premium: Market Outlook and Strategic Implications, Robert Walters", url: "https://www.robertwalters.us/insights/hiring-advice/blog/ai-salary-premium.html" },
       { label: "50 Best Pieces of Career Advice, CareerAddict", url: "https://www.careeraddict.com/career-success-tips" },
     ],
   },
