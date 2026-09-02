@@ -132,6 +132,25 @@ function withProtocol(url: string): string {
 }
 
 /**
+ * Filters out placeholder-looking values (e.g. "[LinkedIn URL — optional]")
+ * that shouldn't be treated as real contact info — seen in practice on a
+ * resume whose contactLinkedIn field held exactly that bracketed string,
+ * most likely copied verbatim from a source document's own unfilled form
+ * field during AI import (see ResumeImportService's parallel guard on the
+ * worker side, which prevents this on future imports; this is the client-
+ * side backstop for data that's already in D1, or entered any other way).
+ * A real email/phone/LinkedIn value never legitimately starts and ends
+ * with brackets, so this is a safe, narrow signal rather than a fuzzy
+ * placeholder-word heuristic that could false-positive on real text.
+ */
+export function isRealContactValue(value?: string): value is string {
+  if (!value) return false;
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  return !(trimmed.startsWith("[") && trimmed.endsWith("]"));
+}
+
+/**
  * Builds the header contact line (email/phone/LinkedIn, joined by
  * separator) — extracted out of ResumePreview's body so PublicResumePage
  * can render an equivalent footer contact line of its own, outside
@@ -151,7 +170,7 @@ export function buildContactLine(input: {
 }): JSX.Element | false {
   const { contactEmail, contactPhone, contactLinkedIn, separator = " · " } = input;
   const contactItems: { key: string; node: JSX.Element }[] = [];
-  if (contactEmail) {
+  if (isRealContactValue(contactEmail)) {
     contactItems.push({
       key: "email",
       node: (
@@ -161,10 +180,10 @@ export function buildContactLine(input: {
       ),
     });
   }
-  if (contactPhone) {
+  if (isRealContactValue(contactPhone)) {
     contactItems.push({ key: "phone", node: <span>{contactPhone}</span> });
   }
-  if (contactLinkedIn) {
+  if (isRealContactValue(contactLinkedIn)) {
     contactItems.push({
       key: "linkedin",
       node: (
@@ -252,7 +271,7 @@ export function ResumePreview({
   // this array (icon list, grid, etc.) rather than the single joined
   // paragraph buildContactLine produces.
   const contactItems: { key: string; node: JSX.Element }[] = [];
-  if (contactEmail) {
+  if (isRealContactValue(contactEmail)) {
     contactItems.push({
       key: "email",
       node: (
@@ -262,10 +281,10 @@ export function ResumePreview({
       ),
     });
   }
-  if (contactPhone) {
+  if (isRealContactValue(contactPhone)) {
     contactItems.push({ key: "phone", node: <span>{contactPhone}</span> });
   }
-  if (contactLinkedIn) {
+  if (isRealContactValue(contactLinkedIn)) {
     contactItems.push({
       key: "linkedin",
       node: (

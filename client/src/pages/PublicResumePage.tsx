@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, catalogApi } from "../api";
 import { PublicResume, ReferenceEntry } from "../types";
-import { buildContactLine, filterAnswerEntries, formatMonth, ResumePreview, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
+import { buildContactLine, filterAnswerEntries, formatMonth, isRealContactValue, ResumePreview, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
 import { CLEARANCE_OPTIONS, recruiterOptionLabel, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
 import { groupAchievementsByExperience } from "../utils/starBullet";
 import { PublicResumeSkeleton } from "../components/common/PublicResumeSkeleton";
@@ -43,7 +43,7 @@ function resumeToPlainText(resume: PublicResume): string {
 
   if (resume.fullName) lines.push(resume.fullName);
   lines.push(resume.title || "Untitled Resume");
-  const contactLine = [resume.contactEmail, resume.contactPhone, resume.contactLinkedIn].filter(Boolean).join("  |  ");
+  const contactLine = [resume.contactEmail, resume.contactPhone, resume.contactLinkedIn].filter(isRealContactValue).join("  |  ");
   if (contactLine) lines.push(contactLine);
   lines.push("");
 

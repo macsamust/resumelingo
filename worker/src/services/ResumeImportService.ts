@@ -99,6 +99,22 @@ function cleanString(value: unknown, maxLen: number): string {
   return value.trim().slice(0, maxLen);
 }
 
+/**
+ * Same as cleanString, but additionally rejects a value that's wrapped in
+ * brackets (e.g. "[LinkedIn URL — optional]") — for contactEmail/Phone/
+ * LinkedIn specifically, where a source document's own unfilled template
+ * placeholder can otherwise get faithfully "extracted" as if it were the
+ * person's real contact info, and then render on the public resume as
+ * literal bracketed text (see client's ResumePreview.tsx isRealContactValue,
+ * the matching client-side backstop for data already saved before this
+ * guard existed). A real contact value never legitimately starts and ends
+ * with brackets, so this is a safe, narrow signal.
+ */
+function cleanContactField(value: unknown, maxLen: number): string {
+  const cleaned = cleanString(value, maxLen);
+  return cleaned.startsWith("[") && cleaned.endsWith("]") ? "" : cleaned;
+}
+
 function cleanMonth(value: unknown): string {
   if (typeof value !== "string") return "";
   const trimmed = value.trim();
@@ -203,9 +219,9 @@ function sanitize(raw: Record<string, unknown>): ImportedResumeData {
   const experience = sanitizeExperience(raw.experience);
   return {
     fullName: cleanString(raw.fullName, MAX_SHORT_FIELD),
-    contactEmail: cleanString(raw.contactEmail, MAX_SHORT_FIELD),
-    contactPhone: cleanString(raw.contactPhone, 40),
-    contactLinkedIn: cleanString(raw.contactLinkedIn, MAX_SHORT_FIELD),
+    contactEmail: cleanContactField(raw.contactEmail, MAX_SHORT_FIELD),
+    contactPhone: cleanContactField(raw.contactPhone, 40),
+    contactLinkedIn: cleanContactField(raw.contactLinkedIn, MAX_SHORT_FIELD),
     experience,
     education: sanitizeEducation(raw.education),
     skillsAndTools: sanitizeSkills(raw.skillsAndTools),

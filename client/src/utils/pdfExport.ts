@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 import { PublicResume, ReferenceEntry } from "../types";
-import { filterAnswerEntries, formatMonth, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
+import { filterAnswerEntries, formatMonth, isRealContactValue, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
 import { groupAchievementsByExperience } from "./starBullet";
 import { getTemplateStyle } from "../config/templateStyles";
 import { PROFICIENCY_MAX_LEVEL, proficiencyLevel } from "./languageProficiency";
@@ -183,7 +183,7 @@ export function downloadResumePdf(resume: PublicResume): void {
 
   if (resume.fullName) w.name(resume.fullName);
   w.subtitle(resume.title || "Untitled Resume");
-  const contactLine = [resume.contactEmail, resume.contactPhone, resume.contactLinkedIn].filter(Boolean).join("   |   ");
+  const contactLine = [resume.contactEmail, resume.contactPhone, resume.contactLinkedIn].filter(isRealContactValue).join("   |   ");
   if (contactLine) w.subtitle(contactLine);
   w.spacer(4);
 
