@@ -148,6 +148,37 @@ export function ProfilePage() {
       </div>
 
       <div className="builder-panel" style={{ maxWidth: 520, marginBottom: 28 }}>
+        <h2>Change password</h2>
+        {passwordError && <div className="form-error">{passwordError}</div>}
+        {passwordSuccess && <div className="empty-state">Password changed.</div>}
+        <form onSubmit={onChangePassword}>
+          <div className="field">
+            <label>Current password</label>
+            <input
+              type="password"
+              required
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label>New password</label>
+            <input
+              type="password"
+              required
+              minLength={8}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="At least 8 characters"
+            />
+          </div>
+          <button className="btn btn-primary btn-block" type="submit" disabled={savingPassword}>
+            {savingPassword ? "Changing…" : "Change password"}
+          </button>
+        </form>
+      </div>
+
+      <div className="builder-panel" style={{ maxWidth: 520, marginBottom: 28 }}>
         <h2>Subscription</h2>
         <div className="field">
           <label>Subscription plan</label>
@@ -180,37 +211,6 @@ export function ProfilePage() {
             )}
           </>
         )}
-      </div>
-
-      <div className="builder-panel" style={{ maxWidth: 520 }}>
-        <h2>Change password</h2>
-        {passwordError && <div className="form-error">{passwordError}</div>}
-        {passwordSuccess && <div className="empty-state">Password changed.</div>}
-        <form onSubmit={onChangePassword}>
-          <div className="field">
-            <label>Current password</label>
-            <input
-              type="password"
-              required
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label>New password</label>
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="At least 8 characters"
-            />
-          </div>
-          <button className="btn btn-primary btn-block" type="submit" disabled={savingPassword}>
-            {savingPassword ? "Changing…" : "Change password"}
-          </button>
-        </form>
       </div>
 
       {(user.subscriptionTier === "professional" || user.subscriptionTier === "premium") && (
