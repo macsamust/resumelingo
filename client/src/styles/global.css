@@ -553,7 +553,12 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .coach-related-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; }
 .coach-related-links a { font-size: 13px; font-weight: 600; color: var(--indigo); }
 .coach-input-row { display: flex; gap: 10px; }
-.coach-input-row input { flex: 1; }
+/* Not wrapped in .field (see .field input above), so it never inherited
+   that rule's padding/border — fell back to the browser's near-zero
+   default input padding, crowding the placeholder text against the left
+   edge. Matches .field input's values directly. */
+.coach-input-row input { flex: 1; padding: 11px 14px; border-radius: 10px; border: 1.5px solid var(--border); font-size: 14px; font-family: inherit; }
+.coach-input-row input:focus { outline: none; border-color: var(--indigo); }
 
 /* Work experience editor (ExperienceEditor.tsx) — one row per job. */
 .experience-editor { margin-bottom: 20px; }
