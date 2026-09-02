@@ -1515,6 +1515,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .version-history-list li + li { border-top: 1px solid var(--border); }
 .version-history-list li > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .version-history-title { font-size: 14px; font-weight: 600; color: var(--navy); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.version-history-summary { margin: 0; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Job Applications page (JobApplicationsPage.tsx) — the "Log an application"
    form's own row layout, since .admin-new-template-row's fixed 100px third

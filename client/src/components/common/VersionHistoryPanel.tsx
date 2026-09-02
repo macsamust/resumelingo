@@ -59,8 +59,11 @@ export function VersionHistoryPanel({ resumeId }: { resumeId: string }) {
       {versions.map((v) => (
         <li key={v.id}>
           <div>
-            <span className="version-history-title">{v.snapshot.title}</span>
-            <span className="hero-note">{formatRelativeTime(v.createdAt)}</span>
+            <div>
+              <span className="version-history-title">{v.snapshot.title}</span>
+              <span className="hero-note">{formatRelativeTime(v.createdAt)}</span>
+            </div>
+            {v.changeSummary && <p className="version-history-summary">{v.changeSummary}</p>}
           </div>
           <button type="button" className="btn btn-ghost btn-sm" disabled={restoringId === v.id} onClick={() => onRestore(v)}>
             {restoringId === v.id ? "Restoring…" : "Restore"}

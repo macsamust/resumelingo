@@ -46,6 +46,8 @@ export interface ResumeVersionRecord {
   resumeId: string;
   snapshot: ResumeVersionSnapshot;
   createdAt: string;
+  /** Short human-readable note on what changed going into this save — see worker/src/utils/versionChangeSummary.ts. "" for rows saved before this column existed (migrations/0028). */
+  changeSummary: string;
 }
 
 /** How many past versions to keep per resume — see snapshot()'s prune step. Chosen as a reasonable "undo the last several edits" window without letting the table grow unbounded on a resume that's edited constantly. */
@@ -100,12 +102,15 @@ export class ResumeVersionRepository {
    * resume — called with the *pre-update* Resume in ResumeService.update,
    * so each version represents "how this resume looked right before this
    * save," and with the *pre-restore* Resume in restoreVersion, so undoing a
-   * restore is itself possible.
+   * restore is itself possible. `changeSummary` is a short human-readable
+   * note on what the upcoming save is about to change (see
+   * utils/versionChangeSummary.ts), stored alongside this pre-update
+   * snapshot so Version History can show it next to the version it led into.
    */
-  async snapshot(resume: Resume): Promise<void> {
+  async snapshot(resume: Resume, changeSummary: string): Promise<void> {
     await this.db
-      .prepare(`INSERT INTO resume_versions ("id", "resumeId", "snapshot", "createdAt") VALUES (?, ?, ?, ?)`)
-      .bind(nanoid(12), resume.id, JSON.stringify(toSnapshot(resume)), new Date().toISOString())
+      .prepare(`INSERT INTO resume_versions ("id", "resumeId", "snapshot", "createdAt", "changeSummary") VALUES (?, ?, ?, ?, ?)`)
+      .bind(nanoid(12), resume.id, JSON.stringify(toSnapshot(resume)), new Date().toISOString(), changeSummary)
       .run();
 
     await this.db
@@ -122,18 +127,22 @@ export class ResumeVersionRepository {
   /** Newest first — see ResumeController.listVersions. */
   async listForResume(resumeId: string): Promise<ResumeVersionRecord[]> {
     const { results } = await this.db
-      .prepare(`SELECT "id", "resumeId", "snapshot", "createdAt" FROM resume_versions WHERE "resumeId" = ? ORDER BY "createdAt" DESC`)
+      .prepare(
+        `SELECT "id", "resumeId", "snapshot", "createdAt", "changeSummary" FROM resume_versions WHERE "resumeId" = ? ORDER BY "createdAt" DESC`
+      )
       .bind(resumeId)
-      .all<{ id: string; resumeId: string; snapshot: string; createdAt: string }>();
+      .all<{ id: string; resumeId: string; snapshot: string; createdAt: string; changeSummary: string }>();
     return results.map((r) => ({ ...r, snapshot: JSON.parse(r.snapshot) as ResumeVersionSnapshot }));
   }
 
   /** Scoped to resumeId too (not just the version's own id) so one user can never restore/view a version row belonging to someone else's resume by guessing a version id. */
   async findById(resumeId: string, versionId: string): Promise<ResumeVersionRecord | undefined> {
     const row = await this.db
-      .prepare(`SELECT "id", "resumeId", "snapshot", "createdAt" FROM resume_versions WHERE "id" = ? AND "resumeId" = ?`)
+      .prepare(
+        `SELECT "id", "resumeId", "snapshot", "createdAt", "changeSummary" FROM resume_versions WHERE "id" = ? AND "resumeId" = ?`
+      )
       .bind(versionId, resumeId)
-      .first<{ id: string; resumeId: string; snapshot: string; createdAt: string }>();
+      .first<{ id: string; resumeId: string; snapshot: string; createdAt: string; changeSummary: string }>();
     return row ? { ...row, snapshot: JSON.parse(row.snapshot) as ResumeVersionSnapshot } : undefined;
   }
 }

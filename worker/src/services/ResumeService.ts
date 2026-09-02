@@ -11,6 +11,7 @@ import { CATEGORY_MIN_TIER, canUseTemplate, getTemplateByKey } from "../config/t
 import { canUseVisibility, VISIBILITY_LABEL, VISIBILITY_MIN_TIER } from "../config/visibilityAccess";
 import { getPlan } from "../config/subscriptionPlans";
 import { getProfessionByKey } from "../config/professions";
+import { summarizeVersionChange } from "../utils/versionChangeSummary";
 
 /**
  * SCOPE NOTE (Phase 3 admin console port): the template-tier gate below
@@ -287,7 +288,7 @@ export class ResumeService {
     // Activate/Deactivate doesn't spend one of the 20 kept versions on a
     // change that has nothing to do with the resume's actual content.
     if (!isLinkOnlyChange) {
-      await this.versions.snapshot(existing);
+      await this.versions.snapshot(existing, summarizeVersionChange(existing, input));
     }
 
     const templateChanging = !!input.templateKey && input.templateKey !== existing.templateKey;
@@ -484,7 +485,7 @@ export class ResumeService {
     const version = await this.versions.findById(resumeId, versionId);
     if (!version) throw new VersionNotFoundError("That version could not be found.");
 
-    await this.versions.snapshot(current);
+    await this.versions.snapshot(current, "Restored an earlier version");
 
     const s = version.snapshot;
     const updated = await this.resumes.update(resumeId, {

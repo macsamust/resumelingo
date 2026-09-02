@@ -428,6 +428,8 @@ export interface ResumeVersion {
   id: string;
   createdAt: string;
   snapshot: { title: string };
+  /** Short auto-generated note on what changed going into this save, e.g. "Switched template from Modern to Classic" — see worker's utils/versionChangeSummary.ts. "" for versions saved before this field existed. */
+  changeSummary: string;
 }
 
 export interface DashboardSummary {
