@@ -647,8 +647,14 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
    live preview frame — opening upward left almost no room before hitting
    that clipped edge, so the bubble barely showed. Opens downward here
    instead, into the rest of the scrollable area below it. */
-.ats-mini-head .info-tooltip-bubble { bottom: auto; top: calc(100% + 8px); }
-.ats-mini-head .info-tooltip-bubble::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: var(--navy); }
+/* Also shifted from centered to left-anchored: the base rule centers the
+   240px bubble on the icon (left: 50%; translateX(-50%)), but this icon
+   sits near the left edge of the narrow ATS mini-card, so a centered bubble
+   overflows past the card/viewport's left edge and gets clipped (its first
+   word cut off). Anchoring the bubble's left edge to the icon instead means
+   it only ever extends rightward, into space the narrow card actually has. */
+.ats-mini-head .info-tooltip-bubble { bottom: auto; top: calc(100% + 8px); left: 0; transform: none; }
+.ats-mini-head .info-tooltip-bubble::after { top: auto; bottom: 100%; left: 8px; transform: none; border-top-color: transparent; border-bottom-color: var(--navy); }
 .experience-remove { padding: 6px 12px; font-size: 12.5px; }
 /* Move Up/Down/Duplicate/Remove row for each entry in a list editor
    (Experience, Education, Awards, Key Achievements, References) — see
