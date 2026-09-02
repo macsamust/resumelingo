@@ -536,6 +536,14 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .coach-exchange { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px 24px; }
 .coach-question { font-weight: 700; font-size: 15px; color: var(--navy); margin-bottom: 10px; }
 .coach-answer p { font-size: 14.5px; line-height: 1.7; color: var(--navy-light); }
+/* Poly's avatar next to each answer — gives the AI response a face rather
+   than reading as an anonymous text block, same "bring the mascot to life"
+   goal as the page heading ("Your Career Coach Poly") and nav label ("Ask
+   Poly"). Sits at the top of .coach-answer, left of the answer text. */
+.coach-answer-row { display: flex; gap: 12px; align-items: flex-start; }
+.coach-answer-avatar { flex: 0 0 auto; }
+.coach-answer-body { flex: 1 1 auto; min-width: 0; }
+.coach-thinking { display: flex; align-items: center; gap: 10px; }
 .coach-related-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; }
 .coach-related-links a { font-size: 13px; font-weight: 600; color: var(--indigo); }
 .coach-input-row { display: flex; gap: 10px; }

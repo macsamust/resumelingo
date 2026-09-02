@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
+import { ParrotLogo } from "../components/brand/ParrotLogo";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, careerCoachApi } from "../api";
 import { CareerCoachAnswer } from "../api/CareerCoachApi";
@@ -16,11 +17,16 @@ function CareerCoachLocked() {
   return (
     <AppShell>
       <div className="app-page-head">
-        <h1>Career Coach</h1>
+        <h1>Ask Poly</h1>
       </div>
       <div className="empty-state">
-        <p>The AI Career Coach is a Premium feature. Upgrade your plan to start asking questions.</p>
-        <Link to="/dashboard" className="btn btn-primary">
+        <div className="coach-answer-row" style={{ justifyContent: "center" }}>
+          <div className="coach-answer-avatar">
+            <ParrotLogo size={40} decorative={false} />
+          </div>
+          <p style={{ margin: 0 }}>I'm Poly, your AI Career Coach — but I'm a Premium perk. Upgrade your plan and I'll start answering.</p>
+        </div>
+        <Link to="/dashboard" className="btn btn-primary" style={{ marginTop: 16 }}>
           Upgrade my plan
         </Link>
       </div>
@@ -67,7 +73,7 @@ export function CareerCoachPage() {
   return (
     <AppShell>
       <div className="app-page-head">
-        <h1>Your Career Coach Poly</h1>
+        <h1>Ask Poly, your Career Coach</h1>
       </div>
       <p className="hero-note" style={{ marginBottom: 20 }}>
         Ask about salary negotiation, interview prep, or which certifications to pursue. Nothing here is saved.
@@ -85,28 +91,43 @@ export function CareerCoachPage() {
 
       <div className="coach-thread">
         {exchanges.length === 0 && !asking && (
-          <p className="hero-note" style={{ fontStyle: "italic" }}>
-            Pick a question above, or type your own below.
-          </p>
+          <div className="coach-answer-row">
+            <div className="coach-answer-avatar">
+              <ParrotLogo size={32} decorative={false} />
+            </div>
+            <p className="hero-note coach-answer-body" style={{ fontStyle: "italic" }}>
+              Hey, I'm Poly — pick a question above, or type your own below, and I'll help you work through it.
+            </p>
+          </div>
         )}
         {exchanges.map((ex, i) => (
           <div className="coach-exchange" key={i}>
             <p className="coach-question">{ex.question}</p>
-            <div className="coach-answer">
-              <p style={{ whiteSpace: "pre-line" }}>{ex.answer.answer}</p>
-              {ex.answer.relatedLinks.length > 0 && (
-                <p className="coach-related-links">
-                  {ex.answer.relatedLinks.map((link) => (
-                    <Link key={link.label} to={link.anchor ? `/career-center#${link.anchor}` : "/career-center"}>
-                      {link.label} →
-                    </Link>
-                  ))}
-                </p>
-              )}
+            <div className="coach-answer coach-answer-row">
+              <div className="coach-answer-avatar">
+                <ParrotLogo size={32} decorative={false} />
+              </div>
+              <div className="coach-answer-body">
+                <p style={{ whiteSpace: "pre-line" }}>{ex.answer.answer}</p>
+                {ex.answer.relatedLinks.length > 0 && (
+                  <p className="coach-related-links">
+                    {ex.answer.relatedLinks.map((link) => (
+                      <Link key={link.label} to={link.anchor ? `/career-center#${link.anchor}` : "/career-center"}>
+                        {link.label} →
+                      </Link>
+                    ))}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         ))}
-        {asking && <p className="hero-note">Thinking…</p>}
+        {asking && (
+          <div className="hero-note coach-thinking">
+            <ParrotLogo size={24} decorative={false} />
+            <span>Poly is thinking…</span>
+          </div>
+        )}
       </div>
 
       <form onSubmit={onSubmit} className="coach-input-row">
