@@ -64,7 +64,7 @@ export class DashboardController {
       sharedLinks: resumes.map((r) => ({ title: r.title, slug: r.slug, visibility: r.visibility })),
       resumeViews: resumes.reduce((sum, r) => sum + r.viewCount, 0),
       profileStrengthScore: averageStrengthScore(resumes),
-      suggestedImprovements: suggestImprovements(resumes),
+      suggestedImprovements: suggestImprovements(resumes, user.subscriptionTier),
       resumeAnalytics,
       recentViews,
       subscription: usage,
@@ -101,9 +101,15 @@ function averageStrengthScore(resumes: Resume[]): number {
   return Math.round(total / resumes.length);
 }
 
-function suggestImprovements(resumes: Resume[]): string[] {
+function suggestImprovements(resumes: Resume[], tier: SubscriptionTier): string[] {
   if (resumes.length === 0) {
-    return ["Create your first resume to get a Profile Strength Score."];
+    // Profile Strength Score is a Professional/Premium perk (see
+    // DashboardPage's showViewsAndStrengthTiles) — Starter accounts never
+    // see that tile, so pointing them at it here would be a dead-end
+    // suggestion. Point them at the thing they can actually do instead.
+    return tier === SubscriptionTier.Starter
+      ? ["Create your first resume to get started."]
+      : ["Create your first resume to get a Profile Strength Score."];
   }
   const suggestions = new Set<string>();
   for (const resume of resumes) {
