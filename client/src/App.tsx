@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Navbar } from "./components/layout/Navbar";
 import { Footer } from "./components/layout/Footer";
+import { ScrollToTop } from "./components/layout/ScrollToTop";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { LandingPage } from "./pages/LandingPage";
 import { CareerCenterPage } from "./pages/CareerCenterPage";
@@ -43,6 +44,7 @@ export default function App() {
 
   return (
     <>
+      <ScrollToTop />
       {!isPublicResumeRoute && !isAdminRoute && <Navbar />}
       <Routes>
         <Route path="/" element={<LandingPage />} />
