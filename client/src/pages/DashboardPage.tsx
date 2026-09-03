@@ -249,7 +249,7 @@ export function DashboardPage() {
         <div className="empty-state poly-hero" style={{ marginBottom: isPremium ? 36 : 0 }}>
           <PolyAvatar size={96} />
           <p style={{ margin: 0 }}>
-            Hey, I'm Poly. You don't have any resumes yet — let's build your first one.
+            Hey, I'm Poly. You don't have any resumes yet let's build your first one.
           </p>
           <Link to="/resumes/new" className="btn btn-primary">
             Create your first resume
