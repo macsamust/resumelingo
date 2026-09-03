@@ -48,6 +48,11 @@ function makeUsersMock(overrides: Partial<UserRepository> = {}) {
     setResetToken: vi.fn(),
     findByResetTokenHash: vi.fn(),
     resetPassword: vi.fn(),
+    // register() -> sendVerificationEmail always calls this too; missing it
+    // threw inside that swallowed .catch() on every register() test,
+    // logging harmless-but-noisy "setVerificationToken is not a function"
+    // stderr output.
+    setVerificationToken: vi.fn(),
     ...overrides,
   } as unknown as UserRepository;
 }
