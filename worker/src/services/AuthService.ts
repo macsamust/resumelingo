@@ -66,6 +66,12 @@ export class AuthService {
     // account just stays unverified until the user hits "resend
     // verification" from the AppShell banner.
     await this.sendVerificationEmail(user).catch((err) => console.error("Failed to send verification email on register", err));
+    // Separate from the verification email above (see EmailService's doc
+    // comment) — same "never let an email failure break signup" swallowed
+    // catch as everywhere else in this file.
+    await this.emailService
+      .sendWelcomeEmail(user.email, user.name, `${this.clientOrigin.replace(/\/$/, "")}/dashboard`)
+      .catch((err) => console.error("Failed to send welcome email on register", err));
     return { user, token };
   }
 

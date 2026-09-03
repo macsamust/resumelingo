@@ -91,6 +91,61 @@ export class EmailService {
     });
   }
 
+  /**
+   * Sent once, right after AuthService.register() — alongside (not instead
+   * of) the verification email above, which stays focused purely on proving
+   * the address. This one is the "yes, your account exists" receipt: it
+   * restates the email the account is under and gives a durable link back
+   * to the app, since a surprising number of signups close the tab and
+   * later can't remember where they signed up. Deliberately never includes
+   * a password, even a freshly-chosen one — plaintext credentials sitting
+   * in an inbox indefinitely is a real security anti-pattern regardless of
+   * how the account was created.
+   */
+  async sendWelcomeEmail(to: string, name: string, loginUrl: string): Promise<void> {
+    await this.send({
+      to,
+      subject: "Welcome to ResumeLingo",
+      html: `
+        <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
+          <h2 style="margin-bottom: 8px;">Welcome to ResumeLingo, ${name}!</h2>
+          <p>Your account is set up under <strong>${to}</strong>. You can build your first resume any time from your dashboard.</p>
+          <p style="margin: 24px 0;">
+            <a href="${loginUrl}" style="background: #4f46e5; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Go to your dashboard</a>
+          </p>
+          <p style="color: #64748b; font-size: 13px;">Check your inbox for a separate email to verify your address, if you haven't already.</p>
+          <p style="color: #94a3b8; font-size: 12px; word-break: break-all;">Or paste this link into your browser: ${loginUrl}</p>
+        </div>
+      `,
+    });
+  }
+
+  /**
+   * Sent once per transition into an active paid tier (see
+   * SubscriptionService.syncSubscription — not on every renewal, only when
+   * the tier actually changes) — the app's own confirmation that the
+   * subscription is live, distinct from whatever generic payment receipt
+   * Stripe itself may send. Not a financial receipt (no amount/card
+   * details) — Stripe already owns that, and duplicating it risks drifting
+   * out of sync with proration/discounts/tax Stripe actually applied.
+   */
+  async sendSubscriptionConfirmationEmail(to: string, planName: string, dashboardUrl: string): Promise<void> {
+    await this.send({
+      to,
+      subject: `You're on the ${planName} plan`,
+      html: `
+        <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
+          <h2 style="margin-bottom: 8px;">You're now on the ${planName} plan</h2>
+          <p>Thanks for subscribing to ResumeLingo ${planName}. Your account has been updated and everything included in this plan is available now.</p>
+          <p style="margin: 24px 0;">
+            <a href="${dashboardUrl}" style="background: #4f46e5; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Go to your dashboard</a>
+          </p>
+          <p style="color: #64748b; font-size: 13px;">This isn't a billing receipt — for a record of the charge itself, check the payment confirmation from Stripe.</p>
+        </div>
+      `,
+    });
+  }
+
   /** Weekly re-engagement digest (ViewDigestService) — "N views this week" plus a mandatory unsubscribe link (CAN-SPAM requirement for any recurring email like this). */
   async sendViewDigestEmail(to: string, input: { totalViews: number; unsubscribeUrl: string }): Promise<void> {
     const viewsLabel = input.totalViews === 1 ? "1 view" : `${input.totalViews} views`;

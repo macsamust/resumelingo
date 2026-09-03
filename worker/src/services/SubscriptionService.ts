@@ -134,7 +134,27 @@ export class SubscriptionService {
     const currentPeriodEnd = isActive && subscription.current_period_end
       ? new Date(subscription.current_period_end * 1000).toISOString()
       : null;
+
+    // Captured before the write below, so this reflects the tier the
+    // account was actually on going into this webhook — not a naive
+    // "isActive" check, since that alone would also fire an email on every
+    // one of Stripe's renewal `customer.subscription.updated` events
+    // (still active, same tier, nothing the subscriber needs to be told).
+    const tierChanged = finalTier !== user.subscriptionTier;
+
     await this.users.applyStripeSubscription(user.id, finalTier, isActive ? subscription.id : null, cancelAtPeriodEnd, currentPeriodEnd);
+
+    // Only on an actual transition into an active paid tier — covers both
+    // a first-time subscribe and a Professional<->Premium change, but not a
+    // renewal (still active, same tier) or a cancellation (isActive false,
+    // finalTier === Starter — no "you're subscribed" confirmation makes
+    // sense there).
+    if (isActive && tierChanged) {
+      const plan = getPlan(finalTier);
+      await this.email.sendSubscriptionConfirmationEmail(user.email, plan.name, `${this.clientOrigin}/dashboard`).catch((err) => {
+        console.error("Failed to send subscription confirmation email:", err);
+      });
+    }
   }
 
   /**

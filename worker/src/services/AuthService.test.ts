@@ -65,7 +65,19 @@ function makeTokensMock() {
 }
 
 function makeEmailMock() {
-  return { sendPasswordResetEmail: vi.fn(async () => {}) } as unknown as EmailService;
+  // register() calls sendVerificationEmail (via the private
+  // sendVerificationEmail helper) and, since this session's change,
+  // sendWelcomeEmail directly — both need to exist on the mock, or calling
+  // an undefined method rejects register()'s own returned promise (it's an
+  // async function, so a synchronous "X is not a function" throw inside it
+  // becomes a rejection, not an uncaught exception), breaking the "creates
+  // a user and returns a signed token" test below even though both sends
+  // are individually .catch()'d in the real service.
+  return {
+    sendPasswordResetEmail: vi.fn(async () => {}),
+    sendVerificationEmail: vi.fn(async () => {}),
+    sendWelcomeEmail: vi.fn(async () => {}),
+  } as unknown as EmailService;
 }
 
 describe("AuthService.register", () => {
