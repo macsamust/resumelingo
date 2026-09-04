@@ -29,7 +29,7 @@ import {
 } from "../../types";
 
 const VISIBILITY_OPTIONS: LinkVisibility[] = ["public", "private", "password"];
-const PHOTO_FAMILIES = ["photo-banner-sidebar", "corner-photo-sidebar", "photo-sidebar-underline", "pill-grid-cards"];
+const PHOTO_FAMILIES = ["photo-banner-sidebar", "corner-photo-sidebar", "photo-sidebar-underline", "pill-grid-cards", "photo-header-list"];
 
 /**
  * Full content editor for any user's resume — a support-case tool that

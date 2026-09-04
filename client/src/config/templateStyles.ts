@@ -25,7 +25,8 @@ export type LayoutFamily =
   | "photo-banner-sidebar"
   | "corner-photo-sidebar"
   | "photo-sidebar-underline"
-  | "pill-grid-cards";
+  | "pill-grid-cards"
+  | "photo-header-list";
 export type Flow = "summary-first" | "bullets-first";
 
 export interface TemplateStyle {
@@ -405,6 +406,19 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     flow: "summary-first", summaryLabel: "Summary", bulletsLabel: "Key Achievements",
     experienceLabel: "Work Experience", skillsLabel: "Professional Skills", toolsLabel: "Technical Skills",
     contactSeparator: " | ", skillsSeparator: " | ", educationAfterSkills: true,
+  },
+
+  // Bold oversized name and a warm tan/gold role line on the left, an intro
+  // paragraph beneath, a dotted decorative grid and a grayscale photo on the
+  // right, contact info tucked under the photo — then a single-column body
+  // below where each Experience/Education entry lays out as a two-column
+  // row (title/dates/company on the left, description on the right) rather
+  // than every other family's stacked layout. See ResumePreview.tsx's
+  // "photo-header-list" branch and global.css's .tpl-photolist-* rules.
+  profile: {
+    family: "photo-header-list",
+    accent: "#b9895a", accentSoft: "#f4ebe0", font: SANS_GEOMETRIC,
+    flow: "summary-first", summaryLabel: "Profile", bulletsLabel: "Highlights",
   },
 };
 

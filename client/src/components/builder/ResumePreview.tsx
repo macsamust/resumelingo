@@ -891,6 +891,48 @@ export function ResumePreview({
     );
   }
 
+  if (style.family === "photo-header-list") {
+    // Summary renders directly in the header (like pill-grid-cards' intro
+    // paragraph) rather than via the generic summaryBlock further down, so
+    // it doesn't render twice.
+    return (
+      <div className="preview-col">
+        {templateTag}
+        <div className="preview-panel tpl-photo-header-list" style={cssVars}>
+          <div className="tpl-photolist-header">
+            <div className="tpl-photolist-header-text">
+              {fullName && <p className="tpl-fullname">{fullName}</p>}
+              <h2>{heading}</h2>
+              {summary ? (
+                <p className="tpl-photolist-intro">{summary}</p>
+              ) : (
+                <p className="tpl-photolist-intro" style={{ color: "var(--muted)", fontStyle: "italic" }}>
+                  Your AI generated summary will appear here once you save.
+                </p>
+              )}
+            </div>
+            <div className="tpl-photolist-header-photo">
+              <div className="tpl-photolist-dots" aria-hidden="true" />
+              {photoUrl && (
+                <img src={photoUrl} alt={fullName ? `${fullName}'s photo` : "Profile photo"} className="tpl-photolist-photo-img" />
+              )}
+              {contactLine}
+            </div>
+          </div>
+          <div className="tpl-photolist-body">
+            {clearanceBannerBlock}
+            {experienceBlock}
+            {educationBlock}
+            {bulletsBlock}
+            {skillsAndToolsBlock}
+            {awardsBlock}
+            {languagesBlock}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // executive-banner, centered-serif, cv-academic, and minimal-clean all share
   // the same single-column structure — the CSS classes per family (see
   // global.css) plus bannerAlign are what actually make them look distinct.

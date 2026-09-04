@@ -26,6 +26,7 @@ export const TEMPLATES: TemplateDefinition[] = [
   { key: "spotlight", name: "Spotlight", description: "Circular photo beside the name on a colored banner header, with Hard Skills/Soft Skills and Workshops & Training sections.", category: TemplateCategory.Premium },
   { key: "boardroom", name: "Boardroom", description: "Full width navy and gold banner header with a bold serif name, for senior and board level roles. Single column and ATS friendly.", category: TemplateCategory.Premium },
   { key: "ats-optimized", name: "ATS Optimized", description: "Single column, plain section headers, and no photos or graphics, built to parse cleanly through applicant tracking systems.", category: TemplateCategory.Premium },
+  { key: "profile", name: "Profile", description: "Oversized name and a dotted photo header, over a clean two-column Experience and Education list.", category: TemplateCategory.Premium },
 ];
 
 export function getTemplateByKey(key: string): TemplateDefinition | undefined {

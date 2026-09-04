@@ -50,6 +50,7 @@ const SKILLS_AND_TOOLS_TEMPLATE_KEYS = new Set([
   "spotlight",
   "boardroom",
   "ats-optimized",
+  "profile",
 ]);
 
 /** Whether `templateKey`'s layout has a "Skills & Tools" section at all — see SKILLS_AND_TOOLS_TEMPLATE_KEYS. */
