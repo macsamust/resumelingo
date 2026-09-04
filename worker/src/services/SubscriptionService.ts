@@ -1,10 +1,23 @@
 import Stripe from "stripe";
 import { UserRepository } from "../repositories/UserRepository";
+import { ResumeRepository } from "../repositories/ResumeRepository";
 import { getPlan } from "../config/subscriptionPlans";
 import { SubscriptionTier } from "../types";
 import { User } from "../models/User";
 import { StripeService } from "./StripeService";
 import { EmailService } from "./EmailService";
+
+/**
+ * Template swapped in on a Starter -> Professional upgrade for anyone still
+ * on the Basic-tier "starter default" template — see syncSubscription's
+ * upgradeStarterTemplate. Classic is the template new resumes start on
+ * (ResumeBuilderPage), so a subscriber who never touched it shouldn't be
+ * stuck looking like they're still on the free tier the moment they've paid
+ * to upgrade. Not applied to any other template — this only replaces the
+ * specific "didn't pick one" default, never a template someone chose on purpose.
+ */
+const STARTER_DEFAULT_TEMPLATE_KEY = "classic";
+const UPGRADED_DEFAULT_TEMPLATE_KEY = "consulting";
 
 /**
  * Same responsibilities as the Node/Express SubscriptionService. One
@@ -22,7 +35,8 @@ export class SubscriptionService {
     private readonly professionalPriceId: string | undefined,
     private readonly premiumPriceId: string | undefined,
     private readonly email: EmailService,
-    private readonly clientOrigin: string
+    private readonly clientOrigin: string,
+    private readonly resumes: ResumeRepository
   ) {}
 
   private priceIdFor(tier: SubscriptionTier): string | undefined {
@@ -154,6 +168,25 @@ export class SubscriptionService {
       await this.email.sendSubscriptionConfirmationEmail(user.email, plan.name, `${this.clientOrigin}/dashboard`).catch((err) => {
         console.error("Failed to send subscription confirmation email:", err);
       });
+    }
+
+    // Specifically Starter -> Professional (not Starter -> Premium, and not
+    // Professional -> Premium) — see STARTER_DEFAULT_TEMPLATE_KEY's doc
+    // comment above for why only this one transition swaps a template out
+    // from under the subscriber.
+    if (tierChanged && user.subscriptionTier === SubscriptionTier.Starter && finalTier === SubscriptionTier.Professional) {
+      await this.upgradeStarterTemplate(user.id).catch((err) => {
+        console.error("Failed to upgrade starter template on Professional upgrade:", err);
+      });
+    }
+  }
+
+  /** Switches every one of this user's resumes still on the Starter-default Classic template to Consulting. Leaves any resume where they picked a different template alone. */
+  private async upgradeStarterTemplate(userId: string): Promise<void> {
+    const resumes = await this.resumes.findAllForUser(userId);
+    for (const resume of resumes) {
+      if (resume.templateKey !== STARTER_DEFAULT_TEMPLATE_KEY) continue;
+      await this.resumes.update(resume.id, { templateKey: UPGRADED_DEFAULT_TEMPLATE_KEY }, { bumpUpdatedAt: false });
     }
   }
 

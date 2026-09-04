@@ -138,7 +138,8 @@ export function createServices(env: Env): Services {
     env.STRIPE_PRICE_PROFESSIONAL,
     env.STRIPE_PRICE_PREMIUM,
     emailService,
-    env.CLIENT_ORIGIN
+    env.CLIENT_ORIGIN,
+    resumeRepo
   );
   const adminService = new AdminService(adminRepo, adminTokenService, env.ADMIN_EMAIL, env.ADMIN_PASSWORD);
   const resumeImportService = new ResumeImportService(env.AI);
