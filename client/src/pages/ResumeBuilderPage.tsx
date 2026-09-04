@@ -76,7 +76,7 @@ export function ResumeBuilderPage() {
 
   // The photo upload only applies to templates that actually render a photo
   // (Portrait, Designer, Monochrome, Showcase) — hidden for every other template.
-  const PHOTO_FAMILIES = ["photo-banner-sidebar", "corner-photo-sidebar", "photo-sidebar-underline", "pill-grid-cards", "photo-header-list", "dark-card-grid"];
+  const PHOTO_FAMILIES = ["photo-banner-sidebar", "corner-photo-sidebar", "photo-sidebar-underline", "pill-grid-cards", "photo-header-list", "dark-card-grid", "bordered-ledger"];
   const usesPhoto = PHOTO_FAMILIES.includes(getTemplateStyle(templateKey).family);
 
   // "Generate AI cover letter" is only offered for Premium-tier templates —

@@ -27,7 +27,8 @@ export type LayoutFamily =
   | "photo-sidebar-underline"
   | "pill-grid-cards"
   | "photo-header-list"
-  | "dark-card-grid";
+  | "dark-card-grid"
+  | "bordered-ledger";
 export type Flow = "summary-first" | "bullets-first";
 
 export interface TemplateStyle {
@@ -432,6 +433,20 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     family: "dark-card-grid",
     accent: "#93e6ac", accentSoft: "#3d4152", font: SANS_GEOMETRIC,
     flow: "summary-first", summaryLabel: "Profile", bulletsLabel: "Skill",
+  },
+
+  // A thick black frame around a cream page, bold black headline name
+  // beside a rectangular photo, plain black rule dividers between every
+  // section (short rule above the name, full-width between sections), a
+  // date-then-details two-column row per Experience entry, and a
+  // three-column footer (Skills / Education / Contact) separated by
+  // vertical rules. See ResumePreview.tsx's "bordered-ledger" branch and
+  // global.css's .tpl-ledger-* rules.
+  ledger: {
+    family: "bordered-ledger",
+    accent: "#111827", accentSoft: "#f6f4f0", font: SANS_GEOMETRIC,
+    flow: "summary-first", summaryLabel: "Professional Summary", bulletsLabel: "Skills",
+    experienceLabel: "Professional Experience",
   },
 };
 

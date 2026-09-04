@@ -28,6 +28,7 @@ export const TEMPLATES: TemplateDefinition[] = [
   { key: "ats-optimized", name: "ATS Optimized", description: "Single column, plain section headers, and no photos or graphics, built to parse cleanly through applicant tracking systems.", category: TemplateCategory.Premium },
   { key: "profile", name: "Profile", description: "Oversized name and a dotted photo header, over a clean two-column Experience and Education list.", category: TemplateCategory.Premium },
   { key: "slate", name: "Slate", description: "Dark slate background with decorative accents behind a two-column grid of floating white cards.", category: TemplateCategory.Premium },
+  { key: "ledger", name: "Ledger", description: "Thick black frame, bold headline name beside a photo, and plain rule dividers between every section.", category: TemplateCategory.Premium },
 ];
 
 export function getTemplateByKey(key: string): TemplateDefinition | undefined {

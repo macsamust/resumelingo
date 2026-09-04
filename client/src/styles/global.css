@@ -1501,6 +1501,63 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .tpl-dark-quote-card .tpl-section-label { justify-content: center; }
 .tpl-dark-quote-card .preview-summary { text-align: center; }
 
+/* bordered-ledger: a thick black frame around a cream page, a bold black
+   headline name beside a rectangular photo, plain black rule dividers
+   between every section (a short rule above the name, full-width rules
+   between sections), a date-then-details two-column row per Experience
+   entry, and a three-column footer (Skills / Education / Contact)
+   separated by vertical rules — monochrome ink-on-paper look, no accent
+   color anywhere. */
+.tpl-bordered-ledger { padding: 0; border: 3px solid #111827; border-radius: 4px; background: var(--tpl-accent-soft); }
+.tpl-ledger-inner { padding: 30px 34px 34px; }
+.tpl-ledger-header { display: flex; align-items: flex-start; gap: 26px; }
+.tpl-ledger-photo-img, .tpl-ledger-photo-badge { width: 130px; height: 150px; flex-shrink: 0; object-fit: cover; }
+.tpl-ledger-photo-badge {
+  display: flex; align-items: center; justify-content: center; background: #fff; border: 1px solid #111827;
+  color: #111827; font-size: 34px; font-weight: 800;
+}
+.tpl-ledger-header-text { flex: 1; min-width: 0; padding-top: 4px; }
+/* Spans the full width of the header-text column so its right endpoint
+   lines up with the full-width rules below it, instead of stopping short
+   partway across. */
+.tpl-ledger-rule-short { width: 100%; height: 3px; background: #111827; margin-bottom: 14px; }
+.tpl-ledger-header-text .tpl-fullname {
+  font-weight: 800; font-size: 34px; line-height: 1.05; letter-spacing: -.01em; text-transform: uppercase; color: #111827;
+}
+.tpl-ledger-header-text h2 { font-size: 16px; font-weight: 500; color: #111827; margin-top: 6px; }
+.tpl-ledger-rule { height: 3px; background: #111827; margin: 24px 0; }
+.tpl-bordered-ledger .tpl-section-label {
+  font-size: 15px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; color: #111827; margin-bottom: 12px;
+}
+.tpl-bordered-ledger .tpl-section-label::before { display: none; }
+.tpl-bordered-ledger .tpl-section + .tpl-section { border-top: none; margin-top: 20px; padding-top: 0; }
+/* Each Experience entry becomes a two-column row: the date range alone in
+   a narrow left column, everything else (title, company, nested bullets)
+   in the wider right column — the opposite grouping from every other
+   family's markup, achieved by making the head row "display: contents" so
+   its title/dates spans can be placed independently on the shared grid. */
+.tpl-bordered-ledger .tpl-experience-item {
+  display: grid; grid-template-columns: 18% 1fr; column-gap: 20px; margin-bottom: 22px;
+}
+.tpl-bordered-ledger .tpl-experience-item:last-child { margin-bottom: 0; }
+.tpl-bordered-ledger .tpl-experience-head { display: contents; }
+.tpl-bordered-ledger .tpl-experience-title { grid-column: 2; grid-row: 1; }
+.tpl-bordered-ledger .tpl-experience-dates { grid-column: 1; grid-row: 1; font-weight: 700; color: #111827; white-space: normal; }
+.tpl-bordered-ledger .tpl-experience-company { grid-column: 2; grid-row: 2; color: var(--navy-light); font-weight: 400; }
+.tpl-bordered-ledger .tpl-experience-bullets { grid-column: 2; grid-row: 3; margin: 8px 0 0; }
+.tpl-ledger-footer {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; column-gap: 26px; position: relative;
+}
+.tpl-ledger-footer-col { min-width: 0; }
+.tpl-ledger-footer-col + .tpl-ledger-footer-col { border-left: 2px solid #111827; padding-left: 26px; }
+.tpl-ledger-contact-list { list-style: none; font-size: 13px; color: var(--navy-light); }
+.tpl-ledger-contact-list li { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; word-break: break-word; }
+.tpl-ledger-contact-list li:last-child { margin-bottom: 0; }
+.tpl-ledger-contact-icon {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: #111827; color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 11px;
+}
+
 .public-resume-page { max-width: 760px; margin: 0 auto; padding: 60px 24px; }
 .public-resume-page .preview-col { position: static; top: auto; }
 .public-resume-page .preview-panel { position: static; top: auto; margin-bottom: 24px; box-shadow: 0 20px 40px -24px rgba(15, 23, 42, .2); }
@@ -1826,6 +1883,16 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   .tpl-photolist-body .tpl-experience-bullets { grid-column: 1; grid-row: auto; margin-top: 8px; }
   .tpl-dark-grid { grid-template-columns: 1fr; }
   .tpl-dark-bar, .tpl-dark-chevrons, .tpl-dark-dots { display: none; }
+  .tpl-ledger-header { flex-direction: column; }
+  .tpl-bordered-ledger .tpl-experience-item { grid-template-columns: 1fr; }
+  .tpl-bordered-ledger .tpl-experience-head { display: flex; flex-direction: column; }
+  .tpl-bordered-ledger .tpl-experience-title,
+  .tpl-bordered-ledger .tpl-experience-dates,
+  .tpl-bordered-ledger .tpl-experience-company,
+  .tpl-bordered-ledger .tpl-experience-bullets { grid-column: 1; grid-row: auto; }
+  .tpl-bordered-ledger .tpl-experience-dates { margin-top: 2px; }
+  .tpl-ledger-footer { grid-template-columns: 1fr; row-gap: 20px; }
+  .tpl-ledger-footer-col + .tpl-ledger-footer-col { border-left: none; padding-left: 0; border-top: 2px solid #111827; padding-top: 16px; }
 }
 
 /* Modal (components/common/Modal.tsx) — a styled confirm()/prompt()
