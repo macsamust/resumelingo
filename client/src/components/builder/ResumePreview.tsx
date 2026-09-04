@@ -966,6 +966,7 @@ export function ResumePreview({
             {awardsBlock}
             {languagesBlock}
           </div>
+          <div className="tpl-photolist-dots tpl-photolist-dots-corner" aria-hidden="true" />
         </div>
       </div>
     );

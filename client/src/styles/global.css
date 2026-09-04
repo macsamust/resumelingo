@@ -1370,6 +1370,9 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .tpl-photolist-photo-img {
   width: 100%; height: 180px; object-fit: cover; border-radius: 4px; filter: grayscale(1);
 }
+/* Same dot-grid accent as above the photo, echoed in the bottom-right
+   corner of the whole resume — at the person's request. */
+.tpl-photolist-dots-corner { position: absolute; right: 20px; bottom: 20px; align-self: auto; }
 /* Bespoke contact stack (phone, then email, then LinkedIn) replacing the
    shared single-line "email · phone · linkedin" paragraph every other
    family uses — this family wants a specific order and per-line styling
