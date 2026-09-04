@@ -1531,6 +1531,11 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 }
 .tpl-bordered-ledger .tpl-section-label::before { display: none; }
 .tpl-bordered-ledger .tpl-section + .tpl-section { border-top: none; margin-top: 20px; padding-top: 0; }
+/* The Highlights & Key Achievements bullets share the "Professional
+   Experience" label text with the entries above them (at the person's
+   request, so it reads as one continuous section) — hides its own
+   repeated label so the heading doesn't print twice in a row. */
+.tpl-ledger-experience .tpl-section + .tpl-section .tpl-section-label { display: none; }
 /* Each Experience entry becomes a two-column row: the date range alone in
    a narrow left column, everything else (title, company, nested bullets)
    in the wider right column — the opposite grouping from every other
