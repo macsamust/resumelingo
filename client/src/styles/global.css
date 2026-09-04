@@ -1555,9 +1555,14 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
    already does this by default; just unbolded/muted to read as a
    secondary line, matching the rest of this template's ink-on-paper tone. */
 .tpl-ledger-footer-col .tpl-experience-company { color: var(--navy-light); font-weight: 400; }
-.tpl-ledger-footer {
-  display: grid; grid-template-columns: 1fr 1fr 1fr; column-gap: 26px; position: relative;
-}
+/* Column count follows however many of Skills & Tools/Education/Contact
+   actually have content (see ResumePreview.tsx's ledgerFooterColumns) —
+   never a fixed 3, so a subscriber missing one of these doesn't end up
+   with a blank column and a stray divider line. */
+.tpl-ledger-footer { display: grid; column-gap: 26px; position: relative; }
+.tpl-ledger-footer-cols-1 { grid-template-columns: 1fr; }
+.tpl-ledger-footer-cols-2 { grid-template-columns: 1fr 1fr; }
+.tpl-ledger-footer-cols-3 { grid-template-columns: 1fr 1fr 1fr; }
 .tpl-ledger-footer-col { min-width: 0; }
 .tpl-ledger-footer-col + .tpl-ledger-footer-col { border-left: 2px solid #111827; padding-left: 26px; }
 .tpl-ledger-contact-list { list-style: none; font-size: 13px; color: var(--navy-light); }

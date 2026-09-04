@@ -51,6 +51,7 @@ const SKILLS_AND_TOOLS_TEMPLATE_KEYS = new Set([
   "boardroom",
   "ats-optimized",
   "profile",
+  "ledger",
 ]);
 
 /** Whether `templateKey`'s layout has a "Skills & Tools" section at all — see SKILLS_AND_TOOLS_TEMPLATE_KEYS. */

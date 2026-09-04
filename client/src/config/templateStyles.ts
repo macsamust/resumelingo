@@ -445,7 +445,7 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
   ledger: {
     family: "bordered-ledger",
     accent: "#111827", accentSoft: "#f6f4f0", font: SANS_GEOMETRIC,
-    flow: "summary-first", summaryLabel: "Professional Summary", bulletsLabel: "Skills",
+    flow: "summary-first", summaryLabel: "Professional Summary", bulletsLabel: "Highlights & Key Achievements",
     experienceLabel: "Professional Experience",
   },
 };

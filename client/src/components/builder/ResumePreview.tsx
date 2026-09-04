@@ -1076,6 +1076,24 @@ export function ResumePreview({
       </ul>
     );
 
+    // Footer columns only render when they actually have content — same
+    // "no empty section" rule every other block in this file follows — and
+    // the grid's column count follows however many are left (1-3), so a
+    // subscriber with no Skills & Tools entries doesn't end up with a
+    // blank column and a stray divider line next to Education/Contact.
+    const ledgerFooterColumns = [
+      skillsAndToolsBlock && <div className="tpl-ledger-footer-col" key="skills">{skillsAndToolsBlock}</div>,
+      educationBlock && <div className="tpl-ledger-footer-col" key="education">{educationBlock}</div>,
+      contactList && (
+        <div className="tpl-ledger-footer-col" key="contact">
+          <div className="tpl-section">
+            {sectionLabel("Contact")}
+            {contactList}
+          </div>
+        </div>
+      ),
+    ].filter(Boolean) as JSX.Element[];
+
     return (
       <div className="preview-col">
         {templateTag}
@@ -1101,18 +1119,18 @@ export function ResumePreview({
             {clearanceBannerBlock}
             {summaryBlock}
             <div className="tpl-ledger-rule" aria-hidden="true" />
-            <div className="tpl-ledger-experience">{experienceBlock}</div>
-            <div className="tpl-ledger-rule" aria-hidden="true" />
-            <div className="tpl-ledger-footer">
-              <div className="tpl-ledger-footer-col">{bulletsBlock}</div>
-              <div className="tpl-ledger-footer-col">{educationBlock}</div>
-              <div className="tpl-ledger-footer-col">
-                <div className="tpl-section">
-                  {sectionLabel("Contact")}
-                  {contactList}
-                </div>
-              </div>
+            <div className="tpl-ledger-experience">
+              {experienceBlock}
+              {bulletsBlock}
             </div>
+            {ledgerFooterColumns.length > 0 && (
+              <>
+                <div className="tpl-ledger-rule" aria-hidden="true" />
+                <div className={`tpl-ledger-footer tpl-ledger-footer-cols-${ledgerFooterColumns.length}`}>
+                  {ledgerFooterColumns}
+                </div>
+              </>
+            )}
             {awardsBlock}
             {languagesBlock}
           </div>
