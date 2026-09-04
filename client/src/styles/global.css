@@ -1360,7 +1360,17 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   color: var(--tpl-accent); font-size: 13px; font-weight: 600; letter-spacing: .01em; text-transform: uppercase;
   line-height: 1.35; margin-top: 10px;
 }
-.tpl-photolist-intro { font-size: 13px; color: var(--navy-light); line-height: 1.7; margin-top: 14px; }
+/* Questrial (already loaded for this template's contact block/section
+   labels) rather than the template's default Poppins — Poppins is only
+   loaded at weights 500+ (see index.html), so a lighter weight there
+   would quietly snap to the nearest loaded weight instead of truly
+   rendering lighter (the same bug hit on the Ledger template). Questrial
+   ships a single true regular weight, so no such risk here — plus
+   italicized, at the person's request. */
+.tpl-photolist-intro {
+  font-family: 'Questrial', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-style: italic; font-size: 13px; color: var(--muted); line-height: 1.7; margin-top: 14px;
+}
 .tpl-photolist-header-photo { flex-shrink: 0; width: 200px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
 .tpl-photolist-dots {
   align-self: flex-start; width: 96px; height: 44px;
