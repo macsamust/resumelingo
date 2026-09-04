@@ -15,7 +15,7 @@ import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
 import { ApiError, catalogApi, resumeApi } from "../api";
 import { ImportedResumeData } from "../api/ResumeImportApi";
 import { useAuth } from "../context/AuthContext";
-import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL } from "../utils/templateAccess";
+import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL, templateHasSkillsAndTools } from "../utils/templateAccess";
 import { getTemplateStyle } from "../config/templateStyles";
 import { isAtsSafeFamily } from "../utils/atsCheck";
 import { withClearanceQuestion } from "../config/clearanceQuestion";
@@ -440,7 +440,7 @@ export function ResumeBuilderPage() {
           experience={experience}
           education={education}
           awards={awards}
-          showSkillsAndTools={selectedTemplateIsPremium}
+          showSkillsAndTools={templateHasSkillsAndTools(templateKey)}
           securityClearance={answers.clearanceLevel}
         />
       </form>

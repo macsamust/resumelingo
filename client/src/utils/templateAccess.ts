@@ -21,3 +21,38 @@ export const TIER_LABEL: Record<SubscriptionTier, string> = {
 export function canUseTemplate(tier: SubscriptionTier, category: TemplateCategory): boolean {
   return TIER_RANK[tier] >= CATEGORY_RANK[category];
 }
+
+/**
+ * Which templates render a "Skills & Tools" section (see ResumePreview.tsx,
+ * which renders it in whichever spot fits each template's own layout).
+ * Deliberately a fixed set of template keys, not "every Premium-category
+ * template" — those used to be the same thing, but Federal and Military
+ * Transition kept this section when they moved from Premium to Professional
+ * (Sep 2026), and Government/Consulting gained it despite being
+ * Professional-tier all along. Section *availability* per template and
+ * *tier gating* per template are two independent decisions now; don't
+ * re-derive one from the other.
+ */
+const SKILLS_AND_TOOLS_TEMPLATE_KEYS = new Set([
+  "government",
+  "federal",
+  "consulting",
+  "military-transition",
+  "creative",
+  "academic",
+  "government-contractor",
+  "portrait",
+  "designer",
+  "monochrome",
+  "showcase",
+  "framed",
+  "emblem",
+  "spotlight",
+  "boardroom",
+  "ats-optimized",
+]);
+
+/** Whether `templateKey`'s layout has a "Skills & Tools" section at all — see SKILLS_AND_TOOLS_TEMPLATE_KEYS. */
+export function templateHasSkillsAndTools(templateKey: string | undefined): boolean {
+  return !!templateKey && SKILLS_AND_TOOLS_TEMPLATE_KEYS.has(templateKey);
+}

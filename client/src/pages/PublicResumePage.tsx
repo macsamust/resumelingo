@@ -8,6 +8,7 @@ import { groupAchievementsByExperience } from "../utils/starBullet";
 import { PublicResumeSkeleton } from "../components/common/PublicResumeSkeleton";
 import { getTemplateStyle } from "../config/templateStyles";
 import { downloadResumePdf } from "../utils/pdfExport";
+import { templateHasSkillsAndTools } from "../utils/templateAccess";
 
 /**
  * Turns a camelCase profession-question key (e.g. "cloudPlatforms",
@@ -423,7 +424,7 @@ export function PublicResumePage() {
         achievements={resume.achievements}
         combineExperienceFormat={resume.combineExperienceFormat}
         skillsAndTools={resume.skillsAndTools}
-        showSkillsAndTools={resume.template?.category === "premium"}
+        showSkillsAndTools={templateHasSkillsAndTools(resume.templateKey)}
         languages={resume.languages}
         hideFooterContact={hasTrailingContent}
         securityClearance={resume.answers.clearanceLevel}

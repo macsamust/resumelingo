@@ -13,6 +13,7 @@ import { isRealContactValue, ResumePreview } from "../../components/builder/Resu
 import { ConfirmDialog } from "../../components/common/ConfirmDialog";
 import { useToast } from "../../components/common/Toast";
 import { adminApi, ApiError, catalogApi } from "../../api";
+import { templateHasSkillsAndTools } from "../../utils/templateAccess";
 import { getTemplateStyle } from "../../config/templateStyles";
 import { generateId } from "../../utils/id";
 import {
@@ -90,7 +91,8 @@ export function AdminResumeEditPage() {
   const [generatedBulletsText, setGeneratedBulletsText] = useState("");
 
   const selectedTemplateIsPremium = templates.find((t) => t.key === templateKey)?.category === "premium";
-  const usesSkillsAndTools = selectedTemplateIsPremium;
+  // Per-template, independent of tier category — see templateHasSkillsAndTools.
+  const usesSkillsAndTools = templateHasSkillsAndTools(templateKey);
   const usesPhoto = PHOTO_FAMILIES.includes(getTemplateStyle(templateKey || "modern").family);
   const generatedBullets = useMemo(
     () => generatedBulletsText.split("\n").map((l) => l.trim()).filter(Boolean),

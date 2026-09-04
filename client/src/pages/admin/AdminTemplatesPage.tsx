@@ -8,6 +8,7 @@ import { useToast } from "../../components/common/Toast";
 import { ResumePreview } from "../../components/builder/ResumePreview";
 import { adminApi, ApiError } from "../../api";
 import { AdminTemplate, TemplateCategory } from "../../types";
+import { templateHasSkillsAndTools } from "../../utils/templateAccess";
 
 const EMPTY_NEW = { key: "", name: "", description: "", category: "basic" as TemplateCategory, sortOrder: "0" };
 
@@ -468,7 +469,7 @@ export function AdminTemplatesPage() {
             {...SAMPLE_RESUME}
             templateKey={previewTemplate.key}
             templateName={previewTemplate.name}
-            showSkillsAndTools={previewTemplate.category === "premium"}
+            showSkillsAndTools={templateHasSkillsAndTools(previewTemplate.key)}
           />
         </Modal>
       )}

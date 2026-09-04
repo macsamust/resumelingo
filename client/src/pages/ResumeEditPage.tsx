@@ -19,7 +19,7 @@ import { Modal } from "../components/common/Modal";
 import { VersionHistoryPanel } from "../components/common/VersionHistoryPanel";
 import { ApiError, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
-import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL } from "../utils/templateAccess";
+import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL, templateHasSkillsAndTools } from "../utils/templateAccess";
 import { canUseVisibility, VISIBILITY_LABEL, VISIBILITY_MIN_TIER } from "../utils/visibilityAccess";
 import { getTemplateStyle } from "../config/templateStyles";
 import { buildResumeTextBlob, isAtsSafeFamily, matchKeywords, runHealthChecks } from "../utils/atsCheck";
@@ -181,13 +181,13 @@ export function ResumeEditPage() {
   // checkbox from appearing for a template that can't use it.
   const selectedTemplateIsPremium = templates.find((t) => t.key === templateKey)?.category === "premium";
 
-  // "Skills & Tools" is available on every Premium-tier template (Portrait,
-  // Designer, Monochrome, Showcase, Federal, Creative, Academic,
-  // Government Contractor, Military Transition — see ResumePreview.tsx,
-  // which renders it in the spot that fits each template's own layout).
-  // Selections are kept even if the template is switched to a non-Premium
-  // one and back, same as every other builder field.
-  const usesSkillsAndTools = selectedTemplateIsPremium;
+  // "Skills & Tools" availability is per-template, independent of tier
+  // category (see templateHasSkillsAndTools) — Federal and Military
+  // Transition keep it despite being Professional-tier, and
+  // Government/Consulting have it despite never having been Premium.
+  // Selections are kept even if the template is switched to one without
+  // this section and back, same as every other builder field.
+  const usesSkillsAndTools = templateHasSkillsAndTools(templateKey);
 
   useEffect(() => {
     if (!id) return;
