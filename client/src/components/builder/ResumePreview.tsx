@@ -624,10 +624,10 @@ export function ResumePreview({
             <div className="tpl-timeline-side">
               {sidebarContact}
               {clearanceBannerBlock}
-              {summaryBlock}
               {educationBlock}
             </div>
             <div className="tpl-timeline-main">
+              {summaryBlock}
               {bulletsBlock}
               {experienceBlock}
               {awardsBlock}

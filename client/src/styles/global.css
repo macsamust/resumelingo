@@ -1081,12 +1081,25 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
    Experience, Education, Awards) is marked with a timeline dot and
    connecting line — see ResumePreview.tsx's "timeline-sidebar" branch. */
 .tpl-timeline-sidebar { padding: 0; }
-.tpl-timeline-sidebar .tpl-timeline-header { padding: 28px 28px 20px; border-bottom: 2px solid var(--tpl-accent); }
-.tpl-timeline-sidebar .tpl-timeline-header h2 { font-weight: 800; letter-spacing: -.01em; }
+.tpl-timeline-sidebar .tpl-timeline-header {
+  padding: 28px 28px 20px; border-bottom: 2px solid var(--tpl-accent);
+  background: linear-gradient(135deg, var(--tpl-accent-soft), #fff 65%);
+}
+/* Resume title/role line — deliberately quiet (small, medium weight, tinted
+   accent, tracked caps) so the bold full name above it stays the one thing
+   that reads as "the headline" in this header, rather than competing with
+   it for attention. */
+.tpl-timeline-sidebar .tpl-timeline-header h2 {
+  font-weight: 500; font-size: 13.5px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--tpl-accent); margin-bottom: 0;
+}
 .tpl-timeline-sidebar .tpl-timeline-header .tpl-role { text-transform: uppercase; letter-spacing: .08em; font-size: 12.5px; font-weight: 600; margin-bottom: 0; }
 .tpl-timeline-body { display: grid; grid-template-columns: 34% 1fr; }
-.tpl-timeline-side { padding: 24px 22px; border-right: 1px solid var(--border); min-width: 0; }
-.tpl-timeline-side .tpl-section + .tpl-section { margin-top: 22px; padding-top: 18px; }
+/* Tinted sidebar block (same "colored side column" convention as
+   photo-banner-sidebar/monochrome) rather than a plain white column with
+   just a divider line — gives the two-column split some actual presence. */
+.tpl-timeline-side { padding: 24px 22px; background: var(--tpl-accent-soft); min-width: 0; }
+.tpl-timeline-side .tpl-section + .tpl-section { margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(15, 23, 42, .08); }
 .tpl-timeline-contact-list { list-style: none; font-size: 12.5px; color: var(--navy-light); }
 .tpl-timeline-contact-list li { margin-bottom: 8px; word-break: break-word; }
 .tpl-timeline-contact-list li:last-child { margin-bottom: 0; }
@@ -1100,9 +1113,12 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   content: ""; position: absolute; left: 5px; top: 4px; bottom: -24px; width: 1px; background: var(--border);
 }
 .tpl-timeline-main .tpl-section:last-child::before { display: none; }
+/* Filled dot with a soft double ring (white, then a tint of the accent
+   color) — reads as a little "halo" around each marker instead of a flat
+   dot, the one purely decorative touch added to this family. */
 .tpl-timeline-main .tpl-section::after {
   content: ""; position: absolute; left: 0; top: 2px; width: 11px; height: 11px; border-radius: 50%;
-  background: var(--tpl-accent); box-shadow: 0 0 0 3px #fff;
+  background: var(--tpl-accent); box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--tpl-accent-soft);
 }
 .tpl-timeline-main .tpl-section-label::before { display: none; }
 
@@ -1616,7 +1632,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   .app-content { padding: 24px 16px; }
   .preview-panel.tpl-sidebar.tpl-side-left, .preview-panel.tpl-sidebar.tpl-side-right { grid-template-columns: 1fr; }
   .tpl-timeline-body { grid-template-columns: 1fr; }
-  .tpl-timeline-side { border-right: none; border-bottom: 1px solid var(--border); }
+  .tpl-timeline-side { border-bottom: 1px solid var(--border); }
   .tpl-photo-body { grid-template-columns: 1fr; }
   .tpl-photo-header { flex-direction: column; }
   .tpl-photo-contact-grid { grid-template-columns: 1fr; }
