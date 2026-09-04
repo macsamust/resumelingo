@@ -1456,6 +1456,14 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .tpl-photolist-body .tpl-experience-dates { display: block; margin-top: 2px; }
 .tpl-photolist-body .tpl-experience-company { grid-column: 1; }
 .tpl-photolist-body .tpl-experience-bullets { grid-column: 2; grid-row: 1 / span 2; margin: 0; }
+/* Questrial (already loaded for this template) instead of the template's
+   default Poppins for the bullet write-up specifically — Poppins is only
+   loaded at weights 500+ (see index.html), so this text was quietly
+   rendering heavier than true regular. Same fix as the intro paragraph
+   and the Ledger title. */
+.tpl-photolist-body .tpl-experience-bullets li {
+  font-family: 'Questrial', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
 
 /* dark-card-grid: a dark slate page background with decorative dot-grid/
    chevron/diagonal-bar accents behind a two-column grid of floating white
