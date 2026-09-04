@@ -911,13 +911,6 @@ export function ResumePreview({
     // paragraph) rather than via the generic summaryBlock further down, so
     // it doesn't render twice.
     //
-    // First name forced onto its own line above the rest of the name
-    // (rather than relying on natural word-wrap at the header's max-width)
-    // — at the person's request.
-    const nameParts = fullName ? fullName.trim().split(/\s+/) : [];
-    const firstName = nameParts[0];
-    const restOfName = nameParts.slice(1).join(" ");
-
     // Bespoke phone/email/LinkedIn stack (in that order, each styled
     // differently) replacing the shared single-line contactLine paragraph
     // — see global.css's .tpl-photolist-contact rules and
@@ -946,17 +939,7 @@ export function ResumePreview({
         <div className="preview-panel tpl-photo-header-list" style={cssVars}>
           <div className="tpl-photolist-header">
             <div className="tpl-photolist-header-text">
-              {fullName && (
-                <p className="tpl-fullname">
-                  {firstName}
-                  {restOfName && (
-                    <>
-                      <br />
-                      {restOfName}
-                    </>
-                  )}
-                </p>
-              )}
+              {fullName && <p className="tpl-fullname">{fullName}</p>}
               <h2>{heading}</h2>
               {summary ? (
                 <p className="tpl-photolist-intro">{summary}</p>
