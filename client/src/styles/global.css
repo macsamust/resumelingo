@@ -1339,10 +1339,19 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   padding: 32px 32px 26px; background: #fff;
 }
 .tpl-photolist-header-text { min-width: 0; max-width: 56%; }
-.tpl-photolist-header-text .tpl-fullname { font-size: 34px; letter-spacing: -.01em; line-height: 1.05; }
+/* Archivo Black — a heavy, tightly tracked geometric grotesk — matches the
+   reference design's condensed all-caps name lockup far more closely than
+   this template's body font (Poppins) at any weight; loaded in index.html
+   just for this one use, same as every other template's dedicated Google
+   Fonts pairing (see templateStyles.ts's doc comment). */
+.tpl-photolist-header-text .tpl-fullname {
+  font-family: 'Archivo Black', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 400; /* Archivo Black ships one weight (900-equivalent) */
+  font-size: 42px; letter-spacing: -.02em; line-height: .96; text-transform: uppercase;
+}
 .tpl-photolist-header-text h2 {
-  color: var(--tpl-accent); font-size: 15px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
-  margin-top: 8px;
+  color: var(--tpl-accent); font-size: 13.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
+  line-height: 1.35; margin-top: 10px;
 }
 .tpl-photolist-intro { font-size: 13px; color: var(--navy-light); line-height: 1.7; margin-top: 14px; }
 .tpl-photolist-header-photo { flex-shrink: 0; width: 200px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
