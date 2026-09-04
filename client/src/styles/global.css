@@ -1342,20 +1342,22 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   padding: 32px 32px 26px;
 }
 .tpl-photolist-header-text { min-width: 0; max-width: 56%; }
-/* Jost — a wide, geometric Futura-alike, same visual family as Questrial
-   but shipped in real weights, so the name/title can read as bold-but-not-
-   heavy (600) rather than Questrial's single regular-only weight (which
-   can only fake bold via browser synthesis) — loaded in index.html
-   alongside Questrial (still used for the contact block below), same as
-   every other template's dedicated Google Fonts pairing (see
-   templateStyles.ts's doc comment). */
+/* Unbounded — a very boxy, squared/blocky geometric sans (picked by the
+   person over Space Grotesk/Archivo/Jost for the boxiest look), shipped in
+   real weights so the name/title can read as bold-but-not-heavy (600)
+   rather than Questrial's single regular-only weight (which can only fake
+   bold via browser synthesis) — loaded in index.html alongside Questrial
+   (still used for the contact block below), same as every other
+   template's dedicated Google Fonts pairing (see templateStyles.ts's doc
+   comment). Sized down and tracked tighter than the previous font choices
+   since Unbounded's letterforms run noticeably wider per character. */
 .tpl-photolist-header-text .tpl-fullname {
-  font-family: 'Jost', 'Questrial', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-weight: 600; font-size: 36px; letter-spacing: .03em; line-height: 1.15; text-transform: uppercase;
+  font-family: 'Unbounded', 'Questrial', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 600; font-size: 30px; letter-spacing: .01em; line-height: 1.25; text-transform: uppercase;
 }
 .tpl-photolist-header-text h2 {
-  font-family: 'Jost', 'Questrial', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: var(--tpl-accent); font-size: 13.5px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase;
+  font-family: 'Unbounded', 'Questrial', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--tpl-accent); font-size: 13px; font-weight: 600; letter-spacing: .01em; text-transform: uppercase;
   line-height: 1.35; margin-top: 10px;
 }
 .tpl-photolist-intro { font-size: 13px; color: var(--navy-light); line-height: 1.7; margin-top: 14px; }
@@ -1381,7 +1383,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .tpl-photolist-contact p { margin: 0 0 5px; font-size: 12.5px; color: var(--navy); word-break: break-word; }
 .tpl-photolist-contact p:last-child { margin-bottom: 0; }
 .tpl-photolist-phone { font-weight: 700; }
-.tpl-photolist-email { text-decoration: underline; }
+.tpl-photolist-email { text-decoration: underline; color: var(--tpl-accent); }
 .tpl-photolist-email a { color: inherit; text-decoration: underline; }
 .tpl-photolist-linkedin, .tpl-photolist-linkedin a { color: var(--muted); font-size: 12px; text-decoration: none; }
 .tpl-photolist-body { padding: 0 32px 30px; position: relative; }
@@ -1397,11 +1399,13 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
    full name for a matching short, blocky look, instead of the generic
    small tan-dot label every other template uses. */
 .tpl-photolist-body .tpl-section-label {
-  /* Jost (not Questrial, which has no bold weight to reach for) so "bold
-     sections" renders as a real bold face instead of a browser-faked one —
-     same reasoning as the name/title's font choice above. */
-  font-family: 'Jost', 'Questrial', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 17px; font-weight: 600; letter-spacing: .04em;
+  /* Unbounded (not Questrial, which has no bold weight to reach for) so
+     "bold sections" renders as a real bold face instead of a
+     browser-faked one — same reasoning as the name/title's font choice
+     above. Sized down from the previous font choices for the same reason
+     given there. */
+  font-family: 'Unbounded', 'Questrial', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 15px; font-weight: 600; letter-spacing: .02em;
 }
 .tpl-photolist-body .tpl-section-label::before { display: none; }
 /* Centered 80%-width dividers between sections (matching the reference
