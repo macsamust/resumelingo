@@ -1437,6 +1437,60 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .tpl-photolist-body .tpl-experience-company { grid-column: 1; }
 .tpl-photolist-body .tpl-experience-bullets { grid-column: 2; grid-row: 1 / span 2; margin: 0; }
 
+/* dark-card-grid: a dark slate page background with decorative dot-grid/
+   chevron/diagonal-bar accents behind a two-column grid of floating white
+   cards — bold name and photo up top, then a contact-info card and an
+   Experience-then-Skill card on the left, a quote-marked Profile card and
+   an Education card on the right. */
+.tpl-dark-card-grid { padding: 34px 30px; background: var(--tpl-accent-soft); position: relative; overflow: hidden; }
+.tpl-dark-decor { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.tpl-dark-dots {
+  position: absolute; width: 90px; height: 70px;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, .35) 1.5px, transparent 1.5px);
+  background-size: 12px 12px;
+}
+.tpl-dark-dots-tl { top: 18px; left: 18px; }
+.tpl-dark-dots-bl { bottom: 90px; left: 0; width: 70px; height: 160px; }
+.tpl-dark-chevrons {
+  position: absolute; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  color: rgba(255, 255, 255, .35); font-size: 15px; line-height: 1;
+}
+.tpl-dark-chevrons-tr { top: 20px; right: 20px; }
+.tpl-dark-chevrons-bl { bottom: 20px; left: 20px; }
+.tpl-dark-bar { position: absolute; width: 220px; height: 34px; background: rgba(255, 255, 255, .08); border-radius: 4px; }
+.tpl-dark-bar-left { top: 46%; left: -70px; transform: rotate(-32deg); }
+.tpl-dark-bar-right { top: 40%; right: -90px; transform: rotate(-32deg); }
+.tpl-dark-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.tpl-dark-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.tpl-dark-name { color: var(--tpl-accent); font-size: 40px; font-weight: 800; line-height: 1.05; }
+.tpl-dark-photo-img, .tpl-dark-photo-badge { width: 100%; height: 220px; border-radius: 14px; box-sizing: border-box; }
+.tpl-dark-photo-img { object-fit: cover; }
+.tpl-dark-photo-badge {
+  display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, .12);
+  color: #fff; font-size: 44px; font-weight: 800;
+}
+.tpl-dark-card { background: #fff; border-radius: 14px; padding: 22px 22px 20px; color: var(--navy); }
+.tpl-dark-card h2 { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 14px; }
+.tpl-dark-contact-list { list-style: none; font-size: 13px; color: var(--navy-light); }
+.tpl-dark-contact-list li { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; word-break: break-word; }
+.tpl-dark-contact-list li:last-child { margin-bottom: 0; }
+.tpl-dark-contact-icon {
+  flex-shrink: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px;
+}
+/* Section labels inside a white card read as a plain bold heading (no
+   small accent dot marker) — and the divider between two sections in the
+   same card (Experience -> Skill) is dashed, matching the reference. */
+.tpl-dark-card .tpl-section-label { font-size: 15px; font-weight: 700; color: var(--navy); }
+.tpl-dark-card .tpl-section-label::before { display: none; }
+.tpl-dark-card .tpl-section + .tpl-section { border-top: 1px dashed var(--border); margin-top: 18px; padding-top: 16px; }
+.tpl-dark-quote-card { text-align: center; }
+.tpl-dark-quote-icon {
+  display: block; font-family: Georgia, 'Times New Roman', serif; font-size: 46px; line-height: 1;
+  color: var(--tpl-accent); font-weight: 700; margin-bottom: 2px;
+}
+.tpl-dark-quote-card .tpl-section-label { justify-content: center; }
+.tpl-dark-quote-card .preview-summary { text-align: center; }
+
 .public-resume-page { max-width: 760px; margin: 0 auto; padding: 60px 24px; }
 .public-resume-page .preview-col { position: static; top: auto; }
 .public-resume-page .preview-panel { position: static; top: auto; margin-bottom: 24px; box-shadow: 0 20px 40px -24px rgba(15, 23, 42, .2); }
@@ -1760,6 +1814,8 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   .tpl-photolist-contact { text-align: left; }
   .tpl-photolist-body .tpl-experience-item { grid-template-columns: 1fr; }
   .tpl-photolist-body .tpl-experience-bullets { grid-column: 1; grid-row: auto; margin-top: 8px; }
+  .tpl-dark-grid { grid-template-columns: 1fr; }
+  .tpl-dark-bar, .tpl-dark-chevrons, .tpl-dark-dots { display: none; }
 }
 
 /* Modal (components/common/Modal.tsx) — a styled confirm()/prompt()

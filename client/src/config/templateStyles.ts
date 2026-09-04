@@ -26,7 +26,8 @@ export type LayoutFamily =
   | "corner-photo-sidebar"
   | "photo-sidebar-underline"
   | "pill-grid-cards"
-  | "photo-header-list";
+  | "photo-header-list"
+  | "dark-card-grid";
 export type Flow = "summary-first" | "bullets-first";
 
 export interface TemplateStyle {
@@ -419,6 +420,18 @@ export const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     family: "photo-header-list",
     accent: "#b9895a", accentSoft: "#f4ebe0", font: SANS_GEOMETRIC,
     flow: "summary-first", summaryLabel: "Profile", bulletsLabel: "Highlights",
+  },
+
+  // Dark slate page background with decorative dot-grid/chevron/diagonal-bar
+  // accents behind a two-column grid of floating white cards: bold mint-
+  // green name and photo up top, then a contact-info card and an
+  // Experience-then-Skill card on the left, a quote-marked Profile card and
+  // an Education card on the right. See ResumePreview.tsx's
+  // "dark-card-grid" branch and global.css's .tpl-dark-* rules.
+  slate: {
+    family: "dark-card-grid",
+    accent: "#93e6ac", accentSoft: "#3d4152", font: SANS_GEOMETRIC,
+    flow: "summary-first", summaryLabel: "Profile", bulletsLabel: "Skill",
   },
 };
 

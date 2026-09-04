@@ -971,6 +971,90 @@ export function ResumePreview({
     );
   }
 
+  if (style.family === "dark-card-grid") {
+    const initials = getInitials(fullName);
+    const CONTACT_ICON: Record<string, string> = { email: "✉", phone: "☎", linkedin: "🔗" };
+    const contactList = contactItems.length > 0 && (
+      <ul className="tpl-dark-contact-list">
+        {contactItems.map((item) => (
+          <li key={item.key}>
+            <span className="tpl-dark-contact-icon" aria-hidden="true">
+              {CONTACT_ICON[item.key] ?? "•"}
+            </span>
+            {item.node}
+          </li>
+        ))}
+      </ul>
+    );
+
+    return (
+      <div className="preview-col">
+        {templateTag}
+        <div className="preview-panel tpl-dark-card-grid" style={cssVars}>
+          {/* Purely decorative background accents (dot grids, chevron
+              stacks, diagonal bars) echoing the reference design — sit
+              behind the card grid below, never part of the resume's actual
+              content. */}
+          <div className="tpl-dark-decor" aria-hidden="true">
+            <div className="tpl-dark-dots tpl-dark-dots-tl" />
+            <div className="tpl-dark-dots tpl-dark-dots-bl" />
+            <div className="tpl-dark-chevrons tpl-dark-chevrons-tr">
+              <span>⌃</span>
+              <span>⌃</span>
+              <span>⌃</span>
+              <span>⌃</span>
+            </div>
+            <div className="tpl-dark-chevrons tpl-dark-chevrons-bl">
+              <span>⌄</span>
+              <span>⌄</span>
+              <span>⌄</span>
+              <span>⌄</span>
+            </div>
+            <div className="tpl-dark-bar tpl-dark-bar-left" />
+            <div className="tpl-dark-bar tpl-dark-bar-right" />
+          </div>
+          <div className="tpl-dark-grid">
+            <div className="tpl-dark-col">
+              {fullName && <p className="tpl-fullname tpl-dark-name">{fullName}</p>}
+              <div className="tpl-dark-card">
+                <h2>{heading}</h2>
+                {contactList}
+              </div>
+              <div className="tpl-dark-card">
+                {clearanceBannerBlock}
+                {experienceBlock}
+                {bulletsBlock}
+                {skillsAndToolsBlock}
+              </div>
+            </div>
+            <div className="tpl-dark-col">
+              {photoUrl ? (
+                <img src={photoUrl} alt={fullName ? `${fullName}'s photo` : "Profile photo"} className="tpl-dark-photo-img" />
+              ) : (
+                initials && (
+                  <div className="tpl-dark-photo-badge" aria-hidden="true">
+                    {initials}
+                  </div>
+                )
+              )}
+              <div className="tpl-dark-card tpl-dark-quote-card">
+                <span className="tpl-dark-quote-icon" aria-hidden="true">
+                  &#8220;
+                </span>
+                {summaryBlock}
+              </div>
+              <div className="tpl-dark-card">
+                {educationBlock}
+                {awardsBlock}
+                {languagesBlock}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // executive-banner, centered-serif, cv-academic, and minimal-clean all share
   // the same single-column structure — the CSS classes per family (see
   // global.css) plus bannerAlign are what actually make them look distinct.
