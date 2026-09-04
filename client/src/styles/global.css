@@ -1521,10 +1521,15 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
    lines up with the full-width rules below it, instead of stopping short
    partway across. */
 .tpl-ledger-rule-short { width: 100%; height: 3px; background: #111827; margin-bottom: 14px; }
+/* IBM Plex Sans (already loaded — see index.html's Google Fonts import)
+   instead of the template's default Poppins for the name specifically —
+   a more neutral, professional-reading grotesk than Poppins' rounded
+   geometric letterforms, at the person's request. */
 .tpl-ledger-header-text .tpl-fullname {
-  font-weight: 800; font-size: 34px; line-height: 1.05; letter-spacing: -.01em; text-transform: uppercase; color: #111827;
+  font-family: 'IBM Plex Sans', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 700; font-size: 34px; line-height: 1.05; letter-spacing: -.01em; text-transform: uppercase; color: #111827;
 }
-.tpl-ledger-header-text h2 { font-size: 16px; font-weight: 500; color: #111827; margin-top: 6px; }
+.tpl-ledger-header-text h2 { font-size: 16px; font-weight: 400; color: #111827; margin-top: 6px; }
 .tpl-ledger-rule { height: 3px; background: #111827; margin: 24px 0; }
 .tpl-bordered-ledger .tpl-section-label {
   font-size: 15px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; color: #111827; margin-bottom: 12px;
