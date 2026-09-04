@@ -1101,7 +1101,7 @@ export function ResumePreview({
             {clearanceBannerBlock}
             {summaryBlock}
             <div className="tpl-ledger-rule" aria-hidden="true" />
-            {experienceBlock}
+            <div className="tpl-ledger-experience">{experienceBlock}</div>
             <div className="tpl-ledger-rule" aria-hidden="true" />
             <div className="tpl-ledger-footer">
               <div className="tpl-ledger-footer-col">{bulletsBlock}</div>
