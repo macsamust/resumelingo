@@ -1383,7 +1383,11 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .tpl-photolist-contact p { margin: 0 0 5px; font-size: 12.5px; color: var(--navy); word-break: break-word; }
 .tpl-photolist-contact p:last-child { margin-bottom: 0; }
 .tpl-photolist-phone { font-weight: 700; }
-.tpl-photolist-email { text-decoration: underline; color: var(--tpl-accent); }
+/* ".tpl-photolist-contact p.tpl-photolist-email" (not just
+   ".tpl-photolist-email") — needs to out-specificity the p-element rule
+   above (class+element beats a single class), or the accent color never
+   actually wins the cascade. */
+.tpl-photolist-contact p.tpl-photolist-email { text-decoration: underline; color: var(--tpl-accent); }
 .tpl-photolist-email a { color: inherit; text-decoration: underline; }
 .tpl-photolist-linkedin, .tpl-photolist-linkedin a { color: var(--muted); font-size: 12px; text-decoration: none; }
 .tpl-photolist-body { padding: 0 32px 30px; position: relative; }
