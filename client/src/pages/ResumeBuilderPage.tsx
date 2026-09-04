@@ -36,13 +36,7 @@ export function ResumeBuilderPage() {
   const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
   const [professionKey, setProfessionKey] = useState("");
   const [professionDetail, setProfessionDetail] = useState<ProfessionDefinition | null>(null);
-  // Starter subscribers default to Classic (Basic tier); Professional and
-  // Premium subscribers default to Consulting instead, since Classic reads
-  // as the "free tier" card once someone's paid to upgrade. Recomputed on
-  // mount only — a user's tier can't change mid-session on this page.
-  const [templateKey, setTemplateKey] = useState(
-    user?.subscriptionTier === "professional" || user?.subscriptionTier === "premium" ? "consulting" : "classic",
-  );
+  const [templateKey, setTemplateKey] = useState("classic");
   const [fullName, setFullName] = useState(user?.name ?? "");
   const [contactEmail, setContactEmail] = useState(user?.email ?? "");
   const [contactPhone, setContactPhone] = useState("");
