@@ -1529,7 +1529,15 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   font-family: 'IBM Plex Sans', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-weight: 700; font-size: 34px; line-height: 1.05; letter-spacing: -.01em; text-transform: uppercase; color: #111827;
 }
-.tpl-ledger-header-text h2 { font-size: 16px; font-weight: 400; color: #111827; margin-top: 6px; }
+/* Font-family explicitly set to IBM Plex Sans (matching the name above
+   it) rather than inheriting the template's default Poppins — Poppins is
+   only loaded at weights 500+ (see index.html), so a "400" weight there
+   was quietly falling back to the nearest loaded weight instead of
+   rendering as true regular. IBM Plex Sans has a real 400 already loaded. */
+.tpl-ledger-header-text h2 {
+  font-family: 'IBM Plex Sans', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 16px; font-weight: 400; color: #111827; margin-top: 6px;
+}
 .tpl-ledger-rule { height: 3px; background: #111827; margin: 24px 0; }
 .tpl-bordered-ledger .tpl-section-label {
   font-size: 15px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; color: #111827; margin-bottom: 12px;
