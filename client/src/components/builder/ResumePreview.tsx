@@ -132,6 +132,21 @@ function withProtocol(url: string): string {
 }
 
 /**
+ * Best-effort "+1 555-232-9800" formatting for a raw phone number string —
+ * used by the "photo-header-list" family's contact block only (see its
+ * branch below), at the person's request. Strips everything but digits;
+ * formats a plain 10-digit US number (or an 11-digit one with a leading
+ * "1") into "+1 XXX-XXX-XXXX". Any other shape (international, an
+ * extension, fewer/more digits) is returned unchanged rather than mangled.
+ */
+export function formatPhoneDisplay(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  const tenDigits = digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
+  if (tenDigits.length !== 10) return value;
+  return `+1 ${tenDigits.slice(0, 3)}-${tenDigits.slice(3, 6)}-${tenDigits.slice(6)}`;
+}
+
+/**
  * Filters out placeholder-looking values (e.g. "[LinkedIn URL — optional]")
  * that shouldn't be treated as real contact info — seen in practice on a
  * resume whose contactLinkedIn field held exactly that bracketed string,
@@ -895,13 +910,53 @@ export function ResumePreview({
     // Summary renders directly in the header (like pill-grid-cards' intro
     // paragraph) rather than via the generic summaryBlock further down, so
     // it doesn't render twice.
+    //
+    // First name forced onto its own line above the rest of the name
+    // (rather than relying on natural word-wrap at the header's max-width)
+    // — at the person's request.
+    const nameParts = fullName ? fullName.trim().split(/\s+/) : [];
+    const firstName = nameParts[0];
+    const restOfName = nameParts.slice(1).join(" ");
+
+    // Bespoke phone/email/LinkedIn stack (in that order, each styled
+    // differently) replacing the shared single-line contactLine paragraph
+    // — see global.css's .tpl-photolist-contact rules and
+    // formatPhoneDisplay's doc comment above.
+    const photolistContact = (
+      <div className="tpl-photolist-contact">
+        {isRealContactValue(contactPhone) && <p className="tpl-photolist-phone">{formatPhoneDisplay(contactPhone)}</p>}
+        {isRealContactValue(contactEmail) && (
+          <p className="tpl-photolist-email">
+            <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+          </p>
+        )}
+        {isRealContactValue(contactLinkedIn) && (
+          <p className="tpl-photolist-linkedin">
+            <a href={withProtocol(contactLinkedIn)} target="_blank" rel="noreferrer">
+              {contactLinkedIn}
+            </a>
+          </p>
+        )}
+      </div>
+    );
+
     return (
       <div className="preview-col">
         {templateTag}
         <div className="preview-panel tpl-photo-header-list" style={cssVars}>
           <div className="tpl-photolist-header">
             <div className="tpl-photolist-header-text">
-              {fullName && <p className="tpl-fullname">{fullName}</p>}
+              {fullName && (
+                <p className="tpl-fullname">
+                  {firstName}
+                  {restOfName && (
+                    <>
+                      <br />
+                      {restOfName}
+                    </>
+                  )}
+                </p>
+              )}
               <h2>{heading}</h2>
               {summary ? (
                 <p className="tpl-photolist-intro">{summary}</p>
@@ -916,7 +971,7 @@ export function ResumePreview({
               {photoUrl && (
                 <img src={photoUrl} alt={fullName ? `${fullName}'s photo` : "Profile photo"} className="tpl-photolist-photo-img" />
               )}
-              {contactLine}
+              {photolistContact}
             </div>
           </div>
           <div className="tpl-photolist-body">

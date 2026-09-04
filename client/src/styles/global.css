@@ -1333,42 +1333,33 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
    lays out as a two-column row (title/dates/company on the left, any
    nested bullets on the right) instead of every other family's stacked
    layout. */
-.tpl-photo-header-list { padding: 0; position: relative; }
-/* Warm accent-colored bars across the very top and bottom of the resume —
-   .preview-panel's own overflow:hidden + border-radius clips these to the
-   panel's rounded corners for free. */
-.tpl-photo-header-list::before, .tpl-photo-header-list::after {
-  content: ""; position: absolute; left: 0; right: 0; height: 8px; background: var(--tpl-accent); z-index: 1;
-}
-.tpl-photo-header-list::before { top: 0; }
-.tpl-photo-header-list::after { bottom: 0; }
+/* Faint gold tint set on the whole panel (not just the body) so it covers
+   the resume edge-to-edge, top to bottom, rather than stopping short at
+   the header. */
+.tpl-photo-header-list { padding: 0; position: relative; background: #fdf9f3; }
 .tpl-photolist-header {
   display: flex; justify-content: space-between; align-items: flex-start; gap: 28px;
-  padding: 32px 32px 26px; background: #fff;
+  padding: 32px 32px 26px;
 }
 .tpl-photolist-header-text { min-width: 0; max-width: 56%; }
-/* Questrial — a wide, geometric, regular-weight-only sans — swapped in for
-   Archivo Black at the person's request (wide/geometric, not bold); loaded
-   in index.html just for this one use, same as every other template's
-   dedicated Google Fonts pairing (see templateStyles.ts's doc comment). */
+/* Jost — a wide, geometric Futura-alike, same visual family as Questrial
+   but shipped in real weights, so the name/title can read as bold-but-not-
+   heavy (600) rather than Questrial's single regular-only weight (which
+   can only fake bold via browser synthesis) — loaded in index.html
+   alongside Questrial (still used for the contact block below), same as
+   every other template's dedicated Google Fonts pairing (see
+   templateStyles.ts's doc comment). */
 .tpl-photolist-header-text .tpl-fullname {
-  font-family: 'Questrial', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-weight: 400; /* Questrial ships one weight only */
-  font-size: 36px; letter-spacing: .03em; line-height: 1.15; text-transform: uppercase;
+  font-family: 'Jost', 'Questrial', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 600; font-size: 36px; letter-spacing: .03em; line-height: 1.15; text-transform: uppercase;
 }
 .tpl-photolist-header-text h2 {
-  font-family: 'Questrial', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: var(--tpl-accent); font-size: 13.5px; font-weight: 400; letter-spacing: .03em; text-transform: uppercase;
+  font-family: 'Jost', 'Questrial', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--tpl-accent); font-size: 13.5px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase;
   line-height: 1.35; margin-top: 10px;
 }
 .tpl-photolist-intro { font-size: 13px; color: var(--navy-light); line-height: 1.7; margin-top: 14px; }
 .tpl-photolist-header-photo { flex-shrink: 0; width: 200px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
-/* Contact line (phone/email under the photo) matches the name/title's
-   Questrial font too, at the person's request, instead of the template's
-   body font (Poppins). */
-.tpl-photolist-header-photo .tpl-contact {
-  font-family: 'Questrial', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
 .tpl-photolist-dots {
   align-self: flex-start; width: 96px; height: 44px;
   background-image: radial-gradient(circle, var(--tpl-accent) 1.5px, transparent 1.5px);
@@ -1377,24 +1368,52 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .tpl-photolist-photo-img {
   width: 100%; height: 180px; object-fit: cover; border-radius: 4px; filter: grayscale(1);
 }
-.tpl-photolist-header-photo .tpl-contact { text-align: right; margin: 0; }
-.tpl-photolist-body { padding: 0 32px 30px; background: #fff; border-top: 1px solid var(--border); }
+/* Bespoke contact stack (phone, then email, then LinkedIn) replacing the
+   shared single-line "email · phone · linkedin" paragraph every other
+   family uses — this family wants a specific order and per-line styling
+   (bold phone, underlined email, muted LinkedIn) that buildContactLine's
+   one-size-fits-all output can't express. See ResumePreview.tsx's
+   "photo-header-list" branch. */
+.tpl-photolist-contact {
+  font-family: 'Questrial', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  text-align: right;
+}
+.tpl-photolist-contact p { margin: 0 0 5px; font-size: 12.5px; color: var(--navy); word-break: break-word; }
+.tpl-photolist-contact p:last-child { margin-bottom: 0; }
+.tpl-photolist-phone { font-weight: 700; }
+.tpl-photolist-email { text-decoration: underline; }
+.tpl-photolist-email a { color: inherit; text-decoration: underline; }
+.tpl-photolist-linkedin, .tpl-photolist-linkedin a { color: var(--muted); font-size: 12px; text-decoration: none; }
+.tpl-photolist-body { padding: 0 32px 30px; position: relative; }
 .tpl-photolist-body .tpl-section:first-child { padding-top: 26px; }
+/* A centered 80%-width hairline above the body (echoing the reference
+   design) instead of a full-bleed border. */
+.tpl-photolist-body::before {
+  content: ""; position: absolute; top: 0; left: 10%; width: 80%; height: 1px; background: var(--border);
+}
 /* Section labels (EXPERIENCE/EDUCATION) sized above the job-title/degree
    line, which in turn stays above its date line (see .tpl-experience-title/
    .tpl-experience-dates below) — and set in the same Questrial font as the
    full name for a matching short, blocky look, instead of the generic
    small tan-dot label every other template uses. */
 .tpl-photolist-body .tpl-section-label {
-  font-family: 'Questrial', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 17px; font-weight: 400; letter-spacing: .04em;
+  /* Jost (not Questrial, which has no bold weight to reach for) so "bold
+     sections" renders as a real bold face instead of a browser-faked one —
+     same reasoning as the name/title's font choice above. */
+  font-family: 'Jost', 'Questrial', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 17px; font-weight: 600; letter-spacing: .04em;
 }
 .tpl-photolist-body .tpl-section-label::before { display: none; }
-/* Plain gray section dividers (matching the reference design) instead of
-   the generic tan-tinted rule every other template uses. */
-.tpl-photolist-body .tpl-section + .tpl-section { border-top-color: var(--border); }
-.tpl-photolist-body .tpl-experience-title { font-size: 14.5px; }
+/* Centered 80%-width dividers between sections (matching the reference
+   design) instead of the generic full-width tan-tinted rule every other
+   template uses. */
+.tpl-photolist-body .tpl-section + .tpl-section { border-top: none; position: relative; }
+.tpl-photolist-body .tpl-section + .tpl-section::before {
+  content: ""; position: absolute; top: 0; left: 10%; width: 80%; height: 1px; background: var(--border);
+}
+.tpl-photolist-body .tpl-experience-title { font-size: 14.5px; font-weight: 500; }
 .tpl-photolist-body .tpl-experience-dates { font-size: 12px; }
+.tpl-photolist-body .tpl-experience-company { font-weight: 400; color: var(--muted); }
 /* Each entry becomes a two-column row instead of a stacked block — narrow
    meta column (title/degree, dates, company/school) beside a wider column
    for any nested bullets (only populated when "Combine Work Experience
@@ -1730,6 +1749,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   .tpl-photolist-header { flex-direction: column; }
   .tpl-photolist-header-text { max-width: 100%; }
   .tpl-photolist-header-photo { align-items: flex-start; width: 100%; }
+  .tpl-photolist-contact { text-align: left; }
   .tpl-photolist-body .tpl-experience-item { grid-template-columns: 1fr; }
   .tpl-photolist-body .tpl-experience-bullets { grid-column: 1; grid-row: auto; margin-top: 8px; }
 }
