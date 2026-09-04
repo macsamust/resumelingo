@@ -962,11 +962,15 @@ export function ResumePreview({
             {experienceBlock}
             {educationBlock}
             {bulletsBlock}
-            {skillsAndToolsBlock}
+            {skillsAndToolsBlock && (
+              <div className="tpl-photolist-skills-wrap">
+                {skillsAndToolsBlock}
+                <div className="tpl-photolist-dots tpl-photolist-dots-corner" aria-hidden="true" />
+              </div>
+            )}
             {awardsBlock}
             {languagesBlock}
           </div>
-          <div className="tpl-photolist-dots tpl-photolist-dots-corner" aria-hidden="true" />
         </div>
       </div>
     );
