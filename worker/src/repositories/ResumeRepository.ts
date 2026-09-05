@@ -137,6 +137,28 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
   }
 
   /**
+   * One row per (profession, templateKey) pair with how many resumes use
+   * that combination — feeds the template picker's "most popular with
+   * <profession>" indicator (see popularTemplates.ts's computePopularTemplates,
+   * which turns this into one best template per profession). Excludes
+   * "classic" entirely: it's the Starter-tier default every new resume
+   * starts on (STARTER_DEFAULT_TEMPLATE_KEY in SubscriptionService.ts), so
+   * counting it would mostly measure who never opened the template picker,
+   * not genuine preference.
+   */
+  async countByProfessionAndTemplate(): Promise<{ profession: string; templateKey: string; count: number }[]> {
+    const { results } = await this.db
+      .prepare(
+        `SELECT profession, templateKey, COUNT(*) as count
+         FROM resumes
+         WHERE templateKey != 'classic'
+         GROUP BY profession, templateKey`
+      )
+      .all<{ profession: string; templateKey: string; count: number }>();
+    return results;
+  }
+
+  /**
    * Search across every user's resumes by title, slug, or owner email/name
    * — the admin's global resume search (see AdminResumeController), since
    * the only prior way to find a resume was opening the right user first.

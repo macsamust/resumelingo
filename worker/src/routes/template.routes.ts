@@ -6,5 +6,6 @@ const templates = new Hono<AppEnv>();
 const controller = new TemplateController();
 
 templates.get("/", controller.list);
+templates.get("/popular-by-profession", controller.popularByProfession);
 
 export default templates;

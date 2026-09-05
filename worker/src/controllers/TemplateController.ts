@@ -1,5 +1,6 @@
 import { Context } from "hono";
 import { AppEnv } from "../middleware/servicesMiddleware";
+import { computePopularTemplates } from "../services/popularTemplates";
 
 /**
  * Public (read-only) endpoint feeding the New/Edit Resume template picker.
@@ -18,5 +19,17 @@ export class TemplateController {
         .filter((t) => t.enabled)
         .map((t) => ({ key: t.key, name: t.name, description: t.description, category: t.category })),
     });
+  };
+
+  /**
+   * GET /api/templates/popular-by-profession — one templateKey per
+   * profession, feeding the picker's "most popular with <profession>"
+   * indicator. See popularTemplates.ts's doc comment for the sample-size
+   * floor and why "classic" never counts.
+   */
+  popularByProfession = async (c: Context<AppEnv>) => {
+    const { resumeRepository } = c.get("services");
+    const counts = await resumeRepository.countByProfessionAndTemplate();
+    return c.json({ popularTemplates: computePopularTemplates(counts) });
   };
 }

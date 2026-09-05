@@ -64,6 +64,10 @@ export function ResumeEditPage() {
   const [professionKey, setProfessionKey] = useState("");
   const [professionDetail, setProfessionDetail] = useState<ProfessionDefinition | null>(null);
   const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
+  // One templateKey per profession — the most-used non-Classic template for
+  // that profession, once it clears a minimum sample size. Feeds the dot
+  // rendered in the template picker below (see popularTemplates on the worker).
+  const [popularTemplates, setPopularTemplates] = useState<Record<string, string>>({});
   const [fullName, setFullName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
@@ -197,8 +201,14 @@ export function ResumeEditPage() {
 
   useEffect(() => {
     if (!id) return;
-    Promise.all([resumeApi.getById(id), catalogApi.listTemplates(), catalogApi.listProfessions(), resumeApi.list()])
-      .then(([resumeRes, templatesRes, professionsRes, allResumesRes]) => {
+    Promise.all([
+      resumeApi.getById(id),
+      catalogApi.listTemplates(),
+      catalogApi.listProfessions(),
+      resumeApi.list(),
+      catalogApi.popularTemplatesByProfession(),
+    ])
+      .then(([resumeRes, templatesRes, professionsRes, allResumesRes, popularTemplatesRes]) => {
         const r = resumeRes.resume;
         setResume(r);
         setFullName(r.fullName);
@@ -246,6 +256,7 @@ export function ResumeEditPage() {
         setSummaryManuallyEdited(r.summaryManuallyEdited);
         setTemplates(templatesRes.templates);
         setProfessions(professionsRes.professions);
+        setPopularTemplates(popularTemplatesRes.popularTemplates);
         setProfessionKey(r.profession);
         setOtherResumes(allResumesRes.resumes.filter((other) => other.id !== r.id));
 
@@ -1062,11 +1073,13 @@ export function ResumeEditPage() {
                 const tier = CATEGORY_MIN_TIER[t.category];
                 const upgradeHint = `Upgrade to ${TIER_LABEL[tier]} to use this template.`;
                 const atsSafe = isAtsSafeFamily(getTemplateStyle(t.key).family);
+                const isPopular = !!professionKey && popularTemplates[professionKey] === t.key;
+                const professionLabel = professions.find((p) => p.key === professionKey)?.label ?? "your profession";
                 // Text fallback for the tier dot/ATS tag, which are otherwise
                 // color- and (for the dot) aria-hidden-only — so someone
                 // relying on a screen reader, or who hasn't learned what the
                 // dot colors mean, still gets tier + ATS info via the title.
-                const tierNote = `${TIER_LABEL[tier]} template.${atsSafe ? " ATS friendly (single column layout)." : ""}`;
+                const tierNote = `${TIER_LABEL[tier]} template.${atsSafe ? " ATS friendly (single column layout)." : ""}${isPopular ? ` Most popular with ${professionLabel}.` : ""}`;
                 return (
                   <span
                     key={t.key}
@@ -1078,6 +1091,7 @@ export function ResumeEditPage() {
                   >
                     <span className={`template-pill-tier template-pill-tier-${tier}`} aria-hidden="true" />
                     {atsSafe && <span className="template-pill-ats-dot" aria-hidden="true" />}
+                    {isPopular && <span className="template-pill-popular-dot" aria-hidden="true" />}
                     {t.name}
                     {locked && (
                       <span className="template-pill-lock" aria-hidden="true">
@@ -1104,6 +1118,10 @@ export function ResumeEditPage() {
               <span>
                 <span className="template-pill-ats-dot" aria-hidden="true" />
                 ATS friendly
+              </span>
+              <span>
+                <span className="template-pill-popular-dot" aria-hidden="true" />
+                Most popular with your profession
               </span>
             </div>
           </CollapsibleSection>

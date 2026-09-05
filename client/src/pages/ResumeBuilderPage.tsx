@@ -65,6 +65,11 @@ export function ResumeBuilderPage() {
   // means they never start filling it out only to be turned away at Save.
   const [limitStatus, setLimitStatus] = useState<{ reached: boolean; planName: string; resumeLimit: number } | null>(null);
 
+  // One templateKey per profession — the most-used non-Classic template for
+  // that profession, once it clears a minimum sample size. Feeds the dot
+  // rendered in the template picker below (see popularTemplates on the worker).
+  const [popularTemplates, setPopularTemplates] = useState<Record<string, string>>({});
+
   useEffect(() => {
     catalogApi
       .dashboardSummary()
@@ -96,6 +101,7 @@ export function ResumeBuilderPage() {
       if (res.professions.length > 0) setProfessionKey(res.professions[0].key);
     });
     catalogApi.listTemplates().then((res) => setTemplates(res.templates));
+    catalogApi.popularTemplatesByProfession().then((res) => setPopularTemplates(res.popularTemplates));
   }, []);
 
   useEffect(() => {
@@ -318,11 +324,13 @@ export function ResumeBuilderPage() {
                 const tier = CATEGORY_MIN_TIER[t.category];
                 const upgradeHint = `Upgrade to ${TIER_LABEL[tier]} to use this template.`;
                 const atsSafe = isAtsSafeFamily(getTemplateStyle(t.key).family);
+                const isPopular = !!professionKey && popularTemplates[professionKey] === t.key;
+                const professionLabel = professions.find((p) => p.key === professionKey)?.label ?? "your profession";
                 // Text fallback for the tier dot/ATS tag, which are otherwise
                 // color- and (for the dot) aria-hidden-only — so someone
                 // relying on a screen reader, or who hasn't learned what the
                 // dot colors mean, still gets tier + ATS info via the title.
-                const tierNote = `${TIER_LABEL[tier]} template.${atsSafe ? " ATS friendly (single column layout)." : ""}`;
+                const tierNote = `${TIER_LABEL[tier]} template.${atsSafe ? " ATS friendly (single column layout)." : ""}${isPopular ? ` Most popular with ${professionLabel}.` : ""}`;
                 return (
                   <span
                     key={t.key}
@@ -334,6 +342,7 @@ export function ResumeBuilderPage() {
                   >
                     <span className={`template-pill-tier template-pill-tier-${tier}`} aria-hidden="true" />
                     {atsSafe && <span className="template-pill-ats-dot" aria-hidden="true" />}
+                    {isPopular && <span className="template-pill-popular-dot" aria-hidden="true" />}
                     {t.name}
                     {locked && (
                       <span className="template-pill-lock" aria-hidden="true">
@@ -360,6 +369,10 @@ export function ResumeBuilderPage() {
               <span>
                 <span className="template-pill-ats-dot" aria-hidden="true" />
                 ATS friendly
+              </span>
+              <span>
+                <span className="template-pill-popular-dot" aria-hidden="true" />
+                Most popular with your profession
               </span>
             </div>
             {usesPhoto && <PhotoUploader value={photoUrl} onChange={setPhotoUrl} />}

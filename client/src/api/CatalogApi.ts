@@ -15,6 +15,11 @@ export class CatalogApi extends ApiClient {
     return this.get<{ templates: TemplateDefinition[] }>("/templates");
   }
 
+  /** One templateKey per profession — the most-used non-Classic template for that profession, once it clears a minimum sample size. See worker's popularTemplates.ts. Feeds the template picker's "most popular with <profession>" indicator. */
+  popularTemplatesByProfession() {
+    return this.get<{ popularTemplates: Record<string, string> }>("/templates/popular-by-profession");
+  }
+
   listPlans() {
     return this.get<{ plans: SubscriptionPlan[] }>("/subscriptions/plans");
   }
