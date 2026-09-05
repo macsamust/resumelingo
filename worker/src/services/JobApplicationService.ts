@@ -128,7 +128,13 @@ export class JobApplicationService {
     // Records a timeline entry only on an actual status change (not just any
     // edit that happens to include `status` unchanged) — see migration
     // 0033's doc comment on why the initial status is never backfilled here.
-    if (input.status !== undefined && input.status !== existing.status) {
+    // Reverting back to "applied" is deliberately never logged as a new
+    // entry, even though it's a real change to the status column: "Applied"
+    // is the one-time starting point of the pipeline (already recorded once,
+    // at creation, in create() above), not a milestone you re-enter later —
+    // a second "Applied" line further down the timeline would just read as
+    // confusing, not informative.
+    if (input.status !== undefined && input.status !== existing.status && input.status !== "applied") {
       await this.applications.recordStatusChange(id, input.status, updated!.updatedAt);
     }
     return updated!;
