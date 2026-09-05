@@ -396,6 +396,18 @@ export interface ResumeRecord {
 export type JobApplicationStatus = "applied" | "interviewing" | "offer" | "rejected" | "withdrawn";
 
 /**
+ * One status change, from worker/migrations/0033_job_application_status_history.sql
+ * — includes an entry for the initial status on any application created
+ * after that migration shipped (real data, logged at creation time). An
+ * application that already existed before then has no such entry; see that
+ * migration's doc comment for why it's never backfilled.
+ */
+export interface JobApplicationStatusHistoryEntry {
+  status: JobApplicationStatus;
+  changedAt: string;
+}
+
+/**
  * Job application tracker — see worker/migrations/0015_job_applications.sql
  * and TODO.md's "Product review" note. Net-new domain model tying which
  * resume (if any) was sent where, and what happened after; not part of the
@@ -409,6 +421,16 @@ export interface JobApplicationRecord {
   company: string;
   role: string;
   status: JobApplicationStatus;
+  /**
+   * The full status timeline, oldest first, including the initial status at
+   * creation for anything created after migration 0033 shipped — only
+   * populated by JobApplicationService.listForUser (see
+   * JobApplicationRepository.findHistoryForUser), same "optional enrichment
+   * field" pattern as Resume.template. Undefined wherever a bare DB row is
+   * used internally (e.g. isStaleApplication). Empty for an application that
+   * already existed before 0033 and hasn't had its status changed since.
+   */
+  statusHistory?: JobApplicationStatusHistoryEntry[];
   /** ISO date (yyyy-mm-dd), or null if not set. */
   appliedDate: string | null;
   link: string;

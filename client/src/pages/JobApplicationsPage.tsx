@@ -6,7 +6,8 @@ import { ConfirmDialog } from "../components/common/ConfirmDialog";
 import { useToast } from "../components/common/Toast";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, jobApplicationApi, resumeApi } from "../api";
-import { JobApplication, JobApplicationStatus, Resume } from "../types";
+import { JobApplication, JobApplicationStatus, JobApplicationStatusHistoryEntry, Resume } from "../types";
+import { formatUpdatedDate } from "../utils/time";
 
 const STATUS_LABEL: Record<JobApplicationStatus, string> = {
   applied: "Applied",
@@ -35,6 +36,18 @@ function safeExternalHref(link: string): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * The status timeline to actually render — falls back to a single
+ * best-effort entry (current status + createdAt) for an application that
+ * already existed before status history shipped and hasn't changed status
+ * since, so the "Status history" block always shows at least one line
+ * rather than nothing. See JobApplication.statusHistory's doc comment.
+ */
+function timelineFor(a: JobApplication): JobApplicationStatusHistoryEntry[] {
+  if (a.statusHistory && a.statusHistory.length > 0) return a.statusHistory;
+  return [{ status: a.status, changedAt: a.createdAt }];
 }
 
 function toDraft(a: JobApplication): Draft {
@@ -381,6 +394,19 @@ export function JobApplicationsPage() {
 
                 {expanded && (
                   <div className="job-app-card-body">
+                    <div className="job-app-status-history">
+                      <span className="hero-note" style={{ display: "block", marginBottom: 6 }}>
+                        Status history
+                      </span>
+                      <ul>
+                        {timelineFor(a).map((h, i) => (
+                          <li key={i}>
+                            <span className={`job-app-status-dot job-app-status-${h.status}`} aria-hidden="true" />
+                            {STATUS_LABEL[h.status]} — {formatUpdatedDate(h.changedAt)}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                     <div className="job-app-form-row">
                       <div className="field">
                         <label>Company</label>

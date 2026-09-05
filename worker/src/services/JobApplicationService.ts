@@ -2,7 +2,7 @@ import { CreateJobApplicationInput, JobApplicationRepository, UpdateJobApplicati
 import { ResumeRepository } from "../repositories/ResumeRepository";
 import { UserRepository } from "../repositories/UserRepository";
 import { User } from "../models/User";
-import { JobApplicationRecord, SubscriptionTier } from "../types";
+import { JobApplicationRecord, JobApplicationStatusHistoryEntry, SubscriptionTier } from "../types";
 
 export class JobApplicationNotFoundError extends Error {}
 export class JobApplicationAccessError extends Error {}
@@ -76,9 +76,20 @@ export class JobApplicationService {
     private readonly users: UserRepository
   ) {}
 
+  /** Attaches each application's own statusHistory (see JobApplicationRecord's doc comment) — one extra query for every history row this user has, grouped in memory rather than fetched per application. */
   async listForUser(userId: string): Promise<JobApplicationRecord[]> {
     await this.assertTrackerAllowed(userId);
-    return this.applications.findAllForUser(userId);
+    const [applications, history] = await Promise.all([
+      this.applications.findAllForUser(userId),
+      this.applications.findHistoryForUser(userId),
+    ]);
+    const historyByApp = new Map<string, JobApplicationStatusHistoryEntry[]>();
+    for (const { jobApplicationId, status, changedAt } of history) {
+      const entries = historyByApp.get(jobApplicationId) ?? [];
+      entries.push({ status, changedAt });
+      historyByApp.set(jobApplicationId, entries);
+    }
+    return applications.map((a) => ({ ...a, statusHistory: historyByApp.get(a.id) ?? [] }));
   }
 
   /** Throws if not found/owned — same shape as ResumeService.getOwned. Does not itself check tier — callers that need the tier gate call assertTrackerAllowed separately, since getOwned alone is also used where a 404/403 (not found/not yours) should take precedence over a tier message. */
@@ -97,15 +108,29 @@ export class JobApplicationService {
     if (count >= MAX_APPLICATIONS_PER_USER) {
       throw new JobApplicationLimitError(`You've reached the ${MAX_APPLICATIONS_PER_USER} application limit. Remove an old one to add another.`);
     }
-    return this.applications.create({ ...input, userId });
+    const application = await this.applications.create({ ...input, userId });
+    // Logs the real initial status at the moment it's actually known — not a
+    // backfill. Migration 0033's "don't invent history" note is specifically
+    // about applications that already existed before this shipped, where the
+    // true initial status is genuinely unknown; a brand-new application's
+    // creation moment is real data, so recording it here means every
+    // application created from now on has a complete, accurate timeline.
+    await this.applications.recordStatusChange(application.id, application.status, application.createdAt);
+    return application;
   }
 
   async update(userId: string, id: string, input: UpdateJobApplicationInput): Promise<JobApplicationRecord> {
     await this.assertTrackerAllowed(userId);
-    await this.getOwned(userId, id); // throws if not found/owned
+    const existing = await this.getOwned(userId, id); // throws if not found/owned
     assertJobApplicationSizeOk(input.notes, input.link);
     if (input.resumeId) await this.assertResumeOwned(userId, input.resumeId);
     const updated = await this.applications.update(id, input);
+    // Records a timeline entry only on an actual status change (not just any
+    // edit that happens to include `status` unchanged) — see migration
+    // 0033's doc comment on why the initial status is never backfilled here.
+    if (input.status !== undefined && input.status !== existing.status) {
+      await this.applications.recordStatusChange(id, input.status, updated!.updatedAt);
+    }
     return updated!;
   }
 

@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import { BaseRepository } from "./BaseRepository";
-import { JobApplicationRecord, JobApplicationStatus } from "../types";
+import { JobApplicationRecord, JobApplicationStatus, JobApplicationStatusHistoryEntry } from "../types";
 
 export interface CreateJobApplicationInput {
   userId: string;
@@ -78,9 +78,52 @@ export class JobApplicationRepository extends BaseRepository<JobApplicationRecor
     return merged;
   }
 
-  /** Bulk version of delete() — used by JobApplicationService.deleteStale's "clean up old applications" action, batched the same way ResumeRepository.deleteBulk is. */
+  /** Bulk version of delete() — used by JobApplicationService.deleteStale's "clean up old applications" action, batched the same way ResumeRepository.deleteBulk is. Deletes each id's status-history rows first (see delete()'s comment — D1 enforces the foreign key). */
   async deleteBulk(ids: string[]): Promise<void> {
     if (ids.length === 0) return;
-    await this.db.batch(ids.map((id) => this.db.prepare(`DELETE FROM job_applications WHERE id = ?`).bind(id)));
+    await this.db.batch([
+      ...ids.map((id) => this.db.prepare(`DELETE FROM job_application_status_history WHERE "jobApplicationId" = ?`).bind(id)),
+      ...ids.map((id) => this.db.prepare(`DELETE FROM job_applications WHERE id = ?`).bind(id)),
+    ]);
+  }
+
+  /**
+   * Overrides BaseRepository.delete() — D1 enforces the foreign key on
+   * job_application_status_history.jobApplicationId (see migration 0033's
+   * comment), so the history rows have to go first or the parent delete
+   * fails outright.
+   */
+  async delete(id: string): Promise<void> {
+    await this.db.prepare(`DELETE FROM job_application_status_history WHERE "jobApplicationId" = ?`).bind(id).run();
+    await super.delete(id);
+  }
+
+  /** Records one status change — called from JobApplicationService.create() (the real initial status) and .update() (only when the status actually changed). See migration 0033's doc comment on why an application's history is never backfilled if it already existed before this shipped. */
+  async recordStatusChange(jobApplicationId: string, status: JobApplicationStatus, changedAt: string): Promise<void> {
+    await this.db
+      .prepare(`INSERT INTO job_application_status_history ("id", "jobApplicationId", "status", "changedAt") VALUES (?, ?, ?, ?)`)
+      .bind(nanoid(12), jobApplicationId, status, changedAt)
+      .run();
+  }
+
+  /**
+   * Every status-history row across every application this user owns, in
+   * one query — used by JobApplicationService.listForUser to attach each
+   * application's own timeline without an N+1 (one extra query per
+   * application). Ordered oldest-first so callers can group and use as-is
+   * without re-sorting.
+   */
+  async findHistoryForUser(userId: string): Promise<(JobApplicationStatusHistoryEntry & { jobApplicationId: string })[]> {
+    const { results } = await this.db
+      .prepare(
+        `SELECT h."jobApplicationId" as "jobApplicationId", h."status" as "status", h."changedAt" as "changedAt"
+         FROM job_application_status_history h
+         JOIN job_applications a ON a."id" = h."jobApplicationId"
+         WHERE a."userId" = ?
+         ORDER BY h."changedAt" ASC`
+      )
+      .bind(userId)
+      .all<JobApplicationStatusHistoryEntry & { jobApplicationId: string }>();
+    return results;
   }
 }

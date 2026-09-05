@@ -9,6 +9,12 @@ export type ThankYouScenario = "post-interview" | "offer-acceptance" | "staying-
 /** Job application tracker — see JobApplicationsPage.tsx, worker's migrations/0015_job_applications.sql. Not tier-gated. */
 export type JobApplicationStatus = "applied" | "interviewing" | "offer" | "rejected" | "withdrawn";
 
+/** One status change after creation — see JobApplication.statusHistory. */
+export interface JobApplicationStatusHistoryEntry {
+  status: JobApplicationStatus;
+  changedAt: string;
+}
+
 export interface JobApplication {
   id: string;
   userId: string;
@@ -17,6 +23,14 @@ export interface JobApplication {
   company: string;
   role: string;
   status: JobApplicationStatus;
+  /**
+   * The full status timeline, oldest first, including the initial status at
+   * creation for anything created after this feature shipped. Empty for an
+   * application that already existed before then and hasn't had its status
+   * changed since — render `status` + `createdAt` as a best-effort first
+   * entry in that case rather than nothing.
+   */
+  statusHistory?: JobApplicationStatusHistoryEntry[];
   /** ISO date (yyyy-mm-dd), or null if not set. */
   appliedDate: string | null;
   link: string;
