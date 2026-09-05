@@ -350,6 +350,20 @@ export function JobApplicationsPage() {
             const draft = editing[a.id] ?? toDraft(a);
             const expanded = expandedId === a.id;
             const href = a.link ? safeExternalHref(a.link) : null;
+            // Every status change after the initial "Applied" gets its own
+            // line below the existing "Sent with X · Applied <date>" line,
+            // right on the collapsed card — a subscriber who never clicks
+            // "Edit" should still be able to see the full timeline, not just
+            // a hint that one exists. "Applied" itself stays on that
+            // existing line, using the dedicated appliedDate field (the
+            // real-world date they applied, editable in the form) rather
+            // than the history timeline's own first entry (when the row was
+            // logged, which can be a different date) — same distinction the
+            // rest of this page already draws. Each later line is formatted
+            // the same "yyyy-mm-dd" way as "Applied {appliedDate}" so every
+            // line reads consistently, rather than switching to a human date
+            // like "Jul 4, 2026".
+            const laterChanges = timelineFor(a).slice(1);
             return (
               <div className="resume-card job-app-card" key={a.id}>
                 <div className="job-app-card-head">
@@ -369,6 +383,11 @@ export function JobApplicationsPage() {
                         </>
                       )}
                     </p>
+                    {laterChanges.map((h, i) => (
+                      <p className="hero-note" key={i}>
+                        {STATUS_LABEL[h.status]} {h.changedAt.slice(0, 10)}
+                      </p>
+                    ))}
                   </div>
                   <div className="job-app-card-actions">
                     <select
