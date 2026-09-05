@@ -15,6 +15,7 @@ import { TOPICS as CAREER_TOPICS } from "./CareerCenterPage";
 import { NotificationBell } from "../components/dashboard/NotificationBell";
 import { PolyAvatar } from "../components/brand/PolyAvatar";
 import { formatRelativeTime } from "../utils/time";
+import { DASHBOARD_TEASER_STEPS } from "../config/quickStartSteps";
 
 // "Job Search Resources" pulls the topics not already covered by the
 // dedicated Resume Tips / Career Articles sections below, so the three
@@ -254,6 +255,19 @@ export function DashboardPage() {
           <Link to="/resumes/new" className="btn btn-primary">
             Create your first resume
           </Link>
+          {isFirstVisit && (
+            <div className="quick-start-teaser">
+              <p className="hero-note" style={{ marginBottom: 8 }}>
+                New here? Here's the quick version:
+              </p>
+              <ol>
+                {DASHBOARD_TEASER_STEPS.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+              <Link to="/help#quick-start">See the full guide →</Link>
+            </div>
+          )}
         </div>
       ) : (
         <div className="resume-list-grid" style={{ marginBottom: isPremium ? 36 : 0 }}>

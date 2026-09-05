@@ -550,6 +550,19 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
    empty-resume state — using PolyAvatar.tsx rather than the small logo
    mark, since the flat logo reads sparse blown up much past ~40px. */
 .poly-hero { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+/* Condensed Quick Start checklist shown only on a first-time visit's empty
+   Dashboard (DashboardPage.tsx, `isFirstVisit && myResumes.length === 0`) —
+   sits inside .poly-hero's centered flex column, but its own content is
+   left-aligned since a numbered list centered as a block reads awkwardly.
+   Steps are pulled from quickStartSteps.tsx (shared with the Help page's
+   full guide) rather than duplicated here. */
+.quick-start-teaser {
+  background: #f8fafc; border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px 20px; text-align: left; max-width: 380px; width: 100%;
+}
+.quick-start-teaser ol { margin: 0; padding-left: 20px; }
+.quick-start-teaser li { margin-bottom: 6px; font-size: 13.5px; }
+.quick-start-teaser a { font-size: 13px; font-weight: 600; color: var(--indigo); display: inline-block; margin-top: 4px; }
 .coach-related-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; }
 .coach-related-links a { font-size: 13px; font-weight: 600; color: var(--indigo); }
 .coach-input-row { display: flex; gap: 10px; }
