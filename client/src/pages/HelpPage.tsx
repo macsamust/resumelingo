@@ -84,6 +84,106 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
     ),
   },
   {
+    id: "ats-check",
+    question: "What's the ATS Check, and why can't I click on some of the suggested keywords?",
+    answer: (
+      <>
+        <p>
+          ATS Check (a Premium feature, found in the editor) scores your resume's structure against what an
+          Applicant Tracking System looks for, and separately lets you paste in a job description to see which of
+          its top keywords your resume already covers.
+        </p>
+        <p>
+          For missing keywords, you'll usually see a <strong>+</strong> button that adds the word straight into your{" "}
+          <strong>Skills &amp; Tools</strong> section. That button only appears on templates that actually have a
+          Skills &amp; Tools section — not every template does. If you don't see it, switching to a template that
+          includes Skills &amp; Tools (most do) will bring it back, or you can just add the keyword yourself
+          somewhere relevant in your resume.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "templates",
+    question: "Can I change my resume's template later, and do all templates have the same sections?",
+    answer: (
+      <p>
+        Yes, you can switch templates any time from the editor and the preview updates instantly, so you can see
+        exactly what changes before committing. Not every template looks or behaves identically though: a few, like
+        photo-based templates, show an uploaded photo, and only some include a dedicated Skills &amp; Tools
+        section. If a section you rely on seems to disappear after switching templates, check the live preview;
+        that's usually why.
+      </p>
+    ),
+  },
+  {
+    id: "import-resume",
+    question: "Can I import an existing resume instead of starting from scratch?",
+    answer: (
+      <p>
+        Yes, on Professional and Premium plans. When starting a new resume, choose{" "}
+        <strong>Import an existing resume</strong> and upload your current PDF or Word document. We'll read it and
+        pre-fill your experience, education, and other sections for you, review and adjust anything before saving.
+      </p>
+    ),
+  },
+  {
+    id: "job-tracker",
+    question: "Is there a way to track the jobs I've applied to?",
+    answer: (
+      <p>
+        Yes, the <strong>Job Applications</strong> tracker (Professional and Premium) lets you log each application:
+        company, role, status (applied, interviewing, offer, rejected, withdrawn), the job posting link, which
+        resume you used, and your own notes, all in one place.
+      </p>
+    ),
+  },
+  {
+    id: "career-center",
+    question: "What's the Career Center?",
+    answer: (
+      <p>
+        A Professional and Premium perk with curated resume tips, interview prep guidance, salary negotiation
+        advice, and career articles, all in one hub separate from the resume editor itself.
+      </p>
+    ),
+  },
+  {
+    id: "ask-poly",
+    question: "What is Ask Poly?",
+    answer: (
+      <p>
+        Poly is our AI Career Coach, a Premium feature for general career questions, like salary expectations,
+        tricky interview questions, or which certifications to pursue, that aren't tied to any specific resume.
+      </p>
+    ),
+  },
+  {
+    id: "cover-and-thank-you-letters",
+    question: "Can ResumeLingo write cover letters or thank-you notes for me?",
+    answer: (
+      <p>
+        Both are Premium features. An AI-generated cover letter can be added when creating a resume on a
+        Premium-tier template (look for the checkbox in the builder). Separately, the{" "}
+        <strong>Thank-You Letter</strong> tool covers common scenarios, post-interview, accepting an offer, staying
+        in touch after a rejection, or following up after networking, and lets you download the result as a text
+        file.
+      </p>
+    ),
+  },
+  {
+    id: "recruiter-mode",
+    question: "What's Recruiter Mode?",
+    answer: (
+      <p>
+        A Premium toggle in the editor that adds a candidate summary card to the top of your public resume link:
+        skills pulled automatically from your resume, plus optional fields like availability, clearance, location,
+        work authorization, expected salary, and remote preference. It's off by default, and every field is
+        optional even once you turn it on.
+      </p>
+    ),
+  },
+  {
     id: "account-changes",
     question: "I want to change my email address or password.",
     answer: (
