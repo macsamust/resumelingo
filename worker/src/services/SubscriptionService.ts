@@ -170,11 +170,16 @@ export class SubscriptionService {
       });
     }
 
-    // Specifically Starter -> Professional (not Starter -> Premium, and not
-    // Professional -> Premium) — see STARTER_DEFAULT_TEMPLATE_KEY's doc
-    // comment above for why only this one transition swaps a template out
-    // from under the subscriber.
-    if (tierChanged && user.subscriptionTier === SubscriptionTier.Starter && finalTier === SubscriptionTier.Professional) {
+    // Any transition off of Starter (Starter -> Professional or Starter ->
+    // Premium, but never Professional -> Premium) — see
+    // STARTER_DEFAULT_TEMPLATE_KEY's doc comment above for why only a
+    // starting-from-Starter transition swaps a template out from under the
+    // subscriber. Must cover Starter -> Premium too: "consulting" is the
+    // only template with a Skills & Tools section that a still-on-"classic"
+    // subscriber could be on, and without this swap their ATS Check keyword
+    // suggestions silently lose their "add" buttons the moment they unlock
+    // that feature, with no indication why.
+    if (tierChanged && user.subscriptionTier === SubscriptionTier.Starter && finalTier !== SubscriptionTier.Starter) {
       await this.upgradeStarterTemplate(user.id).catch((err) => {
         console.error("Failed to upgrade starter template on Professional upgrade:", err);
       });
