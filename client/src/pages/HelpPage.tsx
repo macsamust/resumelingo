@@ -199,8 +199,9 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
     question: "How do I cancel or change my subscription?",
     answer: (
       <p>
-        From your Dashboard, click <strong>Manage billing</strong>. This opens a secure Stripe page where you can
-        update your card, switch plans, or cancel.
+        To manage your subscription, scroll to the bottom of your Dashboard to the{" "}
+        <strong>Subscription Management</strong> section and click <strong>Manage billing</strong>. This opens a
+        secure Stripe page where you can update your card, switch plans, or cancel.
       </p>
     ),
   },
