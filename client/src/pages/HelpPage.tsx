@@ -200,8 +200,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
     answer: (
       <p>
         From your Dashboard, click <strong>Manage billing</strong>. This opens a secure Stripe page where you can
-        update your card, switch plans, or cancel. Downgrading to the free tier can also be done directly in the app
-        without going through Stripe.
+        update your card, switch plans, or cancel.
       </p>
     ),
   },
