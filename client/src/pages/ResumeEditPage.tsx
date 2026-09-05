@@ -27,7 +27,8 @@ import { buildResumeTextBlob, isAtsSafeFamily, matchKeywords, runHealthChecks } 
 import { CLEARANCE_OPTIONS, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
 import { withClearanceQuestion } from "../config/clearanceQuestion";
 import { generateId } from "../utils/id";
-import { clearDraft, loadDraft, ResumeDraft, saveDraft } from "../utils/resumeDraft";
+import { clearDraft, formatDraftChangeList, loadDraft, ResumeDraft, saveDraft, summarizeDraftChanges } from "../utils/resumeDraft";
+import { formatRelativeTime } from "../utils/time";
 import {
   AchievementEntry,
   AwardEntry,
@@ -125,6 +126,10 @@ export function ResumeEditPage() {
   // a leftover draft can never clobber data the user (or another
   // tab/device) actually saved more recently. See utils/resumeDraft.ts.
   const [pendingDraft, setPendingDraft] = useState<ResumeDraft | null>(null);
+  // Which sections the draft above actually differs on — shown in the
+  // restore banner so "Restore them?" isn't a blind guess. See
+  // summarizeDraftChanges's doc comment for what's compared.
+  const [pendingDraftChanges, setPendingDraftChanges] = useState<string[]>([]);
   // Whether the form currently differs from what's actually saved on the
   // server — drives the beforeunload warning below. localStorage autosave
   // protects the *data* from a closed tab or crash, but it doesn't stop
@@ -251,6 +256,7 @@ export function ResumeEditPage() {
         const draft = loadDraft(r.id);
         if (draft && new Date(draft.savedAt).getTime() > new Date(r.updatedAt).getTime()) {
           setPendingDraft(draft);
+          setPendingDraftChanges(summarizeDraftChanges(draft, r));
         } else if (draft) {
           clearDraft(r.id);
         }
@@ -315,11 +321,13 @@ export function ResumeEditPage() {
       onProfessionChange(pendingDraft.professionKey);
     }
     setPendingDraft(null);
+    setPendingDraftChanges([]);
   };
 
   const discardDraft = () => {
     if (id) clearDraft(id);
     setPendingDraft(null);
+    setPendingDraftChanges([]);
   };
 
   // Autosaves a snapshot of the whole form to localStorage shortly after
@@ -946,7 +954,16 @@ export function ResumeEditPage() {
       {error && <div className="form-error">{error}</div>}
       {pendingDraft && (
         <div className="draft-restore-banner">
-          <span>You have unsaved changes from earlier. Restore them?</span>
+          <span>
+            You have unsaved changes from {formatRelativeTime(pendingDraft.savedAt)}
+            {pendingDraftChanges.length > 0 && (
+              <>
+                {" "}
+                affecting <strong>{formatDraftChangeList(pendingDraftChanges)}</strong>
+              </>
+            )}
+            . Restore them?
+          </span>
           <span className="draft-restore-banner-actions">
             <button type="button" className="draft-restore-banner-restore" onClick={restoreDraft}>
               Restore

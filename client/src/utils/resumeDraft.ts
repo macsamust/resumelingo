@@ -5,6 +5,7 @@ import {
   LanguageEntry,
   LinkVisibility,
   ReferenceEntry,
+  Resume,
   SkillOrTool,
   WorkExperienceEntry,
 } from "../types";
@@ -84,4 +85,82 @@ export function clearDraft(resumeId: string): void {
   } catch {
     // ignore
   }
+}
+
+function deepEqual(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/**
+ * Which editor sections a found draft actually differs on from the resume's
+ * last real save — shown in the "Restore them?" banner (ResumeEditPage) so
+ * the choice isn't a blind guess. Labels match the editor's own
+ * CollapsibleSection titles, so "Restore affects: Work Experience" points at
+ * a section the person can immediately recognize.
+ *
+ * Deliberately excludes accessPasswordExpiresAt (stored in two different
+ * formats between the draft and the resume record — comparing them directly
+ * risks a false-positive "changed" on a field that's rarely touched anyway)
+ * and photoUrl (a data: URL, so any real difference is already implied by
+ * Info differing on something else practically every time it's touched).
+ */
+export function summarizeDraftChanges(draft: ResumeDraft, resume: Resume): string[] {
+  const changed: string[] = [];
+  const add = (label: string, isDifferent: boolean) => {
+    if (isDifferent) changed.push(label);
+  };
+
+  add(
+    "Info",
+    draft.fullName !== resume.fullName ||
+      draft.contactEmail !== resume.contactEmail ||
+      draft.contactPhone !== resume.contactPhone ||
+      draft.contactLinkedIn !== resume.contactLinkedIn ||
+      draft.title !== resume.title ||
+      draft.professionKey !== resume.profession ||
+      !deepEqual(draft.answers, resume.answers)
+  );
+  add("Template", draft.templateKey !== resume.templateKey);
+  add("Sharing", draft.visibility !== resume.visibility);
+  add(
+    "Work Experience",
+    !deepEqual(draft.experience, resume.experience) || draft.combineExperienceFormat !== resume.combineExperienceFormat
+  );
+  add("Education", !deepEqual(draft.education, resume.education));
+  add("Languages", !deepEqual(draft.languages ?? [], resume.languages));
+  add("Highlights & Key Achievements", !deepEqual(draft.achievements, resume.achievements));
+  add("Awards", !deepEqual(draft.awards, resume.awards));
+  add("Skills & Tools", !deepEqual(draft.skillsAndTools, resume.skillsAndTools));
+  add(
+    "Recruiter Mode",
+    draft.recruiterModeEnabled !== resume.recruiterModeEnabled ||
+      draft.recruiterLocation !== resume.recruiterLocation ||
+      draft.recruiterAvailability !== resume.recruiterAvailability ||
+      draft.recruiterClearance !== resume.recruiterClearance ||
+      draft.recruiterWorkAuthorization !== resume.recruiterWorkAuthorization ||
+      draft.recruiterExpectedSalary !== resume.recruiterExpectedSalary ||
+      draft.recruiterRemotePreference !== resume.recruiterRemotePreference
+  );
+  add(
+    "References",
+    draft.referencesEnabled !== resume.referencesEnabled ||
+      !deepEqual(draft.references, resume.references) ||
+      draft.referencesRecruiterModeOnly !== resume.referencesRecruiterModeOnly
+  );
+  add("Cover Letter", draft.coverLetterEnabled !== resume.coverLetterEnabled);
+
+  return changed;
+}
+
+/**
+ * Renders a `summarizeDraftChanges` result as a short, fixed-length phrase
+ * for the restore banner — capped at 2 named sections so the banner stays a
+ * single line no matter how much of the form the draft actually touched
+ * (there are 9 possible labels; joining all of them unbounded could produce
+ * a line longer than the page is wide).
+ */
+export function formatDraftChangeList(changes: string[]): string {
+  if (changes.length <= 2) return changes.join(", ");
+  const [shown, remaining] = [changes.slice(0, 2), changes.length - 2];
+  return `${shown.join(", ")}, and ${remaining} more`;
 }
