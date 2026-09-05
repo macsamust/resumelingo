@@ -188,7 +188,7 @@ section { padding: 84px 0; }
    my one premium pick" for templates they can already use, not just the ones
    they're locked out of. */
 .template-pill-tier { width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
-.template-pill-tier-starter { background: #6b7280; }
+.template-pill-tier-starter { background: #000000; }
 .template-pill-tier-professional { background: #c026d3; }
 /* Reuses Boardroom's own gold accent (accentSoft: "#c9a55c" in
    templateStyles.ts) rather than a generic amber/gold, so "Premium" reads as
