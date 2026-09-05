@@ -1,5 +1,14 @@
 # To Do — Later Consideration
 
+## Standing reminder — keep the Help page FAQ current
+
+CJ asked (Sep 2026) to be reminded of this going forward, not just this once: whenever a session ships new
+subscriber-facing functionality (a new template, a new tool/feature, a tier-gating change, etc.), flag before wrapping
+up that `client/src/pages/HelpPage.tsx`'s FAQ list may need a new entry or an update to an existing one. Don't wait to
+be asked — raise it proactively as part of closing out that kind of change, the same way a deploy reminder gets raised.
+
+
+
 ## P1 — AI Resume Refresh nudge email (proposed, Sep 2026) — high priority, not yet started
 
 CJ's idea: a periodic email that notices a resume has gone stale, offers a short list of relevant keywords the subscriber might have picked up experience with since they last touched it, and — if they say yes to one — writes an AI-generated bullet and gets it onto their resume. Marked high priority/"soon" per CJ, but explicitly scoped here rather than built yet, since it's a meaningfully bigger lift than anything shipped this session and has several open product decisions below that change the shape of the build.
