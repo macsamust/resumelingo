@@ -198,7 +198,7 @@ export function ResumeBuilderPage() {
             that limit. Upgrade your plan to create another, or delete an existing resume to free up a slot.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 16 }}>
-            <Link to="/#pricing" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+            <Link to="/#pricing" className="btn btn-primary">
               Upgrade plan
             </Link>
             <Link to="/dashboard" className="btn btn-ghost">
