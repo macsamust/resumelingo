@@ -133,7 +133,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
     question: "Is there a way to track the jobs I've applied to?",
     answer: (
       <p>
-        Yes, the <strong>Job Applications</strong> tracker (Professional and Premium) lets you log each application:
+        Yes, the <strong>Application Tracker</strong> (Professional and Premium) lets you log each application:
         company, role, status (applied, interviewing, offer, rejected, withdrawn), the job posting link, which
         resume you used, and your own notes, all in one place.
       </p>

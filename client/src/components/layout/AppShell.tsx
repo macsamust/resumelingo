@@ -10,7 +10,7 @@ const LINKS = [
   // Professional/Premium only — see JobApplicationService's class comment,
   // which enforces the same restriction server-side, so this is just
   // tidying the nav rather than the actual gate.
-  { to: "/job-applications", label: "Job Applications", minTier: "professional" as const },
+  { to: "/job-applications", label: "Application Tracker", minTier: "professional" as const },
   // Premium only — see ThankYouLetterPage.tsx/ThankYouLetterController.ts,
   // which enforce the same restriction server-side, so this is just tidying
   // the nav rather than the actual gate.

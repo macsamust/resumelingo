@@ -66,7 +66,7 @@ function JobApplicationsLocked() {
   return (
     <AppShell>
       <div className="app-page-head">
-        <h1>Job Applications</h1>
+        <h1>Application Tracker</h1>
       </div>
       <div className="empty-state">
         <div className="poly-row" style={{ justifyContent: "center" }}>
@@ -247,7 +247,7 @@ export function JobApplicationsPage() {
   return (
     <AppShell>
       <div className="app-page-head">
-        <h1>Job Applications</h1>
+        <h1>Application Tracker</h1>
         <span className="app-page-head-count">
           {applications.length}
           {limit !== null ? ` / ${limit}` : ""} tracked
