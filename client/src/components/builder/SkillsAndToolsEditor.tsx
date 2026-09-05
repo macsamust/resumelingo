@@ -206,10 +206,11 @@ export function SkillsAndToolsEditor({ professionKey, professionLabel, value, on
         ) : (
           <div className="hero-note-box" style={{ marginTop: 4, marginBottom: 16 }}>
             <p className="hero-note" style={{ marginBottom: 8 }}>
-              AI suggestions tailored to this resume's title require the Professional or Premium plan.
+              AI suggestions tailored to this resume's title require the Professional or Premium plan. Upgrading
+              opens in a new tab, so your progress here stays right where it is.
             </p>
             <Link to="/#pricing" target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
-              Upgrade to use this tool
+              Upgrade plan
             </Link>
           </div>
         )

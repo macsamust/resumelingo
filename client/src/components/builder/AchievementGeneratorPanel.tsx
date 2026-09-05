@@ -103,10 +103,11 @@ export function AchievementGeneratorPanel({ canGenerate, professionLabel, jobTit
       ) : (
         <>
           <p className="hero-note" style={{ marginBottom: 12 }}>
-            Generating bullets from a few keywords requires the Professional or Premium plan.
+            Generating bullets from a few keywords requires the Professional or Premium plan. Upgrading opens in a
+            new tab, so your progress here stays right where it is.
           </p>
           <Link to="/#pricing" target="_blank" rel="noopener noreferrer" className="btn btn-ghost">
-            Upgrade to use this tool
+            Upgrade plan
           </Link>
         </>
       )}
