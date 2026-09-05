@@ -1,5 +1,33 @@
 # To Do — Later Consideration
 
+## Bogus/unverified account protection (pinned, Sep 2026 — revisit later)
+
+CJ raised this after noticing the email-verification banner doesn't actually stop a bot from creating unlimited
+accounts. Confirmed by checking the code: `emailVerified` is never checked as a gate anywhere (`AuthService`/
+`authMiddleware` — it's purely the "track + nudge, don't block" rollout decision noted elsewhere in this file), there's
+no CAPTCHA anywhere in the app, and `/api/auth/register` has no IP rate limit (unlike login/reset/verify, which all
+do). So today a script could create unlimited Starter accounts with zero friction, and nothing ever purges an
+unverified one.
+
+**Explicitly not being built now — CJ wants to keep creating unverified test accounts while testing, and asked to pin
+this rather than decide the policy under time pressure.** Important: nothing about testing needs to change today —
+since verification isn't a gate at all right now, unverified test accounts already work fully, and will keep working
+regardless of whatever gets built here, as long as it's built with a dev/test exemption.
+
+**When this gets picked back up, three independent levers, each needs its own decision:**
+1. **Bot defense at signup.** Cloudflare Turnstile (CAPTCHA — free, native to Workers) vs. an IP rate limit on
+   `/register` (same pattern as login/reset/verify, e.g. 5/IP/hour) vs. both. A rate limit alone doesn't stop an
+   IP-rotating bot; Turnstile is the stronger single lever.
+2. **Whether unverified accounts eventually lose functional access.** Options range from leaving it fully passive (no
+   change), to a soft gate (e.g. block creating *new* resumes after 48h unverified, existing ones stay usable), to a
+   hard gate (can't create any resume until verified — simplest rule, but risks blocking a real signup who just
+   hasn't checked their inbox yet).
+3. **Stale-account cleanup.** A scheduled purge (same cron pattern as the view digest) of accounts that stay
+   unverified past some window (30 vs. 90 days) with zero resumes created — caps how much a bot account can
+   accumulate over time even if 1 and 2 don't fully stop signups.
+
+Not started. No code changes made for this item.
+
 ## Standing reminder — keep the Help page FAQ current
 
 CJ asked (Sep 2026) to be reminded of this going forward, not just this once: whenever a session ships new
