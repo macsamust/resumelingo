@@ -70,7 +70,12 @@ export function ResumeImportPanel({ canImport, onImported }: Props) {
           Upload a resume (PDF, Word, or text) and let AI pull your work history, education, and skills into the form
           below automatically. This requires the Professional or Premium plan.
         </p>
-        <Link to="/#pricing" className="btn btn-ghost">
+        {/* target="_blank" rather than a same-tab navigation — this panel lives inside the New Resume
+            form, which holds unsaved state (profession, answers, etc.). Sending a Starter subscriber
+            to the marketing site's pricing section in the same tab would silently discard whatever
+            they'd already filled in. Opening pricing in a new tab keeps this page (and their
+            in-progress form) exactly as they left it. */}
+        <Link to="/#pricing" target="_blank" rel="noopener noreferrer" className="btn btn-ghost">
           Upgrade to import a resume
         </Link>
       </div>

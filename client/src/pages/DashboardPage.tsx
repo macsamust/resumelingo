@@ -222,7 +222,9 @@ export function DashboardPage() {
 
       {!showSubscriptionManagement && (
         <div style={{ display: "flex", gap: 12, marginBottom: 36 }}>
-          <Link to="/#pricing" className="btn btn-ghost">
+          {/* target="_blank" so clicking doesn't navigate the Dashboard itself away — opens pricing in
+              a new tab instead, same fix as ResumeImportPanel's upgrade link. */}
+          <Link to="/#pricing" target="_blank" rel="noopener noreferrer" className="btn btn-ghost">
             Upgrade plan
           </Link>
         </div>
