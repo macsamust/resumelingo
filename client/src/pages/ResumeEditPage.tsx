@@ -20,6 +20,7 @@ import { VersionHistoryPanel } from "../components/common/VersionHistoryPanel";
 import { ApiError, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL, templateHasSkillsAndTools } from "../utils/templateAccess";
+import { titleCase } from "../utils/textFormat";
 import { canUseVisibility, VISIBILITY_LABEL, VISIBILITY_MIN_TIER } from "../utils/visibilityAccess";
 import { getTemplateStyle } from "../config/templateStyles";
 import { buildResumeTextBlob, isAtsSafeFamily, matchKeywords, runHealthChecks } from "../utils/atsCheck";
@@ -1019,7 +1020,11 @@ export function ResumeEditPage() {
             {usesPhoto && <PhotoUploader value={photoUrl} onChange={setPhotoUrl} />}
             <div className="field">
               <label>Resume title</label>
-              <input value={title} onChange={(e) => setTitle(e.target.value)} />
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={(e) => setTitle(titleCase(e.target.value))}
+              />
             </div>
             <div className="field">
               <label>Profession</label>

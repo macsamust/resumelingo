@@ -16,6 +16,7 @@ import { ApiError, catalogApi, resumeApi } from "../api";
 import { ImportedResumeData } from "../api/ResumeImportApi";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL, templateHasSkillsAndTools } from "../utils/templateAccess";
+import { titleCase } from "../utils/textFormat";
 import { getTemplateStyle } from "../config/templateStyles";
 import { isAtsSafeFamily } from "../utils/atsCheck";
 import { withClearanceQuestion } from "../config/clearanceQuestion";
@@ -291,7 +292,12 @@ export function ResumeBuilderPage() {
             </div>
             <div className="field">
               <label>Resume title</label>
-              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Cloud Architect Resume" />
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={(e) => setTitle(titleCase(e.target.value))}
+                placeholder="e.g. Cloud Architect Resume"
+              />
             </div>
             <div className="field">
               <label>Profession</label>

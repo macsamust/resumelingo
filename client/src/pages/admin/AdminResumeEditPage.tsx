@@ -14,6 +14,7 @@ import { ConfirmDialog } from "../../components/common/ConfirmDialog";
 import { useToast } from "../../components/common/Toast";
 import { adminApi, ApiError, catalogApi } from "../../api";
 import { templateHasSkillsAndTools } from "../../utils/templateAccess";
+import { titleCase } from "../../utils/textFormat";
 import { getTemplateStyle } from "../../config/templateStyles";
 import { generateId } from "../../utils/id";
 import {
@@ -260,7 +261,11 @@ export function AdminResumeEditPage() {
             {usesPhoto && <PhotoUploader value={photoUrl} onChange={setPhotoUrl} />}
             <div className="field">
               <label>Resume title</label>
-              <input value={title} onChange={(e) => setTitle(e.target.value)} />
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={(e) => setTitle(titleCase(e.target.value))}
+              />
             </div>
             <label className="checkbox-field">
               <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
