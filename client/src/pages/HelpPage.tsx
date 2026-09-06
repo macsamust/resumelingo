@@ -63,6 +63,18 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
     ),
   },
   {
+    id: "verify-before-sharing",
+    question: "Do I need to verify my email before sharing?",
+    answer: (
+      <p>
+        Only if you want your link to be <strong>Public</strong> or <strong>Password protected</strong> — those
+        visibility settings require a verified email, since they make your resume reachable outside your account.{" "}
+        <strong>Private</strong> stays available either way. Check your inbox for the verification email, or resend
+        it from the banner at the top of the app or from the Sharing section itself.
+      </p>
+    ),
+  },
+  {
     id: "resume-limit",
     question: "How many resumes can I create?",
     answer: (
