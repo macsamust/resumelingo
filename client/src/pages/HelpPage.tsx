@@ -21,21 +21,17 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
     answer: (
       <>
         <p>
-          Most of the resume editor autosaves automatically: when you click or tab out of a field, it saves within a
-          second or two. You'll see "All changes saved" near the top of the page when it's caught up, or "Couldn't
-          autosave, click Save changes to retry" if something went wrong (usually a connection hiccup). There's also
-          a "Save changes" button at the top of the editor you can click any time to save immediately, rather than
-          waiting for autosave.
+          Most of the editor autosaves the moment you leave a field- look for <strong>"All changes saved"</strong>{" "}
+          near the top, or <strong>"Couldn't autosave…"</strong> if it hiccuped. There's also a{" "}
+          <strong>Save changes</strong> button for saving on demand.
         </p>
         <p>
-          One section works differently: the <strong>Generated Summary &amp; Bullets</strong> section has its own{" "}
-          <strong>"Save summary"</strong> button, separate from the rest of the form. If you edited your summary or
-          bullet text and don't see it reflected, check that you clicked "Save summary" specifically. That section
-          doesn't autosave with everything else.
+          One exception: <strong>Generated Summary &amp; Bullets</strong> only saves via its own{" "}
+          <strong>Save summary</strong> button, it doesn't autosave with the rest of the form.
         </p>
         <p>
-          If you edited a resume and the change still isn't showing on your public link, try a hard refresh
-          (Cmd+Shift+R / Ctrl+Shift+R). Browsers sometimes cache the public resume page.
+          If a change isn't showing on your public link, hard-refresh (Cmd+Shift+R / Ctrl+Shift+R) — browsers
+          sometimes cache that page.
         </p>
       </>
     ),
