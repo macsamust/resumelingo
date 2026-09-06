@@ -27,8 +27,6 @@ import { buildResumeTextBlob, isAtsSafeFamily, matchKeywords, runHealthChecks } 
 import { CLEARANCE_OPTIONS, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
 import { withClearanceQuestion } from "../config/clearanceQuestion";
 import { generateId } from "../utils/id";
-import { clearDraft, formatDraftChangeList, loadDraft, ResumeDraft, saveDraft, summarizeDraftChanges } from "../utils/resumeDraft";
-import { formatRelativeTime } from "../utils/time";
 import {
   AchievementEntry,
   AwardEntry,
@@ -125,29 +123,19 @@ export function ResumeEditPage() {
   // list (from creating another resume in a different tab mid-edit) is an
   // acceptable tradeoff for not re-fetching on every keystroke.
   const [otherResumes, setOtherResumes] = useState<Resume[]>([]);
-  // A locally-autosaved draft found on load that's newer than this resume's
-  // last real save — offered via a banner rather than silently applied, so
-  // a leftover draft can never clobber data the user (or another
-  // tab/device) actually saved more recently. See utils/resumeDraft.ts.
-  const [pendingDraft, setPendingDraft] = useState<ResumeDraft | null>(null);
-  // Which sections the draft above actually differs on — shown in the
-  // restore banner so "Restore them?" isn't a blind guess. See
-  // summarizeDraftChanges's doc comment for what's compared.
-  const [pendingDraftChanges, setPendingDraftChanges] = useState<string[]>([]);
   // Whether the form currently differs from what's actually saved on the
-  // server — drives the beforeunload warning below. localStorage autosave
-  // protects the *data* from a closed tab or crash, but it doesn't stop
-  // someone from closing the tab thinking they'd hit "Save changes" when
-  // they'd only autosaved locally, hence this separate, explicit signal.
+  // server — drives both the beforeunload warning below and the gate on the
+  // on-blur/unmount server autosave, so neither fires when there's nothing
+  // to save.
   const [isDirty, setIsDirty] = useState(false);
   // Drives the small status line next to "Save changes" — reflects the
   // on-blur autosave below, separate from `saving` (which is specifically
   // the explicit button's own in-flight state).
   const [autoSaveState, setAutoSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  // True once the form has "settled" after a load/restore/discard — the
-  // dirty-tracking effect below fires on that settling too (same
-  // dependency list as autosave), and that first firing must not count as
-  // a real edit or the warning would fire on a page that was never touched.
+  // True once the form has "settled" after a load — the dirty-tracking
+  // effect below fires on that settling too (same dependency list), and
+  // that first firing must not count as a real edit or the warning would
+  // fire on a page that was never touched.
   const hasSettledRef = useRef(false);
 
   // Shows the floating "back to top" button once the page's own header has
@@ -260,18 +248,6 @@ export function ResumeEditPage() {
         setProfessionKey(r.profession);
         setOtherResumes(allResumesRes.resumes.filter((other) => other.id !== r.id));
 
-        // Offer to restore a local autosave only if it's actually newer than
-        // this resume's last real save — otherwise it's a stale leftover
-        // from before a save that already happened (here or on another
-        // device/tab), and applying it would silently roll the resume back.
-        const draft = loadDraft(r.id);
-        if (draft && new Date(draft.savedAt).getTime() > new Date(r.updatedAt).getTime()) {
-          setPendingDraft(draft);
-          setPendingDraftChanges(summarizeDraftChanges(draft, r));
-        } else if (draft) {
-          clearDraft(r.id);
-        }
-
         return catalogApi.getProfessionQuestions(r.profession);
       })
       .then((res) => setProfessionDetail(res.profession))
@@ -297,137 +273,12 @@ export function ResumeEditPage() {
     catalogApi.getProfessionQuestions(key).then((res) => setProfessionDetail(res.profession));
   };
 
-  /** Applies every field from a found local draft, then dismisses the banner. */
-  const restoreDraft = () => {
-    if (!pendingDraft) return;
-    setFullName(pendingDraft.fullName);
-    setContactEmail(pendingDraft.contactEmail);
-    setContactPhone(pendingDraft.contactPhone);
-    setContactLinkedIn(pendingDraft.contactLinkedIn);
-    setPhotoUrl(pendingDraft.photoUrl);
-    setTitle(pendingDraft.title);
-    setTemplateKey(pendingDraft.templateKey);
-    setVisibility(pendingDraft.visibility);
-    setAccessPasswordExpiresAt(pendingDraft.accessPasswordExpiresAt);
-    setAnswers(pendingDraft.answers);
-    setExperience(pendingDraft.experience);
-    setEducation(pendingDraft.education);
-    setAwards(pendingDraft.awards);
-    setAchievements(pendingDraft.achievements);
-    setSkillsAndTools(pendingDraft.skillsAndTools);
-    setLanguages(pendingDraft.languages ?? []); // ?? [] guards a draft saved before this field existed
-    setCoverLetterEnabled(pendingDraft.coverLetterEnabled);
-    setRecruiterModeEnabled(pendingDraft.recruiterModeEnabled);
-    setRecruiterLocation(pendingDraft.recruiterLocation);
-    setRecruiterAvailability(pendingDraft.recruiterAvailability);
-    setRecruiterClearance(pendingDraft.recruiterClearance);
-    setRecruiterWorkAuthorization(pendingDraft.recruiterWorkAuthorization);
-    setRecruiterExpectedSalary(pendingDraft.recruiterExpectedSalary);
-    setRecruiterRemotePreference(pendingDraft.recruiterRemotePreference);
-    setReferencesEnabled(pendingDraft.referencesEnabled);
-    setReferences(pendingDraft.references);
-    setReferencesRecruiterModeOnly(pendingDraft.referencesRecruiterModeOnly);
-    setCombineExperienceFormat(pendingDraft.combineExperienceFormat);
-    if (pendingDraft.professionKey && pendingDraft.professionKey !== professionKey) {
-      onProfessionChange(pendingDraft.professionKey);
-    }
-    setPendingDraft(null);
-    setPendingDraftChanges([]);
-  };
-
-  const discardDraft = () => {
-    if (id) clearDraft(id);
-    setPendingDraft(null);
-    setPendingDraftChanges([]);
-  };
-
-  // Autosaves a snapshot of the whole form to localStorage shortly after
-  // each change, so closing the tab or a browser crash before hitting "Save
-  // changes" doesn't lose the work — see utils/resumeDraft.ts. Skipped
-  // entirely while the initial load is still in flight (nothing to save
-  // yet) and while a just-found draft is awaiting the user's restore/discard
-  // decision (autosaving here would immediately overwrite the very draft
-  // being offered, with the pre-restore form state).
-  useEffect(() => {
-    if (loading || !id || pendingDraft) return;
-    const handle = setTimeout(() => {
-      saveDraft(id, {
-        fullName,
-        contactEmail,
-        contactPhone,
-        contactLinkedIn,
-        photoUrl,
-        title,
-        professionKey,
-        templateKey,
-        visibility,
-        accessPasswordExpiresAt,
-        answers,
-        experience,
-        education,
-        awards,
-        achievements,
-        skillsAndTools,
-        languages,
-        coverLetterEnabled,
-        recruiterModeEnabled,
-        recruiterLocation,
-        recruiterAvailability,
-        recruiterClearance,
-        recruiterWorkAuthorization,
-        recruiterExpectedSalary,
-        recruiterRemotePreference,
-        referencesEnabled,
-        references,
-        referencesRecruiterModeOnly,
-        combineExperienceFormat,
-      });
-    }, 800);
-    return () => clearTimeout(handle);
-  }, [
-    loading,
-    id,
-    pendingDraft,
-    fullName,
-    contactEmail,
-    contactPhone,
-    contactLinkedIn,
-    photoUrl,
-    title,
-    professionKey,
-    templateKey,
-    visibility,
-    accessPasswordExpiresAt,
-    answers,
-    experience,
-    education,
-    awards,
-    achievements,
-    skillsAndTools,
-    languages,
-    coverLetterEnabled,
-    recruiterModeEnabled,
-    recruiterLocation,
-    recruiterAvailability,
-    recruiterClearance,
-    recruiterWorkAuthorization,
-    recruiterExpectedSalary,
-    recruiterRemotePreference,
-    referencesEnabled,
-    references,
-    referencesRecruiterModeOnly,
-    combineExperienceFormat,
-  ]);
-
   // Tracks whether the form has actually changed since it last matched the
-  // server — same dependency list as the autosave effect above, since both
-  // need to fire on exactly the same "something changed" signal. While
-  // loading, or while a restore/discard decision is pending, any firing is
-  // just the form settling into place rather than a real edit, so
-  // hasSettledRef is reset and the very next firing after that is skipped
-  // once rather than marked dirty.
+  // server. While loading, any firing is just the form settling into place
+  // rather than a real edit, so hasSettledRef is reset and the very next
+  // firing after that is skipped once rather than marked dirty.
   useEffect(() => {
-    if (loading || pendingDraft) {
+    if (loading) {
       hasSettledRef.current = false;
       return;
     }
@@ -442,7 +293,6 @@ export function ResumeEditPage() {
     setAutoSaveState("idle");
   }, [
     loading,
-    pendingDraft,
     fullName,
     contactEmail,
     contactPhone,
@@ -700,10 +550,6 @@ export function ResumeEditPage() {
     if (!id) return;
     const { resume: updated } = await resumeApi.update(id, buildSavePayload());
     setResume(updated);
-    // Now safely persisted server-side — the local autosave would only be
-    // stale from here on, and leaving it around would just prompt an
-    // unnecessary "restore?" banner on the next visit.
-    clearDraft(id);
     setIsDirty(false);
   };
 
@@ -801,8 +647,8 @@ export function ResumeEditPage() {
   // so without this it would forever see the very first render's stale
   // isDirty/id/buildSavePayload rather than whatever was true right before
   // the person navigated away.
-  const latestSaveStateRef = useRef({ isDirty, id, pendingDraft, buildSavePayload });
-  latestSaveStateRef.current = { isDirty, id, pendingDraft, buildSavePayload };
+  const latestSaveStateRef = useRef({ isDirty, id, buildSavePayload });
+  latestSaveStateRef.current = { isDirty, id, buildSavePayload };
 
   useEffect(() => () => {
     if (autosaveTimeoutRef.current) clearTimeout(autosaveTimeoutRef.current);
@@ -818,8 +664,8 @@ export function ResumeEditPage() {
     // persist() (whose setResume/setIsDirty calls would warn about setting
     // state on an unmounted component), means the edit survives even when
     // nobody waited around for the debounce or clicked "Save changes".
-    const { isDirty, id, pendingDraft, buildSavePayload } = latestSaveStateRef.current;
-    if (isDirty && id && !pendingDraft) {
+    const { isDirty, id, buildSavePayload } = latestSaveStateRef.current;
+    if (isDirty && id) {
       resumeApi.update(id, buildSavePayload()).catch(() => {});
     }
   }, []);
@@ -856,7 +702,7 @@ export function ResumeEditPage() {
    */
   const flushPendingAutosave = () => {
     if (autosaveTimeoutRef.current) clearTimeout(autosaveTimeoutRef.current);
-    if (savingInFlightRef.current || saving || !isDirty || !id || pendingDraft) return undefined;
+    if (savingInFlightRef.current || saving || !isDirty || !id) return undefined;
     savingInFlightRef.current = true;
     setAutoSaveState("saving");
     return persist()
@@ -963,28 +809,6 @@ export function ResumeEditPage() {
         </div>
       </div>
       {error && <div className="form-error">{error}</div>}
-      {pendingDraft && (
-        <div className="draft-restore-banner">
-          <span>
-            You have unsaved changes from {formatRelativeTime(pendingDraft.savedAt)}
-            {pendingDraftChanges.length > 0 && (
-              <>
-                {" "}
-                affecting <strong>{formatDraftChangeList(pendingDraftChanges)}</strong>
-              </>
-            )}
-            . Restore them?
-          </span>
-          <span className="draft-restore-banner-actions">
-            <button type="button" className="draft-restore-banner-restore" onClick={restoreDraft}>
-              Restore
-            </button>
-            <button type="button" className="draft-restore-banner-discard" onClick={discardDraft}>
-              Discard
-            </button>
-          </span>
-        </div>
-      )}
       <form id="resume-edit-form" onSubmit={onSubmit} className="builder-grid" onBlur={handleFormBlur}>
         <div className="builder-panel">
           <button className="btn btn-primary btn-block" type="submit" disabled={saving} style={{ marginBottom: 8 }}>
