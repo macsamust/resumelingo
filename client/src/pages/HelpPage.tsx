@@ -30,7 +30,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
           <strong>Save summary</strong> button, it doesn't autosave with the rest of the form.
         </p>
         <p>
-          If a change isn't showing on your public link, hard-refresh (Cmd+Shift+R / Ctrl+Shift+R) — browsers
+          If a change isn't showing on your public link, hard-refresh (Cmd+Shift+R / Ctrl+Shift+R), browsers
           sometimes cache that page.
         </p>
       </>
