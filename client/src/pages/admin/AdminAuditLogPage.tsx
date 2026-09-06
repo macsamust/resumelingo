@@ -8,8 +8,8 @@ import { downloadBlob } from "../../utils/downloadBlob";
 
 const PAGE_SIZE = 50;
 
-/** Human-readable label for each action code logged by the various admin controllers — see worker's AdminAuditLogRepository.log call sites. */
-const ACTION_LABELS: Record<string, string> = {
+/** Human-readable label for each action code logged by the various admin controllers — see worker's AdminAuditLogRepository.log call sites. Exported for reuse by AdminDashboardPage's recent-activity tile. */
+export const ACTION_LABELS: Record<string, string> = {
   "user.change_tier": "Changed subscription tier",
   "user.suspend": "Suspended account",
   "user.unsuspend": "Unsuspended account",

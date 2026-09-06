@@ -322,8 +322,23 @@ export class UserRepository extends BaseRepository<UserRecord> {
     return row?.count ?? 0;
   }
 
+  /** Signups within a bounded window (`[fromIso, toIso)`) — unlike countCreatedSince (open-ended, "since X"), this is what the admin dashboard's trend arrows use to compare one period against the equal-length period immediately before it. */
+  async countCreatedBetween(fromIso: string, toIso: string): Promise<number> {
+    const row = await this.db
+      .prepare(`SELECT COUNT(*) as count FROM users WHERE createdAt >= ? AND createdAt < ?`)
+      .bind(fromIso, toIso)
+      .first<{ count: number }>();
+    return row?.count ?? 0;
+  }
+
   async countSuspended(): Promise<number> {
     const row = await this.db.prepare(`SELECT COUNT(*) as count FROM users WHERE suspended = 1`).first<{ count: number }>();
+    return row?.count ?? 0;
+  }
+
+  /** Accounts currently mid-failed-renewal (see SubscriptionService.notifyPaymentFailure) — feeds the admin dashboard's payment-health tile. */
+  async countPaymentFailed(): Promise<number> {
+    const row = await this.db.prepare(`SELECT COUNT(*) as count FROM users WHERE paymentFailed = 1`).first<{ count: number }>();
     return row?.count ?? 0;
   }
 

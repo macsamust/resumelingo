@@ -327,13 +327,39 @@ export interface AdminDashboardSummary {
   users: {
     total: number;
     newInRange: number;
+    /** Same-length window immediately before this one — e.g. for "last 7 days" this is the 7 days before that. Feeds the trend arrow. */
+    newInRangePrevious: number;
     suspended: number;
     byTier: Record<SubscriptionTier, number>;
   };
   resumes: {
     total: number;
     newInRange: number;
+    newInRangePrevious: number;
   };
+  /** MRR = each tier's current subscriber count x that plan's current monthly price — a snapshot of "if nothing changes, what renews next month," not scoped to rangeDays. */
+  revenue: {
+    mrr: number;
+    byTier: Record<SubscriptionTier, number>;
+    paymentFailedCount: number;
+  };
+  /** Security-events count in range, by severity — see SecurityEventRepository.countBySeverity. Links through to the Security Report page. */
+  security: {
+    critical: number;
+    warning: number;
+    info: number;
+    previous: { critical: number; warning: number; info: number };
+  };
+  engagement: {
+    viewsInRange: number;
+    viewsInRangePrevious: number;
+    /** Fleet-wide, Classic excluded — see ResumeRepository.countByTemplate. */
+    topTemplates: { templateKey: string; count: number }[];
+    /** Distinct users with at least one tracked application, all-time (cumulative, not scoped to rangeDays). */
+    jobTrackerAdoption: number;
+  };
+  /** Last few admin_audit_log entries — a glance, not a replacement for the full Audit Log page. */
+  recentActivity: AdminAuditLogEntry[];
 }
 
 /** One resume in the admin's cross-user search results — a regular Resume plus its owner's name/email, since the admin isn't scoped to one user's page here. */

@@ -167,6 +167,44 @@ section { padding: 84px 0; }
 .dash-tile { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px 16px; text-align: center; }
 .dash-tile .dash-icon { font-size: 22px; margin-bottom: 10px; }
 .dash-tile p { font-size: 13.5px; font-weight: 600; color: var(--navy-light); }
+/* A handful of dashboard tiles (the Security row) are <Link>s through to a
+   detail page rather than plain divs — <a> defaults to inline, which broke
+   the block sizing/centering .dash-tile assumes, so this restores it. */
+a.dash-tile { display: block; text-decoration: none; color: inherit; }
+a.dash-tile:hover { border-color: var(--indigo); }
+/* Applied only when a tile's count is actually nonzero (see
+   AdminDashboardPage.tsx) — a tile that's fine stays the plain neutral
+   .dash-tile look; only something that needs a look gets colored, so the
+   color itself is the at-a-glance signal instead of requiring every number
+   to be read to tell routine from urgent. */
+.dash-tile-alert-critical { background: #fee2e2; border-color: #fecaca; }
+.dash-tile-alert-critical p { color: #b91c1c; }
+.dash-tile-alert-warning { background: #fef3c7; border-color: #fde68a; }
+.dash-tile-alert-warning p { color: #92400e; }
+/* Compact ranked list (top templates) — replaces cramming a variable-length
+   ranking into square dash-tiles, which only ever had room to show a couple
+   of the ranked results at once. */
+.dash-rank-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; }
+.dash-rank-list { list-style: none; margin: 0; padding: 0; }
+.dash-rank-list li { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.dash-rank-list li:last-child { border-bottom: none; }
+.dash-rank-number { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #f1f5f9; color: var(--navy-light); font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.dash-rank-label { flex: 1; font-size: 14px; font-weight: 600; color: var(--navy-light); text-transform: capitalize; }
+.dash-rank-count { font-size: 13px; color: var(--muted); }
+/* Trend arrow under a dash-tile's number — see AdminDashboardPage.tsx's
+   Trend component. Color reflects whether the direction is good news for
+   that specific metric (a rise in signups vs. a rise in critical security
+   events), not just up-vs-down. */
+.dash-trend { display: block; font-size: 11.5px; font-weight: 600; margin-top: 4px; }
+.dash-trend-good { color: #166534; }
+.dash-trend-bad { color: #b91c1c; }
+.dash-trend-flat { color: var(--muted); font-weight: 500; }
+/* Only rendered when something in range actually needs a look (critical
+   security events or failing payments) — sits above every other section so
+   the most urgent facts aren't buried below routine totals. */
+.dash-attention-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 12px 18px; margin-bottom: 24px; font-size: 13.5px; color: #b91c1c; }
+.dash-attention-banner strong { color: #7f1d1d; }
+.dash-attention-banner a { color: #b91c1c; font-weight: 600; text-decoration: underline; }
 
 .template-pills { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 /* white-space left at its normal-wrap default (not nowrap) — a long name

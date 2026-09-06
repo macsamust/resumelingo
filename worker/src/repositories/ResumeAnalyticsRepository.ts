@@ -58,6 +58,21 @@ export class ResumeAnalyticsRepository {
       .run();
   }
 
+  /** Fleet-wide view count since `sinceIso`, across every resume — not scoped to one user's resumes like dailyViewCounts above. Feeds the admin dashboard's engagement tile. */
+  async countViewsSince(sinceIso: string): Promise<number> {
+    const row = await this.db.prepare(`SELECT COUNT(*) as count FROM resume_views WHERE "viewedAt" >= ?`).bind(sinceIso).first<{ count: number }>();
+    return row?.count ?? 0;
+  }
+
+  /** Same bounded-window shape as UserRepository.countCreatedBetween — feeds the admin dashboard's trend arrow on the Engagement tile. */
+  async countViewsBetween(fromIso: string, toIso: string): Promise<number> {
+    const row = await this.db
+      .prepare(`SELECT COUNT(*) as count FROM resume_views WHERE "viewedAt" >= ? AND "viewedAt" < ?`)
+      .bind(fromIso, toIso)
+      .first<{ count: number }>();
+    return row?.count ?? 0;
+  }
+
   /** Snapshots a resume's current Resume.strengthScore — called after every create/update/clone in ResumeService, so a trend ("up 12 points this month") can be shown without recomputing the score for past states, which isn't possible since only the current resume row is stored. */
   async recordScoreSnapshot(resumeId: string, score: number): Promise<void> {
     await this.db

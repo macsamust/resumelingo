@@ -35,6 +35,14 @@ export class JobApplicationRepository extends BaseRepository<JobApplicationRecor
     return results;
   }
 
+  /** Distinct users with at least one tracked application, all-time (not range-scoped — adoption is cumulative, not a per-window event) — feeds the admin dashboard's engagement tile as a rough "how many subscribers actually use the Application Tracker" figure. */
+  async countDistinctUsersWithApplications(): Promise<number> {
+    const row = await this.db
+      .prepare(`SELECT COUNT(DISTINCT "userId") as count FROM job_applications`)
+      .first<{ count: number }>();
+    return row?.count ?? 0;
+  }
+
   /** Backs JobApplicationService's per-user creation cap — unlike resumes, this isn't plan-tiered, just a flat backstop against a runaway client bug or scripted abuse bloating the table. */
   async countForUser(userId: string): Promise<number> {
     const row = await this.db.prepare(`SELECT COUNT(*) as count FROM job_applications WHERE "userId" = ?`).bind(userId).first<{ count: number }>();

@@ -113,6 +113,28 @@ export class SecurityEventRepository extends BaseRepository<SecurityEventRecord>
     return { entries: results, total: countRow?.count ?? 0 };
   }
 
+  /** Counts since `sinceIso`, grouped by severity — feeds the admin dashboard's security summary tile. Zero-filled for any severity with no events in range. */
+  async countBySeverity(sinceIso: string): Promise<Record<SecurityEventSeverity, number>> {
+    const { results } = await this.db
+      .prepare(`SELECT severity, COUNT(*) as count FROM security_events WHERE "createdAt" >= ? GROUP BY severity`)
+      .bind(sinceIso)
+      .all<{ severity: SecurityEventSeverity; count: number }>();
+    const counts: Record<SecurityEventSeverity, number> = { critical: 0, warning: 0, info: 0 };
+    for (const row of results) counts[row.severity] = row.count;
+    return counts;
+  }
+
+  /** Same bounded-window shape as countBySeverity, but `[fromIso, toIso)` instead of open-ended — feeds the admin dashboard's trend arrow on the Security tiles (comparing the current range against the equal-length one before it). */
+  async countBySeverityBetween(fromIso: string, toIso: string): Promise<Record<SecurityEventSeverity, number>> {
+    const { results } = await this.db
+      .prepare(`SELECT severity, COUNT(*) as count FROM security_events WHERE "createdAt" >= ? AND "createdAt" < ? GROUP BY severity`)
+      .bind(fromIso, toIso)
+      .all<{ severity: SecurityEventSeverity; count: number }>();
+    const counts: Record<SecurityEventSeverity, number> = { critical: 0, warning: 0, info: 0 };
+    for (const row of results) counts[row.severity] = row.count;
+    return counts;
+  }
+
   /** Every event since `sinceIso`, oldest first — used by SecurityMonitorService to build the daily digest email. */
   async findSince(sinceIso: string): Promise<SecurityEventRecord[]> {
     const { results } = await this.db

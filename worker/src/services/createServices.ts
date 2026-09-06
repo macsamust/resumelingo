@@ -78,6 +78,8 @@ export interface Services {
   /** Real Workers AI call as of Aug 2026, wrapped with a rule-based fallback for AI outages (see ContentGeneratorWithFallback in ContentGenerator.ts) — was bare rule-based template logic. Exposed here only for symmetry with the other AI services; ResumeService is the only consumer, wired at construction below. */
   contentGenerator: IContentGenerator;
   jobApplicationService: JobApplicationService;
+  /** Exposed directly for AdminDashboardController's engagement tile (Application Tracker adoption count) — every other consumer goes through jobApplicationService. */
+  jobApplicationRepository: JobApplicationRepository;
   viewDigestService: ViewDigestService;
   /** Real Workers AI call as of Aug 2026 (see CareerCoachGenerator.ts) — was rule-based keyword matching. */
   careerCoachGenerator: ICareerCoachGenerator;
@@ -207,6 +209,7 @@ export function createServices(env: Env): Services {
     skillSuggestionAiService,
     contentGenerator,
     jobApplicationService,
+    jobApplicationRepository,
     viewDigestService,
     careerCoachGenerator,
     unsubscribeDigestTokenService,

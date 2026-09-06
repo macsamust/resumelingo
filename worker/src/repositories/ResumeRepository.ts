@@ -136,6 +136,15 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
     return row?.count ?? 0;
   }
 
+  /** Same bounded-window shape as UserRepository.countCreatedBetween — feeds the admin dashboard's trend arrows. */
+  async countCreatedBetween(fromIso: string, toIso: string): Promise<number> {
+    const row = await this.db
+      .prepare(`SELECT COUNT(*) as count FROM resumes WHERE createdAt >= ? AND createdAt < ?`)
+      .bind(fromIso, toIso)
+      .first<{ count: number }>();
+    return row?.count ?? 0;
+  }
+
   /**
    * One row per (profession, templateKey) pair with how many resumes use
    * that combination — feeds the template picker's "most popular with
@@ -155,6 +164,29 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
          GROUP BY profession, templateKey`
       )
       .all<{ profession: string; templateKey: string; count: number }>();
+    return results;
+  }
+
+  /**
+   * Fleet-wide template popularity, top `limit` first — same "classic
+   * excluded" reasoning as countByProfessionAndTemplate above (it's the
+   * Starter default every resume starts on, so counting it mostly measures
+   * who never opened the picker). Feeds the admin dashboard's engagement
+   * tile — a global view of countByProfessionAndTemplate's per-profession
+   * data, not a replacement for it.
+   */
+  async countByTemplate(limit = 5): Promise<{ templateKey: string; count: number }[]> {
+    const { results } = await this.db
+      .prepare(
+        `SELECT templateKey, COUNT(*) as count
+         FROM resumes
+         WHERE templateKey != 'classic'
+         GROUP BY templateKey
+         ORDER BY count DESC
+         LIMIT ?`
+      )
+      .bind(limit)
+      .all<{ templateKey: string; count: number }>();
     return results;
   }
 
