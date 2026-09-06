@@ -2,11 +2,25 @@ import { CreateJobApplicationInput, JobApplicationRepository, UpdateJobApplicati
 import { ResumeRepository } from "../repositories/ResumeRepository";
 import { UserRepository } from "../repositories/UserRepository";
 import { User } from "../models/User";
-import { JobApplicationRecord, JobApplicationStatusHistoryEntry, SubscriptionTier } from "../types";
+import { JobApplicationRecord, JobApplicationStatus, JobApplicationStatusHistoryEntry, SubscriptionTier } from "../types";
+
+// Human-readable labels for the "already reached this status" error message
+// below — kept here rather than imported from anywhere client-side, since
+// this is the one place the worker needs to say a status name out loud
+// rather than just pass the raw code through. Mirrors JobApplicationsPage.tsx's
+// own STATUS_LABEL; if a status is ever added there, add it here too.
+const STATUS_LABELS: Record<JobApplicationStatus, string> = {
+  applied: "Applied",
+  interviewing: "Interviewing",
+  offer: "Offer",
+  rejected: "Rejected",
+  withdrawn: "Withdrawn",
+};
 
 export class JobApplicationNotFoundError extends Error {}
 export class JobApplicationAccessError extends Error {}
 export class JobApplicationTierAccessError extends Error {}
+export class JobApplicationInvalidStatusError extends Error {}
 
 /** Professional/Premium only — same tier gate as Version History (assertVersionHistoryAllowed in ResumeService.ts), same shape/throw pattern. */
 export function assertJobApplicationTrackerAllowed(tier: SubscriptionTier): void {
@@ -124,17 +138,31 @@ export class JobApplicationService {
     const existing = await this.getOwned(userId, id); // throws if not found/owned
     assertJobApplicationSizeOk(input.notes, input.link);
     if (input.resumeId) await this.assertResumeOwned(userId, input.resumeId);
+
+    // A status can only be reached once per application — "Applied" is the
+    // one-time starting point of the pipeline (already recorded at creation,
+    // in create() above), not a milestone to re-enter later, and the same
+    // logic holds for every other status too: selecting "Interviewing" a
+    // second time after moving past it doesn't describe a real second event,
+    // it's just a duplicate line in the timeline. Checked against this
+    // application's own history (not just its current `status` column) so
+    // this catches every already-reached status, not only the current one —
+    // e.g. Applied -> Interviewing -> Offer, then picking "Interviewing"
+    // again, is still rejected even though the *current* status is "Offer".
+    if (input.status !== undefined && input.status !== existing.status) {
+      const history = await this.applications.findHistoryForApplication(id);
+      if (history.some((h) => h.status === input.status)) {
+        throw new JobApplicationInvalidStatusError(
+          `This application already had the "${STATUS_LABELS[input.status]}" status — a status can't be re-selected once it's been reached.`
+        );
+      }
+    }
+
     const updated = await this.applications.update(id, input);
     // Records a timeline entry only on an actual status change (not just any
     // edit that happens to include `status` unchanged) — see migration
     // 0033's doc comment on why the initial status is never backfilled here.
-    // Reverting back to "applied" is deliberately never logged as a new
-    // entry, even though it's a real change to the status column: "Applied"
-    // is the one-time starting point of the pipeline (already recorded once,
-    // at creation, in create() above), not a milestone you re-enter later —
-    // a second "Applied" line further down the timeline would just read as
-    // confusing, not informative.
-    if (input.status !== undefined && input.status !== existing.status && input.status !== "applied") {
+    if (input.status !== undefined && input.status !== existing.status) {
       await this.applications.recordStatusChange(id, input.status, updated!.updatedAt);
     }
     return updated!;

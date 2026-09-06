@@ -42,6 +42,7 @@ import { ContentGenerateError } from "./services/ContentGenerator";
 import { CoverLetterGenerateError } from "./services/CoverLetterGenerator";
 import {
   JobApplicationAccessError,
+  JobApplicationInvalidStatusError,
   JobApplicationLimitError,
   JobApplicationNotFoundError,
   JobApplicationTierAccessError,
@@ -114,6 +115,8 @@ app.onError((err, c) => {
       : err instanceof JobApplicationTierAccessError
       ? 402
       : err instanceof JobApplicationTooLargeError
+      ? 400
+      : err instanceof JobApplicationInvalidStatusError
       ? 400
       : err instanceof JobApplicationLimitError
       // 429 (not 402 like ResumeLimitError) — this cap isn't an upgrade

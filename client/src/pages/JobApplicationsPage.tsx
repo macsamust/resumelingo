@@ -364,6 +364,13 @@ export function JobApplicationsPage() {
             // line reads consistently, rather than switching to a human date
             // like "Jul 4, 2026".
             const laterChanges = timelineFor(a).slice(1);
+            // Once an application has reached a status, it can't be
+            // re-selected — enforced again server-side (see
+            // JobApplicationService.update's JobApplicationInvalidStatusError),
+            // this just keeps the dropdown from offering a choice that would
+            // just be rejected, and avoids a duplicate line in the status
+            // history for the same status shown twice.
+            const usedStatuses = new Set(timelineFor(a).map((h) => h.status));
             return (
               <div className="resume-card job-app-card" key={a.id}>
                 <div className="job-app-card-head">
@@ -397,7 +404,7 @@ export function JobApplicationsPage() {
                       onChange={(e) => onStatusChange(a, e.target.value as JobApplicationStatus)}
                     >
                       {STATUSES.map((s) => (
-                        <option key={s} value={s}>
+                        <option key={s} value={s} disabled={s !== a.status && usedStatuses.has(s)}>
                           {STATUS_LABEL[s]}
                         </option>
                       ))}
