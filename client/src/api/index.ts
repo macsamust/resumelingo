@@ -4,6 +4,7 @@ import { CatalogApi } from "./CatalogApi";
 import { AdminApi } from "./AdminApi";
 import { ThankYouLetterApi } from "./ThankYouLetterApi";
 import { CoverLetterApi } from "./CoverLetterApi";
+import { MarketingEventApi } from "./MarketingEventApi";
 import { CareerCoachApi } from "./CareerCoachApi";
 import { ResumeImportApi } from "./ResumeImportApi";
 import { AchievementGenerateApi } from "./AchievementGenerateApi";
@@ -15,6 +16,10 @@ export const resumeApi = new ResumeApi();
 export const catalogApi = new CatalogApi();
 export const thankYouLetterApi = new ThankYouLetterApi();
 export const coverLetterApi = new CoverLetterApi();
+// Deliberately not included in setAuthToken below — this endpoint is
+// unauthenticated by design (fires from the logged-out Pricing page too),
+// so there's no session to keep in sync.
+export const marketingEventApi = new MarketingEventApi();
 export const careerCoachApi = new CareerCoachApi();
 export const resumeImportApi = new ResumeImportApi();
 export const achievementGenerateApi = new AchievementGenerateApi();
@@ -46,6 +51,7 @@ export * from "./CatalogApi";
 export * from "./AdminApi";
 export * from "./ThankYouLetterApi";
 export * from "./CoverLetterApi";
+export * from "./MarketingEventApi";
 export * from "./CareerCoachApi";
 export * from "./ResumeImportApi";
 export * from "./AchievementGenerateApi";

@@ -17,6 +17,7 @@ import adminRoutes from "./routes/admin.routes";
 import careerCoachRoutes from "./routes/careerCoach.routes";
 import thankYouLetterRoutes from "./routes/thankYouLetter.routes";
 import coverLetterRoutes from "./routes/coverLetter.routes";
+import marketingEventRoutes from "./routes/marketingEvent.routes";
 import webhookRoutes from "./routes/webhooks.routes";
 import jobApplicationRoutes from "./routes/jobApplication.routes";
 import { AuthError, InvalidResetTokenError, InvalidVerificationTokenError } from "./services/AuthService";
@@ -97,6 +98,7 @@ app.route("/api/admin", adminRoutes);
 app.route("/api/career-coach", careerCoachRoutes);
 app.route("/api/thank-you-letters", thankYouLetterRoutes);
 app.route("/api/cover-letters", coverLetterRoutes);
+app.route("/api/marketing-events", marketingEventRoutes);
 app.route("/api/webhooks", webhookRoutes);
 app.route("/api/job-applications", jobApplicationRoutes);
 

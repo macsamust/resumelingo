@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { catalogApi } from "../../api";
+import { catalogApi, marketingEventApi } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { SubscriptionPlan } from "../../types";
 
@@ -23,6 +23,7 @@ export function Pricing() {
   }, []);
 
   const handleUpgrade = async (tier: "professional" | "premium") => {
+    marketingEventApi.record("plan_clicked", tier);
     setCheckingOut(tier);
     try {
       const { url } = await catalogApi.checkout(tier);
@@ -80,9 +81,18 @@ export function Pricing() {
                   </button>
                 )
               ) : (
+                // Carries the clicked plan through to signup via a query
+                // param (Sep 2026 QA pass — see TODO.md's "Pricing CTAs
+                // preserve plan intent" entry) — previously every tier's
+                // button pointed at a bare /signup, so clicking Professional
+                // or Premium lost that intent entirely; the new account
+                // landed on free Starter with no upgrade path surfaced.
+                // SignupPage.tsx reads this param and routes straight into
+                // checkout for professional/premium after account creation.
                 <Link
-                  to="/signup"
+                  to={`/signup?plan=${plan.tier}`}
                   className={`btn btn-block ${plan.tier === "professional" ? "btn-primary" : "btn-ghost"}`}
+                  onClick={() => marketingEventApi.record("plan_clicked", plan.tier)}
                 >
                   {plan.tier === "starter" ? "Start free" : plan.tier === "professional" ? "Upgrade to Professional" : "Go Premium"}
                 </Link>

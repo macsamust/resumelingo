@@ -14,6 +14,7 @@ import { AdminLoginIpLogRepository } from "../repositories/AdminLoginIpLogReposi
 import { EmailVerificationIpLogRepository } from "../repositories/EmailVerificationIpLogRepository";
 import { PublicResumePasswordIpLogRepository } from "../repositories/PublicResumePasswordIpLogRepository";
 import { SecurityEventRepository } from "../repositories/SecurityEventRepository";
+import { MarketingEventRepository } from "../repositories/MarketingEventRepository";
 import { TokenService } from "./TokenService";
 import { AuthService } from "./AuthService";
 import { ResumeService } from "./ResumeService";
@@ -59,6 +60,8 @@ export interface Services {
   publicResumePasswordIpLogRepository: PublicResumePasswordIpLogRepository;
   /** Durable log of flagged abuse/anomaly signals — see SecurityEventRepository.ts. Exposed directly for AdminSecurityEventController's Security Report page. */
   securityEventRepository: SecurityEventRepository;
+  /** Durable funnel-event log (e.g. plan_clicked) — see MarketingEventRepository.ts. No analytics vendor is wired into this app, so this is the closest thing to one. */
+  marketingEventRepository: MarketingEventRepository;
   /** Writes to securityEventRepository (with dedupe) and fires an immediate email on critical severity — the single call site every throttled controller uses. */
   securityAlertService: SecurityAlertService;
   /** Daily cron consumer — see index.ts's `scheduled` export. */
@@ -110,6 +113,7 @@ export function createServices(env: Env): Services {
   const emailVerificationIpLogRepository = new EmailVerificationIpLogRepository(env.DB);
   const publicResumePasswordIpLogRepository = new PublicResumePasswordIpLogRepository(env.DB);
   const securityEventRepository = new SecurityEventRepository(env.DB);
+  const marketingEventRepository = new MarketingEventRepository(env.DB);
   const resumeAnalyticsRepository = new ResumeAnalyticsRepository(env.DB);
   const resumeVersionRepository = new ResumeVersionRepository(env.DB);
   const jobApplicationRepository = new JobApplicationRepository(env.DB);
@@ -200,6 +204,7 @@ export function createServices(env: Env): Services {
     emailVerificationIpLogRepository,
     publicResumePasswordIpLogRepository,
     securityEventRepository,
+    marketingEventRepository,
     securityAlertService,
     securityMonitorService,
     adminRepository: adminRepo,
