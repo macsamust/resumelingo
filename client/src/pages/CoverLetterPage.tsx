@@ -165,7 +165,21 @@ export function CoverLetterPage() {
                     value={letter}
                     onChange={(e) => setLetter(e.target.value)}
                     rows={16}
-                    style={{ width: "100%", lineHeight: 1.7, fontSize: 14.5, color: "var(--navy-light)", resize: "vertical" }}
+                    // fontFamily explicitly set to inherit here — this
+                    // textarea isn't wrapped in a .field div, so it never
+                    // picks up global.css's `.field textarea { font-family:
+                    // inherit }` rule and would otherwise fall back to the
+                    // browser's own default textarea font, which reads
+                    // differently than ThankYouLetterPage's plain <p> (that
+                    // inherits the page font with no fallback needed).
+                    style={{
+                      width: "100%",
+                      lineHeight: 1.7,
+                      fontSize: 14.5,
+                      fontFamily: "inherit",
+                      color: "var(--navy-light)",
+                      resize: "vertical",
+                    }}
                   />
                   <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
                     <button className="btn btn-ghost" type="button" onClick={onCopy}>
