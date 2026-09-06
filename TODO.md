@@ -1,5 +1,7 @@
 # To Do — Later Consideration
 
+**See also `protecting-your-app-idea.md`** (repo root) — informal notes from a Sep 5, 2026 conversation on protecting the app idea/business: what's automatically protectable (copyright), what needs action (trademark, patent, trade secret), what actually deters copying in practice vs. what doesn't, and when to bring in a real IP attorney. Not legal advice, not a build item — kept as a standalone reference note rather than folded into this file.
+
 ## P1 — Security anomaly detection: scheduled job + Admin Console report + email alerts (proposed, Sep 2026) — **Shipped.**
 
 Built as scoped below: `security_events` table (migration `0034_security_monitoring.sql`, alongside a new `public_resume_password_ip_log` table for the second prevention gap), `SecurityEventRepository`, `SecurityAlertService` (the single write path every throttled controller calls — dedupes per (type, ip) per window so an ongoing burst writes one row/sends one email, not one per blocked request), `SecurityMonitorService` (new daily Cron Trigger, `"0 13 * * *"`, alongside the existing weekly view-digest one), two new `EmailService` methods (`sendSecurityAlertEmail` fires immediately on critical, `sendSecurityDailyDigestEmail` rolls up everything else once a day), and the Admin Console's new Security Report page (`/admin/security-report`, same filter/pagination conventions as the Audit Log page).
