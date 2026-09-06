@@ -40,7 +40,7 @@ export function Hero() {
             <PolyAvatar size={130} decorative={false} />
           </div>
           <p className="hero-mascot-caption">
-            <em>Meet Poly, short for Polyglot, our resident many tongued parrot.</em>
+            <em>Meet Poly- short for Polyglot, our resident many tongued parrot.</em>
           </p>
           <div className="browser-bar">
             <span style={{ background: "#f87171" }}></span>
