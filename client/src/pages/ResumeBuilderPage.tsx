@@ -12,6 +12,7 @@ import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { ResumeImportPanel } from "../components/builder/ResumeImportPanel";
 import { ResumePreview } from "../components/builder/ResumePreview";
 import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
+import { TemplateUpgradeModal } from "../components/builder/TemplateUpgradeModal";
 import { ApiError, catalogApi, resumeApi } from "../api";
 import { ImportedResumeData } from "../api/ResumeImportApi";
 import { useAuth } from "../context/AuthContext";
@@ -26,6 +27,8 @@ import {
   EducationEntry,
   ProfessionDefinition,
   ProfessionSummary,
+  SubscriptionPlan,
+  SubscriptionTier,
   TemplateDefinition,
   WorkExperienceEntry,
 } from "../types";
@@ -69,6 +72,14 @@ export function ResumeBuilderPage() {
   // that profession, once it clears a minimum sample size. Feeds the dot
   // rendered in the template picker below (see popularTemplates on the worker).
   const [popularTemplates, setPopularTemplates] = useState<Record<string, string>>({});
+  // Feeds TemplateUpgradeModal's price line — see ResumeEditPage.tsx's
+  // identical fields for why this is fetched once here rather than per-click.
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [lockedTemplateModal, setLockedTemplateModal] = useState<{ name: string; tier: SubscriptionTier } | null>(null);
+
+  useEffect(() => {
+    catalogApi.listPlans().then((res) => setPlans(res.plans)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     catalogApi
@@ -336,7 +347,11 @@ export function ResumeBuilderPage() {
                     key={t.key}
                     className={`template-pill ${templateKey === t.key ? "active" : ""} ${locked ? "locked" : ""} ${isPopular ? "template-pill-popular" : ""}`}
                     onClick={() => {
-                      if (!locked) setTemplateKey(t.key);
+                      if (locked) {
+                        setLockedTemplateModal({ name: t.name, tier });
+                      } else {
+                        setTemplateKey(t.key);
+                      }
                     }}
                     title={locked ? `${upgradeHint} ${t.description}` : `${tierNote} ${t.description}`}
                   >
@@ -461,6 +476,14 @@ export function ResumeBuilderPage() {
           securityClearance={answers.clearanceLevel}
         />
       </form>
+      {lockedTemplateModal && (
+        <TemplateUpgradeModal
+          templateName={lockedTemplateModal.name}
+          tier={lockedTemplateModal.tier}
+          plans={plans}
+          onClose={() => setLockedTemplateModal(null)}
+        />
+      )}
     </AppShell>
   );
 }

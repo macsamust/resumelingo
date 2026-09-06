@@ -16,6 +16,7 @@ import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { isRealContactValue, ResumePreview } from "../components/builder/ResumePreview";
 import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
 import { Modal } from "../components/common/Modal";
+import { TemplateUpgradeModal } from "../components/builder/TemplateUpgradeModal";
 import { VersionHistoryPanel } from "../components/common/VersionHistoryPanel";
 import { ApiError, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
@@ -38,6 +39,8 @@ import {
   ReferenceEntry,
   Resume,
   SkillOrTool,
+  SubscriptionPlan,
+  SubscriptionTier,
   TemplateDefinition,
   WorkExperienceEntry,
 } from "../types";
@@ -66,6 +69,13 @@ export function ResumeEditPage() {
   // that profession, once it clears a minimum sample size. Feeds the dot
   // rendered in the template picker below (see popularTemplates on the worker).
   const [popularTemplates, setPopularTemplates] = useState<Record<string, string>>({});
+  // Feeds TemplateUpgradeModal's price line — fetched once alongside the
+  // other catalog data below, not per-click, since clicking several locked
+  // templates in a row shouldn't refetch pricing every time.
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  // Which locked template pill was just clicked, if any — see
+  // TemplateUpgradeModal.tsx. Previously that click was a true no-op.
+  const [lockedTemplateModal, setLockedTemplateModal] = useState<{ name: string; tier: SubscriptionTier } | null>(null);
   const [fullName, setFullName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
@@ -193,6 +203,11 @@ export function ResumeEditPage() {
 
   useEffect(() => {
     if (!id) return;
+    // Independent of the resume-load Promise.all below — pricing doesn't
+    // block anything else from rendering, and a failure here should just
+    // leave TemplateUpgradeModal without a price line (still useful) rather
+    // than blocking the whole page load.
+    catalogApi.listPlans().then((res) => setPlans(res.plans)).catch(() => {});
     Promise.all([
       resumeApi.getById(id),
       catalogApi.listTemplates(),
@@ -913,7 +928,11 @@ export function ResumeEditPage() {
                     key={t.key}
                     className={`template-pill ${templateKey === t.key ? "active" : ""} ${locked ? "locked" : ""} ${isPopular ? "template-pill-popular" : ""}`}
                     onClick={() => {
-                      if (!locked) setTemplateKey(t.key);
+                      if (locked) {
+                        setLockedTemplateModal({ name: t.name, tier });
+                      } else {
+                        setTemplateKey(t.key);
+                      }
                     }}
                     title={locked ? `${upgradeHint} ${t.description}` : `${tierNote} ${t.description}`}
                   >
@@ -1472,6 +1491,14 @@ export function ResumeEditPage() {
         <Modal title="Live preview" wide onClose={() => setPreviewExpanded(false)}>
           {previewElement}
         </Modal>
+      )}
+      {lockedTemplateModal && (
+        <TemplateUpgradeModal
+          templateName={lockedTemplateModal.name}
+          tier={lockedTemplateModal.tier}
+          plans={plans}
+          onClose={() => setLockedTemplateModal(null)}
+        />
       )}
       <p className="form-footnote">
         <Link to="/dashboard">← Back to dashboard</Link>
