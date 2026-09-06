@@ -18,7 +18,7 @@ import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
 import { Modal } from "../components/common/Modal";
 import { TemplateUpgradeModal } from "../components/builder/TemplateUpgradeModal";
 import { VersionHistoryPanel } from "../components/common/VersionHistoryPanel";
-import { ApiError, catalogApi, resumeApi } from "../api";
+import { ApiError, authApi, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL, templateHasSkillsAndTools } from "../utils/templateAccess";
 import { titleCase } from "../utils/textFormat";
@@ -59,7 +59,7 @@ function isoToDatetimeLocal(iso: string): string {
 export function ResumeEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const [resume, setResume] = useState<Resume | null>(null);
   const [professions, setProfessions] = useState<ProfessionSummary[]>([]);
   const [professionKey, setProfessionKey] = useState("");
@@ -87,6 +87,12 @@ export function ResumeEditPage() {
   const [accessPassword, setAccessPassword] = useState("");
   // Local-time "datetime-local" input value, converted to/from ISO on load/save.
   const [accessPasswordExpiresAt, setAccessPasswordExpiresAt] = useState("");
+  // Sep 2026 QA pass (ticket S9): resend action for the Public/Password
+  // visibility options being locked behind email verification below —
+  // mirrors AppShell's VerifyEmailBanner rather than building a second
+  // resend flow.
+  const [verifyResending, setVerifyResending] = useState(false);
+  const [verifySent, setVerifySent] = useState(false);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [experience, setExperience] = useState<WorkExperienceEntry[]>([]);
   const [education, setEducation] = useState<EducationEntry[]>([]);
@@ -994,11 +1000,21 @@ export function ResumeEditPage() {
               <label>Link visibility</label>
               <select value={visibility} onChange={(e) => setVisibility(e.target.value as LinkVisibility)}>
                 {VISIBILITY_OPTIONS.map((v) => {
-                  const locked = !!user && !canUseVisibility(user.subscriptionTier, v);
+                  const tierLocked = !!user && !canUseVisibility(user.subscriptionTier, v);
+                  // Sep 2026 QA pass (ticket S9): Public and Password links
+                  // expose the resume outside the account itself, so they
+                  // require a verified email — Private never leaves the
+                  // account and is unaffected. Server-enforced too (see
+                  // ResumeService.assertEmailVerifiedForVisibility); this is
+                  // just keeping the UI from offering an option that would
+                  // fail on save.
+                  const emailLocked = !!user && !user.emailVerified && (v === "public" || v === "password");
+                  const locked = tierLocked || emailLocked;
                   return (
                     <option key={v} value={v} disabled={locked}>
                       {VISIBILITY_LABEL[v]}
-                      {locked ? ` (requires ${TIER_LABEL[VISIBILITY_MIN_TIER[v]]})` : ""}
+                      {tierLocked ? ` (requires ${TIER_LABEL[VISIBILITY_MIN_TIER[v]]})` : ""}
+                      {!tierLocked && emailLocked ? " (requires verified email)" : ""}
                     </option>
                   );
                 })}
@@ -1007,6 +1023,34 @@ export function ResumeEditPage() {
                 Starter plans get public links only. Professional adds private links, and Premium adds
                 password protected links.
               </p>
+              {user && !user.emailVerified && (
+                <p className="hero-note" style={{ marginTop: 6, marginBottom: 0 }}>
+                  {verifySent
+                    ? "Verification email sent. Check your inbox."
+                    : "Public and password-protected links require a verified email."}{" "}
+                  {!verifySent && (
+                    <button
+                      type="button"
+                      className="app-banner-link"
+                      disabled={verifyResending}
+                      onClick={async () => {
+                        setVerifyResending(true);
+                        try {
+                          await authApi.resendVerification();
+                          setVerifySent(true);
+                          refresh();
+                        } catch {
+                          /* Same fire-and-forget tolerance as AppShell's VerifyEmailBanner — a failed resend isn't worth blocking this form over. */
+                        } finally {
+                          setVerifyResending(false);
+                        }
+                      }}
+                    >
+                      {verifyResending ? "sending…" : "Resend verification email"}
+                    </button>
+                  )}
+                </p>
+              )}
             </div>
             {visibility === "password" && (
               <>

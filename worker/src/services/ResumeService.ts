@@ -51,6 +51,7 @@ export class ResumeAccessError extends Error {
 }
 export class TemplateAccessError extends Error {}
 export class VisibilityAccessError extends Error {}
+export class EmailVerificationRequiredError extends Error {}
 export class PhotoTooLargeError extends Error {}
 export class CloneAccessError extends Error {}
 export class ActiveToggleAccessError extends Error {}
@@ -125,6 +126,26 @@ export function assertVisibilityAllowed(tier: User["subscriptionTier"], visibili
   throw new VisibilityAccessError(
     `${VISIBILITY_LABEL[visibility]} links require the ${requiredPlan.name} plan. Upgrade to use this visibility setting.`
   );
+}
+
+/**
+ * Sep 2026 QA pass (ticket S9): the "verify your email" banner
+ * (AppShell.tsx's VerifyEmailBanner) was documented as "nudge only,
+ * doesn't gate anything" — but that meant an unverified, unconfirmed
+ * address could still publish a resume to a public URL or share a
+ * password-protected link, which is exactly the kind of thing email
+ * verification exists to prevent (spam/abuse from throwaway addresses).
+ * Only Public and PasswordProtected are gated here — Private is never
+ * reachable by anyone but the owner, so it carries none of that risk and
+ * an unverified account can still use it freely.
+ */
+export function assertEmailVerifiedForVisibility(emailVerified: boolean, visibility: LinkVisibility): void {
+  if (emailVerified) return;
+  if (visibility === LinkVisibility.Public || visibility === LinkVisibility.PasswordProtected) {
+    throw new EmailVerificationRequiredError(
+      "Verify your email address before making a resume public or password-protected."
+    );
+  }
 }
 
 /**
@@ -212,7 +233,14 @@ export class ResumeService {
       );
     }
     assertTemplateAllowed(user.subscriptionTier, input.templateKey);
-    if (input.visibility) assertVisibilityAllowed(user.subscriptionTier, input.visibility);
+    if (input.visibility) {
+      assertVisibilityAllowed(user.subscriptionTier, input.visibility);
+      // Only checked for an *explicit* request — see the defaultVisibility
+      // fallback below for the unrequested case, which quietly defaults an
+      // unverified account to Private instead of throwing on the very first
+      // resume they ever create.
+      assertEmailVerifiedForVisibility(user.emailVerified, input.visibility);
+    }
     assertPhotoSizeOk(input.photoUrl);
 
     const fullName = input.fullName?.trim() || user.name;
@@ -255,7 +283,13 @@ export class ResumeService {
       title: input.title,
       profession: input.profession,
       templateKey: input.templateKey,
-      visibility: input.visibility ?? LinkVisibility.Public,
+      // Every builder flow omits `visibility` entirely and relies on this
+      // default (see ResumeBuilderPage.tsx) — an unverified account
+      // defaulting to Public here would hard-block resume creation itself
+      // on day one for anyone who hasn't clicked their verification email
+      // yet, not just publishing. Private is the safe default instead;
+      // they can switch to Public once verified.
+      visibility: input.visibility ?? (user.emailVerified ? LinkVisibility.Public : LinkVisibility.Private),
       accessPassword: input.accessPassword ?? null,
       accessPasswordExpiresAt: input.accessPasswordExpiresAt ?? null,
       coverLetterEnabled,
@@ -315,9 +349,13 @@ export class ResumeService {
     if (templateChanging || visibilityChanging || recruiterModeRequested || referencesRequested || activeChangeRequested) {
       const userRecord = await this.users.findById(userId);
       if (userRecord) {
-        const tier = new User(userRecord).subscriptionTier;
+        const userModel = new User(userRecord);
+        const tier = userModel.subscriptionTier;
         if (templateChanging) assertTemplateAllowed(tier, input.templateKey!);
-        if (visibilityChanging) assertVisibilityAllowed(tier, input.visibility!);
+        if (visibilityChanging) {
+          assertVisibilityAllowed(tier, input.visibility!);
+          assertEmailVerifiedForVisibility(userModel.emailVerified, input.visibility!);
+        }
         if (activeChangeRequested) assertActiveToggleAllowed(tier);
         recruiterModeEnabled = recruiterModeRequested && tier === SubscriptionTier.Premium;
         referencesEnabled =

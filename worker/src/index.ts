@@ -26,6 +26,7 @@ import { AdminAuthError } from "./services/AdminService";
 import {
   ActiveToggleAccessError,
   CloneAccessError,
+  EmailVerificationRequiredError,
   GeneratedContentTooLargeError,
   PhotoTooLargeError,
   ResumeAccessError,
@@ -132,6 +133,8 @@ app.onError((err, c) => {
       ? 402
       : err instanceof VisibilityAccessError
       ? 402
+      : err instanceof EmailVerificationRequiredError
+      ? 403
       : err instanceof CloneAccessError
       ? 402
       : err instanceof ActiveToggleAccessError
