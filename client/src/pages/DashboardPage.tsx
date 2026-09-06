@@ -216,13 +216,13 @@ export function DashboardPage() {
           <p>
             {summary.subscription.planName}:{" "}
             {summary.subscription.unlimited
-              ? "Unlimited resumes"
-              : // Sep 2026 QA pass: "0 left" read as cryptic on its own — this
-                // spells out both halves of the fraction (remaining vs. plan
-                // limit) so it's unambiguous at a glance, on every tier.
-                `${summary.subscription.remaining} of ${summary.subscription.resumeLimit} resume${
-                  summary.subscription.resumeLimit === 1 ? "" : "s"
-                } remaining`}
+              ? "Unlimited"
+              : // Sep 2026 QA pass: "0 left" alone read as cryptic — this
+                // spells out the plan limit as a simple fraction so it's
+                // unambiguous at a glance, on every tier. Resume limits top
+                // out at a single digit, so this stays short enough not to
+                // wrap in the tile.
+                `${summary.subscription.remaining}/${summary.subscription.resumeLimit} resumes`}
           </p>
         </div>
       </div>
