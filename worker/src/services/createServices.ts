@@ -17,7 +17,7 @@ import { SecurityEventRepository } from "../repositories/SecurityEventRepository
 import { TokenService } from "./TokenService";
 import { AuthService } from "./AuthService";
 import { ResumeService } from "./ResumeService";
-import { AiCoverLetterGenerator, CoverLetterGeneratorWithFallback, RuleBasedCoverLetterGenerator } from "./CoverLetterGenerator";
+import { AiCoverLetterGenerator, CoverLetterGeneratorWithFallback, ICoverLetterGenerator, RuleBasedCoverLetterGenerator } from "./CoverLetterGenerator";
 import { JobApplicationService } from "./JobApplicationService";
 import { SubscriptionService } from "./SubscriptionService";
 import { AdminService } from "./AdminService";
@@ -77,6 +77,8 @@ export interface Services {
   skillSuggestionAiService: SkillSuggestionAiService;
   /** Real Workers AI call as of Aug 2026, wrapped with a rule-based fallback for AI outages (see ContentGeneratorWithFallback in ContentGenerator.ts) — was bare rule-based template logic. Exposed here only for symmetry with the other AI services; ResumeService is the only consumer, wired at construction below. */
   contentGenerator: IContentGenerator;
+  /** Same AI-with-fallback wrapper as contentGenerator, but with two consumers now (Sep 2026): ResumeService's embedded coverLetterEnabled flow, and CoverLetterController's standalone tool. */
+  coverLetterGenerator: ICoverLetterGenerator;
   jobApplicationService: JobApplicationService;
   /** Exposed directly for AdminDashboardController's engagement tile (Application Tracker adoption count) — every other consumer goes through jobApplicationService. */
   jobApplicationRepository: JobApplicationRepository;
@@ -208,6 +210,7 @@ export function createServices(env: Env): Services {
     achievementGeneratorService,
     skillSuggestionAiService,
     contentGenerator,
+    coverLetterGenerator,
     jobApplicationService,
     jobApplicationRepository,
     viewDigestService,

@@ -9,6 +9,21 @@ export interface CoverLetterInput {
   summary: string;
   /** Most recent/current role, if any, called out in the second sentence. */
   topExperience?: WorkExperienceEntry;
+  /**
+   * Target company (Sep 2026 QA pass — see TODO.md's "Cover Letter parity
+   * with Thank-You Letter" entry). Optional: the resume-embedded checkbox
+   * flow doesn't target a specific employer, only the standalone Cover
+   * Letter tool does. When given, woven into the opening the same way
+   * ThankYouLetterGenerator already does for its own company field.
+   */
+  companyName?: string;
+  /**
+   * Named recipient for the "Dear ___," line, in place of the generic
+   * "Dear Hiring Manager,". Optional and rarely known, but the standalone
+   * tool asks for it the same way ThankYouLetterPage asks for an
+   * interviewer/contact name.
+   */
+  hiringManagerName?: string;
 }
 
 export interface ICoverLetterGenerator {
@@ -30,17 +45,17 @@ const MAX_FIELD_LENGTH = 300;
  * two fixed lines the same way RuleBasedCoverLetterGenerator (below) always
  * did.
  */
-const SYSTEM_PROMPT = `You write the body of a professional cover letter, NOT the salutation ("Dear Hiring Manager,") or the sign-off ("Sincerely, {name}"), which are added separately. You're given the person's target role, profession, their resume's own About/Summary statement, and (optionally) their most recent job title/company.
+const SYSTEM_PROMPT = `You write the body of a professional cover letter, NOT the salutation ("Dear Hiring Manager,") or the sign-off ("Sincerely, {name}"), which are added separately. You're given the person's target role, profession, their resume's own About/Summary statement, and (optionally) their most recent job title/company and a target company.
 
 Respond with ONLY a single JSON object (no prose, no markdown code fence) matching exactly this shape:
 { "paragraphs": string[] }
 
 Rules:
 - Write 2-3 short paragraphs, first person ("I"), warm but professional tone.
-- Open by expressing interest in the given role, weaving in the given summary so the letter reads consistently with the resume it accompanies.
+- Open by expressing interest in the given role, weaving in the given summary so the letter reads consistently with the resume it accompanies. If a target company is given, name it naturally in this opening (e.g. "...in the Senior Product Manager role at Acme Corp"), but never invent a company if one isn't given.
 - If a most-recent job title/company is given, mention it naturally in the second paragraph as relevant background, but never invent a company, title, achievement, or number that wasn't given.
 - Close with a short paragraph welcoming the opportunity to discuss further and thanking them for their time. Do not include "Sincerely" or the person's name, that's added separately.
-- Never invent any fact (employer, dates, metrics, certifications) beyond what's given in the profession, role, summary, or most-recent-role fields.
+- Never invent any fact (employer, dates, metrics, certifications) beyond what's given in the profession, role, summary, target company, or most-recent-role fields.
 - Never mention that this was AI-generated.`;
 
 function truthy(value: unknown): value is string {
@@ -102,13 +117,18 @@ function sanitizeParagraphs(raw: Record<string, unknown>): string[] {
 export class AiCoverLetterGenerator implements ICoverLetterGenerator {
   constructor(private readonly ai: Ai) {}
 
-  async generate({ fullName, title, professionLabel, summary, topExperience }: CoverLetterInput): Promise<string> {
+  async generate({ fullName, title, professionLabel, summary, topExperience, companyName, hiringManagerName }: CoverLetterInput): Promise<string> {
     const name = cleanString(fullName, MAX_FIELD_LENGTH) || "Applicant";
     const roleLine = cleanString(title, MAX_FIELD_LENGTH) || cleanString(professionLabel, MAX_FIELD_LENGTH);
+    const company = cleanString(companyName, MAX_FIELD_LENGTH);
+    const salutation = cleanString(hiringManagerName, MAX_FIELD_LENGTH)
+      ? `Dear ${cleanString(hiringManagerName, MAX_FIELD_LENGTH)},`
+      : "Dear Hiring Manager,";
 
     const userContent = [
       `Target role: ${roleLine}`,
       `Profession: ${cleanString(professionLabel, MAX_FIELD_LENGTH)}`,
+      company && `Target company: ${company}`,
       summary && `Resume summary: ${cleanString(summary, 1200)}`,
       topExperience &&
         `Most recent role: ${cleanString(topExperience.title, MAX_FIELD_LENGTH) || "a professional role"}${
@@ -136,9 +156,12 @@ export class AiCoverLetterGenerator implements ICoverLetterGenerator {
 
     const parsed = extractParsedJson(response);
     const paragraphs = sanitizeParagraphs(parsed);
-    const body = paragraphs.length > 0 ? paragraphs.join("\n\n") : `I am writing to express my interest in ${roleLine} opportunities.`;
+    const body =
+      paragraphs.length > 0
+        ? paragraphs.join("\n\n")
+        : `I am writing to express my interest in ${roleLine} opportunities${company ? ` at ${company}` : ""}.`;
 
-    return ["Dear Hiring Manager,", "", body, "", "Sincerely,", name].join("\n");
+    return [salutation, "", body, "", "Sincerely,", name].join("\n");
   }
 }
 
@@ -190,11 +213,13 @@ export class CoverLetterGeneratorWithFallback implements ICoverLetterGenerator {
  * synchronous, no I/O.
  */
 export class RuleBasedCoverLetterGenerator implements ICoverLetterGenerator {
-  async generate({ fullName, title, professionLabel, summary, topExperience }: CoverLetterInput): Promise<string> {
+  async generate({ fullName, title, professionLabel, summary, topExperience, companyName, hiringManagerName }: CoverLetterInput): Promise<string> {
     const name = fullName.trim() || "Applicant";
     const roleLine = title.trim() || professionLabel;
+    const company = companyName?.trim();
+    const salutation = hiringManagerName?.trim() ? `Dear ${hiringManagerName.trim()},` : "Dear Hiring Manager,";
 
-    const opening = `I am writing to express my interest in ${roleLine} opportunities. ${summary}`.trim();
+    const opening = `I am writing to express my interest in ${roleLine} opportunities${company ? ` at ${company}` : ""}. ${summary}`.trim();
 
     const experienceLine = topExperience
       ? ` Most recently, I served as ${topExperience.title || "a professional"}${
@@ -205,6 +230,6 @@ export class RuleBasedCoverLetterGenerator implements ICoverLetterGenerator {
     const closing =
       "I would welcome the opportunity to discuss how my background and skills align with your team's needs. Thank you for your time and consideration.";
 
-    return ["Dear Hiring Manager,", "", `${opening}${experienceLine}`, "", closing, "", "Sincerely,", name].join("\n");
+    return [salutation, "", `${opening}${experienceLine}`, "", closing, "", "Sincerely,", name].join("\n");
   }
 }

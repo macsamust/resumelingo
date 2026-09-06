@@ -164,11 +164,11 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
     question: "Can ResumeLingo write cover letters or thank-you notes for me?",
     answer: (
       <p>
-        Both are Premium features. An AI-generated cover letter can be added when creating a resume on a
-        Premium-tier template (look for the checkbox in the builder). Separately, the{" "}
-        <strong>Thank-You Letter</strong> tool covers common scenarios, post-interview, accepting an offer, staying
-        in touch after a rejection, or following up after networking, and lets you download the result as a text
-        file.
+        Both are Premium features. The <strong>Cover Letter</strong> tool lets you pick one of your resumes, add
+        the company and role you're targeting (and optionally the hiring manager's name), then edit, copy, or
+        download the result. Separately, the <strong>Thank-You Letter</strong> tool covers common scenarios,
+        post-interview, accepting an offer, staying in touch after a rejection, or following up after networking,
+        and lets you download the result as a text file too.
       </p>
     ),
   },

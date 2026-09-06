@@ -15,6 +15,10 @@ const LINKS = [
   // which enforce the same restriction server-side, so this is just tidying
   // the nav rather than the actual gate.
   { to: "/thank-you-letter", label: "Thank-You Letter", minTier: "premium" as const },
+  // Premium only — see CoverLetterPage.tsx/CoverLetterController.ts, which
+  // enforce the same restriction server-side, so this is just tidying the
+  // nav rather than the actual gate.
+  { to: "/cover-letter", label: "Cover Letter", minTier: "premium" as const },
   // Premium only — see CareerCoachPage.tsx/CareerCoachController.ts, which
   // enforce the same restriction server-side, so this is just tidying the
   // nav rather than the actual gate.

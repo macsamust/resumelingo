@@ -20,6 +20,7 @@ import { ResumeBuilderPage } from "./pages/ResumeBuilderPage";
 import { ResumeEditPage } from "./pages/ResumeEditPage";
 import { PublicResumePage } from "./pages/PublicResumePage";
 import { ThankYouLetterPage } from "./pages/ThankYouLetterPage";
+import { CoverLetterPage } from "./pages/CoverLetterPage";
 import { CareerCoachPage } from "./pages/CareerCoachPage";
 import { JobApplicationsPage } from "./pages/JobApplicationsPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
@@ -105,6 +106,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ThankYouLetterPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cover-letter"
+          element={
+            <ProtectedRoute>
+              <CoverLetterPage />
             </ProtectedRoute>
           }
         />
