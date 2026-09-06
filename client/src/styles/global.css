@@ -178,6 +178,13 @@ section { padding: 84px 0; }
    two-line pill with just a name is fine; a wrapped two-line pill with a
    trailing text tag was not. */
 .template-pills span, .template-pill { display: inline-flex; align-items: center; background: #fff; border: 1px solid var(--border); padding: 9px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--navy-light); cursor: pointer; text-align: center; }
+/* Most-used non-Classic template for the currently selected profession (see
+   worker's popularTemplates.ts) — a darker grey fill on the whole pill
+   rather than a third dot or colored text, so the pill's size/shape never
+   changes and the tier dot still reads through the tint. Placed before
+   .active below so the normal selected-state indigo still wins if this
+   same pill is also the one currently chosen. */
+.template-pill-popular { background: #d1d5db; border-color: #9ca3af; color: #1f2937; }
 .template-pill.active { border-color: var(--indigo); color: var(--indigo); background: #eef2ff; }
 .template-pill.locked { cursor: not-allowed; opacity: .55; }
 .template-pill.locked.active { border-color: var(--border); color: var(--navy-light); background: #fff; }
@@ -209,18 +216,16 @@ section { padding: 84px 0; }
    name past the grid cell's minimum width, wrapping to a second line that
    visually overflowed the pill's rounded corners. */
 .template-pill-ats-dot { width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; background: #16a34a; }
-/* Most-used non-Classic template for the currently selected profession (see
-   worker's popularTemplates.ts) — same fixed-size-dot convention as the two
-   dots above, so it never grows the pill or pushes it to a second line. Red
-   so it reads distinctly from the green ATS dot and the tier dots. */
-.template-pill-popular-dot { width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; background: #dc2626; }
-/* Legend for the dots above — tier meaning isn't self-evident from color
-   alone (see template-pill-tier's own comment), and now there are three kinds
-   of dot on the same pill, so this spells out all five in one place rather
-   than relying only on each pill's hover title. */
-.template-legend { display: flex; flex-wrap: wrap; gap: 18px; margin-top: -10px; margin-bottom: 20px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+/* Legend for the dots/tint above — tier meaning isn't self-evident from
+   color alone (see template-pill-tier's own comment), so this spells out
+   all of them in one place rather than relying only on each pill's hover
+   title. The "Most popular" entry is a small pill-shaped swatch (not a
+   dot) so it actually samples the grey-tint look instead of just
+   describing it. */
+.template-legend { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; margin-top: -10px; margin-bottom: 20px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
 .template-legend span { display: inline-flex; align-items: center; }
-.template-legend .template-pill-tier, .template-legend .template-pill-ats-dot, .template-legend .template-pill-popular-dot { margin-right: 6px; }
+.template-legend .template-pill-tier, .template-legend .template-pill-ats-dot { margin-right: 6px; }
+.template-legend .template-pill-popular { padding: 3px 10px; }
 
 footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 /* Privacy Policy / Terms of Service (PrivacyPolicyPage.tsx/TermsOfServicePage.tsx)

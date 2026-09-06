@@ -1083,7 +1083,7 @@ export function ResumeEditPage() {
                 return (
                   <span
                     key={t.key}
-                    className={`template-pill ${templateKey === t.key ? "active" : ""} ${locked ? "locked" : ""}`}
+                    className={`template-pill ${templateKey === t.key ? "active" : ""} ${locked ? "locked" : ""} ${isPopular ? "template-pill-popular" : ""}`}
                     onClick={() => {
                       if (!locked) setTemplateKey(t.key);
                     }}
@@ -1091,7 +1091,6 @@ export function ResumeEditPage() {
                   >
                     <span className={`template-pill-tier template-pill-tier-${tier}`} aria-hidden="true" />
                     {atsSafe && <span className="template-pill-ats-dot" aria-hidden="true" />}
-                    {isPopular && <span className="template-pill-popular-dot" aria-hidden="true" />}
                     {t.name}
                     {locked && (
                       <span className="template-pill-lock" aria-hidden="true">
@@ -1119,10 +1118,7 @@ export function ResumeEditPage() {
                 <span className="template-pill-ats-dot" aria-hidden="true" />
                 ATS friendly
               </span>
-              <span>
-                <span className="template-pill-popular-dot" aria-hidden="true" />
-                Most popular with your profession
-              </span>
+              <span className="template-pill-popular">Most popular with your profession</span>
             </div>
           </CollapsibleSection>
 
