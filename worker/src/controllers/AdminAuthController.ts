@@ -18,7 +18,7 @@ export class AdminAuthController {
    * budget the way repeated wrong passwords should.
    */
   login = async (c: Context<AppEnv>) => {
-    const { adminService, adminLoginIpLogRepository } = c.get("services");
+    const { adminService, adminLoginIpLogRepository, securityAlertService } = c.get("services");
     const body = await c.req.json().catch(() => ({}));
     const { email, password, totpCode } = body as Record<string, string>;
     if (!email || !password) {
@@ -34,6 +34,13 @@ export class AdminAuthController {
     const ip = c.req.header("CF-Connecting-IP") || c.req.header("x-forwarded-for") || "unknown";
     const recentFailures = await adminLoginIpLogRepository.countRecentFailures(ip, IP_WINDOW_MINUTES);
     if (recentFailures >= MAX_IP_FAILURES) {
+      await securityAlertService.recordIfNew({
+        type: "admin_login_brute_force",
+        severity: "critical",
+        ip,
+        detail: { attemptedEmail: email },
+        dedupeWindowMinutes: IP_WINDOW_MINUTES,
+      });
       return c.json({ error: "Too many login attempts from this network. Please try again later." }, 429);
     }
 

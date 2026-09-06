@@ -18,6 +18,20 @@ const FORGOT_PASSWORD_WINDOW_MINUTES = 60;
 /** Failed login attempts from a single IP before it's throttled — same "guard against scripted guessing" concern as verify above, just against a human-chosen password instead of a 256-bit token. bcrypt already slows each individual guess, but that's not a substitute for actually capping attempts; AdminAuthController.login has had this same protection since the admin console shipped, this just closes the equivalent gap on subscriber login. Failure-only (a legitimate user who gets it right doesn't count against their own limit), same treatment as verify. */
 const MAX_LOGIN_FAILURES = 10;
 const LOGIN_WINDOW_MINUTES = 15;
+/**
+ * Registration requests from a single IP before it's throttled — closes the
+ * gap flagged in the Sep 2026 "Bogus/unverified account protection" TODO
+ * entry: previously nothing limited or logged /api/auth/register at all, so
+ * a script could create unlimited accounts. Recorded on every attempt
+ * regardless of outcome (like resend below), not failure-only — the concern
+ * here is account-creation volume itself, not guessing anything. Same
+ * acknowledged limitation as every other IP-based throttle in this codebase
+ * (an attacker rotating IPs isn't stopped by this alone) — Cloudflare
+ * Turnstile is the stronger single lever if that's ever added, a separate,
+ * bigger decision.
+ */
+const MAX_REGISTER_ATTEMPTS = 5;
+const REGISTER_WINDOW_MINUTES = 60;
 
 /** Same CF-Connecting-IP / x-forwarded-for fallback as AdminAuthController.login. */
 function clientIp(c: Context<AppEnv>): string {
@@ -26,13 +40,28 @@ function clientIp(c: Context<AppEnv>): string {
 
 export class AuthController {
   register = async (c: Context<AppEnv>) => {
-    const { authService } = c.get("services");
+    const { authService, emailVerificationIpLogRepository, securityAlertService } = c.get("services");
+    const ip = clientIp(c);
+    const recentAttempts = await emailVerificationIpLogRepository.countRecentAttempts(ip, "register", REGISTER_WINDOW_MINUTES);
+    if (recentAttempts >= MAX_REGISTER_ATTEMPTS) {
+      await securityAlertService.recordIfNew({
+        type: "register_burst",
+        severity: "warning",
+        ip,
+        detail: { attempts: recentAttempts },
+        dedupeWindowMinutes: REGISTER_WINDOW_MINUTES,
+      });
+      return c.json({ error: "Too many signup attempts from this network. Please try again later." }, 429);
+    }
+
     const body = await c.req.json().catch(() => ({}));
     const { name, email, password, profession } = body as Record<string, string>;
     if (!name || !email || !password) {
       return c.json({ error: "name, email, and password are required." }, 400);
     }
     const { user, token } = await authService.register({ name, email, password, profession });
+    await emailVerificationIpLogRepository.recordAttempt(ip, "register");
+    await emailVerificationIpLogRepository.pruneOlderThan(REGISTER_WINDOW_MINUTES);
     return c.json({ user: user.toPublicJSON(), token }, 201);
   };
 
@@ -43,10 +72,16 @@ export class AuthController {
    * this codebase (an attacker rotating IPs isn't stopped by this alone).
    */
   login = async (c: Context<AppEnv>) => {
-    const { authService, emailVerificationIpLogRepository } = c.get("services");
+    const { authService, emailVerificationIpLogRepository, securityAlertService } = c.get("services");
     const ip = clientIp(c);
     const recentFailures = await emailVerificationIpLogRepository.countRecentAttempts(ip, "login", LOGIN_WINDOW_MINUTES);
     if (recentFailures >= MAX_LOGIN_FAILURES) {
+      await securityAlertService.recordIfNew({
+        type: "login_brute_force",
+        severity: "critical",
+        ip,
+        dedupeWindowMinutes: LOGIN_WINDOW_MINUTES,
+      });
       return c.json({ error: "Too many login attempts from this network. Please try again later." }, 429);
     }
 
@@ -98,7 +133,7 @@ export class AuthController {
   };
 
   forgotPassword = async (c: Context<AppEnv>) => {
-    const { authService, emailVerificationIpLogRepository } = c.get("services");
+    const { authService, emailVerificationIpLogRepository, securityAlertService } = c.get("services");
     // Checked before anything else, including the format validation below —
     // an attacker probing for the rate limit shouldn't be able to burn zero
     // attempts by sending intentionally-malformed emails first.
@@ -109,6 +144,12 @@ export class AuthController {
       FORGOT_PASSWORD_WINDOW_MINUTES
     );
     if (recentAttempts >= MAX_FORGOT_PASSWORD_ATTEMPTS) {
+      await securityAlertService.recordIfNew({
+        type: "password_reset_spam",
+        severity: "warning",
+        ip,
+        dedupeWindowMinutes: FORGOT_PASSWORD_WINDOW_MINUTES,
+      });
       return c.json({ error: "Too many requests from this network. Please try again later." }, 429);
     }
 
@@ -193,10 +234,16 @@ export class AuthController {
    * tokens from the same network do (see EmailVerificationIpLogRepository).
    */
   verifyEmail = async (c: Context<AppEnv>) => {
-    const { authService, emailVerificationIpLogRepository } = c.get("services");
+    const { authService, emailVerificationIpLogRepository, securityAlertService } = c.get("services");
     const ip = clientIp(c);
     const recentFailures = await emailVerificationIpLogRepository.countRecentAttempts(ip, "verify", VERIFY_WINDOW_MINUTES);
     if (recentFailures >= MAX_VERIFY_FAILURES) {
+      await securityAlertService.recordIfNew({
+        type: "verify_brute_force",
+        severity: "warning",
+        ip,
+        dedupeWindowMinutes: VERIFY_WINDOW_MINUTES,
+      });
       return c.json({ error: "Too many attempts from this network. Please try again later." }, 429);
     }
 
@@ -225,10 +272,16 @@ export class AuthController {
    * guessing — even a "successful" resend still costs a real Resend send.
    */
   resendVerification = async (c: Context<AppEnv>) => {
-    const { authService, emailVerificationIpLogRepository } = c.get("services");
+    const { authService, emailVerificationIpLogRepository, securityAlertService } = c.get("services");
     const ip = clientIp(c);
     const recentAttempts = await emailVerificationIpLogRepository.countRecentAttempts(ip, "resend", RESEND_WINDOW_MINUTES);
     if (recentAttempts >= MAX_RESEND_ATTEMPTS) {
+      await securityAlertService.recordIfNew({
+        type: "resend_spam",
+        severity: "info",
+        ip,
+        dedupeWindowMinutes: RESEND_WINDOW_MINUTES,
+      });
       return c.json({ error: "Too many resend requests from this network. Please try again later." }, 429);
     }
 

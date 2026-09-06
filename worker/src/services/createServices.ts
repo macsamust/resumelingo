@@ -12,6 +12,8 @@ import { RoleDescriptionRepository } from "../repositories/RoleDescriptionReposi
 import { AdminAuditLogRepository } from "../repositories/AdminAuditLogRepository";
 import { AdminLoginIpLogRepository } from "../repositories/AdminLoginIpLogRepository";
 import { EmailVerificationIpLogRepository } from "../repositories/EmailVerificationIpLogRepository";
+import { PublicResumePasswordIpLogRepository } from "../repositories/PublicResumePasswordIpLogRepository";
+import { SecurityEventRepository } from "../repositories/SecurityEventRepository";
 import { TokenService } from "./TokenService";
 import { AuthService } from "./AuthService";
 import { ResumeService } from "./ResumeService";
@@ -27,6 +29,8 @@ import { AchievementGeneratorService } from "./AchievementGeneratorService";
 import { SkillSuggestionAiService } from "./SkillSuggestionAiService";
 import { ViewDigestService, UnsubscribeDigestTokenPayload } from "./ViewDigestService";
 import { AiCareerCoachGenerator, ICareerCoachGenerator } from "./CareerCoachGenerator";
+import { SecurityAlertService } from "./SecurityAlertService";
+import { SecurityMonitorService } from "./SecurityMonitorService";
 
 export interface Services {
   authService: AuthService;
@@ -49,8 +53,16 @@ export interface Services {
   adminAuditLogRepository: AdminAuditLogRepository;
   /** Backs the IP-based rate limit on admin login — see AdminAuthController.login. */
   adminLoginIpLogRepository: AdminLoginIpLogRepository;
-  /** Backs the IP-based rate limit on verify-email/resend-verification — see AuthController. */
+  /** Backs the IP-based rate limit on verify-email/resend-verification/login/register — see AuthController. */
   emailVerificationIpLogRepository: EmailVerificationIpLogRepository;
+  /** Backs the IP+slug-based rate limit on password-protected public resume links — see PublicController.getBySlug. */
+  publicResumePasswordIpLogRepository: PublicResumePasswordIpLogRepository;
+  /** Durable log of flagged abuse/anomaly signals — see SecurityEventRepository.ts. Exposed directly for AdminSecurityEventController's Security Report page. */
+  securityEventRepository: SecurityEventRepository;
+  /** Writes to securityEventRepository (with dedupe) and fires an immediate email on critical severity — the single call site every throttled controller uses. */
+  securityAlertService: SecurityAlertService;
+  /** Daily cron consumer — see index.ts's `scheduled` export. */
+  securityMonitorService: SecurityMonitorService;
   /** Exposed directly for the admin console's own account-management screen — see AdminManagementController. */
   adminRepository: AdminRepository;
   /** Exposed directly (not just via authService) for the admin console's user-management screens — see AdminUserController. */
@@ -92,6 +104,8 @@ export function createServices(env: Env): Services {
   const adminAuditLogRepository = new AdminAuditLogRepository(env.DB);
   const adminLoginIpLogRepository = new AdminLoginIpLogRepository(env.DB);
   const emailVerificationIpLogRepository = new EmailVerificationIpLogRepository(env.DB);
+  const publicResumePasswordIpLogRepository = new PublicResumePasswordIpLogRepository(env.DB);
+  const securityEventRepository = new SecurityEventRepository(env.DB);
   const resumeAnalyticsRepository = new ResumeAnalyticsRepository(env.DB);
   const resumeVersionRepository = new ResumeVersionRepository(env.DB);
   const jobApplicationRepository = new JobApplicationRepository(env.DB);
@@ -155,6 +169,14 @@ export function createServices(env: Env): Services {
     unsubscribeDigestTokenService,
     env.CLIENT_ORIGIN
   );
+  const securityAlertService = new SecurityAlertService(securityEventRepository, adminRepo, emailService, env.ADMIN_EMAIL);
+  const securityMonitorService = new SecurityMonitorService(
+    adminAuditLogRepository,
+    adminRepo,
+    securityEventRepository,
+    emailService,
+    env.ADMIN_EMAIL
+  );
 
   return {
     authService,
@@ -172,6 +194,10 @@ export function createServices(env: Env): Services {
     adminAuditLogRepository,
     adminLoginIpLogRepository,
     emailVerificationIpLogRepository,
+    publicResumePasswordIpLogRepository,
+    securityEventRepository,
+    securityAlertService,
+    securityMonitorService,
     adminRepository: adminRepo,
     userRepository: userRepo,
     resumeRepository: resumeRepo,

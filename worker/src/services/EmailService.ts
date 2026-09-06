@@ -162,4 +162,74 @@ export class EmailService {
       `,
     });
   }
+
+  /** Human-readable label for a SecurityEventType — shared by the alert and digest emails below, and worth keeping in sync with AdminSecurityReportPage.tsx's client-side copy of the same labels. */
+  private static securityEventLabel(type: string): string {
+    const labels: Record<string, string> = {
+      login_brute_force: "Repeated failed logins",
+      register_burst: "Registration burst",
+      verify_brute_force: "Repeated failed email verification attempts",
+      resend_spam: "Verification email resend spam",
+      password_reset_spam: "Password reset request spam",
+      public_resume_password_guessing: "Public resume password guessing",
+      admin_login_brute_force: "Repeated failed admin logins",
+      admin_mass_delete: "Unusual volume of admin deletes",
+    };
+    return labels[type] ?? type;
+  }
+
+  /**
+   * Fired immediately (not batched into the daily digest below) the moment
+   * SecurityAlertService.recordIfNew writes a `critical` security_events row
+   * — see that class's dedupe guard for why this fires once per burst, not
+   * once per blocked request. Sent to every admin account (see
+   * AdminRepository.findAll, falling back to env.ADMIN_EMAIL if none exist
+   * yet) since this is operational, not marketing, mail — no
+   * unsubscribe/opt-out needed.
+   */
+  async sendSecurityAlertEmail(to: string, type: string, detail: Record<string, unknown> | null): Promise<void> {
+    const label = EmailService.securityEventLabel(type);
+    const detailRows = detail
+      ? Object.entries(detail)
+          .map(([k, v]) => `<li><strong>${k}:</strong> ${String(v)}</li>`)
+          .join("")
+      : "";
+    await this.send({
+      to,
+      subject: `[ResumeLingo Security] ${label}`,
+      html: `
+        <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
+          <h2 style="margin-bottom: 8px;">${label}</h2>
+          <p>The security monitor flagged this as a threshold-based signal — worth a look, not a confirmed breach.</p>
+          ${detailRows ? `<ul style="color: #475569; font-size: 14px;">${detailRows}</ul>` : ""}
+          <p style="color: #64748b; font-size: 13px;">See the full history on the Admin Console's Security Report page.</p>
+        </div>
+      `,
+    });
+  }
+
+  /**
+   * Once-daily rollup of everything logged to security_events in the last
+   * 24h (see SecurityMonitorService) — critical events already triggered
+   * their own immediate email above, this is a recap plus everything at
+   * warning/info severity so admins aren't pinged individually for every
+   * single lower-severity signal.
+   */
+  async sendSecurityDailyDigestEmail(to: string, counts: { type: string; severity: string; count: number }[]): Promise<void> {
+    if (counts.length === 0) return;
+    const rows = counts
+      .map((c) => `<li><strong>${EmailService.securityEventLabel(c.type)}</strong> (${c.severity}) — ${c.count}</li>`)
+      .join("");
+    await this.send({
+      to,
+      subject: `[ResumeLingo Security] Daily summary — ${counts.reduce((sum, c) => sum + c.count, 0)} flagged event(s)`,
+      html: `
+        <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
+          <h2 style="margin-bottom: 8px;">Security signals — last 24 hours</h2>
+          <ul style="color: #475569; font-size: 14px;">${rows}</ul>
+          <p style="color: #64748b; font-size: 13px;">See the full history on the Admin Console's Security Report page.</p>
+        </div>
+      `,
+    });
+  }
 }

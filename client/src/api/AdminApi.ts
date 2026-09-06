@@ -12,6 +12,7 @@ import {
   AdminTemplate,
   AdminUserSummary,
   Resume,
+  SecurityEvent,
   TemplateCategory,
 } from "../types";
 
@@ -113,6 +114,19 @@ export class AdminApi extends ApiClient {
   /** Recomputes the whole hash chain server-side — see worker's AdminAuditLogRepository.verifyChainIntegrity. O(n) on table size, so this is a manual "Verify integrity" button, not something called automatically. */
   verifyAuditLogIntegrity() {
     return this.get<{ intact: boolean; brokenAt?: AdminAuditLogEntry }>("/admin/audit-log/verify-integrity");
+  }
+
+  /** Backs the Security Report page — see worker's SecurityEventRepository/SecurityAlertService/SecurityMonitorService for how rows get written. */
+  listSecurityEvents(params: { page: number; pageSize: number; type?: string; severity?: string; from?: string; to?: string }) {
+    const qs = new URLSearchParams({
+      page: String(params.page),
+      pageSize: String(params.pageSize),
+      ...(params.type ? { type: params.type } : {}),
+      ...(params.severity ? { severity: params.severity } : {}),
+      ...(params.from ? { from: params.from } : {}),
+      ...(params.to ? { to: params.to } : {}),
+    });
+    return this.get<{ entries: SecurityEvent[]; total: number; page: number; pageSize: number }>(`/admin/security-events?${qs}`);
   }
 
   listAdmins() {

@@ -362,6 +362,28 @@ export interface AdminAuditLogEntry {
   createdAt: string;
 }
 
+export type SecurityEventType =
+  | "login_brute_force"
+  | "register_burst"
+  | "verify_brute_force"
+  | "resend_spam"
+  | "password_reset_spam"
+  | "public_resume_password_guessing"
+  | "admin_login_brute_force"
+  | "admin_mass_delete";
+
+export type SecurityEventSeverity = "info" | "warning" | "critical";
+
+/** One flagged abuse/anomaly signal — see api/AdminApi.ts's listSecurityEvents. Threshold-based, not machine-learning anomaly detection. */
+export interface SecurityEvent {
+  id: string;
+  type: SecurityEventType;
+  severity: SecurityEventSeverity;
+  ip: string | null;
+  detail: string | null;
+  createdAt: string;
+}
+
 export interface AdminPlan {
   tier: SubscriptionTier;
   name: string;

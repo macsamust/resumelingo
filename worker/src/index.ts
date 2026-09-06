@@ -171,15 +171,24 @@ app.notFound((c) => {
 export default {
   fetch: app.fetch,
   /**
-   * Fired by the Cron Trigger in wrangler.jsonc's `triggers.crons`
-   * ("0 14 * * 1" — every Monday). The Worker's very first background job
-   * — everything else in this app only ever runs on an incoming request.
-   * `ctx.waitUntil` keeps the invocation alive until the digest run
-   * finishes rather than letting the runtime tear it down as soon as this
-   * handler returns.
+   * Fired by either Cron Trigger in wrangler.jsonc's `triggers.crons` —
+   * "0 14 * * 1" (weekly, the view digest) or "0 13 * * *" (daily, the
+   * security monitor added Sep 2026). Told apart by `event.cron` rather than
+   * two separate exports, since Workers only supports one `scheduled`
+   * handler per Worker. `ctx.waitUntil` keeps the invocation alive until
+   * whichever job finishes rather than letting the runtime tear it down as
+   * soon as this handler returns.
    */
-  scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+  scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     const services = createServices(env);
+    if (event.cron === "0 13 * * *") {
+      ctx.waitUntil(
+        services.securityMonitorService.runDailyCheck().then((summary) => {
+          console.log("Daily security monitor run complete", summary);
+        })
+      );
+      return;
+    }
     ctx.waitUntil(
       services.viewDigestService.sendWeeklyDigests().then((summary) => {
         console.log("Weekly view digest run complete", summary);

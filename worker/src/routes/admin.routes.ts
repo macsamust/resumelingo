@@ -12,6 +12,7 @@ import { AdminResumeController } from "../controllers/AdminResumeController";
 import { AdminAuditLogController } from "../controllers/AdminAuditLogController";
 import { AdminManagementController } from "../controllers/AdminManagementController";
 import { AdminSecurityController } from "../controllers/AdminSecurityController";
+import { AdminSecurityEventController } from "../controllers/AdminSecurityEventController";
 
 const admin = new Hono<AppEnv>();
 
@@ -44,6 +45,9 @@ admin.post("/security/revoke-sessions", requireAdminAuth, adminSecurityControlle
 admin.post("/security/totp/enroll", requireAdminAuth, adminSecurityController.beginTotpEnroll);
 admin.post("/security/totp/confirm", requireAdminAuth, adminSecurityController.confirmTotpEnroll);
 admin.post("/security/totp/disable", requireAdminAuth, adminSecurityController.disableTotp);
+
+const securityEventController = new AdminSecurityEventController();
+admin.get("/security-events", requireAdminAuth, securityEventController.list);
 
 const userController = new AdminUserController();
 admin.get("/users", requireAdminAuth, userController.list);

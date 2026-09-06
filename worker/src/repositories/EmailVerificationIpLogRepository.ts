@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 
-export type EmailVerificationIpAction = "verify" | "resend" | "password-reset" | "login";
+export type EmailVerificationIpAction = "verify" | "resend" | "password-reset" | "login" | "register";
 
 /**
  * IP-based rate limiting for auth flows that send an email — same pattern as
@@ -19,6 +19,10 @@ export type EmailVerificationIpAction = "verify" | "resend" | "password-reset" |
  * failures from one IP, failure-only like verify" shape, and this table's
  * name already stopped being literally accurate once password-reset joined
  * it.
+ *
+ * "register" (see AuthController.register) also reuses it — recorded on
+ * every attempt regardless of outcome (like resend), since the concern is
+ * account-creation volume itself, not guessing anything.
  *
  * Not a BaseRepository subclass, same reasoning as AdminLoginIpLogRepository
  * — this table has no natural "get by id"/"update" access pattern.

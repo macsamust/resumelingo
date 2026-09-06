@@ -131,6 +131,42 @@ export interface AdminRecord {
   totpBackupCodeHashes: string;
 }
 
+/**
+ * Which abuse/anomaly pattern a security_events row describes — see
+ * SecurityAlertService and SecurityMonitorService. Threshold-based heuristics
+ * against known abuse patterns, not machine-learning anomaly detection —
+ * scoped for a solo-admin app, not real "hacker detection."
+ */
+export type SecurityEventType =
+  | "login_brute_force"
+  | "register_burst"
+  | "verify_brute_force"
+  | "resend_spam"
+  | "password_reset_spam"
+  | "public_resume_password_guessing"
+  | "admin_login_brute_force"
+  | "admin_mass_delete";
+
+export type SecurityEventSeverity = "info" | "warning" | "critical";
+
+/**
+ * One entry in the security_events table (see
+ * repositories/SecurityEventRepository.ts) — written only when an existing
+ * IP-throttle actually trips (a 429 is returned) or the daily
+ * SecurityMonitorService scan finds an admin-side anomaly in the durable
+ * admin_audit_log. One row per crossed threshold, not per request.
+ */
+export interface SecurityEventRecord {
+  id: string;
+  type: SecurityEventType;
+  severity: SecurityEventSeverity;
+  /** Null for events with no single associated IP (e.g. admin_mass_delete, keyed by admin instead). */
+  ip: string | null;
+  /** JSON-serialized context (e.g. { email }, { slug }, { adminId, adminEmail, count }) — shown expanded on the Admin Console's Security Report page. */
+  detail: string | null;
+  createdAt: string;
+}
+
 /** One entry in the admin_audit_log table (see repositories/AdminAuditLogRepository.ts) — records who did what, to what, and when for every sensitive admin action. */
 export interface AdminAuditLogRecord {
   id: string;
