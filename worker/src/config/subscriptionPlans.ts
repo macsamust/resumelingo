@@ -11,7 +11,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlanDefinition[] = [
     name: "Starter",
     priceMonthly: 0,
     resumeLimit: 1,
-    features: ["One resume", "Basic template", "PDF download", "Public link", "Limited edits", "Basic tips"],
+    features: ["One resume", "Basic template", "PDF download", "Public link", "Basic tips"],
   },
   {
     tier: SubscriptionTier.Professional,

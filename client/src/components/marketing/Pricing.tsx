@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { SubscriptionPlan } from "../../types";
 
 const FALLBACK_PLANS: SubscriptionPlan[] = [
-  { tier: "starter", name: "Starter", priceMonthly: 0, resumeLimit: 1, features: ["One resume", "Basic template", "PDF download", "Public link", "Limited edits", "Basic tips"] },
+  { tier: "starter", name: "Starter", priceMonthly: 0, resumeLimit: 1, features: ["One resume", "Basic template", "PDF download", "Public link", "Basic tips"] },
   { tier: "professional", name: "Professional", priceMonthly: 9.99, resumeLimit: 3, features: ["Three resumes", "Unlimited edits", "Template library", "Private sharing", "Analytics", "Resume scoring", "Career Center", "AI assistance", "Application Tracker"] },
   { tier: "premium", name: "Premium", priceMonthly: 19.99, resumeLimit: -1, features: ["Everything in Professional", "Unlimited resumes", "Premium templates", "Branded resume link", "Resume analytics", "Interview preparation", "Career coaching resources", "ATS optimization", "AI cover letters & thank-you letters", "AI Career Coach"] },
 ];
