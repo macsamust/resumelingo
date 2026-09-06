@@ -48,6 +48,7 @@ export function AdminSkillSuggestionsPage() {
   const [newSuggestion, setNewSuggestion] = useState(EMPTY_NEW);
   const [creating, setCreating] = useState(false);
   const [filterProfession, setFilterProfession] = useState<string>("all");
+  const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortState<SuggestionSortKey>>({ key: "professionKey", direction: "asc" });
   // Which suggestion (if any) is the subject of the delete confirm dialog —
   // replaces window.confirm(), same pattern as AdminUsersPage.
@@ -72,10 +73,18 @@ export function AdminSkillSuggestionsPage() {
 
   useEffect(load, []);
 
-  const filtered = useMemo(
-    () => (filterProfession === "all" ? suggestions : suggestions.filter((s) => s.professionKey === filterProfession)),
-    [suggestions, filterProfession]
-  );
+  // Client-side filter+sort — this catalog is small (a handful of keywords
+  // per profession at most), so like AdminTemplatesPage.tsx there's no real
+  // benefit to pushing search server-side here.
+  const filtered = useMemo(() => {
+    const byProfession = filterProfession === "all" ? suggestions : suggestions.filter((s) => s.professionKey === filterProfession);
+    const q = query.trim().toLowerCase();
+    if (!q) return byProfession;
+    return byProfession.filter((s) => {
+      const profession = professions.find((p) => p.key === s.professionKey)?.label ?? s.professionKey;
+      return s.label.toLowerCase().includes(q) || profession.toLowerCase().includes(q) || s.category.toLowerCase().includes(q);
+    });
+  }, [suggestions, filterProfession, query, professions]);
   const sorted = useMemo(() => [...filtered].sort((a, b) => compareSuggestions(a, b, sort)), [filtered, sort]);
   const onSort = (key: SuggestionSortKey) => setSort((prev) => nextSortState(prev, key));
 
@@ -139,7 +148,15 @@ export function AdminSkillSuggestionsPage() {
   return (
     <AdminShell>
       <div className="app-page-head">
-        <h1>Skills &amp; Tools Suggestions</h1>
+        <h1>
+          Skills &amp; Tools Suggestions <span className="app-page-head-count">({suggestions.length})</span>
+        </h1>
+        <input
+          className="admin-search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search by keyword, profession, or category…"
+        />
       </div>
       <p className="hero-note admin-plan-warning">
         These are the "AI suggested" keyword chips shown in the Edit Resume Skills &amp; Tools picker (Portrait
@@ -272,6 +289,13 @@ export function AdminSkillSuggestionsPage() {
                   </tr>
                 );
               })}
+              {sorted.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="hero-note">
+                    {query ? `No keywords match "${query}".` : "No keywords for this profession yet."}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </>
