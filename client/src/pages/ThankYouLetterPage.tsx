@@ -130,11 +130,11 @@ export function ThankYouLetterPage() {
           </div>
           <div className="field">
             <label>Company</label>
-            <input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="e.g. Acme Corp" />
+            <input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="e.g. Acme Corp" required />
           </div>
           <div className="field">
             <label>Role</label>
-            <input value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Senior Product Manager" />
+            <input value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Senior Product Manager" required />
           </div>
           <div className="field">
             <label>Interviewer / contact name (optional)</label>
@@ -152,7 +152,7 @@ export function ThankYouLetterPage() {
               placeholder="e.g. the team's migration to microservices"
             />
           </div>
-          <button className="btn btn-primary btn-block" type="submit" disabled={generating}>
+          <button className="btn btn-primary btn-block" type="submit" disabled={generating || !company.trim() || !role.trim()}>
             {generating ? "Writing…" : letter ? "Regenerate letter" : "Generate letter"}
           </button>
         </form>

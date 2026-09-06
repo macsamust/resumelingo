@@ -34,6 +34,16 @@ export class ThankYouLetterController {
     if (!scenario || !VALID_SCENARIOS.has(scenario)) {
       return c.json({ error: "A valid scenario is required." }, 400);
     }
+    // Sep 2026 QA pass: previously unvalidated, so a blank company/role
+    // still generated a letter — RuleBasedThankYouLetterGenerator's own
+    // "the role" fallback for a missing role read as "the the role" once
+    // spliced into a sentence already containing "the". Required here
+    // rather than just patching the generator's wording, since a generic
+    // letter with no real company/role isn't a useful result regardless of
+    // how it's worded.
+    if (typeof company !== "string" || !company.trim() || typeof role !== "string" || !role.trim()) {
+      return c.json({ error: "Company and role are required." }, 400);
+    }
 
     const professionLabel = user.profession ? getProfessionByKey(user.profession)?.label ?? user.profession : undefined;
     const letter = this.generator.generate({

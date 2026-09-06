@@ -37,9 +37,18 @@ export class RuleBasedThankYouLetterGenerator implements IThankYouLetterGenerato
     const name = input.fullName.trim() || "Applicant";
     const greeting = `Dear ${input.interviewerName?.trim() || "Hiring Team"},`;
     const company = input.company?.trim() || "";
-    const role = input.role?.trim() || "the role";
+    const role = input.role?.trim() || "";
     const topicClause = input.topic?.trim() ? ` about ${input.topic.trim()}` : "";
     const atCompany = company ? ` at ${company}` : "";
+    // Sep 2026 QA pass fix: company/role are now required upstream (see
+    // ThankYouLetterController.generate), so this defensive branch should
+    // never actually fire in normal use. It's kept anyway as a backstop for
+    // any other caller of this generator, but built the same way `atCompany`
+    // above already is — an empty string when missing, not a placeholder
+    // word — so a blank role can never collide with the templates' own
+    // hardcoded "the" and produce "the the role" the way the previous
+    // `|| "the role"` fallback did.
+    const roleClause = role ? `${role} position` : "position";
 
     let body: string[];
     let signOff: string;
@@ -47,7 +56,7 @@ export class RuleBasedThankYouLetterGenerator implements IThankYouLetterGenerato
     switch (input.scenario) {
       case "offer-acceptance":
         body = [
-          `Thank you so much for offering me the ${role} position${atCompany}. I am thrilled to accept and excited to join the team${
+          `Thank you so much for offering me the ${roleClause}${atCompany}. I am thrilled to accept and excited to join the team${
             topicClause ? `, especially given our discussion${topicClause}` : ""
           }.`,
           "I appreciate the trust you've placed in me and look forward to contributing to the team's success.",
@@ -58,7 +67,7 @@ export class RuleBasedThankYouLetterGenerator implements IThankYouLetterGenerato
 
       case "staying-in-touch":
         body = [
-          `Thank you for letting me know about your decision regarding the ${role} position${atCompany}. While I'm disappointed I won't be joining the team at this time, I genuinely enjoyed our conversation${topicClause} and learning more about your work.`,
+          `Thank you for letting me know about your decision regarding the ${roleClause}${atCompany}. While I'm disappointed I won't be joining the team at this time, I genuinely enjoyed our conversation${topicClause} and learning more about your work.`,
           "I'd love to stay in touch for future opportunities that may be a better fit, and I'll be following the team's progress with interest.",
           "Thank you again for your time and consideration.",
         ];
@@ -81,7 +90,7 @@ export class RuleBasedThankYouLetterGenerator implements IThankYouLetterGenerato
       case "post-interview":
       default:
         body = [
-          `Thank you for taking the time to meet with me about the ${role} position${atCompany}${
+          `Thank you for taking the time to meet with me about the ${roleClause}${atCompany}${
             topicClause ? ` and for our conversation${topicClause}` : ""
           }. I enjoyed learning more about the team and came away even more enthusiastic about the opportunity to contribute.`,
           `Our conversation reinforced that my background in ${
