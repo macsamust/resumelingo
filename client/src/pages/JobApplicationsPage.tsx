@@ -18,6 +18,24 @@ const STATUS_LABEL: Record<JobApplicationStatus, string> = {
 };
 const STATUSES = Object.keys(STATUS_LABEL) as JobApplicationStatus[];
 
+/**
+ * The application-tracker state machine — mirrors
+ * JOB_APPLICATION_ALLOWED_NEXT_STATUSES in the worker's
+ * JobApplicationService.ts, which is what's actually enforced; this copy
+ * just lets the dropdown below disable a choice up front instead of letting
+ * the person pick it and then showing an error. From "applied", every
+ * status is reachable. From "interviewing", everything is still reachable
+ * except going back to "applied". "offer", "rejected", and "withdrawn" are
+ * each a final outcome — nothing else is reachable from any of them.
+ */
+const ALLOWED_NEXT_STATUSES: Record<JobApplicationStatus, JobApplicationStatus[]> = {
+  applied: ["applied", "interviewing", "offer", "rejected", "withdrawn"],
+  interviewing: ["interviewing", "offer", "rejected", "withdrawn"],
+  offer: ["offer"],
+  rejected: ["rejected"],
+  withdrawn: ["withdrawn"],
+};
+
 const EMPTY_NEW = { company: "", role: "", resumeId: "", status: "applied" as JobApplicationStatus, appliedDate: "", link: "" };
 
 type Draft = { company: string; role: string; resumeId: string; status: JobApplicationStatus; appliedDate: string; link: string; notes: string };
@@ -364,13 +382,12 @@ export function JobApplicationsPage() {
             // line reads consistently, rather than switching to a human date
             // like "Jul 4, 2026".
             const laterChanges = timelineFor(a).slice(1);
-            // Once an application has reached a status, it can't be
-            // re-selected — enforced again server-side (see
+            // What this application can actually move to next, per the
+            // state machine above — enforced again server-side (see
             // JobApplicationService.update's JobApplicationInvalidStatusError),
             // this just keeps the dropdown from offering a choice that would
-            // just be rejected, and avoids a duplicate line in the status
-            // history for the same status shown twice.
-            const usedStatuses = new Set(timelineFor(a).map((h) => h.status));
+            // just be rejected.
+            const allowedNext = ALLOWED_NEXT_STATUSES[a.status];
             return (
               <div className="resume-card job-app-card" key={a.id}>
                 <div className="job-app-card-head">
@@ -404,7 +421,7 @@ export function JobApplicationsPage() {
                       onChange={(e) => onStatusChange(a, e.target.value as JobApplicationStatus)}
                     >
                       {STATUSES.map((s) => (
-                        <option key={s} value={s} disabled={s !== a.status && usedStatuses.has(s)}>
+                        <option key={s} value={s} disabled={!allowedNext.includes(s)}>
                           {STATUS_LABEL[s]}
                         </option>
                       ))}

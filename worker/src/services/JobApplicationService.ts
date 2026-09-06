@@ -4,17 +4,47 @@ import { UserRepository } from "../repositories/UserRepository";
 import { User } from "../models/User";
 import { JobApplicationRecord, JobApplicationStatus, JobApplicationStatusHistoryEntry, SubscriptionTier } from "../types";
 
-// Human-readable labels for the "already reached this status" error message
-// below — kept here rather than imported from anywhere client-side, since
-// this is the one place the worker needs to say a status name out loud
-// rather than just pass the raw code through. Mirrors JobApplicationsPage.tsx's
-// own STATUS_LABEL; if a status is ever added there, add it here too.
+// Human-readable labels for the status-transition error message below —
+// kept here rather than imported from anywhere client-side, since this is
+// the one place the worker needs to say a status name out loud rather than
+// just pass the raw code through. Mirrors JobApplicationsPage.tsx's own
+// STATUS_LABEL; if a status is ever added there, add it here too.
 const STATUS_LABELS: Record<JobApplicationStatus, string> = {
   applied: "Applied",
   interviewing: "Interviewing",
   offer: "Offer",
   rejected: "Rejected",
   withdrawn: "Withdrawn",
+};
+
+/**
+ * The application-tracker state machine (Sep 2026, replacing the earlier
+ * "no status can repeat" rule with an explicit shape once it became clear
+ * that rule was really describing this):
+ *
+ *  - From "applied": every status is reachable, including forward moves to
+ *    Interviewing/Offer/Rejected/Withdrawn. Applied itself is the one
+ *    status that can stay "selected" without it meaning anything (picking
+ *    the value already shown is a no-op, not a real transition).
+ *  - From "interviewing": everything is still reachable *except* Applied —
+ *    once a real interview has happened, going back to "just applied"
+ *    doesn't describe a real state the application is in.
+ *  - From "offer", "rejected", or "withdrawn": nothing else is reachable.
+ *    Each of these is a final outcome of the pipeline, not a waypoint —
+ *    once an application has an offer, is rejected, or is withdrawn,
+ *    there's nowhere else for the tracker to say it can go.
+ *
+ * Mirrored on the client (JobApplicationsPage.tsx's own copy of this table)
+ * so the dropdown never even offers a choice this method would reject —
+ * but this is the version that's actually enforced; the client copy is
+ * just the UI reflecting it up front.
+ */
+export const JOB_APPLICATION_ALLOWED_NEXT_STATUSES: Record<JobApplicationStatus, JobApplicationStatus[]> = {
+  applied: ["applied", "interviewing", "offer", "rejected", "withdrawn"],
+  interviewing: ["interviewing", "offer", "rejected", "withdrawn"],
+  offer: ["offer"],
+  rejected: ["rejected"],
+  withdrawn: ["withdrawn"],
 };
 
 export class JobApplicationNotFoundError extends Error {}
@@ -139,22 +169,17 @@ export class JobApplicationService {
     assertJobApplicationSizeOk(input.notes, input.link);
     if (input.resumeId) await this.assertResumeOwned(userId, input.resumeId);
 
-    // A status can only be reached once per application — "Applied" is the
-    // one-time starting point of the pipeline (already recorded at creation,
-    // in create() above), not a milestone to re-enter later, and the same
-    // logic holds for every other status too: selecting "Interviewing" a
-    // second time after moving past it doesn't describe a real second event,
-    // it's just a duplicate line in the timeline. Checked against this
-    // application's own history (not just its current `status` column) so
-    // this catches every already-reached status, not only the current one —
-    // e.g. Applied -> Interviewing -> Offer, then picking "Interviewing"
-    // again, is still rejected even though the *current* status is "Offer".
+    // Enforces the state machine above — see
+    // JOB_APPLICATION_ALLOWED_NEXT_STATUSES's doc comment for the actual
+    // shape (Offer/Rejected/Withdrawn are final; Interviewing can't go back
+    // to Applied; Applied can go anywhere).
     if (input.status !== undefined && input.status !== existing.status) {
-      const history = await this.applications.findHistoryForApplication(id);
-      if (history.some((h) => h.status === input.status)) {
-        throw new JobApplicationInvalidStatusError(
-          `This application already had the "${STATUS_LABELS[input.status]}" status — a status can't be re-selected once it's been reached.`
-        );
+      if (!JOB_APPLICATION_ALLOWED_NEXT_STATUSES[existing.status].includes(input.status)) {
+        const message =
+          existing.status === "offer" || existing.status === "rejected" || existing.status === "withdrawn"
+            ? `"${STATUS_LABELS[existing.status]}" is a final status and can't be changed.`
+            : `Can't change status from "${STATUS_LABELS[existing.status]}" to "${STATUS_LABELS[input.status]}".`;
+        throw new JobApplicationInvalidStatusError(message);
       }
     }
 

@@ -115,23 +115,6 @@ export class JobApplicationRepository extends BaseRepository<JobApplicationRecor
   }
 
   /**
-   * Every status-history row for one application, oldest first — used by
-   * JobApplicationService.update to check whether the requested new status
-   * has already been reached before (see that method's doc comment). Not
-   * the same query as findHistoryForUser below: that one is a bulk fetch
-   * across every application a user owns, for attaching timelines to a
-   * list; this is a single-application lookup for a status-change check
-   * that only needs to run right before a write.
-   */
-  async findHistoryForApplication(jobApplicationId: string): Promise<JobApplicationStatusHistoryEntry[]> {
-    const { results } = await this.db
-      .prepare(`SELECT "status", "changedAt" FROM job_application_status_history WHERE "jobApplicationId" = ? ORDER BY "changedAt" ASC`)
-      .bind(jobApplicationId)
-      .all<JobApplicationStatusHistoryEntry>();
-    return results;
-  }
-
-  /**
    * Every status-history row across every application this user owns, in
    * one query — used by JobApplicationService.listForUser to attach each
    * application's own timeline without an N+1 (one extra query per
