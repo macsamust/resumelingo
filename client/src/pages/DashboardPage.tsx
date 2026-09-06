@@ -215,7 +215,14 @@ export function DashboardPage() {
           <div className="dash-icon">⚙️</div>
           <p>
             {summary.subscription.planName}:{" "}
-            {summary.subscription.unlimited ? "Unlimited" : `${summary.subscription.remaining} left`}
+            {summary.subscription.unlimited
+              ? "Unlimited resumes"
+              : // Sep 2026 QA pass: "0 left" read as cryptic on its own — this
+                // spells out both halves of the fraction (remaining vs. plan
+                // limit) so it's unambiguous at a glance, on every tier.
+                `${summary.subscription.remaining} of ${summary.subscription.resumeLimit} resume${
+                  summary.subscription.resumeLimit === 1 ? "" : "s"
+                } remaining`}
           </p>
         </div>
       </div>
