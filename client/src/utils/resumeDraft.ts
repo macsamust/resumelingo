@@ -100,9 +100,16 @@ function deepEqual(a: unknown, b: unknown): boolean {
  *
  * Deliberately excludes accessPasswordExpiresAt (stored in two different
  * formats between the draft and the resume record — comparing them directly
- * risks a false-positive "changed" on a field that's rarely touched anyway)
- * and photoUrl (a data: URL, so any real difference is already implied by
- * Info differing on something else practically every time it's touched).
+ * risks a false-positive "changed" on a field that's rarely touched anyway).
+ *
+ * photoUrl *is* compared (as "Photo") despite being a data: URL — it was
+ * excluded until Sep 2026 on the assumption a photo edit never happens
+ * without some other field also changing, so Info differing would always
+ * cover it. A live "Restore them?" banner with zero named sections (nothing
+ * in `changed`, yet the draft was genuinely newer than the last save)
+ * proved that assumption false — a photo-only edit is a real, isolated case.
+ * The comparison here is by full string equality, not content — fine, since
+ * the point is just "did this change," not diffing image bytes.
  */
 export function summarizeDraftChanges(draft: ResumeDraft, resume: Resume): string[] {
   const changed: string[] = [];
@@ -120,6 +127,7 @@ export function summarizeDraftChanges(draft: ResumeDraft, resume: Resume): strin
       draft.professionKey !== resume.profession ||
       !deepEqual(draft.answers, resume.answers)
   );
+  add("Photo", draft.photoUrl !== resume.photoUrl);
   add("Template", draft.templateKey !== resume.templateKey);
   add("Sharing", draft.visibility !== resume.visibility);
   add(
