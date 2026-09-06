@@ -1,5 +1,10 @@
 import { SubscriptionPlanDefinition, SubscriptionTier } from "../types";
 
+// NOTE: this array no longer drives the live Pricing page's feature list —
+// SubscriptionController.plans reads from the D1-backed `plans` table
+// (PlanRepository, admin-editable via AdminPlanController) instead, so it
+// can reflect admin edits immediately. This config only feeds internal
+// policy checks now (tier limits, template/visibility gates).
 export const SUBSCRIPTION_PLANS: SubscriptionPlanDefinition[] = [
   {
     tier: SubscriptionTier.Starter,

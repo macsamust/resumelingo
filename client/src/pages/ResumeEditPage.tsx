@@ -148,7 +148,11 @@ export function ResumeEditPage() {
 
   // ATS Check is a Premium perk, matching the marketing/pricing copy — see
   // client/src/utils/atsCheck.ts for why this stays entirely client-side
-  // (no save, no network call, nothing to protect server-side).
+  // (no save, no network call, nothing to protect server-side). Considered
+  // extending this to Professional too (Sep 2026 QA pass, since the check
+  // itself is cheap to run at any tier) but kept Premium-exclusive per
+  // product decision — see TODO.md's "Professional ATS/analytics" entry for
+  // the copy-side fix that was made instead.
   const isPremium = user?.subscriptionTier === "premium";
 
   // Gate for "Generate from keywords" inside Highlights & Key Achievements —

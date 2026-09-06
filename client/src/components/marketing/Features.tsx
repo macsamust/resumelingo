@@ -5,8 +5,18 @@ const FEATURES = [
   { icon: "👁️", title: "Live preview", body: "Every change instantly updates across PDF, website, printable resume, and mobile view." },
   { icon: "📄", title: "Multiple resume versions", body: "Clone your resume instead of rewriting it: a Cloud Architect version, a Program Manager version, a Solutions Architect version, each with its own summary and keywords." },
   { icon: "🔒", title: "Public or private sharing", body: "Set links public, password protected, recruiter only, or one time use, with optional expiration dates." },
-  { icon: "📊", title: "Resume analytics", body: "See how your resume is performing, with a running view count and trend over time." },
-  { icon: "✅", title: "Resume Health Score & ATS optimization", body: "Get a Health Score, flags for missing metrics or weak summaries, and keyword recommendations scanned against real job titles." },
+  // "trend over time" was previously an unqualified promise here, but the
+  // view-count is the only part every plan actually gets — the trend
+  // chart/score history is Premium-only (DashboardController.buildResumeAnalytics).
+  // Rephrased (Sep 2026 QA pass) so this card doesn't promise something a
+  // Starter or Professional account can't see. See TODO.md's "Professional
+  // ATS/analytics" entry.
+  { icon: "📊", title: "Resume analytics", body: "See how your resume is performing with a running view count on every plan — Premium adds trend charts and score history over time." },
+  // Previously promised unqualified — ATS Check is Premium-only (kept that
+  // way on purpose, Sep 2026 QA pass; see TODO.md's "Professional
+  // ATS/analytics" entry), so a Starter/Professional visitor who signed up
+  // on this line's strength would find nothing behind it.
+  { icon: "✅", title: "Resume Health Score & ATS optimization (Premium)", body: "Premium unlocks a Health Score, flags for missing metrics or weak summaries, and keyword recommendations scanned against real job titles." },
   { icon: "📚", title: "Career Center", body: "Resume tips, interview tips, salary negotiation, and success stories, all tailored to your profession, right on your dashboard." },
 ];
 
