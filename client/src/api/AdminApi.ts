@@ -116,6 +116,11 @@ export class AdminApi extends ApiClient {
     return this.get<{ intact: boolean; brokenAt?: AdminAuditLogEntry }>("/admin/audit-log/verify-integrity");
   }
 
+  /** One-time repair for a chain broken by the createdAt-tie bug (Sep 2026) — see worker's AdminAuditLogRepository.repairChain. Only ever touches the hash column, never the logged action/admin/target/detail fields. */
+  repairAuditLogChain() {
+    return this.post<{ repaired: number }>("/admin/audit-log/repair-chain", {});
+  }
+
   /** Backs the Security Report page — see worker's SecurityEventRepository/SecurityAlertService/SecurityMonitorService for how rows get written. */
   listSecurityEvents(params: { page: number; pageSize: number; type?: string; severity?: string; from?: string; to?: string }) {
     const qs = new URLSearchParams({

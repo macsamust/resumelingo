@@ -55,6 +55,7 @@ export function AdminAuditLogPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [repairing, setRepairing] = useState(false);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const hasActiveFilters = Object.values(filters).some(Boolean);
@@ -129,6 +130,35 @@ export function AdminAuditLogPage() {
     }
   };
 
+  /**
+   * One-time repair for a chain broken by the createdAt-tie bug fixed
+   * alongside this button (see worker's AdminAuditLogRepository.repairChain)
+   * — recomputes and fixes only the `hash` column, never the logged action
+   * itself. Re-runs verify-integrity right after so the toast confirms the
+   * chain is actually intact now rather than just reporting a repair count.
+   */
+  const onRepairChain = async () => {
+    setRepairing(true);
+    try {
+      const result = await adminApi.repairAuditLogChain();
+      if (result.repaired === 0) {
+        showToast("success", "Chain was already intact — nothing to repair.");
+      } else {
+        const verify = await adminApi.verifyAuditLogIntegrity();
+        showToast(
+          verify.intact ? "success" : "error",
+          verify.intact
+            ? `Repaired ${result.repaired} hash(es). Chain is now intact.`
+            : `Repaired ${result.repaired} hash(es), but the chain still breaks at entry ${verify.brokenAt?.id ?? "(unknown)"}.`
+        );
+      }
+    } catch (err) {
+      showToast("error", err instanceof ApiError ? err.message : "Couldn't repair the audit log chain.");
+    } finally {
+      setRepairing(false);
+    }
+  };
+
   return (
     <AdminShell>
       <div className="app-page-head">
@@ -138,6 +168,9 @@ export function AdminAuditLogPage() {
         <div className="admin-page-head-actions">
           <button className="btn btn-ghost btn-sm" type="button" disabled={verifying} onClick={onVerifyIntegrity}>
             {verifying ? "Verifying…" : "Verify integrity"}
+          </button>
+          <button className="btn btn-ghost btn-sm" type="button" disabled={repairing} onClick={onRepairChain}>
+            {repairing ? "Repairing…" : "Repair chain"}
           </button>
           <button className="btn btn-ghost btn-sm" type="button" disabled={exporting || total === 0} onClick={onExport}>
             {exporting ? "Exporting…" : "Export CSV"}

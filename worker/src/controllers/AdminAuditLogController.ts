@@ -60,4 +60,23 @@ export class AdminAuditLogController {
     const result = await adminAuditLogRepository.verifyChainIntegrity();
     return c.json(result);
   };
+
+  /**
+   * One-time repair for a chain broken by the createdAt-tie bug (see
+   * AdminAuditLogRepository.repairChain's doc comment) — recomputes and
+   * fixes the `hash` column only, never the substantive fields. Logged
+   * itself, same as every other sensitive admin action, but only *after*
+   * the repair runs — that new log entry chains correctly off the
+   * just-repaired final hash.
+   */
+  repairChain = async (c: Context<AppEnv>) => {
+    const { adminAuditLogRepository } = c.get("services");
+    const result = await adminAuditLogRepository.repairChain();
+    await adminAuditLogRepository.log(c.get("admin")!, {
+      action: "audit_log.repair_chain",
+      targetType: "audit_log",
+      detail: `Repaired ${result.repaired} hash(es)`,
+    });
+    return c.json(result);
+  };
 }

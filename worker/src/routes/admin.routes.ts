@@ -34,6 +34,7 @@ const auditLogController = new AdminAuditLogController();
 admin.get("/audit-log", requireAdminAuth, auditLogController.list);
 admin.get("/audit-log/export", requireAdminAuth, auditLogController.exportCsv);
 admin.get("/audit-log/verify-integrity", requireAdminAuth, auditLogController.verifyIntegrity);
+admin.post("/audit-log/repair-chain", requireAdminAuth, auditLogController.repairChain);
 
 const adminManagementController = new AdminManagementController();
 admin.get("/admins", requireAdminAuth, adminManagementController.list);
