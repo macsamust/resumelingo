@@ -130,11 +130,33 @@ export function ThankYouLetterPage() {
           </div>
           <div className="field">
             <label>Company</label>
-            <input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="e.g. Acme Corp" required />
+            <input
+              value={company}
+              onChange={(e) => {
+                setCompany(e.target.value);
+                if (letter) {
+                  setLetter("");
+                  setCopied(false);
+                }
+              }}
+              placeholder="e.g. Acme Corp"
+              required
+            />
           </div>
           <div className="field">
             <label>Role</label>
-            <input value={role} onChange={(e) => setRole(e.target.value)} placeholder="e.g. Senior Product Manager" required />
+            <input
+              value={role}
+              onChange={(e) => {
+                setRole(e.target.value);
+                if (letter) {
+                  setLetter("");
+                  setCopied(false);
+                }
+              }}
+              placeholder="e.g. Senior Product Manager"
+              required
+            />
           </div>
           <div className="field">
             <label>Interviewer / contact name (optional)</label>
