@@ -8,6 +8,14 @@ const DEFAULT_RANGE_DAYS = 7;
 /** How many recent admin_audit_log entries surface directly on the dashboard — a glance, not a replacement for the full Audit Log page. */
 const RECENT_ACTIVITY_LIMIT = 5;
 
+/** Stripe secret keys are always prefixed sk_test_/sk_live_ (restricted keys use rk_test_/rk_live_) — reading that prefix is enough to tell which mode a deployment is pointed at without ever handling the key's actual value. */
+function stripeModeFromSecretKey(secretKey: string | undefined): "test" | "live" | "unset" {
+  if (!secretKey) return "unset";
+  if (secretKey.startsWith("sk_live_") || secretKey.startsWith("rk_live_")) return "live";
+  if (secretKey.startsWith("sk_test_") || secretKey.startsWith("rk_test_")) return "test";
+  return "unset";
+}
+
 /**
  * Powers the admin console's landing page (previously /admin just
  * redirected straight to /admin/users with no aggregate view at all).
@@ -109,6 +117,11 @@ export class AdminDashboardController {
       security: { ...severityCounts, previous: severityCountsPrevious },
       engagement: { viewsInRange, viewsInRangePrevious, topTemplates, jobTrackerAdoption },
       recentActivity,
+      // Derived from the key's own prefix (sk_test_/sk_live_), never the key
+      // itself — an admin asked how to tell which mode a deployment is
+      // pointed at without digging through Cloudflare secrets. "unset" covers
+      // local/preview environments that never had the secret configured.
+      stripeMode: stripeModeFromSecretKey(c.env.STRIPE_SECRET_KEY),
     });
   };
 }

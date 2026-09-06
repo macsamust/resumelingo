@@ -360,6 +360,8 @@ export interface AdminDashboardSummary {
   };
   /** Last few admin_audit_log entries — a glance, not a replacement for the full Audit Log page. */
   recentActivity: AdminAuditLogEntry[];
+  /** Read from the STRIPE_SECRET_KEY secret's own prefix (sk_test_/sk_live_) server-side — never the key value itself. "unset" means this environment has no Stripe secret configured at all. */
+  stripeMode: "test" | "live" | "unset";
 }
 
 /** One resume in the admin's cross-user search results — a regular Resume plus its owner's name/email, since the admin isn't scoped to one user's page here. */

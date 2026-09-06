@@ -164,6 +164,19 @@ export function AdminDashboardPage() {
               <div className="dash-icon">⚠️</div>
               <p>{summary.revenue.paymentFailedCount} Payment(s) Failing</p>
             </div>
+            {/* Read from STRIPE_SECRET_KEY's own prefix server-side (see
+                AdminDashboardController.stripeModeFromSecretKey) — flagged
+                here as a warning tile whenever it's anything other than
+                "live", since a production deployment accidentally pointed
+                at a test key (or missing the secret entirely) is worth an
+                admin noticing at a glance. */}
+            <div className={`dash-tile ${summary.stripeMode !== "live" ? "dash-tile-alert-warning" : ""}`}>
+              <div className="dash-icon">💳</div>
+              <p>
+                Stripe:{" "}
+                {summary.stripeMode === "live" ? "Live" : summary.stripeMode === "test" ? "Test mode" : "Not configured"}
+              </p>
+            </div>
           </div>
 
           <h2 style={{ marginBottom: 16 }}>Security</h2>
