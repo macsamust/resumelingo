@@ -217,12 +217,14 @@ export function DashboardPage() {
             {summary.subscription.planName}:{" "}
             {summary.subscription.unlimited
               ? "Unlimited"
-              : // Sep 2026 QA pass: "0 left" alone read as cryptic — this
-                // spells out the plan limit as a simple fraction so it's
-                // unambiguous at a glance, on every tier. Resume limits top
-                // out at a single digit, so this stays short enough not to
-                // wrap in the tile.
-                `${summary.subscription.remaining}/${summary.subscription.resumeLimit} resumes`}
+              : // Sep 2026 QA pass: "0 left" alone read as cryptic, and a
+                // bare fraction (even ordered used/limit) still made a
+                // tester pause to work out which number meant what. Spelling
+                // out "used" removes that ambiguity outright, the way a
+                // storage quota reads "8 of 10 GB used" rather than "8/10."
+                // Resume limits top out at a single digit, so this stays
+                // short enough not to wrap in the tile.
+                `${summary.subscription.resumesUsed} of ${summary.subscription.resumeLimit} used`}
           </p>
         </div>
       </div>
