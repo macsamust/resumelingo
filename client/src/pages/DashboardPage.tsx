@@ -110,14 +110,15 @@ export function DashboardPage() {
 
   const handleClone = async (title: string) => {
     if (!cloneSourceResume) return;
-    try {
-      await resumeApi.clone(cloneSourceResume.id, { title });
-      showToast("success", `Cloned as "${title}".`);
-      setCloneSourceResume(null);
-      load();
-    } catch (err) {
-      showToast("error", err instanceof Error ? err.message : "Couldn't clone this resume.");
-    }
+    // Deliberately not caught here (Sep 2026 QA pass) — a failure (e.g. the
+    // resume-limit cap) needs to reach TextPromptDialog's own error display,
+    // which is right next to the Clone button the person just clicked,
+    // rather than being swallowed here and only shown as an easy-to-miss
+    // toast while the modal sits open looking unresponsive.
+    await resumeApi.clone(cloneSourceResume.id, { title });
+    showToast("success", `Cloned as "${title}".`);
+    setCloneSourceResume(null);
+    load();
   };
 
   const handleManageBilling = async () => {

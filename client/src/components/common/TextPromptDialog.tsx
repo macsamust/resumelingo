@@ -33,6 +33,13 @@ export function TextPromptDialog({ title, message, label, defaultValue = "", pla
     setBusy(true);
     try {
       await onSubmit(value.trim());
+    } catch (err) {
+      // Sep 2026 QA pass: a server-side failure (e.g. Dashboard's Clone
+      // hitting the resume-limit cap) used to be swallowed by the caller and
+      // surfaced only as a corner toast, while this dialog stayed open
+      // looking unresponsive — attention is on the modal at this point, not
+      // the toast stack, so the error belongs here instead.
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setBusy(false);
     }
