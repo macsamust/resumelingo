@@ -292,13 +292,13 @@ export function AdminDashboardPage() {
             <Link to="/admin/audit-log">View the full Audit Log →</Link>
           </p>
 
-          {/* TEMPORARY — remove alongside AdminDebugController once this feature no longer needs manual poking. */}
-          <h2 style={{ marginBottom: 16, marginTop: 24 }}>Debug tools (dev only)</h2>
+          {/* TEMPORARILY UNHIDDEN in production (Sep 7 2026) so QA can run one manual pass against the real prod test account after today's 15:00 UTC cron already fired before that account existed — see AdminDebugController's matching temporary change. Re-wrap in `window.location.hostname === "localhost" &&` once that pass is done; this should not stay visible in production. */}
+          <h2 style={{ marginBottom: 16, marginTop: 24 }}>Debug tools (Dev use only)</h2>
           <div className="builder-panel" style={{ maxWidth: 520 }}>
             <p className="hero-note" style={{ marginTop: 0, marginBottom: 8 }}>
-              Manually runs the AI Resume Refresh nudge's daily cron job. Local dev never fires Cron Triggers on its
-              own, so this is the only way to see a real nudge email without waiting for a production deploy. This
-              sends real emails to eligible accounts — same as the production cron would.
+              Manually runs the AI Resume Refresh nudge's daily cron job. Local dev never fires Cron Triggers on
+              its own, so this is the only way to see a real nudge email without waiting for a production
+              deploy. This sends real emails to eligible accounts — same as the production cron would.
             </p>
             {debugError && <div className="form-error">{debugError}</div>}
             {debugResult && <div className="empty-state">{debugResult}</div>}

@@ -211,7 +211,22 @@ export class ResumeRefreshController {
     // Catches the CAR path too (which has no keyword to check against) and
     // covers a race where two commits for the same resume land back to
     // back before either one's result reaches the picker.
-    const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+    //
+    // Also strips trailing sentence punctuation and folds curly
+    // quotes/apostrophes to straight ones (found via QA's DUP-03: the CAR
+    // path runs Challenge/Action/Result through the AI content generator,
+    // which can reproduce an existing bullet's exact wording but with a
+    // different trailing period or a curly vs. straight apostrophe —
+    // "exact" to a person reading it, but not byte-identical, so the old
+    // trim/lowercase/whitespace-collapse alone let it through).
+    const normalize = (s: string) =>
+      s
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .replace(/[.!?]+$/, "")
+        .replace(/[‘’]/g, "'")
+        .replace(/[“”]/g, '"');
     const existingNormalized = new Set(existingBullets.map(normalize));
 
     const newAchievements: AchievementEntry[] = [];

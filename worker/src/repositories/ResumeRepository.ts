@@ -184,7 +184,19 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
    */
   async dedupeAllGeneratedBullets(): Promise<{ resumeId: string; removedCount: number }[]> {
     const { results } = await this.db.prepare(`SELECT id, "generatedBullets" FROM resumes`).all<{ id: string; generatedBullets: string }>();
-    const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+    // Kept in sync with ResumeRefreshController.commit's dedupe normalize —
+    // also strips trailing sentence punctuation and folds curly
+    // quotes/apostrophes to straight ones, so this retroactive pass catches
+    // the same near-duplicates (e.g. one bullet ending in a period, an
+    // AI-regenerated one that doesn't) that the commit-time check now does.
+    const normalize = (s: string) =>
+      s
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .replace(/[.!?]+$/, "")
+        .replace(/[‘’]/g, "'")
+        .replace(/[“”]/g, '"');
     const changed: { resumeId: string; removedCount: number }[] = [];
     const statements = [];
     for (const row of results) {
