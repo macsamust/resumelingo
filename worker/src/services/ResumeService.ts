@@ -325,6 +325,18 @@ export class ResumeService {
       await this.versions.snapshot(existing, summarizeVersionChange(existing, input));
     }
 
+    // Sep 2026 QA pass: unlike create() (which falls back to the account's
+    // own name when fullName is blank), update() previously had no such
+    // guard — the on-blur autosave could write an empty fullName straight
+    // over an existing resume's real name with nothing catching it
+    // server-side. A blank/whitespace-only value here is treated as "no
+    // change requested" (falls back to the existing name) rather than a
+    // real intent to blank it out; the client also now marks this field
+    // required, but this is the actual guarantee, not that client check.
+    if (input.fullName !== undefined && !input.fullName.trim()) {
+      input = { ...input, fullName: existing.fullName };
+    }
+
     const templateChanging = !!input.templateKey && input.templateKey !== existing.templateKey;
     const visibilityChanging = !!input.visibility && input.visibility !== existing.visibility;
     // Recruiter Mode is Premium-only — re-checked (and silently coerced off,

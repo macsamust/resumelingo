@@ -279,7 +279,7 @@ export function ResumeBuilderPage() {
           <CollapsibleSection title="1. Tell us about the role" forceOpen={forceOpen} complete={sectionProgress.info}>
             <div className="field">
               <label>Your full name</label>
-              <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Jordan Lee" />
+              <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Jordan Lee" required />
             </div>
             <div className="field">
               <label>Email</label>
@@ -452,7 +452,18 @@ export function ResumeBuilderPage() {
             )}
           </CollapsibleSection>
 
-          <button className="btn btn-primary btn-block" type="submit" disabled={submitting || !professionKey} style={{ marginTop: 20 }}>
+          <button
+            className="btn btn-primary btn-block"
+            type="submit"
+            // Sep 2026 QA pass: a blank full name was silently accepted and
+            // replaced with the account's own name server-side (see
+            // ResumeService.create's fallback) rather than being called out
+            // to the user — required here (plus the input's own `required`
+            // attribute above) so submission is blocked with a clear
+            // validation message instead.
+            disabled={submitting || !professionKey || !fullName.trim()}
+            style={{ marginTop: 20 }}
+          >
             {submitting ? "Generating your resume…" : "Create my resume"}
           </button>
         </div>
