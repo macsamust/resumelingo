@@ -29,6 +29,7 @@ import { ResumeImportService } from "./ResumeImportService";
 import { AchievementGeneratorService } from "./AchievementGeneratorService";
 import { SkillSuggestionAiService } from "./SkillSuggestionAiService";
 import { ViewDigestService, UnsubscribeDigestTokenPayload } from "./ViewDigestService";
+import { ResumeRefreshNudgeService, ResumeRefreshNudgeTokenPayload } from "./ResumeRefreshNudgeService";
 import { AiCareerCoachGenerator, ICareerCoachGenerator } from "./CareerCoachGenerator";
 import { SecurityAlertService } from "./SecurityAlertService";
 import { SecurityMonitorService } from "./SecurityMonitorService";
@@ -90,6 +91,10 @@ export interface Services {
   careerCoachGenerator: ICareerCoachGenerator;
   /** Verifies the token on GET /api/auth/unsubscribe-digest — kept separate from authService's tokenService since it's a different payload shape/purpose and a much longer expiry. */
   unsubscribeDigestTokenService: TokenService<UnsubscribeDigestTokenPayload>;
+  /** Signs/verifies the no-login nudge link's token (see ResumeRefreshNudgeService.ts) — its own TokenService instance since it's a different payload shape/purpose/expiry than the other two. */
+  resumeRefreshNudgeTokenService: TokenService<ResumeRefreshNudgeTokenPayload>;
+  /** Daily cron consumer — see index.ts's `scheduled` export. */
+  resumeRefreshNudgeService: ResumeRefreshNudgeService;
 }
 
 /**
@@ -128,6 +133,9 @@ export function createServices(env: Env): Services {
   // open right away should still work weeks later, and re-confirming an
   // already-set opt-out is harmless.
   const unsubscribeDigestTokenService = new TokenService<UnsubscribeDigestTokenPayload>(env.JWT_SECRET, "180d");
+  // 30d — see ResumeRefreshNudgeTokenPayload's doc comment for why this is
+  // much shorter than the unsubscribe link's 180d.
+  const resumeRefreshNudgeTokenService = new TokenService<ResumeRefreshNudgeTokenPayload>(env.JWT_SECRET, "30d");
 
   // Wrapped in a fallback, not wired up bare — resume create/update used to
   // be pure D1 + template logic with no way to fail, and a raw Workers AI
@@ -177,6 +185,14 @@ export function createServices(env: Env): Services {
     unsubscribeDigestTokenService,
     env.CLIENT_ORIGIN
   );
+  const resumeRefreshNudgeService = new ResumeRefreshNudgeService(
+    resumeRepo,
+    skillSuggestionRepository,
+    emailService,
+    resumeRefreshNudgeTokenService,
+    unsubscribeDigestTokenService,
+    env.CLIENT_ORIGIN
+  );
   const securityAlertService = new SecurityAlertService(securityEventRepository, adminRepo, emailService, env.ADMIN_EMAIL);
   const securityMonitorService = new SecurityMonitorService(
     adminAuditLogRepository,
@@ -221,5 +237,7 @@ export function createServices(env: Env): Services {
     viewDigestService,
     careerCoachGenerator,
     unsubscribeDigestTokenService,
+    resumeRefreshNudgeTokenService,
+    resumeRefreshNudgeService,
   };
 }

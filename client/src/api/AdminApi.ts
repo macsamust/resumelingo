@@ -53,6 +53,20 @@ export class AdminApi extends ApiClient {
     return this.get<AdminDashboardSummary>(`/admin/dashboard/summary${qs}`);
   }
 
+  /** TEMPORARY — see worker's AdminDebugController doc comment. Manually runs the AI Resume Refresh nudge's daily cron job, since `wrangler dev` never fires Cron Triggers on its own. */
+  debugRunResumeRefreshNudge() {
+    return this.post<{ summary: { eligibleResumes: number; usersNudged: number; resumesNudged: number; failed: number } }>(
+      "/admin/debug/run-resume-refresh-nudge"
+    );
+  }
+
+  /** Permanent admin maintenance tool — see worker's AdminResumeController.dedupeBullets and ResumeRepository.dedupeAllGeneratedBullets doc comments. */
+  dedupeResumeBullets() {
+    return this.post<{ resumesChanged: number; totalRemoved: number; details: { resumeId: string; removedCount: number }[] }>(
+      "/admin/resumes/dedupe-bullets"
+    );
+  }
+
   /** Cross-user resume search — see worker's AdminResumeController.search. */
   searchResumes(params: { page: number; pageSize: number; q?: string }) {
     const qs = new URLSearchParams({

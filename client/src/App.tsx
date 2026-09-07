@@ -13,6 +13,7 @@ import { SignupPage } from "./pages/SignupPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { UnsubscribePage } from "./pages/UnsubscribePage";
+import { ResumeRefreshPage } from "./pages/ResumeRefreshPage";
 import { VerifyEmailPage } from "./pages/VerifyEmailPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ProfilePage } from "./pages/ProfilePage";
@@ -59,6 +60,7 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/unsubscribe" element={<UnsubscribePage />} />
+        <Route path="/resume-refresh" element={<ResumeRefreshPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/r/:slug" element={<PublicResumePage />} />
         <Route

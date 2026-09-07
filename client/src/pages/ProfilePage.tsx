@@ -72,11 +72,25 @@ export function ProfilePage() {
     }
   };
 
-  const onToggleDigest = async (checked: boolean) => {
+  // All three preferences below save through the same PUT
+  // /auth/me/email-preferences call (see AuthController.updateEmailPreferences),
+  // so changing any one sends the *others'* current values along unchanged
+  // rather than needing three separate endpoints for settings that live in
+  // one panel.
+  const saveEmailPreferences = async (overrides: {
+    viewDigestOptOut?: boolean;
+    resumeRefreshOptOut?: boolean;
+    resumeRefreshCadenceDays?: number;
+  }) => {
+    if (!user) return;
     setDigestError(null);
     setSavingDigest(true);
     try {
-      const { user: updated } = await authApi.updateEmailPreferences({ viewDigestOptOut: !checked });
+      const { user: updated } = await authApi.updateEmailPreferences({
+        viewDigestOptOut: overrides.viewDigestOptOut ?? user.viewDigestOptOut,
+        resumeRefreshOptOut: overrides.resumeRefreshOptOut ?? user.resumeRefreshOptOut,
+        resumeRefreshCadenceDays: overrides.resumeRefreshCadenceDays ?? user.resumeRefreshCadenceDays,
+      });
       updateUser(updated);
     } catch (err) {
       setDigestError(err instanceof ApiError ? err.message : "Something went wrong saving your email preferences.");
@@ -84,6 +98,10 @@ export function ProfilePage() {
       setSavingDigest(false);
     }
   };
+
+  const onToggleDigest = (checked: boolean) => saveEmailPreferences({ viewDigestOptOut: !checked });
+  const onToggleRefresh = (checked: boolean) => saveEmailPreferences({ resumeRefreshOptOut: !checked });
+  const onChangeRefreshCadence = (days: number) => saveEmailPreferences({ resumeRefreshCadenceDays: days });
 
   const onCancelSubscription = async () => {
     setCancelError(null);
@@ -217,15 +235,49 @@ export function ProfilePage() {
         <div className="builder-panel" style={{ maxWidth: 520, marginTop: 28 }}>
           <h2>Email preferences</h2>
           {digestError && <div className="form-error">{digestError}</div>}
-          <label className="field" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <input
-              type="checkbox"
-              checked={!user.viewDigestOptOut}
-              disabled={savingDigest}
-              onChange={(e) => onToggleDigest(e.target.checked)}
-            />
-            <span>Weekly resume view digest: a Monday summary of how many views your resumes got that week.</span>
-          </label>
+
+          <div className="field">
+            <label style={{ marginBottom: 4 }}>Weekly resume view digest</label>
+            <p className="hero-note" style={{ marginTop: 0, marginBottom: 8 }}>
+              A Monday summary of how many views your resumes got that week.
+            </p>
+            <label className="checkbox-field" style={{ display: "flex", alignItems: "center", margin: "4px 0 0", gap: 24 }}>
+              <input
+                type="checkbox"
+                checked={!user.viewDigestOptOut}
+                disabled={savingDigest}
+                onChange={(e) => onToggleDigest(e.target.checked)}
+              />
+              <span className="hero-note" style={{ margin: 0 }}>Send me the weekly digest</span>
+            </label>
+          </div>
+
+          <div className="field" style={{ marginTop: 20 }}>
+            <label style={{ marginBottom: 4 }}>AI Resume Refresh nudge</label>
+            <p className="hero-note" style={{ marginTop: 0, marginBottom: 8 }}>
+              If a resume goes quiet, we'll check in and offer a couple of keywords worth considering for your
+              role — no login needed to act on it from the email.
+            </p>
+            <label className="checkbox-field" style={{ display: "flex", alignItems: "center", margin: "4px 0 10px", gap: 24 }}>
+              <input
+                type="checkbox"
+                checked={!user.resumeRefreshOptOut}
+                disabled={savingDigest}
+                onChange={(e) => onToggleRefresh(e.target.checked)}
+              />
+              <span className="hero-note" style={{ margin: 0 }}>Send me the refresh nudge</span>
+            </label>
+            <select
+              value={user.resumeRefreshCadenceDays}
+              disabled={savingDigest || user.resumeRefreshOptOut}
+              onChange={(e) => onChangeRefreshCadence(Number(e.target.value))}
+              style={{ maxWidth: 220 }}
+            >
+              <option value={60}>Check in every 60 days</option>
+              <option value={120}>Check in every 120 days</option>
+              <option value={360}>Check in every 360 days</option>
+            </select>
+          </div>
         </div>
       )}
 

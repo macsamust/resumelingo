@@ -20,8 +20,10 @@ import coverLetterRoutes from "./routes/coverLetter.routes";
 import marketingEventRoutes from "./routes/marketingEvent.routes";
 import webhookRoutes from "./routes/webhooks.routes";
 import jobApplicationRoutes from "./routes/jobApplication.routes";
+import resumeRefreshRoutes from "./routes/resumeRefresh.routes";
 import { AuthError, InvalidResetTokenError, InvalidVerificationTokenError } from "./services/AuthService";
 import { InvalidUnsubscribeTokenError } from "./controllers/AuthController";
+import { InvalidNudgeTokenError } from "./controllers/ResumeRefreshController";
 import { AdminAuthError } from "./services/AdminService";
 import {
   ActiveToggleAccessError,
@@ -102,6 +104,7 @@ app.route("/api/cover-letters", coverLetterRoutes);
 app.route("/api/marketing-events", marketingEventRoutes);
 app.route("/api/webhooks", webhookRoutes);
 app.route("/api/job-applications", jobApplicationRoutes);
+app.route("/api/resume-refresh", resumeRefreshRoutes);
 
 app.onError((err, c) => {
   const status =
@@ -151,6 +154,8 @@ app.onError((err, c) => {
       ? 400
       : err instanceof InvalidUnsubscribeTokenError
       ? 400
+      : err instanceof InvalidNudgeTokenError
+      ? 400
       : err instanceof InvalidVerificationTokenError
       ? 400
       : err instanceof ResumeImportError
@@ -181,13 +186,14 @@ app.notFound((c) => {
 export default {
   fetch: app.fetch,
   /**
-   * Fired by either Cron Trigger in wrangler.jsonc's `triggers.crons` —
-   * "0 14 * * 1" (weekly, the view digest) or "0 13 * * *" (daily, the
-   * security monitor added Sep 2026). Told apart by `event.cron` rather than
-   * two separate exports, since Workers only supports one `scheduled`
-   * handler per Worker. `ctx.waitUntil` keeps the invocation alive until
-   * whichever job finishes rather than letting the runtime tear it down as
-   * soon as this handler returns.
+   * Fired by any of the three Cron Triggers in wrangler.jsonc's
+   * `triggers.crons` — "0 14 * * 1" (weekly, the view digest), "0 13 * * *"
+   * (daily, the security monitor added Sep 2026), or "0 15 * * *" (daily,
+   * the AI Resume Refresh nudge added Sep 2026). Told apart by `event.cron`
+   * rather than separate exports, since Workers only supports one
+   * `scheduled` handler per Worker. `ctx.waitUntil` keeps the invocation
+   * alive until whichever job finishes rather than letting the runtime tear
+   * it down as soon as this handler returns.
    */
   scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     const services = createServices(env);
@@ -195,6 +201,14 @@ export default {
       ctx.waitUntil(
         services.securityMonitorService.runDailyCheck().then((summary) => {
           console.log("Daily security monitor run complete", summary);
+        })
+      );
+      return;
+    }
+    if (event.cron === "0 15 * * *") {
+      ctx.waitUntil(
+        services.resumeRefreshNudgeService.sendDailyNudges().then((summary) => {
+          console.log("Daily resume refresh nudge run complete", summary);
         })
       );
       return;

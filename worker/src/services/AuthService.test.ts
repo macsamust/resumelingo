@@ -27,6 +27,8 @@ function makeUserRecord(overrides: Partial<UserRecord> = {}): UserRecord {
     paymentFailed: false,
     cancelAtPeriodEnd: false,
     currentPeriodEnd: null,
+    resumeRefreshCadenceDays: 120,
+    resumeRefreshOptOut: false,
     ...overrides,
   };
 }

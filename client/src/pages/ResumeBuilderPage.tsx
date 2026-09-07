@@ -68,6 +68,20 @@ export function ResumeBuilderPage() {
   // means they never start filling it out only to be turned away at Save.
   const [limitStatus, setLimitStatus] = useState<{ reached: boolean; planName: string; resumeLimit: number } | null>(null);
 
+  // Whether this account had zero resumes *before* this create — the gate
+  // for FirstResumeEmailPreferencesModal below. Fetched once on mount
+  // rather than derived from limitStatus's `remaining`, since `remaining`
+  // is null for an unlimited plan and wouldn't distinguish "first resume
+  // ever" from "5th resume on an unlimited plan."
+  const [hadNoResumesBeforeCreate, setHadNoResumesBeforeCreate] = useState(false);
+
+  useEffect(() => {
+    resumeApi
+      .list()
+      .then((res) => setHadNoResumesBeforeCreate(res.resumes.length === 0))
+      .catch(() => {});
+  }, []);
+
   // One templateKey per profession — the most-used non-Classic template for
   // that profession, once it clears a minimum sample size. Feeds the dot
   // rendered in the template picker below (see popularTemplates on the worker).
@@ -187,7 +201,19 @@ export function ResumeBuilderPage() {
         awards,
         achievements,
       });
-      navigate(`/resumes/${resume.id}/edit`);
+      // Professional/Premium subscribers get a one-time nudge about the
+      // weekly digest/AI Resume Refresh email preferences right after their
+      // very first resume — shown on the edit page itself (via this router
+      // state flag), not as a gate here before navigating, so the "Resume
+      // created" moment reads as a straightforward success rather than an
+      // interstitial. See FirstResumeEmailPreferencesModal's doc comment.
+      // Starter accounts never get the flag (those preferences don't apply
+      // to that tier), and it can never resurface on a 2nd+ resume since
+      // hadNoResumesBeforeCreate was captured before this create ran.
+      const isProfessionalOrPremium = user?.subscriptionTier === "professional" || user?.subscriptionTier === "premium";
+      navigate(`/resumes/${resume.id}/edit`, {
+        state: isProfessionalOrPremium && hadNoResumesBeforeCreate ? { justCreatedFirstResume: true } : undefined,
+      });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong creating your resume.");
     } finally {

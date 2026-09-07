@@ -10,6 +10,30 @@ import { toCsv } from "../utils/csv";
  * like "my public link is broken" where you only have a title or slug.
  */
 export class AdminResumeController {
+  /**
+   * Retroactive fix-up for the AI Resume Refresh nudge's pre-fix duplicate
+   * bullet bug (Sep 2026) — reopening an old nudge email could add the same
+   * bullet to a resume more than once before ResumeRefreshController started
+   * rejecting exact-duplicate text at commit time. Scans every resume in
+   * the database (not just ones the nudge touched — a duplicate bullet is
+   * the same problem regardless of how it got there), so this is a real,
+   * permanent admin tool, not a temporary dev-only trigger like
+   * AdminDebugController's nudge runner. See ResumeRepository.dedupeAllGeneratedBullets
+   * for exactly what counts as a duplicate and why only generatedBullets
+   * (not achievements) gets touched.
+   */
+  dedupeBullets = async (c: Context<AppEnv>) => {
+    const { resumeRepository, adminAuditLogRepository } = c.get("services");
+    const changed = await resumeRepository.dedupeAllGeneratedBullets();
+    const totalRemoved = changed.reduce((sum, r) => sum + r.removedCount, 0);
+    await adminAuditLogRepository.log(c.get("admin")!, {
+      action: "resume.dedupe_bullets",
+      targetType: "system",
+      detail: `${totalRemoved} duplicate bullet${totalRemoved === 1 ? "" : "s"} removed across ${changed.length} resume${changed.length === 1 ? "" : "s"}`,
+    });
+    return c.json({ resumesChanged: changed.length, totalRemoved, details: changed });
+  };
+
   /** One resume plus its owner's name/email, for the admin resume editor (support cases — see client's AdminResumeEditPage). */
   get = async (c: Context<AppEnv>) => {
     const { resumeRepository, userRepository } = c.get("services");

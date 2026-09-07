@@ -15,6 +15,8 @@ export const ACTION_LABELS: Record<string, string> = {
   "user.unsuspend": "Unsuspended account",
   "user.send_password_reset": "Sent password reset email",
   "user.delete": "Deleted account",
+  "debug.run_resume_refresh_nudge": "Manually ran AI Resume Refresh nudge (debug)",
+  "resume.dedupe_bullets": "Removed duplicate resume bullets",
   "template.create": "Created template",
   "template.update": "Updated template",
   "template.delete": "Deleted template",

@@ -58,6 +58,30 @@ export function AdminDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [rangeDays, setRangeDays] = useState(7);
 
+  // TEMPORARY — see worker's AdminDebugController doc comment. Remove this
+  // whole panel once the AI Resume Refresh nudge no longer needs manual
+  // poking in local dev (`wrangler dev` never fires Cron Triggers itself).
+  const [debugRunning, setDebugRunning] = useState(false);
+  const [debugResult, setDebugResult] = useState<string | null>(null);
+  const [debugError, setDebugError] = useState<string | null>(null);
+  const onRunResumeRefreshNudgeDebug = async () => {
+    setDebugRunning(true);
+    setDebugError(null);
+    setDebugResult(null);
+    try {
+      const { summary: s } = await adminApi.debugRunResumeRefreshNudge();
+      setDebugResult(
+        `${s.usersNudged} email${s.usersNudged === 1 ? "" : "s"} sent, ${s.resumesNudged} resume${
+          s.resumesNudged === 1 ? "" : "s"
+        } nudged, ${s.failed} failed (${s.eligibleResumes} resume${s.eligibleResumes === 1 ? "" : "s"} were eligible).`
+      );
+    } catch (err) {
+      setDebugError(err instanceof ApiError ? err.message : "Something went wrong running that.");
+    } finally {
+      setDebugRunning(false);
+    }
+  };
+
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -267,6 +291,21 @@ export function AdminDashboardPage() {
           <p className="hero-note" style={{ marginTop: 8 }}>
             <Link to="/admin/audit-log">View the full Audit Log →</Link>
           </p>
+
+          {/* TEMPORARY — remove alongside AdminDebugController once this feature no longer needs manual poking. */}
+          <h2 style={{ marginBottom: 16, marginTop: 24 }}>Debug tools (dev only)</h2>
+          <div className="builder-panel" style={{ maxWidth: 520 }}>
+            <p className="hero-note" style={{ marginTop: 0, marginBottom: 8 }}>
+              Manually runs the AI Resume Refresh nudge's daily cron job. Local dev never fires Cron Triggers on its
+              own, so this is the only way to see a real nudge email without waiting for a production deploy. This
+              sends real emails to eligible accounts — same as the production cron would.
+            </p>
+            {debugError && <div className="form-error">{debugError}</div>}
+            {debugResult && <div className="empty-state">{debugResult}</div>}
+            <button className="btn btn-ghost" onClick={onRunResumeRefreshNudgeDebug} disabled={debugRunning}>
+              {debugRunning ? "Running…" : "Run AI Resume Refresh nudge now"}
+            </button>
+          </div>
         </>
       ) : null}
     </AdminShell>

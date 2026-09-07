@@ -13,6 +13,7 @@ import { AdminAuditLogController } from "../controllers/AdminAuditLogController"
 import { AdminManagementController } from "../controllers/AdminManagementController";
 import { AdminSecurityController } from "../controllers/AdminSecurityController";
 import { AdminSecurityEventController } from "../controllers/AdminSecurityEventController";
+import { AdminDebugController } from "../controllers/AdminDebugController";
 
 const admin = new Hono<AppEnv>();
 
@@ -24,6 +25,7 @@ const dashboardController = new AdminDashboardController();
 admin.get("/dashboard/summary", requireAdminAuth, dashboardController.summary);
 
 const resumeSearchController = new AdminResumeController();
+admin.post("/resumes/dedupe-bullets", requireAdminAuth, resumeSearchController.dedupeBullets);
 admin.get("/resumes", requireAdminAuth, resumeSearchController.search);
 admin.get("/resumes/export", requireAdminAuth, resumeSearchController.exportCsv);
 admin.post("/resumes/bulk-delete", requireAdminAuth, resumeSearchController.bulkDelete);
@@ -82,5 +84,10 @@ admin.get("/role-descriptions", requireAdminAuth, roleDescriptionController.list
 admin.post("/role-descriptions", requireAdminAuth, roleDescriptionController.create);
 admin.put("/role-descriptions/:id", requireAdminAuth, roleDescriptionController.update);
 admin.delete("/role-descriptions/:id", requireAdminAuth, roleDescriptionController.remove);
+
+// TEMPORARY — see AdminDebugController's doc comment. Remove once the AI
+// Resume Refresh nudge no longer needs manual poking in local dev.
+const debugController = new AdminDebugController();
+admin.post("/debug/run-resume-refresh-nudge", requireAdminAuth, debugController.runResumeRefreshNudge);
 
 export default admin;

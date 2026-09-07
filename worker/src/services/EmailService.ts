@@ -163,6 +163,65 @@ export class EmailService {
     });
   }
 
+  /**
+   * AI Resume Refresh nudge (ResumeRefreshNudgeService) — checks in on each
+   * resume that's gone quiet past its account's chosen cadence, one section
+   * per resume, all combined into a single email per subscriber (the
+   * product decision — see TODO.md — was "combine", not one email per stale
+   * resume). Each resume's "still working there?" question links to its own
+   * signed no-login landing page (nudgeUrl); the keyword list is the
+   * curated skill_suggestions catalog for that resume's profession, not a
+   * claim about live job postings — the copy here is written to stay honest
+   * about that (see TODO.md's "I do not want to oversell features"
+   * decision). Same mandatory unsubscribe link as the weekly digest.
+   */
+  async sendResumeRefreshNudgeEmail(
+    to: string,
+    input: {
+      resumes: { resumeTitle: string; company: string | null; jobTitle: string | null; keywords: string[]; nudgeUrl: string }[];
+      unsubscribeUrl: string;
+    }
+  ): Promise<void> {
+    const subject =
+      input.resumes.length === 1
+        ? `Still at ${input.resumes[0].company ?? "the same job"}? Quick resume check-in`
+        : `Quick check-in on ${input.resumes.length} resumes`;
+
+    const sections = input.resumes
+      .map((r) => {
+        const question = r.company && r.jobTitle
+          ? `Are you still working at <strong>${r.company}</strong> as <strong>${r.jobTitle}</strong>?`
+          : `Is "${r.resumeTitle}" still up to date?`;
+        const keywordsHtml =
+          r.keywords.length > 0
+            ? `<p style="color: #64748b; font-size: 13px; margin: 8px 0 0;">A few keywords worth considering for this role, from our curated list for this profession: ${r.keywords.join(", ")}.</p>`
+            : "";
+        return `
+          <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 14px;">
+            <p style="margin: 0 0 10px;">${question}</p>
+            ${keywordsHtml}
+            <p style="margin: 14px 0 0;">
+              <a href="${r.nudgeUrl}" style="background: #4f46e5; color: #fff; padding: 10px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13.5px;">Answer — no login needed</a>
+            </p>
+          </div>
+        `;
+      })
+      .join("");
+
+    await this.send({
+      to,
+      subject,
+      html: `
+        <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
+          <h2 style="margin-bottom: 8px;">Time for a resume check-in</h2>
+          <p style="color: #64748b; font-size: 13.5px;">It's been a while since we heard from you on ${input.resumes.length === 1 ? "this resume" : "these resumes"}. Answer below — no login required.</p>
+          ${sections}
+          <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">Don't want these emails? <a href="${input.unsubscribeUrl}" style="color: #94a3b8;">Unsubscribe from the resume refresh nudge</a>.</p>
+        </div>
+      `,
+    });
+  }
+
   /** Human-readable label for a SecurityEventType — shared by the alert and digest emails below, and worth keeping in sync with AdminSecurityReportPage.tsx's client-side copy of the same labels. */
   private static securityEventLabel(type: string): string {
     const labels: Record<string, string> = {

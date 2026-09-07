@@ -174,6 +174,10 @@ export interface AuthUser {
   createdAt: string;
   /** Weekly resume-view digest opt-out — see ProfilePage's "Email preferences" section. Only meaningful for Professional/Premium accounts, which are the only tiers the digest is ever sent to. */
   viewDigestOptOut: boolean;
+  /** AI Resume Refresh nudge cadence in days (60/120/360) — same "Email preferences" section, same Professional/Premium-only reach as viewDigestOptOut. Only meaningful when resumeRefreshOptOut is false. */
+  resumeRefreshCadenceDays: number;
+  /** Opt-out flag for the AI Resume Refresh nudge, separate from the cadence value above. */
+  resumeRefreshOptOut: boolean;
   /** Whether the current email address has been confirmed — see AppShell's "verify your email" banner. Doesn't gate any feature; it's a nudge, not an access control. */
   emailVerified: boolean;
   /** Set when Stripe reports a failed subscription-renewal charge, cleared on the next successful one — see AppShell's "update your payment method" banner. Same "nudge, not a gate" treatment as emailVerified; Stripe's own retry schedule is what actually determines whether the subscription eventually gets cancelled. */

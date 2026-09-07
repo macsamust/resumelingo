@@ -182,7 +182,7 @@ export class AuthController {
     return c.json({ success: true });
   };
 
-  /** Logged-in settings-page toggle — see UnsubscribePage.tsx for the no-login-required equivalent reached from the email link. */
+  /** Logged-in settings-page toggle — see UnsubscribePage.tsx for the no-login-required equivalent reached from the email link. Also carries the AI Resume Refresh nudge's cadence choice, since both live in the same Profile "Email preferences" section and save together. */
   updateEmailPreferences = async (c: Context<AppEnv>) => {
     const { authService } = c.get("services");
     const user = c.get("user")!;
@@ -190,7 +190,15 @@ export class AuthController {
     if (typeof body.viewDigestOptOut !== "boolean") {
       return c.json({ error: "viewDigestOptOut (boolean) is required." }, 400);
     }
-    const updated = await authService.setViewDigestOptOut(user.id, body.viewDigestOptOut);
+    if (typeof body.resumeRefreshOptOut !== "boolean") {
+      return c.json({ error: "resumeRefreshOptOut (boolean) is required." }, 400);
+    }
+    if (![60, 120, 360].includes(body.resumeRefreshCadenceDays as number)) {
+      return c.json({ error: "resumeRefreshCadenceDays must be 60, 120, or 360." }, 400);
+    }
+    await authService.setViewDigestOptOut(user.id, body.viewDigestOptOut);
+    await authService.setResumeRefreshOptOut(user.id, body.resumeRefreshOptOut);
+    const updated = await authService.setResumeRefreshCadenceDays(user.id, body.resumeRefreshCadenceDays as number);
     return c.json({ user: updated.toPublicJSON() });
   };
 
@@ -200,6 +208,13 @@ export class AuthController {
    * client's /unsubscribe landing page (see UnsubscribePage.tsx), not a bare
    * GET link, so that an email-security scanner prefetching every link in
    * the message can't silently unsubscribe users on their behalf.
+   *
+   * Handles both opt-out preferences this app has (weekly digest and AI
+   * Resume Refresh nudge) — which one it flips is decided entirely by the
+   * token's own embedded `purpose`, not by anything the client sends, since
+   * the client can't verify the token's signature itself. See
+   * UnsubscribeDigestTokenPayload's doc comment for why this didn't get a
+   * second route.
    */
   unsubscribeDigest = async (c: Context<AppEnv>) => {
     const { unsubscribeDigestTokenService, userRepository } = c.get("services");
@@ -214,10 +229,14 @@ export class AuthController {
     } catch {
       throw new InvalidUnsubscribeTokenError("This unsubscribe link is invalid or has expired.");
     }
-    if (payload.purpose !== "unsubscribe-digest" || !payload.userId) {
+    if (!payload.userId || (payload.purpose !== "unsubscribe-digest" && payload.purpose !== "unsubscribe-resume-refresh")) {
       throw new InvalidUnsubscribeTokenError("This unsubscribe link is invalid or has expired.");
     }
-    await userRepository.setViewDigestOptOut(payload.userId, true);
+    if (payload.purpose === "unsubscribe-resume-refresh") {
+      await userRepository.setResumeRefreshOptOut(payload.userId, true);
+    } else {
+      await userRepository.setViewDigestOptOut(payload.userId, true);
+    }
     return c.json({ success: true });
   };
 

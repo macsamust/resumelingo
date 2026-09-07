@@ -9,6 +9,7 @@ import {
   ReferenceEntry,
   ResumeRecord,
   SkillOrTool,
+  SubscriptionTier,
   WorkExperienceEntry,
 } from "../types";
 
@@ -120,6 +121,96 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       .bind(userId)
       .all<ResumeRecord>();
     return results.map(normalizeBooleans);
+  }
+
+  /**
+   * Every resume due for an AI Resume Refresh nudge — the recipient list for
+   * ResumeRefreshNudgeService's daily cron run. Filters and computes the
+   * per-resume cadence check in SQL (rather than loading every Professional/
+   * Premium subscriber's resumes and filtering in JS, like
+   * UserRepository.findEligibleForDigest does for the simpler weekly digest)
+   * since this needs a per-resume comparison against its own
+   * lastRefreshNudgeSentAt, not just a per-user opt-out flag. A resume with
+   * no prior nudge (lastRefreshNudgeSentAt IS NULL) is always due. Returns
+   * flat resume rows with the owning account's email/cadence attached so the
+   * service can group by userId to combine multiple stale resumes into one
+   * email per the product decision — see TODO.md. Unpaginated (like
+   * findEligibleForDigest) since this only runs once a day off the request
+   * path; capped as a backstop against an unbounded scan.
+   */
+  async findEligibleForRefreshNudge(): Promise<(ResumeRecord & { ownerEmail: string; cadenceDays: number })[]> {
+    const { results } = await this.db
+      .prepare(
+        `SELECT r.*, u.email as ownerEmail, u."resumeRefreshCadenceDays" as cadenceDays
+         FROM resumes r
+         JOIN users u ON u.id = r."userId"
+         WHERE u."subscriptionTier" IN (?, ?)
+           AND u."resumeRefreshOptOut" = 0
+           AND (
+             r."lastRefreshNudgeSentAt" IS NULL
+             OR julianday('now') - julianday(r."lastRefreshNudgeSentAt") >= u."resumeRefreshCadenceDays"
+           )
+         LIMIT 20000`
+      )
+      .bind(SubscriptionTier.Professional, SubscriptionTier.Premium)
+      .all<ResumeRecord & { ownerEmail: string; cadenceDays: number }>();
+    return results.map((row) => ({ ...normalizeBooleans(row), ownerEmail: row.ownerEmail, cadenceDays: row.cadenceDays }));
+  }
+
+  /** Stamps a resume as just-nudged — see findEligibleForRefreshNudge's doc comment for why this is per-resume, not per-account. */
+  async setLastRefreshNudgeSentAt(resumeId: string, isoDate: string): Promise<void> {
+    await this.db.prepare(`UPDATE resumes SET "lastRefreshNudgeSentAt" = ? WHERE id = ?`).bind(isoDate, resumeId).run();
+  }
+
+  /**
+   * Retroactive cleanup for the AI Resume Refresh nudge's pre-fix duplicate
+   * bullet bug (Sep 2026) — before ResumeRefreshController started rejecting
+   * exact-duplicate bullet text at commit time, reopening an old nudge
+   * email (or the same one twice) could add the same bullet to a resume
+   * more than once. Scans every resume's generatedBullets (not
+   * account-scoped — a duplicate could in principle exist from any source,
+   * not just this bug), removes exact-text duplicates (trimmed,
+   * lowercased, whitespace-collapsed — same normalization as the commit-time
+   * check), keeping the first occurrence and everything's original order.
+   * Deliberately only touches generatedBullets, not the achievements array:
+   * bullets are what actually render on the resume, and correlating
+   * achievements back to bullets 1:1 isn't reliable once a resume's
+   * summary/bullets have been hand-edited (summaryManuallyEdited) — see
+   * ResumeService.update's doc comment. A stray extra achievement entry
+   * with no matching bullet is harmless; a duplicate bullet on the actual
+   * resume is the visible problem this fixes. Bypasses ResumeService.update
+   * entirely (no version snapshot, no regeneration) since this is a direct
+   * data-cleanup pass, not a content edit.
+   */
+  async dedupeAllGeneratedBullets(): Promise<{ resumeId: string; removedCount: number }[]> {
+    const { results } = await this.db.prepare(`SELECT id, "generatedBullets" FROM resumes`).all<{ id: string; generatedBullets: string }>();
+    const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+    const changed: { resumeId: string; removedCount: number }[] = [];
+    const statements = [];
+    for (const row of results) {
+      let bullets: string[];
+      try {
+        bullets = JSON.parse(row.generatedBullets || "[]");
+      } catch {
+        continue;
+      }
+      if (!Array.isArray(bullets) || bullets.length === 0) continue;
+      const seen = new Set<string>();
+      const deduped: string[] = [];
+      for (const bullet of bullets) {
+        if (typeof bullet !== "string") continue;
+        const key = normalize(bullet);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        deduped.push(bullet);
+      }
+      if (deduped.length !== bullets.length) {
+        changed.push({ resumeId: row.id, removedCount: bullets.length - deduped.length });
+        statements.push(this.db.prepare(`UPDATE resumes SET "generatedBullets" = ? WHERE id = ?`).bind(JSON.stringify(deduped), row.id));
+      }
+    }
+    if (statements.length > 0) await this.db.batch(statements);
+    return changed;
   }
 
   /** Total resume count, and how many were created in the last N days — powers the admin dashboard's "Resumes" tile. */
@@ -324,6 +415,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       viewCount: 0,
       createdAt: now,
       updatedAt: now,
+      lastRefreshNudgeSentAt: null,
     };
     await this.insertRow(record as unknown as Record<string, unknown>);
     return record;

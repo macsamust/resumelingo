@@ -16,6 +16,7 @@ function normalizeBooleans(row: UserRecord): UserRecord {
     emailVerified: !!row.emailVerified,
     paymentFailed: !!row.paymentFailed,
     cancelAtPeriodEnd: !!row.cancelAtPeriodEnd,
+    resumeRefreshOptOut: !!row.resumeRefreshOptOut,
   };
 }
 
@@ -68,6 +69,11 @@ export class UserRepository extends BaseRepository<UserRecord> {
       paymentFailed: false,
       cancelAtPeriodEnd: false,
       currentPeriodEnd: null,
+      // Matches the column's own DEFAULT 120 (migration 0037) — set
+      // explicitly here too since insertRow writes every column named in
+      // this object, not just the ones an admin/migration seeded.
+      resumeRefreshCadenceDays: 120,
+      resumeRefreshOptOut: false,
     };
     await this.insertRow(record as unknown as Record<string, unknown>);
     return record;
@@ -145,6 +151,16 @@ export class UserRepository extends BaseRepository<UserRecord> {
   /** Settings-page toggle (ProfilePage) and the token-verified public unsubscribe link both land here — see AuthService.setViewDigestOptOut. */
   async setViewDigestOptOut(userId: string, optOut: boolean): Promise<void> {
     await this.db.prepare(`UPDATE users SET "viewDigestOptOut" = ? WHERE id = ?`).bind(optOut ? 1 : 0, userId).run();
+  }
+
+  /** Same Profile "Email preferences" section as setViewDigestOptOut above — see AuthService.setResumeRefreshCadenceDays for the allowed-value check (60/120/360). */
+  async setResumeRefreshCadenceDays(userId: string, days: number): Promise<void> {
+    await this.db.prepare(`UPDATE users SET "resumeRefreshCadenceDays" = ? WHERE id = ?`).bind(days, userId).run();
+  }
+
+  /** Separate on/off switch from the cadence value above — same pattern as setViewDigestOptOut. */
+  async setResumeRefreshOptOut(userId: string, optOut: boolean): Promise<void> {
+    await this.db.prepare(`UPDATE users SET "resumeRefreshOptOut" = ? WHERE id = ?`).bind(optOut ? 1 : 0, userId).run();
   }
 
   /**

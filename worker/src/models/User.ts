@@ -22,6 +22,8 @@ export class User {
   readonly paymentFailed: boolean;
   readonly cancelAtPeriodEnd: boolean;
   readonly currentPeriodEnd: string | null;
+  readonly resumeRefreshCadenceDays: number;
+  readonly resumeRefreshOptOut: boolean;
 
   constructor(record: UserRecord) {
     this.id = record.id;
@@ -39,6 +41,8 @@ export class User {
     this.paymentFailed = record.paymentFailed;
     this.cancelAtPeriodEnd = record.cancelAtPeriodEnd;
     this.currentPeriodEnd = record.currentPeriodEnd;
+    this.resumeRefreshCadenceDays = record.resumeRefreshCadenceDays;
+    this.resumeRefreshOptOut = record.resumeRefreshOptOut;
   }
 
   get plan() {
@@ -65,6 +69,8 @@ export class User {
       paymentFailed: this.paymentFailed,
       cancelAtPeriodEnd: this.cancelAtPeriodEnd,
       currentPeriodEnd: this.currentPeriodEnd,
+      resumeRefreshCadenceDays: this.resumeRefreshCadenceDays,
+      resumeRefreshOptOut: this.resumeRefreshOptOut,
     };
   }
 }

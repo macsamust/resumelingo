@@ -104,6 +104,10 @@ export interface UserRecord {
   cancelAtPeriodEnd: boolean;
   /** ISO timestamp of the current paid period's end, mirrored from Stripe's subscription.current_period_end — null for a Starter (free) account or before Stripe has reported one. Shown to the person as "access until <date>" when cancelAtPeriodEnd is true. */
   currentPeriodEnd: string | null;
+  /** How many days of inactivity on a resume before the AI Resume Refresh nudge email offers to help update it (ResumeRefreshNudgeService) — one setting per account, not per resume, same simplicity as viewDigestOptOut. Subscriber-selectable (60/120/360) from the same Profile "Email preferences" section as the view digest; defaults to 120. Only meaningful when resumeRefreshOptOut is false. Only ever read for Professional/Premium accounts, same tier gate as viewDigestOptOut's eligibility query. */
+  resumeRefreshCadenceDays: number;
+  /** Opt-out flag for the AI Resume Refresh nudge, separate from the cadence value above (migration 0038) — same opt-out-not-opt-in default as viewDigestOptOut. */
+  resumeRefreshOptOut: boolean;
 }
 
 /**
@@ -427,6 +431,8 @@ export interface ResumeRecord {
   viewCount: number;
   createdAt: string;
   updatedAt: string;
+  /** ISO timestamp of the last AI Resume Refresh nudge email sent for this resume, or null if never sent — see migration 0037 and ResumeRefreshNudgeService.ts. Per-resume (not per-account, unlike resumeRefreshCadenceDays), so the daily cron can tell which resumes have already gone quiet long enough since their own last nudge. */
+  lastRefreshNudgeSentAt: string | null;
 }
 
 export type JobApplicationStatus = "applied" | "interviewing" | "offer" | "rejected" | "withdrawn";

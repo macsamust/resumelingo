@@ -4,10 +4,25 @@ import { ResumeAnalyticsRepository, DailyViewCount } from "../repositories/Resum
 import { EmailService } from "./EmailService";
 import { TokenService } from "./TokenService";
 
-/** Signed, stateless — no DB storage needed for unsubscribe links, unlike password reset (which needs revocable, one-time tokens). A long expiry is fine since worst case an old link just re-confirms an opt-out that may already be set. */
+/**
+ * Signed, stateless — no DB storage needed for unsubscribe links, unlike
+ * password reset (which needs revocable, one-time tokens). A long expiry is
+ * fine since worst case an old link just re-confirms an opt-out that may
+ * already be set.
+ *
+ * `purpose` covers both of this app's opt-out email preferences, not just
+ * the weekly digest its name suggests — "unsubscribe-resume-refresh" was
+ * added alongside ResumeRefreshNudgeService rather than standing up a
+ * second near-identical token type/route pair, since the only real
+ * difference is which UserRepository setter AuthController.unsubscribeDigest
+ * calls. The client tells the two apart cosmetically via a `type` query
+ * param on the link (see ResumeRefreshNudgeService.unsubscribeUrl and
+ * UnsubscribePage.tsx) — the token's own embedded purpose is what the
+ * server actually trusts.
+ */
 export interface UnsubscribeDigestTokenPayload {
   userId: string;
-  purpose: "unsubscribe-digest";
+  purpose: "unsubscribe-digest" | "unsubscribe-resume-refresh";
 }
 
 /** Sums a week of per-day view counts — pulled out as its own function so it's covered by a plain unit test without needing a D1 instance. */

@@ -32,6 +32,8 @@ export function AdminResumesPage() {
   const [exporting, setExporting] = useState(false);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [confirmDedupe, setConfirmDedupe] = useState(false);
+  const [dedupeBusy, setDedupeBusy] = useState(false);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const allOnPageSelected = resumes.length > 0 && resumes.every((r) => selected.has(r.id));
@@ -99,6 +101,25 @@ export function AdminResumesPage() {
     }
   };
 
+  const onDedupeBullets = async () => {
+    setDedupeBusy(true);
+    try {
+      const res = await adminApi.dedupeResumeBullets();
+      showToast(
+        "success",
+        res.totalRemoved === 0
+          ? "No duplicate bullets found."
+          : `Removed ${res.totalRemoved} duplicate bullet${res.totalRemoved === 1 ? "" : "s"} across ${res.resumesChanged} resume${res.resumesChanged === 1 ? "" : "s"}.`
+      );
+      setConfirmDedupe(false);
+      load();
+    } catch (err) {
+      showToast("error", err instanceof ApiError ? err.message : "Couldn't remove duplicate bullets.");
+    } finally {
+      setDedupeBusy(false);
+    }
+  };
+
   const onBulkDelete = async () => {
     setBulkBusy(true);
     try {
@@ -129,6 +150,10 @@ export function AdminResumesPage() {
           />
           <button className="btn btn-ghost btn-sm" type="button" disabled={exporting || total === 0} onClick={onExport}>
             {exporting ? "Exporting…" : "Export CSV"}
+          </button>
+          {/* Cleanup for the AI Resume Refresh nudge's pre-fix duplicate bullet bug — see AdminResumeController.dedupeBullets. Scans every resume, not just the ones on this page/search. */}
+          <button className="btn btn-ghost btn-sm" type="button" onClick={() => setConfirmDedupe(true)}>
+            Remove duplicate bullets
           </button>
         </div>
       </div>
@@ -229,6 +254,15 @@ export function AdminResumesPage() {
           danger
           onConfirm={onBulkDelete}
           onCancel={() => setConfirmBulkDelete(false)}
+        />
+      )}
+      {confirmDedupe && (
+        <ConfirmDialog
+          title="Remove duplicate bullets"
+          message="Scans every resume in the database and removes any exact-duplicate bullet, keeping the first occurrence. This can't be targeted to specific resumes — it runs across the whole database at once."
+          confirmLabel={dedupeBusy ? "Removing…" : "Remove duplicates"}
+          onConfirm={onDedupeBullets}
+          onCancel={() => setConfirmDedupe(false)}
         />
       )}
     </AdminShell>

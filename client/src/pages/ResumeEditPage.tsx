@@ -1,5 +1,5 @@
 import { FormEvent, MouseEvent, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { CollapsibleSection, ForceOpenSignal } from "../components/builder/CollapsibleSection";
 import { DynamicQuestionForm } from "../components/builder/DynamicQuestionForm";
@@ -17,6 +17,7 @@ import { isRealContactValue, ResumePreview } from "../components/builder/ResumeP
 import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
 import { Modal } from "../components/common/Modal";
 import { TemplateUpgradeModal } from "../components/builder/TemplateUpgradeModal";
+import { FirstResumeEmailPreferencesModal } from "../components/builder/FirstResumeEmailPreferencesModal";
 import { VersionHistoryPanel } from "../components/common/VersionHistoryPanel";
 import { ApiError, authApi, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
@@ -59,8 +60,17 @@ function isoToDatetimeLocal(iso: string): string {
 export function ResumeEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, refresh } = useAuth();
   const [resume, setResume] = useState<Resume | null>(null);
+  // Set only on the navigate() call right after creating a Professional/
+  // Premium account's very first resume — see ResumeBuilderPage.onSubmit.
+  // Read once on mount rather than derived from resume count, since that
+  // would keep being true (or false) on every future visit to this same
+  // resume; router state only exists for this one navigation.
+  const [showFirstResumePrompt, setShowFirstResumePrompt] = useState(
+    () => (location.state as { justCreatedFirstResume?: boolean } | null)?.justCreatedFirstResume === true
+  );
   const [professions, setProfessions] = useState<ProfessionSummary[]>([]);
   const [professionKey, setProfessionKey] = useState("");
   const [professionDetail, setProfessionDetail] = useState<ProfessionDefinition | null>(null);
@@ -1592,6 +1602,17 @@ export function ResumeEditPage() {
           tier={lockedTemplateModal.tier}
           plans={plans}
           onClose={() => setLockedTemplateModal(null)}
+        />
+      )}
+      {showFirstResumePrompt && (
+        <FirstResumeEmailPreferencesModal
+          onClose={() => {
+            setShowFirstResumePrompt(false);
+            // Clears the router state so a page refresh doesn't re-show
+            // this — window.history.state otherwise survives a hard reload,
+            // unlike React state.
+            navigate(location.pathname, { replace: true, state: {} });
+          }}
         />
       )}
       <p className="form-footnote">

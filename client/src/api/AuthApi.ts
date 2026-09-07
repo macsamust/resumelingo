@@ -36,7 +36,7 @@ export class AuthApi extends ApiClient {
     return this.post<{ success: true }>("/auth/reset-password", input);
   }
 
-  updateEmailPreferences(input: { viewDigestOptOut: boolean }) {
+  updateEmailPreferences(input: { viewDigestOptOut: boolean; resumeRefreshOptOut: boolean; resumeRefreshCadenceDays: number }) {
     return this.put<{ user: AuthUser }>("/auth/me/email-preferences", input);
   }
 

@@ -253,6 +253,22 @@ export class AuthService {
     return new User(record);
   }
 
+  /** Settings-page control for the AI Resume Refresh nudge's cadence — see UserRepository.setResumeRefreshCadenceDays. Allowed-value check (60/120/360) lives in AuthController, matching setViewDigestOptOut's neighboring validation convention. */
+  async setResumeRefreshCadenceDays(userId: string, days: number): Promise<User> {
+    await this.users.setResumeRefreshCadenceDays(userId, days);
+    const record = await this.users.findById(userId);
+    if (!record) throw new AuthError("User not found.");
+    return new User(record);
+  }
+
+  /** Settings-page on/off switch for the AI Resume Refresh nudge, separate from the cadence choice — see UserRepository.setResumeRefreshOptOut. */
+  async setResumeRefreshOptOut(userId: string, optOut: boolean): Promise<User> {
+    await this.users.setResumeRefreshOptOut(userId, optOut);
+    const record = await this.users.findById(userId);
+    if (!record) throw new AuthError("User not found.");
+    return new User(record);
+  }
+
   /** Consumes a reset token — one-time use, since resetPassword() clears it on the same write that sets the new password. */
   async resetPassword(token: string, newPassword: string): Promise<void> {
     const tokenHash = await sha256Hex(token);
