@@ -365,6 +365,56 @@ export function ResumeEditPage() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
 
+  // Sep 2026 QA pass (test plan row 25): beforeunload above only fires on an
+  // actual page unload (tab close, refresh, typing a new URL, an external
+  // link) — it never fires for React Router's client-side navigation, so
+  // clicking a sidebar link to Dashboard silently discarded unsaved changes
+  // with no warning at all. A `useBlocker`-based fix would be the cleaner
+  // long-term answer, but that requires a data router (createBrowserRouter),
+  // and this app is on a plain <BrowserRouter> — migrating the whole routing
+  // setup is a bigger, riskier change than this bug warrants. Instead, this
+  // intercepts clicks on internal links in the capture phase (before
+  // react-router-dom's own bubble-phase Link handler ever sees the event),
+  // confirms, and only lets the click through if the person actually wants
+  // to leave. Known gap: this can't catch the browser's own Back/Forward
+  // buttons, since no click is involved there — flagged separately, not
+  // fixed here.
+  useEffect(() => {
+    if (!isDirty) return;
+    // globalThis.MouseEvent (the native DOM type), not the React MouseEvent
+    // imported above for JSX onClick handlers — this listener is attached
+    // directly to `document`, outside React's synthetic event system.
+    const handleClick = (e: globalThis.MouseEvent) => {
+      // Only a plain left-click should be intercepted — modifier-clicks
+      // (open in new tab, etc.) and non-primary buttons never navigate this
+      // tab away in the first place.
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const anchor = (e.target as HTMLElement).closest("a");
+      if (!anchor || anchor.target === "_blank") return;
+      const href = anchor.getAttribute("href");
+      if (!href) return;
+      let url: URL;
+      try {
+        url = new URL(href, window.location.href);
+      } catch {
+        return;
+      }
+      // External links and same-page anchors (e.g. "#faq") are left alone —
+      // beforeunload already covers leaving the site entirely, and a
+      // same-page jump isn't a navigation away from this form at all.
+      if (url.origin !== window.location.origin || url.pathname === window.location.pathname) return;
+      if (!window.confirm("You have unsaved changes. Leave this page without saving?")) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    // Capture phase, not bubble — must run before react-router-dom's own
+    // click handler on the <Link>, which calls preventDefault() itself to
+    // do its client-side navigation.
+    document.addEventListener("click", handleClick, true);
+    return () => document.removeEventListener("click", handleClick, true);
+  }, [isDirty]);
+
   // The profession's own Additional Details questions, plus the Govt
   // Contractor template's Clearance Level question when that template is
   // selected — see config/clearanceQuestion.ts.
