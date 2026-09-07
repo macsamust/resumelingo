@@ -1971,9 +1971,16 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   .dashboard-grid { grid-template-columns: 1fr 1fr; }
   .price-card.featured { transform: none; }
   .app-shell { flex-direction: column; }
-  .app-sidebar { width: 100%; display: flex; flex-direction: row; min-height: 0; overflow-x: auto; }
+  .app-sidebar { width: 100%; display: flex; flex-direction: row; align-items: center; min-height: 0; overflow-x: auto; }
   .app-sidebar-links { display: flex; }
-  .app-sidebar-user { display: none; }
+  /* Was `display: none` — the sidebar's own avatar/name link to /profile was
+     the only way into Profile in the whole app, so hiding it here left
+     mobile with no path there at all. Kept visible but shrunk to just the
+     avatar circle (name dropped, border/margin from the vertical layout
+     removed) so it fits as the first item in the horizontal scroll row
+     alongside the nav links instead of stacked above them. */
+  .app-sidebar-user { flex-shrink: 0; margin-bottom: 0; padding: 6px; border-bottom: none; }
+  .app-sidebar-user-name { display: none; }
   .back-to-top-fab { left: 24px; }
 }
 @media (max-width: 640px) {
