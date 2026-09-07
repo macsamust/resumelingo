@@ -95,7 +95,7 @@ export function CareerCoachPage() {
           <div className="poly-hero" style={{ padding: "20px 0" }}>
             <PolyAvatar size={80} />
             <p className="hero-note" style={{ fontStyle: "italic", margin: 0 }}>
-              Hey, I'm Poly — pick a question above, or type your own below, and I'll help you work through it.
+              Hey, I'm Poly- pick a question above, or type your own below, and I'll help you work through it.
             </p>
           </div>
         )}
