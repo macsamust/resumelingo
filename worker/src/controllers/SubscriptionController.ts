@@ -2,8 +2,23 @@ import { Context } from "hono";
 import { AppEnv } from "../middleware/servicesMiddleware";
 import { SubscriptionTier } from "../types";
 
-/** Where to send the browser back to after Checkout / the Billing Portal. */
+/**
+ * Where to send the browser back to after Checkout / the Billing Portal.
+ * Prefers the actual request's Origin header over the static CLIENT_ORIGIN
+ * env var — CLIENT_ORIGIN alone breaks the return URL whenever the app is
+ * reached through anything other than that one fixed address, e.g. a
+ * Cloudflare Tunnel/ngrok URL used for tester access, which also changes
+ * every session, so hardcoding it into CLIENT_ORIGIN would just break again
+ * next time. The checkout/portal endpoints both require an authenticated
+ * user and only ever affect where the browser lands after a real Stripe
+ * flow completes (not an access-control decision), so trusting the
+ * request's own Origin here carries materially less risk than it would for
+ * an auth or CORS decision — falls back to CLIENT_ORIGIN if the header is
+ * missing or doesn't look like a real absolute origin.
+ */
 function clientOrigin(c: Context<AppEnv>): string {
+  const requestOrigin = c.req.header("Origin");
+  if (requestOrigin && /^https?:\/\/[^/]+$/.test(requestOrigin)) return requestOrigin;
   return c.env.CLIENT_ORIGIN || "http://localhost:5173";
 }
 
