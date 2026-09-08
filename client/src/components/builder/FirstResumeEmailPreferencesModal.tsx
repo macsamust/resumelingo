@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Modal } from "../common/Modal";
 import { useAuth } from "../../context/AuthContext";
 import { authApi, ApiError } from "../../api";
+import { PolyAvatar } from "../brand/PolyAvatar";
 
 interface Props {
   onClose: () => void;
@@ -51,6 +52,9 @@ export function FirstResumeEmailPreferencesModal({ onClose }: Props) {
 
   return (
     <Modal title="Stay in the loop?" onClose={onClose} disableDismiss={saving}>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+        <PolyAvatar size={64} decorative />
+      </div>
       <p className="modal-message">
         Nice work on your first resume! Here are two optional emails you can turn on or off now — you can always
         change this later from your Profile page.
