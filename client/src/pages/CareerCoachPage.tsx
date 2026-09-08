@@ -2,7 +2,7 @@ import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { ParrotLogo } from "../components/brand/ParrotLogo";
-import { PolyAvatar } from "../components/brand/PolyAvatar";
+import { PolyAnimated } from "../components/brand/PolyAnimated";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, careerCoachApi } from "../api";
 import { CareerCoachAnswer } from "../api/CareerCoachApi";
@@ -93,7 +93,7 @@ export function CareerCoachPage() {
       <div className="coach-thread">
         {exchanges.length === 0 && !asking && (
           <div className="poly-hero" style={{ padding: "20px 0" }}>
-            <PolyAvatar size={80} />
+            <PolyAnimated expression="wave" size={80} />
             <p className="hero-note" style={{ fontStyle: "italic", margin: 0 }}>
               Hey, I'm Poly- pick a question above, or type your own below, and I'll help you work through it.
             </p>
