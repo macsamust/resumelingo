@@ -8,18 +8,17 @@
  *
  * Source: client/public/brand/poly-thinking.gif — one of five animated
  * expression gifs supplied together (Sep 2026: thinking/happy/wave/
- * sleepy/celebrate) at native 560x560 resolution (see PolyAnimated's doc
- * comment for why these ship full-size rather than pre-shrunk for icon
- * use), same as the earlier one-off wave-in gif this replaces
- * (poly-loading.gif). "Thinking" (eyes up, small thought bubble) was the
- * natural fit for an AI-generation wait state out of the five. Always
- * *shown* at icon size (~40px) via the `size` prop/CSS even though the
- * downloaded file is full-res. Same "real pixels, not a hand-drawn
+ * sleepy/celebrate), resized from the original ~560px uploads down to
+ * 160x160 and re-optimized, same as the earlier one-off wave-in gif this
+ * replaces (poly-loading.gif). "Thinking" (eyes up, small thought bubble)
+ * was the natural fit for an AI-generation wait state out of the five.
+ * Kept small since it's always shown at icon size (~40px) and loops
+ * continuously while visible. Same "real pixels, not a hand-drawn
  * recreation" reasoning as ParrotLogo/PolyAvatar — this is not an SVG
  * animation.
  */
-const NATIVE_WIDTH = 560;
-const NATIVE_HEIGHT = 560;
+const NATIVE_WIDTH = 160;
+const NATIVE_HEIGHT = 160;
 
 interface PolyLoaderProps {
   size?: number;
