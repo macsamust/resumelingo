@@ -93,7 +93,7 @@ export function CareerCoachPage() {
       <div className="coach-thread">
         {exchanges.length === 0 && !asking && (
           <div className="poly-hero" style={{ padding: "20px 0" }}>
-            <PolyAnimated expression="wave" size={560} large />
+            <PolyAnimated expression="wave" size={200} large />
             <p className="hero-note" style={{ fontStyle: "italic", margin: 0 }}>
               Hey, I'm Poly- pick a question above, or type your own below, and I'll help you work through it.
             </p>
