@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { PolyAnimated } from "../brand/PolyAnimated";
+import { PolyAvatar } from "../brand/PolyAvatar";
 
 export function Hero() {
   return (
@@ -27,17 +27,17 @@ export function Hero() {
         </div>
         <div className="hero-visual">
           {/* Poly, the ResumeLingo mascot — stands alone here with no adjacent
-              brand text, so it gets a real alt/title (see PolyAnimated's
+              brand text, so it gets a real alt/title (see PolyAvatar's
               `decorative` prop) instead of being hidden from screen readers.
               The name/backstory lives here as real, visible copy (readable
               on mobile, announced to screen readers) rather than only in the
               image's hover tooltip, which neither of those reach. Uses the
-              animated "wave" expression (Sep 2026) rather than the static
-              PolyAvatar or ParrotLogo's flat head-only mark — "Meet Poly" is
-              literally a greeting, and this is the single most prominent,
-              standalone appearance Poly makes in the whole app. */}
+              full-body PolyAvatar rather than ParrotLogo's flat head-only
+              mark — this is exactly the kind of standalone "hero" moment
+              PolyAvatar was built for (see its doc comment), where the logo
+              mark alone reads as sparse once it's the sole visual focus. */}
           <div className="hero-mascot">
-            <PolyAnimated expression="wave" size={130} decorative={false} />
+            <PolyAvatar size={130} decorative={false} />
           </div>
           <p className="hero-mascot-caption">
             <em>Meet Poly- short for Polyglot, our resident many tongued parrot.</em>
