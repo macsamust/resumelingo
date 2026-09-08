@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { authApi, ApiError } from "../api";
 import { useAuth } from "../context/AuthContext";
@@ -17,8 +17,20 @@ export function VerifyEmailPage() {
   const { refresh } = useAuth();
   const [status, setStatus] = useState<"pending" | "done" | "error">("pending");
   const [error, setError] = useState<string | null>(null);
+  // Guards against React StrictMode's dev-only double-invoke of effects
+  // (never happens in a production build). Without this, the verify call
+  // fires twice locally: the first succeeds and consumes the single-use
+  // token server-side, the second immediately fires with that now-already-
+  // used token and gets rejected as invalid — whichever response lands last
+  // wins, so a genuinely successful verification could still show an error.
+  // Found via a real local-dev repro (Sep 2026): the database showed
+  // emailVerified already true while the page displayed "invalid or
+  // expired."
+  const calledRef = useRef(false);
 
   useEffect(() => {
+    if (calledRef.current) return;
+    calledRef.current = true;
     if (!token) {
       setStatus("error");
       setError("This verification link is missing its token. Please use the link from your email.");
