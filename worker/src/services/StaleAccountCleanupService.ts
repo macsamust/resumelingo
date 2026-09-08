@@ -4,13 +4,14 @@ import { EmailService } from "./EmailService";
 import { AuthService } from "./AuthService";
 
 /**
- * Hourly cron job (see wrangler.jsonc's `triggers.crons`) that clears out
- * bot/abandoned accounts — pinned in TODO.md's "Bogus/unverified account
- * protection" entry (Sep 2026). CJ's reasoning: this app's onboarding flow is
- * "sign up, then immediately get interviewed into your first resume" — there
- * is no legitimate path where a real signup sits on zero resumes for a full
- * day. An account that's still unverified AND still has zero resumes an hour
- * later is overwhelmingly bot/junk, not a hesitant real user.
+ * Cron job, every 15 minutes (see wrangler.jsonc's `triggers.crons`), that
+ * clears out bot/abandoned accounts — pinned in TODO.md's "Bogus/unverified
+ * account protection" entry (Sep 2026). CJ's reasoning: this app's
+ * onboarding flow is "sign up, then immediately get interviewed into your
+ * first resume" — there is no legitimate path where a real signup sits on
+ * zero resumes for a full day. An account that's still unverified AND still
+ * has zero resumes an hour later is overwhelmingly bot/junk, not a hesitant
+ * real user.
  *
  * Two-step, not a single delete pass: `SUSPEND_AFTER_HOURS` (1 — matching
  * the verification link's own TTL) suspends the account and emails a fresh
@@ -26,9 +27,11 @@ import { AuthService } from "./AuthService";
  * insurance against the eligibility query and the delete step ever drifting
  * out of sync with each other.
  *
- * Hourly (not daily, unlike every other cron job in this app) specifically
- * because the suspend window is only 1 hour — daily resolution would make
- * the actual wait unpredictable by up to 24h.
+ * Every 15 minutes (not hourly, and not daily like every other cron job in
+ * this app) specifically because the suspend window is only 1 hour — an
+ * hourly tick's worst case (an account created just after the hour) delayed
+ * suspension by up to ~2h instead of ~1h, found via QA testing the real
+ * timing (Sep 8, 2026). 15-minute resolution caps the worst case at ~1h15m.
  *
  * `PROTECTED_BEFORE_ISO` grandfathers in every account that already existed
  * when this feature shipped (Sep 8, 2026) — same precedent as migration

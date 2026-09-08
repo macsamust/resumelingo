@@ -47,16 +47,18 @@
   // three never overlap) drives ResumeRefreshNudgeService's daily check —
   // added Sep 2026, deliberately its own independent cron rather than
   // folded into the weekly digest (see TODO.md's "two fully independent
-  // scheduled jobs" decision). "0 * * * *" (hourly) drives
-  // StaleAccountCleanupService — added Sep 2026, deliberately hourly rather
-  // than daily like the other three, since its 24h deletion window needs
-  // roughly hour-level precision (see that service's doc comment) rather
-  // than the day-level precision a daily tick would give it. Cron Triggers
-  // only take effect once deployed (`wrangler deploy`); `wrangler dev` does
-  // not fire them automatically — see the "Local dev" note in the deploy
-  // docs.
+  // scheduled jobs" decision). "*/15 * * * *" (every 15 min) drives
+  // StaleAccountCleanupService — added Sep 2026, originally hourly but
+  // tightened same-day after QA found hourly's worst case delayed the 1h
+  // suspend step by up to ~2h (an account created just after the hour has
+  // to wait a full extra tick before "createdAt <= now - 1h" is true). At
+  // 15-minute resolution the worst case is ~1h15m instead. The 24h deletion
+  // step doesn't need this precision on its own, but rides the same cron
+  // since it's cheap to check every run. Cron Triggers only take effect
+  // once deployed (`wrangler deploy`); `wrangler dev` does not fire them
+  // automatically — see the "Local dev" note in the deploy docs.
   "triggers": {
-    "crons": ["0 14 * * 1", "0 13 * * *", "0 15 * * *", "0 * * * *"]
+    "crons": ["0 14 * * 1", "0 13 * * *", "0 15 * * *", "*/15 * * * *"]
   },
 
   // Non-secret config. JWT_SECRET and RESEND_API_KEY are intentionally NOT
