@@ -24,6 +24,7 @@ export class User {
   readonly currentPeriodEnd: string | null;
   readonly resumeRefreshCadenceDays: number;
   readonly resumeRefreshOptOut: boolean;
+  readonly suspensionReason: string | null;
 
   constructor(record: UserRecord) {
     this.id = record.id;
@@ -43,6 +44,7 @@ export class User {
     this.currentPeriodEnd = record.currentPeriodEnd;
     this.resumeRefreshCadenceDays = record.resumeRefreshCadenceDays;
     this.resumeRefreshOptOut = record.resumeRefreshOptOut;
+    this.suspensionReason = record.suspensionReason;
   }
 
   get plan() {

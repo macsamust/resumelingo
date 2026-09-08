@@ -1,33 +1,34 @@
 import { UserRepository } from "../repositories/UserRepository";
 import { ResumeRepository } from "../repositories/ResumeRepository";
 import { EmailService } from "./EmailService";
+import { AuthService } from "./AuthService";
 
 /**
  * Hourly cron job (see wrangler.jsonc's `triggers.crons`) that clears out
  * bot/abandoned accounts — pinned in TODO.md's "Bogus/unverified account
- * protection" entry (Sep 2026), picked back up with a much shorter window
- * than originally proposed. CJ's reasoning: this app's onboarding flow is
+ * protection" entry (Sep 2026). CJ's reasoning: this app's onboarding flow is
  * "sign up, then immediately get interviewed into your first resume" — there
- * is no legitimate path where a real signup sits on zero resumes for days.
- * An account that's still unverified AND still has zero resumes a day later
- * is overwhelmingly bot/junk, not a hesitant real user, so a 24h window
- * carries very little false-positive risk here specifically (this reasoning
- * doesn't generalize to a typical SaaS signup funnel — it's specific to this
- * app's own product shape).
+ * is no legitimate path where a real signup sits on zero resumes for a full
+ * day. An account that's still unverified AND still has zero resumes an hour
+ * later is overwhelmingly bot/junk, not a hesitant real user.
  *
- * Two-step, not a single delete pass: `WARN_AFTER_HOURS` (12) sends one
- * warning email per account (UserRepository.markStaleAccountWarned prevents
- * re-sending it every run), then `DELETE_AFTER_HOURS` (24) actually removes
- * the account. Deletion reuses the exact same cascade AdminUserController's
+ * Two-step, not a single delete pass: `SUSPEND_AFTER_HOURS` (1 — matching
+ * the verification link's own TTL) suspends the account and emails a fresh
+ * verification link (UserRepository.suspendForUnverifiedEmail also marks
+ * `staleAccountWarnedAt` so this step never re-fires for the same account),
+ * then `DELETE_AFTER_HOURS` (24) actually removes it. Suspending rather than
+ * deleting outright at the 1h mark gives a genuine user a 23-hour recovery
+ * window via the fresh link this step sends — see EmailService's
+ * sendAccountSuspendedEmail and AuthService's generateFreshVerificationUrl.
+ * Deletion reuses the exact same cascade AdminUserController's
  * admin-triggered delete uses (resumes first, then the account) even though
  * these accounts should always have zero resumes by construction — cheap
  * insurance against the eligibility query and the delete step ever drifting
  * out of sync with each other.
  *
  * Hourly (not daily, unlike every other cron job in this app) specifically
- * because the window is short enough that daily resolution would mean the
- * actual wait before warning/deletion could be anywhere from 24h to 48h
- * rather than a predictable ~24h.
+ * because the suspend window is only 1 hour — daily resolution would make
+ * the actual wait unpredictable by up to 24h.
  *
  * `PROTECTED_BEFORE_ISO` grandfathers in every account that already existed
  * when this feature shipped (Sep 8, 2026) — same precedent as migration
@@ -37,13 +38,13 @@ import { EmailService } from "./EmailService";
  * included, even ones that happen to be unverified with zero resumes today.
  * Only accounts *created* on or after this cutoff are ever eligible.
  */
-const WARN_AFTER_HOURS = 12;
+const SUSPEND_AFTER_HOURS = 1;
 const DELETE_AFTER_HOURS = 24;
 const PROTECTED_BEFORE_ISO = "2026-09-08T00:00:00.000Z";
 
 export interface StaleAccountCleanupSummary {
-  warned: number;
-  warnFailed: number;
+  suspended: number;
+  suspendFailed: number;
   deleted: number;
 }
 
@@ -52,31 +53,30 @@ export class StaleAccountCleanupService {
     private readonly users: UserRepository,
     private readonly resumes: ResumeRepository,
     private readonly email: EmailService,
-    private readonly clientOrigin: string
+    private readonly auth: AuthService
   ) {}
 
-  private loginUrl(): string {
-    return `${this.clientOrigin.replace(/\/$/, "")}/login`;
-  }
-
   async run(): Promise<StaleAccountCleanupSummary> {
-    const summary: StaleAccountCleanupSummary = { warned: 0, warnFailed: 0, deleted: 0 };
+    const summary: StaleAccountCleanupSummary = { suspended: 0, suspendFailed: 0, deleted: 0 };
 
-    const toWarn = await this.users.findEligibleForStaleWarning(WARN_AFTER_HOURS, PROTECTED_BEFORE_ISO);
-    for (const userRecord of toWarn) {
+    const toSuspend = await this.users.findEligibleForSuspension(SUSPEND_AFTER_HOURS, PROTECTED_BEFORE_ISO);
+    for (const userRecord of toSuspend) {
       try {
-        const hoursUntilDeletion = DELETE_AFTER_HOURS - WARN_AFTER_HOURS;
-        await this.email.sendStaleAccountWarningEmail(userRecord.email, this.loginUrl(), hoursUntilDeletion);
-        await this.users.markStaleAccountWarned(userRecord.id, new Date().toISOString());
-        summary.warned++;
+        const verifyUrl = await this.auth.generateFreshVerificationUrl(userRecord.id);
+        if (!verifyUrl) continue; // account vanished between the query and here — nothing to do
+        const hoursUntilDeletion = DELETE_AFTER_HOURS - SUSPEND_AFTER_HOURS;
+        await this.email.sendAccountSuspendedEmail(userRecord.email, verifyUrl, hoursUntilDeletion);
+        await this.users.suspendForUnverifiedEmail(userRecord.id, new Date().toISOString());
+        summary.suspended++;
       } catch (err) {
-        console.error("Stale account warning failed for user", userRecord.id, err);
-        summary.warnFailed++;
+        console.error("Stale account suspension failed for user", userRecord.id, err);
+        summary.suspendFailed++;
       }
     }
 
-    // Independent of the warning step above — see findEligibleForStalePurge's
-    // doc comment for why deletion doesn't wait on staleAccountWarnedAt.
+    // Independent of the suspend step above — see findEligibleForStalePurge's
+    // doc comment for why deletion doesn't wait on the account having been
+    // suspended first.
     const toDelete = await this.users.findEligibleForStalePurge(DELETE_AFTER_HOURS, PROTECTED_BEFORE_ISO);
     for (const userRecord of toDelete) {
       await this.resumes.deleteAllForUser(userRecord.id);

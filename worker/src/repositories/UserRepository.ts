@@ -75,6 +75,7 @@ export class UserRepository extends BaseRepository<UserRecord> {
       resumeRefreshCadenceDays: 120,
       resumeRefreshOptOut: false,
       staleAccountWarnedAt: null,
+      suspensionReason: null,
     };
     await this.insertRow(record as unknown as Record<string, unknown>);
     return record;
@@ -112,9 +113,24 @@ export class UserRepository extends BaseRepository<UserRecord> {
   }
 
   /** Marks the address verified and clears the token in one step — a used or superseded token can never be replayed, same as resetPassword. */
+  /**
+   * Also lifts a system-initiated suspension (suspensionReason ===
+   * "unverified_email") since that's the one thing this exact action fixes.
+   * Deliberately leaves an admin-initiated suspension (suspensionReason
+   * null) untouched — verifying your email doesn't undo a real abuse
+   * suspension that happens to be in effect for an unrelated reason.
+   */
   async confirmEmailVerification(userId: string): Promise<void> {
     await this.db
-      .prepare(`UPDATE users SET "emailVerified" = 1, "verificationTokenHash" = NULL, "verificationTokenExpiresAt" = NULL WHERE id = ?`)
+      .prepare(
+        `UPDATE users
+         SET "emailVerified" = 1,
+             "verificationTokenHash" = NULL,
+             "verificationTokenExpiresAt" = NULL,
+             suspended = CASE WHEN "suspensionReason" = 'unverified_email' THEN 0 ELSE suspended END,
+             "suspensionReason" = CASE WHEN "suspensionReason" = 'unverified_email' THEN NULL ELSE "suspensionReason" END
+         WHERE id = ?`
+      )
       .bind(userId)
       .run();
   }
@@ -195,7 +211,8 @@ export class UserRepository extends BaseRepository<UserRecord> {
    * against resumes is cheap: both tables are small relative to most SaaS
    * user tables, and this only runs once an hour.
    */
-  async findEligibleForStaleWarning(warnAfterHours: number, protectedBeforeIso: string): Promise<UserRecord[]> {
+  /** Unverified, zero-resume accounts past `suspendAfterHours` old that haven't already been system-suspended — the pool StaleAccountCleanupService's suspend pass acts on. */
+  async findEligibleForSuspension(suspendAfterHours: number, protectedBeforeIso: string): Promise<UserRecord[]> {
     const { results } = await this.db
       .prepare(
         `SELECT * FROM users
@@ -206,22 +223,26 @@ export class UserRepository extends BaseRepository<UserRecord> {
            AND NOT EXISTS (SELECT 1 FROM resumes WHERE resumes."userId" = users.id)
          LIMIT 20000`
       )
-      .bind(`-${warnAfterHours} hours`, protectedBeforeIso)
+      .bind(`-${suspendAfterHours} hours`, protectedBeforeIso)
       .all<UserRecord>();
     return results.map(normalizeBooleans);
   }
 
-  async markStaleAccountWarned(userId: string, isoDate: string): Promise<void> {
-    await this.db.prepare(`UPDATE users SET "staleAccountWarnedAt" = ? WHERE id = ?`).bind(isoDate, userId).run();
+  /** Marks a user as system-suspended for an unverified email — sets `suspended`, `suspensionReason`, and (reusing the existing column) `staleAccountWarnedAt` as the "already processed by this job" marker so it isn't picked up again. */
+  async suspendForUnverifiedEmail(userId: string, isoDate: string): Promise<void> {
+    await this.db
+      .prepare(`UPDATE users SET suspended = 1, "suspensionReason" = 'unverified_email', "staleAccountWarnedAt" = ? WHERE id = ?`)
+      .bind(isoDate, userId)
+      .run();
   }
 
   /**
    * Accounts due actual deletion — same unverified + zero-resumes +
-   * post-rollout-cutoff signal as the warning query, past `deleteAfterHours`
-   * instead. Deliberately not conditioned on `staleAccountWarnedAt` being
-   * set: if the warning job somehow missed a run, the account still gets
-   * deleted on schedule rather than silently living forever because it
-   * never got warned — the warning is a courtesy, not a precondition.
+   * post-rollout-cutoff signal as the suspend query, past `deleteAfterHours`
+   * instead. Deliberately not conditioned on the account having already been
+   * suspended: if the suspend job somehow missed a run, the account still
+   * gets deleted on schedule rather than silently living forever — the
+   * suspend step is a courtesy/recovery window, not a precondition.
    */
   async findEligibleForStalePurge(deleteAfterHours: number, protectedBeforeIso: string): Promise<UserRecord[]> {
     const { results } = await this.db
@@ -243,8 +264,12 @@ export class UserRepository extends BaseRepository<UserRecord> {
   }
 
   /** Admin action — disables/re-enables login without touching the account's data. */
+  /** Admin-driven suspend/unsuspend — always clears `suspensionReason` since this is a fresh, explicit admin decision that supersedes whatever set the flag before (including a prior system suspension). */
   async setSuspended(userId: string, suspended: boolean): Promise<void> {
-    await this.db.prepare(`UPDATE users SET suspended = ? WHERE id = ?`).bind(suspended ? 1 : 0, userId).run();
+    await this.db
+      .prepare(`UPDATE users SET suspended = ?, "suspensionReason" = NULL WHERE id = ?`)
+      .bind(suspended ? 1 : 0, userId)
+      .run();
   }
 
   /** Bulk version of setSuspended — one statement covering every id, for the admin Users page's multi-select suspend/unsuspend. */
@@ -252,7 +277,7 @@ export class UserRepository extends BaseRepository<UserRecord> {
     if (userIds.length === 0) return;
     const placeholders = userIds.map(() => "?").join(", ");
     await this.db
-      .prepare(`UPDATE users SET suspended = ? WHERE id IN (${placeholders})`)
+      .prepare(`UPDATE users SET suspended = ?, "suspensionReason" = NULL WHERE id IN (${placeholders})`)
       .bind(suspended ? 1 : 0, ...userIds)
       .run();
   }

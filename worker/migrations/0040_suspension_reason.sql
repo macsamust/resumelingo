@@ -1,0 +1,11 @@
+-- Backs the stale-account suspend step (StaleAccountCleanupService, Sep
+-- 2026 follow-up to migration 0039) — distinguishes a system suspension
+-- (unverified + zero resumes past 1h) from an admin-initiated one (abuse,
+-- etc.), both of which share the existing `suspended` flag. Null means
+-- "admin-suspended" (or never suspended); "unverified_email" is the only
+-- system-set value today. Lets AuthService.login show honest, specific
+-- copy instead of the generic "contact support" message for someone who
+-- just hasn't verified yet, and lets AuthService.verifyEmail auto-clear
+-- the suspension on successful verification without also clearing a real
+-- admin suspension that happens to be in effect for an unrelated reason.
+ALTER TABLE users ADD COLUMN "suspensionReason" TEXT;

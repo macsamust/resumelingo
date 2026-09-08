@@ -30,6 +30,7 @@ function makeUserRecord(overrides: Partial<UserRecord> = {}): UserRecord {
     resumeRefreshCadenceDays: 120,
     resumeRefreshOptOut: false,
     staleAccountWarnedAt: null,
+    suspensionReason: null,
     ...overrides,
   };
 }

@@ -74,29 +74,30 @@ export class EmailService {
   }
 
   /**
-   * StaleAccountCleanupService's warning, sent once (see
-   * UserRepository.findEligibleForStaleWarning/markStaleAccountWarned) partway
-   * through the unverified-account retention window, before the account is
-   * actually deleted. Links to login rather than a fresh verify token —
-   * deliberately, since the original signup verification link only lasts 1
-   * hour (see sendVerificationEmail's doc comment above) and this warning
-   * fires 12 hours in, so that original link is always long expired by the
-   * time anyone sees this. Logging in surfaces AppShell's "resend the
-   * verification email" banner, which is the only reliable way to get a
-   * fresh, valid link at this point.
+   * StaleAccountCleanupService's suspend-step notice (see
+   * UserRepository.findEligibleForSuspension/suspendForUnverifiedEmail),
+   * sent once when an unverified, zero-resume account gets automatically
+   * suspended an hour after signup. Unlike the earlier warning-email design
+   * this replaces, it links straight to a *fresh* verify token — minted via
+   * AuthService.generateFreshVerificationUrl right before this send — rather
+   * than to login, since login is now blocked while the account is
+   * suspended (see AuthService.login's suspensionReason check). Verifying
+   * via this link auto-lifts the suspension (see
+   * UserRepository.confirmEmailVerification).
    */
-  async sendStaleAccountWarningEmail(to: string, loginUrl: string, hoursUntilDeletion: number): Promise<void> {
+  async sendAccountSuspendedEmail(to: string, verifyUrl: string, hoursUntilDeletion: number): Promise<void> {
     await this.send({
       to,
-      subject: "Verify your email or your ResumeLingo account will be removed",
+      subject: "Your ResumeLingo account has been suspended — verify to restore it",
       html: `
         <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
-          <h2 style="margin-bottom: 8px;">Your account is about to be removed</h2>
-          <p>Your email address hasn't been verified yet, and no resume has been created on this account. To keep it, verify your email within the next ${hoursUntilDeletion} hours — otherwise it'll be automatically removed.</p>
+          <h2 style="margin-bottom: 8px;">Your account has been suspended</h2>
+          <p>Your email address was never verified, and no resume has been created on this account, so it's been automatically suspended. Verify your email now to restore access — otherwise the account will be permanently removed in ${hoursUntilDeletion} hours.</p>
           <p style="margin: 24px 0;">
-            <a href="${loginUrl}" style="background: #4f46e5; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Log in to verify</a>
+            <a href="${verifyUrl}" style="background: #4f46e5; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Verify email address</a>
           </p>
           <p style="color: #64748b; font-size: 13px;">If you didn't create this account, no action is needed — it'll be removed automatically.</p>
+          <p style="color: #94a3b8; font-size: 12px; word-break: break-all;">Or paste this link into your browser: ${verifyUrl}</p>
         </div>
       `,
     });

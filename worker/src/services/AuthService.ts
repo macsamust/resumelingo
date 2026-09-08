@@ -75,8 +75,8 @@ export class AuthService {
     return { user, token };
   }
 
-  /** Generates and emails a fresh verification link, overwriting any earlier pending one. Shared by register() and resendVerificationEmail(). */
-  private async sendVerificationEmail(user: User): Promise<void> {
+  /** Mints a fresh verification token, stores its hash, and returns the plaintext URL — the shared plumbing behind sendVerificationEmail() and generateFreshVerificationUrl(). */
+  private async mintVerificationUrl(user: User): Promise<string> {
     const token = generateRandomToken();
     const tokenHash = await sha256Hex(token);
     const expiresAt = new Date(Date.now() + VERIFICATION_TOKEN_TTL_MS).toISOString();
@@ -94,7 +94,26 @@ export class AuthService {
     if (this.clientOrigin.includes("localhost")) {
       console.log(`[local dev] Verification link for ${user.email}: ${verifyUrl}`);
     }
+    return verifyUrl;
+  }
+
+  /** Generates and emails a fresh verification link, overwriting any earlier pending one. Shared by register() and resendVerificationEmail(). */
+  private async sendVerificationEmail(user: User): Promise<void> {
+    const verifyUrl = await this.mintVerificationUrl(user);
     await this.emailService.sendVerificationEmail(user.email, verifyUrl);
+  }
+
+  /**
+   * Mints a fresh verification link but, unlike sendVerificationEmail(),
+   * doesn't send the standard "verify your email" email — StaleAccountCleanupService
+   * uses this to get a working link to embed in its own distinct
+   * account-suspended notice, since the original signup link is always
+   * expired (1h TTL) by the time the 1h suspend job runs.
+   */
+  async generateFreshVerificationUrl(userId: string): Promise<string | undefined> {
+    const record = await this.users.findById(userId);
+    if (!record) return undefined;
+    return this.mintVerificationUrl(new User(record));
   }
 
   /**
@@ -136,7 +155,17 @@ export class AuthService {
     const matches = await bcrypt.compare(password, record.passwordHash);
     if (!matches) throw new AuthError("Invalid email or password.");
 
-    if (record.suspended) throw new AuthError("This account has been suspended. Contact support at support@resumelingo.com for help.");
+    if (record.suspended) {
+      // Distinguishes StaleAccountCleanupService's automated suspension
+      // (fixable by the user themselves, without contacting anyone) from a
+      // real admin-initiated one — see migration 0040's doc comment.
+      if (record.suspensionReason === "unverified_email") {
+        throw new AuthError(
+          "This account was suspended because its email address was never verified. Check your inbox for the suspension notice, which includes a fresh verification link."
+        );
+      }
+      throw new AuthError("This account has been suspended. Contact support at support@resumelingo.com for help.");
+    }
 
     const user = new User(record);
     const token = await this.tokens.sign({ userId: user.id, email: user.email });

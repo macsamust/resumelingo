@@ -108,8 +108,10 @@ export interface UserRecord {
   resumeRefreshCadenceDays: number;
   /** Opt-out flag for the AI Resume Refresh nudge, separate from the cadence value above (migration 0038) — same opt-out-not-opt-in default as viewDigestOptOut. */
   resumeRefreshOptOut: boolean;
-  /** ISO timestamp of the stale-account warning email (StaleAccountCleanupService) — set the first time an unverified, zero-resume account is warned it'll be deleted, so the hourly job doesn't re-send the warning on every run. Null means "never warned." Unrelated to verificationTokenExpiresAt, which is about the original signup verification link, not this cleanup job. */
+  /** ISO timestamp of when StaleAccountCleanupService suspended this account for being unverified with zero resumes — set once so the hourly job doesn't re-suspend/re-email on every run. Null means "not yet processed by this job." Unrelated to verificationTokenExpiresAt, which is about the original signup verification link, not this cleanup job. */
   staleAccountWarnedAt: string | null;
+  /** Distinguishes why `suspended` is true — null for an admin-initiated suspension (or never suspended), "unverified_email" for StaleAccountCleanupService's automated one (migration 0040). Lets login show honest, specific copy and lets verifyEmail auto-clear only this kind of suspension, not a real admin one. */
+  suspensionReason: string | null;
 }
 
 /**
