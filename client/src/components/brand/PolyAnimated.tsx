@@ -6,16 +6,25 @@
  * more alive without introducing a whole new visual style.
  *
  * Source: five animated gifs supplied together (Sep 2026: thinking, happy,
- * wave, sleepy, celebrate), resized from the original ~560px uploads down to
- * 160x160 and re-optimized. "Thinking" went to PolyLoader (see that file's
- * doc comment) since it's specifically the AI-wait state; the other four
- * live here. "Happy" and "sleepy" aren't wired into a surface yet — added
- * for whichever spot needs them next (a returning-user greeting, an empty
- * state) without a fresh asset round-trip. Same "real pixels, not a
- * hand-drawn recreation" reasoning as ParrotLogo/PolyAvatar.
+ * wave, sleepy, celebrate) at their original native 560x560 resolution —
+ * initially shipped downscaled to 160x160, but CJ asked for full-size Poly
+ * on the Career Coach page (a genuine standalone moment, not an icon), and
+ * upscaling a 160px source to that size in CSS looked soft/blurry, so the
+ * shipped files were swapped back to full native res (chroma-keyed
+ * transparent, same as the 160px versions were). "Thinking" went to
+ * PolyLoader (see that file's doc comment) since it's specifically the
+ * AI-wait state; the other four live here. "Happy" and "sleepy" aren't
+ * wired into a surface yet. Same "real pixels, not a hand-drawn recreation"
+ * reasoning as ParrotLogo/PolyAvatar.
+ *
+ * Trade-off worth knowing: these are now 430-920KB each (vs. ~170-280KB at
+ * 160x160) since nothing here is compressed for icon-sized use — every
+ * caller downloads the same full-res file regardless of the `size` it
+ * renders at (DynamicQuestionForm's 32px wave included). Revisit with a
+ * dedicated small variant if that ever shows up as a real load-time issue.
  */
-const NATIVE_WIDTH = 160;
-const NATIVE_HEIGHT = 160;
+const NATIVE_WIDTH = 560;
+const NATIVE_HEIGHT = 560;
 
 export type PolyExpression = "wave" | "celebrate" | "happy" | "sleepy";
 
