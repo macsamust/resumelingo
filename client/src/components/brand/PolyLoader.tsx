@@ -6,15 +6,19 @@
  * small animated companion so the wait reads as "Poly is writing this for
  * you" rather than dead air.
  *
- * Source: client/public/brand/poly-loading.gif — a resized (120x120,
- * downscaled from the original 560x560 upload) and re-optimized copy of the
- * animated GIF supplied directly for this purpose, kept small since it's
- * always shown at icon size (~40px) and loops continuously while visible.
- * Same "real pixels, not a hand-drawn recreation" reasoning as
- * ParrotLogo/PolyAvatar — this is not an SVG animation.
+ * Source: client/public/brand/poly-thinking.gif — one of five animated
+ * expression gifs supplied together (Sep 2026: thinking/happy/wave/
+ * sleepy/celebrate), resized from the original ~560px uploads down to
+ * 160x160 and re-optimized, same as the earlier one-off wave-in gif this
+ * replaces (poly-loading.gif). "Thinking" (eyes up, small thought bubble)
+ * was the natural fit for an AI-generation wait state out of the five.
+ * Kept small since it's always shown at icon size (~40px) and loops
+ * continuously while visible. Same "real pixels, not a hand-drawn
+ * recreation" reasoning as ParrotLogo/PolyAvatar — this is not an SVG
+ * animation.
  */
-const NATIVE_WIDTH = 120;
-const NATIVE_HEIGHT = 120;
+const NATIVE_WIDTH = 160;
+const NATIVE_HEIGHT = 160;
 
 interface PolyLoaderProps {
   size?: number;
@@ -26,7 +30,7 @@ export function PolyLoader({ size = 40, label }: PolyLoaderProps) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
       <img
-        src="/brand/poly-loading.gif"
+        src="/brand/poly-thinking.gif"
         alt=""
         aria-hidden="true"
         width={size}

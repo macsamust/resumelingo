@@ -1,5 +1,5 @@
 import { ProfessionQuestion } from "../../types";
-import { PolyAvatar } from "../brand/PolyAvatar";
+import { PolyAnimated } from "../brand/PolyAnimated";
 
 interface Props {
   questions: ProfessionQuestion[];
@@ -22,7 +22,7 @@ export function DynamicQuestionForm({ questions, answers, onChange }: Props) {
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-        <PolyAvatar size={32} decorative />
+        <PolyAnimated expression="wave" size={32} decorative />
         <span className="hero-note" style={{ margin: 0 }}>A few questions from Poly, tailored to your profession.</span>
       </div>
       {questions.map((q) => (
