@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ApiError, achievementGenerateApi } from "../../api";
 import { AchievementEntry } from "../../types";
+import { PolyLoader } from "../brand/PolyLoader";
 
 interface Props {
   /** Professional/Premium-gated (see worker's AchievementGenerateController) — caller passes whether the account's tier can use this, same as ResumeImportPanel's canImport. */
@@ -73,27 +74,32 @@ export function AchievementGeneratorPanel({ canGenerate, professionLabel, jobTit
             placeholder="e.g. led migration to Kubernetes, mentored 3 junior engineers, cut deploy time"
             disabled={status === "generating"}
           />
-          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={onGenerate}
-              disabled={status === "generating" || !keywords.trim()}
-            >
-              {status === "generating" ? "Generating…" : "Generate"}
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={() => {
-                setStatus("collapsed");
-                setError(null);
-              }}
-              disabled={status === "generating"}
-            >
-              Cancel
-            </button>
-          </div>
+          {status === "generating" ? (
+            <div style={{ marginTop: 10 }}>
+              <PolyLoader label="Generating…" />
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={onGenerate}
+                disabled={!keywords.trim()}
+              >
+                Generate
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => {
+                  setStatus("collapsed");
+                  setError(null);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
           {status === "error" && error && (
             <div className="form-error" style={{ marginTop: 10 }}>
               {error}
