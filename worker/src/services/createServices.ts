@@ -30,6 +30,7 @@ import { AchievementGeneratorService } from "./AchievementGeneratorService";
 import { SkillSuggestionAiService } from "./SkillSuggestionAiService";
 import { ViewDigestService, UnsubscribeDigestTokenPayload } from "./ViewDigestService";
 import { ResumeRefreshNudgeService, ResumeRefreshNudgeTokenPayload } from "./ResumeRefreshNudgeService";
+import { StaleAccountCleanupService } from "./StaleAccountCleanupService";
 import { AiCareerCoachGenerator, ICareerCoachGenerator } from "./CareerCoachGenerator";
 import { SecurityAlertService } from "./SecurityAlertService";
 import { SecurityMonitorService } from "./SecurityMonitorService";
@@ -95,6 +96,7 @@ export interface Services {
   resumeRefreshNudgeTokenService: TokenService<ResumeRefreshNudgeTokenPayload>;
   /** Daily cron consumer — see index.ts's `scheduled` export. */
   resumeRefreshNudgeService: ResumeRefreshNudgeService;
+  staleAccountCleanupService: StaleAccountCleanupService;
 }
 
 /**
@@ -193,6 +195,7 @@ export function createServices(env: Env): Services {
     unsubscribeDigestTokenService,
     env.CLIENT_ORIGIN
   );
+  const staleAccountCleanupService = new StaleAccountCleanupService(userRepo, resumeRepo, emailService, env.CLIENT_ORIGIN);
   const securityAlertService = new SecurityAlertService(securityEventRepository, adminRepo, emailService, env.ADMIN_EMAIL);
   const securityMonitorService = new SecurityMonitorService(
     adminAuditLogRepository,
@@ -239,5 +242,6 @@ export function createServices(env: Env): Services {
     unsubscribeDigestTokenService,
     resumeRefreshNudgeTokenService,
     resumeRefreshNudgeService,
+    staleAccountCleanupService,
   };
 }

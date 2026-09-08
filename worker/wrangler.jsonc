@@ -37,7 +37,7 @@
     "binding": "AI"
   },
 
-  // Three Cron Triggers — index.ts's `scheduled` export tells them apart by
+  // Four Cron Triggers — index.ts's `scheduled` export tells them apart by
   // `event.cron`. "0 14 * * 1" (every Monday 14:00 UTC) drives the weekly
   // re-engagement view digest (ViewDigestService) — the app's first-ever
   // background job. "0 13 * * *" (daily, 13:00 UTC) drives
@@ -47,11 +47,16 @@
   // three never overlap) drives ResumeRefreshNudgeService's daily check —
   // added Sep 2026, deliberately its own independent cron rather than
   // folded into the weekly digest (see TODO.md's "two fully independent
-  // scheduled jobs" decision). Cron Triggers only take effect once deployed
-  // (`wrangler deploy`); `wrangler dev` does not fire them automatically —
-  // see the "Local dev" note in the deploy docs.
+  // scheduled jobs" decision). "0 * * * *" (hourly) drives
+  // StaleAccountCleanupService — added Sep 2026, deliberately hourly rather
+  // than daily like the other three, since its 24h deletion window needs
+  // roughly hour-level precision (see that service's doc comment) rather
+  // than the day-level precision a daily tick would give it. Cron Triggers
+  // only take effect once deployed (`wrangler deploy`); `wrangler dev` does
+  // not fire them automatically — see the "Local dev" note in the deploy
+  // docs.
   "triggers": {
-    "crons": ["0 14 * * 1", "0 13 * * *", "0 15 * * *"]
+    "crons": ["0 14 * * 1", "0 13 * * *", "0 15 * * *", "0 * * * *"]
   },
 
   // Non-secret config. JWT_SECRET and RESEND_API_KEY are intentionally NOT

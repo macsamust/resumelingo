@@ -54,7 +54,7 @@ export class EmailService {
     });
   }
 
-  /** Sent on register and on every email-address change (see AuthService.sendVerificationEmail) — confirms the account holder actually controls the address. Link expires in 24 hours; the settings-page/AppShell banner can trigger a fresh one via resendVerificationEmail if it lapses. */
+  /** Sent on register and on every email-address change (see AuthService.sendVerificationEmail) — confirms the account holder actually controls the address. Link expires in 1 hour (VERIFICATION_TOKEN_TTL_MS — shortened from an original 24h, see that constant's doc comment); the settings-page/AppShell banner can trigger a fresh one via resendVerificationEmail if it lapses. This doc comment and the email copy below previously still said 24 hours after the TTL was shortened — fixed alongside the stale-account cleanup work (Sep 2026), which is what surfaced the mismatch. */
   async sendVerificationEmail(to: string, verifyUrl: string): Promise<void> {
     await this.send({
       to,
@@ -62,12 +62,41 @@ export class EmailService {
       html: `
         <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
           <h2 style="margin-bottom: 8px;">Verify your email address</h2>
-          <p>Confirm that this is your email address to finish setting up your ResumeLingo account. This link expires in 24 hours.</p>
+          <p>Confirm that this is your email address to finish setting up your ResumeLingo account. This link expires in 1 hour.</p>
           <p style="margin: 24px 0;">
             <a href="${verifyUrl}" style="background: #4f46e5; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Verify email address</a>
           </p>
           <p style="color: #64748b; font-size: 13px;">If you didn't create this account or make this change, you can safely ignore this email.</p>
           <p style="color: #94a3b8; font-size: 12px; word-break: break-all;">Or paste this link into your browser: ${verifyUrl}</p>
+        </div>
+      `,
+    });
+  }
+
+  /**
+   * StaleAccountCleanupService's warning, sent once (see
+   * UserRepository.findEligibleForStaleWarning/markStaleAccountWarned) partway
+   * through the unverified-account retention window, before the account is
+   * actually deleted. Links to login rather than a fresh verify token —
+   * deliberately, since the original signup verification link only lasts 1
+   * hour (see sendVerificationEmail's doc comment above) and this warning
+   * fires 12 hours in, so that original link is always long expired by the
+   * time anyone sees this. Logging in surfaces AppShell's "resend the
+   * verification email" banner, which is the only reliable way to get a
+   * fresh, valid link at this point.
+   */
+  async sendStaleAccountWarningEmail(to: string, loginUrl: string, hoursUntilDeletion: number): Promise<void> {
+    await this.send({
+      to,
+      subject: "Verify your email or your ResumeLingo account will be removed",
+      html: `
+        <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
+          <h2 style="margin-bottom: 8px;">Your account is about to be removed</h2>
+          <p>Your email address hasn't been verified yet, and no resume has been created on this account. To keep it, verify your email within the next ${hoursUntilDeletion} hours — otherwise it'll be automatically removed.</p>
+          <p style="margin: 24px 0;">
+            <a href="${loginUrl}" style="background: #4f46e5; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Log in to verify</a>
+          </p>
+          <p style="color: #64748b; font-size: 13px;">If you didn't create this account, no action is needed — it'll be removed automatically.</p>
         </div>
       `,
     });

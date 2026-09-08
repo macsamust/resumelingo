@@ -108,6 +108,8 @@ export interface UserRecord {
   resumeRefreshCadenceDays: number;
   /** Opt-out flag for the AI Resume Refresh nudge, separate from the cadence value above (migration 0038) — same opt-out-not-opt-in default as viewDigestOptOut. */
   resumeRefreshOptOut: boolean;
+  /** ISO timestamp of the stale-account warning email (StaleAccountCleanupService) — set the first time an unverified, zero-resume account is warned it'll be deleted, so the hourly job doesn't re-send the warning on every run. Null means "never warned." Unrelated to verificationTokenExpiresAt, which is about the original signup verification link, not this cleanup job. */
+  staleAccountWarnedAt: string | null;
 }
 
 /**

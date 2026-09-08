@@ -82,6 +82,18 @@ export class AuthService {
     const expiresAt = new Date(Date.now() + VERIFICATION_TOKEN_TTL_MS).toISOString();
     await this.users.setVerificationToken(user.id, tokenHash, expiresAt);
     const verifyUrl = `${this.clientOrigin.replace(/\/$/, "")}/verify-email?token=${token}`;
+    // Local-dev-only fallback — local test accounts often use throwaway
+    // addresses with no real inbox behind them (see worker/.dev.vars, which
+    // does carry a real RESEND_API_KEY for local testing), so Resend happily
+    // "sends" the email with nowhere for it to actually land. Logging the
+    // raw link here means it's still retrievable from the `wrangler dev`
+    // terminal instead of requiring a real mailbox for local verification
+    // testing. Same CLIENT_ORIGIN-based environment check used elsewhere in
+    // this app (see AdminDebugController, SubscriptionController) — never
+    // logs in production, where CLIENT_ORIGIN is the real site.
+    if (this.clientOrigin.includes("localhost")) {
+      console.log(`[local dev] Verification link for ${user.email}: ${verifyUrl}`);
+    }
     await this.emailService.sendVerificationEmail(user.email, verifyUrl);
   }
 

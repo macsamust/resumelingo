@@ -186,14 +186,16 @@ app.notFound((c) => {
 export default {
   fetch: app.fetch,
   /**
-   * Fired by any of the three Cron Triggers in wrangler.jsonc's
+   * Fired by any of the four Cron Triggers in wrangler.jsonc's
    * `triggers.crons` — "0 14 * * 1" (weekly, the view digest), "0 13 * * *"
-   * (daily, the security monitor added Sep 2026), or "0 15 * * *" (daily,
-   * the AI Resume Refresh nudge added Sep 2026). Told apart by `event.cron`
-   * rather than separate exports, since Workers only supports one
-   * `scheduled` handler per Worker. `ctx.waitUntil` keeps the invocation
-   * alive until whichever job finishes rather than letting the runtime tear
-   * it down as soon as this handler returns.
+   * (daily, the security monitor added Sep 2026), "0 15 * * *" (daily,
+   * the AI Resume Refresh nudge added Sep 2026), or "0 * * * *" (hourly,
+   * the stale-account cleanup added Sep 2026 — see StaleAccountCleanupService's
+   * doc comment for why this one runs hourly instead of daily like the
+   * others). Told apart by `event.cron` rather than separate exports, since
+   * Workers only supports one `scheduled` handler per Worker. `ctx.waitUntil`
+   * keeps the invocation alive until whichever job finishes rather than
+   * letting the runtime tear it down as soon as this handler returns.
    */
   scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     const services = createServices(env);
@@ -209,6 +211,14 @@ export default {
       ctx.waitUntil(
         services.resumeRefreshNudgeService.sendDailyNudges().then((summary) => {
           console.log("Daily resume refresh nudge run complete", summary);
+        })
+      );
+      return;
+    }
+    if (event.cron === "0 * * * *") {
+      ctx.waitUntil(
+        services.staleAccountCleanupService.run().then((summary) => {
+          console.log("Hourly stale account cleanup run complete", summary);
         })
       );
       return;

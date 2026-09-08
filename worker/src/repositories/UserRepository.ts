@@ -74,6 +74,7 @@ export class UserRepository extends BaseRepository<UserRecord> {
       // this object, not just the ones an admin/migration seeded.
       resumeRefreshCadenceDays: 120,
       resumeRefreshOptOut: false,
+      staleAccountWarnedAt: null,
     };
     await this.insertRow(record as unknown as Record<string, unknown>);
     return record;
@@ -179,6 +180,60 @@ export class UserRepository extends BaseRepository<UserRecord> {
          LIMIT 20000`
       )
       .bind(SubscriptionTier.Professional, SubscriptionTier.Premium)
+      .all<UserRecord>();
+    return results.map(normalizeBooleans);
+  }
+
+  /**
+   * Accounts due the stale-account warning email — unverified, zero
+   * resumes, older than `warnAfterHours`, never warned before, and created
+   * on or after `protectedBeforeIso` (see StaleAccountCleanupService's doc
+   * comment for both the "zero resumes" reasoning and why every account
+   * that predates this feature's rollout is grandfathered in rather than
+   * retroactively swept up — same precedent as migration 0017 grandfathering
+   * emailVerified for pre-existing accounts). The `NOT EXISTS` subquery
+   * against resumes is cheap: both tables are small relative to most SaaS
+   * user tables, and this only runs once an hour.
+   */
+  async findEligibleForStaleWarning(warnAfterHours: number, protectedBeforeIso: string): Promise<UserRecord[]> {
+    const { results } = await this.db
+      .prepare(
+        `SELECT * FROM users
+         WHERE "emailVerified" = 0
+           AND "staleAccountWarnedAt" IS NULL
+           AND datetime("createdAt") <= datetime('now', ?)
+           AND datetime("createdAt") >= datetime(?)
+           AND NOT EXISTS (SELECT 1 FROM resumes WHERE resumes."userId" = users.id)
+         LIMIT 20000`
+      )
+      .bind(`-${warnAfterHours} hours`, protectedBeforeIso)
+      .all<UserRecord>();
+    return results.map(normalizeBooleans);
+  }
+
+  async markStaleAccountWarned(userId: string, isoDate: string): Promise<void> {
+    await this.db.prepare(`UPDATE users SET "staleAccountWarnedAt" = ? WHERE id = ?`).bind(isoDate, userId).run();
+  }
+
+  /**
+   * Accounts due actual deletion — same unverified + zero-resumes +
+   * post-rollout-cutoff signal as the warning query, past `deleteAfterHours`
+   * instead. Deliberately not conditioned on `staleAccountWarnedAt` being
+   * set: if the warning job somehow missed a run, the account still gets
+   * deleted on schedule rather than silently living forever because it
+   * never got warned — the warning is a courtesy, not a precondition.
+   */
+  async findEligibleForStalePurge(deleteAfterHours: number, protectedBeforeIso: string): Promise<UserRecord[]> {
+    const { results } = await this.db
+      .prepare(
+        `SELECT * FROM users
+         WHERE "emailVerified" = 0
+           AND datetime("createdAt") <= datetime('now', ?)
+           AND datetime("createdAt") >= datetime(?)
+           AND NOT EXISTS (SELECT 1 FROM resumes WHERE resumes."userId" = users.id)
+         LIMIT 20000`
+      )
+      .bind(`-${deleteAfterHours} hours`, protectedBeforeIso)
       .all<UserRecord>();
     return results.map(normalizeBooleans);
   }
