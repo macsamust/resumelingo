@@ -61,6 +61,29 @@ export function TermsOfServicePage() {
           for lost access, lost data, or missed opportunities resulting from downtime.
         </p>
 
+        <h2>Disclaimer of Warranties</h2>
+        <p>
+          ResumeLingo is provided on an "AS IS" and "AS AVAILABLE" basis without warranties of any kind, whether
+          express, implied, or statutory, including but not limited to implied warranties of merchantability,
+          fitness for a particular purpose, non-infringement, or accuracy. We do not guarantee that the service will
+          be uninterrupted, error-free, secure, or that any AI-generated content or career tools will result in job
+          offers, interviews, or career advancement.
+        </p>
+
+        <h2>Limitation of Liability</h2>
+        <p>
+          To the maximum extent permitted by applicable law, in no event will ResumeLingo, its owners, operators,
+          affiliates, or licensors be liable for any indirect, incidental, special, consequential, or punitive
+          damages—including, without limitation, loss of profits, data, employment opportunities, business
+          reputation, or goodwill—arising out of or related to your access to or use of (or inability to access or
+          use) ResumeLingo or any AI-generated content.
+        </p>
+        <p>
+          In no event will our total aggregate liability for any and all claims arising out of or related to these
+          terms or the service exceed the greater of $50 or the total amount you paid to ResumeLingo in the twelve
+          (12) months preceding the event giving rise to the claim.
+        </p>
+
         <h2>Changes</h2>
         <p>
           We may update these terms as the product changes. Continued use of ResumeLingo after an update means you
