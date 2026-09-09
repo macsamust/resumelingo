@@ -55,11 +55,24 @@ export class AuthController {
     }
 
     const body = await c.req.json().catch(() => ({}));
-    const { name, email, password, profession } = body as Record<string, string>;
+    const { name, email, password, profession, acceptedTerms } = body as Record<string, unknown> as {
+      name: string;
+      email: string;
+      password: string;
+      profession?: string;
+      acceptedTerms?: boolean;
+    };
     if (!name || !email || !password) {
       return c.json({ error: "name, email, and password are required." }, 400);
     }
-    const { user, token } = await authService.register({ name, email, password, profession });
+    // Checked here too (not just in authService.register) so an unchecked
+    // box is rejected before it burns an attempt against the IP throttle
+    // below — same early-return-before-recordAttempt treatment as the
+    // name/email/password check just above.
+    if (!acceptedTerms) {
+      return c.json({ error: "You must accept the Terms of Service to create an account." }, 400);
+    }
+    const { user, token } = await authService.register({ name, email, password, profession, acceptedTerms });
     await emailVerificationIpLogRepository.recordAttempt(ip, "register");
     await emailVerificationIpLogRepository.pruneOlderThan(REGISTER_WINDOW_MINUTES);
     return c.json({ user: user.toPublicJSON(), token }, 201);

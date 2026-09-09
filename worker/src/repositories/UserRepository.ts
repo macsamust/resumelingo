@@ -46,7 +46,15 @@ export class UserRepository extends BaseRepository<UserRecord> {
     return rows.map(normalizeBooleans);
   }
 
-  async create(input: { name: string; email: string; passwordHash: string; profession: string | null }): Promise<UserRecord> {
+  async create(input: {
+    name: string;
+    email: string;
+    passwordHash: string;
+    profession: string | null;
+    /** Null when the caller didn't confirm acceptance — AuthService.register is expected to reject registration before ever reaching here, but this stays nullable rather than required so it fails closed (no timestamp) instead of failing to compile if a future caller forgets to pass it. */
+    termsAcceptedAt: string | null;
+    termsVersion: string | null;
+  }): Promise<UserRecord> {
     const record: UserRecord = {
       id: nanoid(12),
       name: input.name,
@@ -76,6 +84,8 @@ export class UserRepository extends BaseRepository<UserRecord> {
       resumeRefreshOptOut: false,
       staleAccountWarnedAt: null,
       suspensionReason: null,
+      termsAcceptedAt: input.termsAcceptedAt,
+      termsVersion: input.termsVersion,
     };
     await this.insertRow(record as unknown as Record<string, unknown>);
     return record;

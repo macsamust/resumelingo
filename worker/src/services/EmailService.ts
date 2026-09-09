@@ -132,7 +132,24 @@ export class EmailService {
    * in an inbox indefinitely is a real security anti-pattern regardless of
    * how the account was created.
    */
-  async sendWelcomeEmail(to: string, name: string, loginUrl: string): Promise<void> {
+  /**
+   * Doubles as the account-creation confirmation (name, plan, and Terms of
+   * Service acceptance) rather than sending a separate fourth email for
+   * that — see AuthService.register, which is this method's only caller.
+   * `details.termsAcceptedAt` is expected non-null here (register() always
+   * sets it, having already rejected an unaccepted signup before it gets
+   * this far) — rendered defensively anyway so a future caller that omits
+   * it gets a sane fallback instead of "Invalid Date" in the email.
+   */
+  async sendWelcomeEmail(
+    to: string,
+    name: string,
+    loginUrl: string,
+    details: { planName: string; termsUrl: string; termsAcceptedAt: string | null }
+  ): Promise<void> {
+    const acceptedOn = details.termsAcceptedAt
+      ? new Date(details.termsAcceptedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+      : null;
     await this.send({
       to,
       subject: "Welcome to ResumeLingo",
@@ -140,6 +157,15 @@ export class EmailService {
         <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
           <h2 style="margin-bottom: 8px;">Welcome to ResumeLingo, ${name}!</h2>
           <p>Your account is set up under <strong>${to}</strong>. You can build your first resume any time from your dashboard.</p>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 20px; margin: 20px 0;">
+            <p style="margin: 0 0 8px; font-weight: 600;">Account details</p>
+            <p style="margin: 0 0 4px;">Name: ${name}</p>
+            <p style="margin: 0 0 4px;">Plan: ${details.planName}</p>
+            <p style="margin: 0;">
+              Terms of Service: accepted${acceptedOn ? ` on ${acceptedOn}` : ""} —
+              <a href="${details.termsUrl}" style="color: #4f46e5;">view the terms</a>
+            </p>
+          </div>
           <p style="margin: 24px 0;">
             <a href="${loginUrl}" style="background: #4f46e5; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Go to your dashboard</a>
           </p>

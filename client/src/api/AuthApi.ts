@@ -7,7 +7,7 @@ export interface AuthResponse {
 }
 
 export class AuthApi extends ApiClient {
-  register(input: { name: string; email: string; password: string; profession?: string }) {
+  register(input: { name: string; email: string; password: string; profession?: string; acceptedTerms: boolean }) {
     return this.post<AuthResponse>("/auth/register", input);
   }
 

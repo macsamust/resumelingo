@@ -3,7 +3,7 @@ import { UserRepository } from "../repositories/UserRepository";
 import { TokenService } from "./TokenService";
 import { EmailService } from "./EmailService";
 import { User } from "../models/User";
-import { AuthTokenPayload } from "../types";
+import { AuthTokenPayload, TERMS_VERSION } from "../types";
 import { isValidEmail, normalizeEmail } from "../utils/validation";
 import { randomHex, sha256Hex } from "../utils/crypto";
 
@@ -44,18 +44,27 @@ export class AuthService {
     private readonly clientOrigin: string
   ) {}
 
-  async register(input: { name: string; email: string; password: string; profession?: string }) {
+  async register(input: { name: string; email: string; password: string; profession?: string; acceptedTerms: boolean }) {
     const email = normalizeEmail(input.email);
     if (!isValidEmail(email)) throw new AuthError("Please enter a valid email address.");
+    // Same AuthError treatment (401 via index.ts's onError) as the other
+    // input-validation failures in this method — not a security-relevant
+    // 401, just this codebase's existing convention for "reject with a
+    // message the client shows verbatim." Checked before the existing-email
+    // lookup so an unchecked box never leaks whether an email is taken.
+    if (!input.acceptedTerms) throw new AuthError("You must accept the Terms of Service to create an account.");
     const existing = await this.users.findByEmail(email);
     if (existing) throw new AuthError("An account with that email already exists.");
 
     const passwordHash = await bcrypt.hash(input.password, 10);
+    const termsAcceptedAt = new Date().toISOString();
     const record = await this.users.create({
       name: input.name,
       email,
       passwordHash,
       profession: input.profession ?? null,
+      termsAcceptedAt,
+      termsVersion: TERMS_VERSION,
     });
     const user = new User(record);
     const token = await this.tokens.sign({ userId: user.id, email: user.email });
@@ -68,9 +77,15 @@ export class AuthService {
     await this.sendVerificationEmail(user).catch((err) => console.error("Failed to send verification email on register", err));
     // Separate from the verification email above (see EmailService's doc
     // comment) — same "never let an email failure break signup" swallowed
-    // catch as everywhere else in this file.
+    // catch as everywhere else in this file. Carries the account-details
+    // confirmation (name, plan, terms acceptance) the welcome email now
+    // doubles as, rather than sending a fourth, near-duplicate email.
     await this.emailService
-      .sendWelcomeEmail(user.email, user.name, `${this.clientOrigin.replace(/\/$/, "")}/dashboard`)
+      .sendWelcomeEmail(user.email, user.name, `${this.clientOrigin.replace(/\/$/, "")}/dashboard`, {
+        planName: user.plan.name,
+        termsUrl: `${this.clientOrigin.replace(/\/$/, "")}/terms`,
+        termsAcceptedAt: user.termsAcceptedAt,
+      })
       .catch((err) => console.error("Failed to send welcome email on register", err));
     return { user, token };
   }

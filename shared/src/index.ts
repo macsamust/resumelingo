@@ -17,6 +17,17 @@
  * here — this package is only for the parts that must stay identical.
  */
 
+/**
+ * Version tag for the Terms of Service page's substantive content — bump
+ * it whenever TermsOfServicePage.tsx changes in a way that actually
+ * affects what someone agreed to (a typo fix doesn't need a bump). Stamped
+ * onto UserRecord.termsVersion at registration (see AuthService.register)
+ * as a point-in-time record of what a given account actually accepted;
+ * it deliberately doesn't change retroactively when the terms are edited
+ * later, so it never means "the current terms" for an existing account.
+ */
+export const TERMS_VERSION = "2026-09-09";
+
 export enum SubscriptionTier {
   Starter = "starter",
   Professional = "professional",
@@ -112,6 +123,10 @@ export interface UserRecord {
   staleAccountWarnedAt: string | null;
   /** Distinguishes why `suspended` is true — null for an admin-initiated suspension (or never suspended), "unverified_email" for StaleAccountCleanupService's automated one (migration 0040). Lets login show honest, specific copy and lets verifyEmail auto-clear only this kind of suspension, not a real admin one. */
   suspensionReason: string | null;
+  /** ISO timestamp of when this account holder explicitly accepted the Terms of Service (checkbox on the signup form — see SignupPage.tsx and AuthController.register), or null for accounts that predate this requirement (Sep 2026) and were never backfilled with a fabricated date. */
+  termsAcceptedAt: string | null;
+  /** Which TERMS_VERSION was in effect when termsAcceptedAt was recorded — null whenever termsAcceptedAt is null. A fixed point-in-time record, not a live pointer to "the current terms." */
+  termsVersion: string | null;
 }
 
 /**

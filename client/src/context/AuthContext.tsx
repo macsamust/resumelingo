@@ -5,7 +5,7 @@ import { AuthUser } from "../types";
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
-  register: (input: { name: string; email: string; password: string; profession?: string }) => Promise<void>;
+  register: (input: { name: string; email: string; password: string; profession?: string; acceptedTerms: boolean }) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   refresh: () => Promise<void>;

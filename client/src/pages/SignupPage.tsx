@@ -15,6 +15,7 @@ export function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [profession, setProfession] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [professions, setProfessions] = useState<ProfessionSummary[]>([]);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +40,7 @@ export function SignupPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await register({ name, email, password, profession: profession || undefined });
+      await register({ name, email, password, profession: profession || undefined, acceptedTerms });
       if (requestedPlan) {
         // Straight into Stripe Checkout for the plan that was clicked on
         // the pricing page, rather than the dashboard — a checkout failure
@@ -104,14 +105,26 @@ export function SignupPage() {
               ))}
             </select>
           </div>
-          <button className="btn btn-primary btn-block" type="submit" disabled={submitting}>
+          <label
+            className="checkbox-field"
+            style={{ display: "flex", alignItems: "flex-start", gap: 10, margin: "4px 0 18px" }}
+          >
+            <input
+              type="checkbox"
+              required
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              style={{ marginTop: 3 }}
+            />
+            <span className="hero-note" style={{ margin: 0 }}>
+              I agree to the <Link to="/terms">Terms of Service</Link> and{" "}
+              <Link to="/privacy">Privacy Policy</Link>.
+            </span>
+          </label>
+          <button className="btn btn-primary btn-block" type="submit" disabled={submitting || !acceptedTerms}>
             {submitting ? "Creating account…" : "Create an account"}
           </button>
         </form>
-        <p className="hero-note" style={{ textAlign: "center", marginTop: 14 }}>
-          By creating an account, you agree to our <Link to="/terms">Terms of Service</Link> and{" "}
-          <Link to="/privacy">Privacy Policy</Link>.
-        </p>
         <p className="form-footnote">
           Already have an account? <Link to="/login">Log in</Link>
         </p>

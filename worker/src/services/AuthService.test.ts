@@ -31,6 +31,8 @@ function makeUserRecord(overrides: Partial<UserRecord> = {}): UserRecord {
     resumeRefreshOptOut: false,
     staleAccountWarnedAt: null,
     suspensionReason: null,
+    termsAcceptedAt: new Date().toISOString(),
+    termsVersion: "2026-09-09",
     ...overrides,
   };
 }
@@ -93,9 +95,19 @@ describe("AuthService.register", () => {
   it("throws if the email is already registered", async () => {
     const users = makeUsersMock({ findByEmail: vi.fn(async () => makeUserRecord()) } as never);
     const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
-    await expect(service.register({ name: "A", email: "jordan@example.com", password: "password123" })).rejects.toThrow(
-      AuthError
-    );
+    await expect(
+      service.register({ name: "A", email: "jordan@example.com", password: "password123", acceptedTerms: true })
+    ).rejects.toThrow(AuthError);
+  });
+
+  it("throws if terms of service were not accepted, without ever looking up the email", async () => {
+    const findByEmail = vi.fn(async () => undefined);
+    const users = makeUsersMock({ findByEmail } as never);
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    await expect(
+      service.register({ name: "A", email: "jordan@example.com", password: "password123", acceptedTerms: false })
+    ).rejects.toThrow(AuthError);
+    expect(findByEmail).not.toHaveBeenCalled();
   });
 
   it("creates a user and returns a signed token when the email is free", async () => {
@@ -106,10 +118,33 @@ describe("AuthService.register", () => {
     } as never);
     const tokens = makeTokensMock();
     const service = new AuthService(users, tokens, makeEmailMock(), "http://localhost:5173");
-    const { user, token } = await service.register({ name: "Jordan Lee", email: "jordan@example.com", password: "password123" });
+    const { user, token } = await service.register({
+      name: "Jordan Lee",
+      email: "jordan@example.com",
+      password: "password123",
+      acceptedTerms: true,
+    });
     expect(user.email).toBe("jordan@example.com");
     expect(token).toBe("signed-token");
     expect(tokens.sign).toHaveBeenCalledWith({ userId: created.id, email: created.email });
+  });
+
+  it("stamps termsAcceptedAt and termsVersion on the created record when terms are accepted", async () => {
+    const create = vi.fn(async (input: Record<string, unknown>) => makeUserRecord(input as never));
+    const users = makeUsersMock({ findByEmail: vi.fn(async () => undefined), create } as never);
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    await service.register({
+      name: "Jordan Lee",
+      email: "jordan@example.com",
+      password: "password123",
+      acceptedTerms: true,
+    });
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        termsAcceptedAt: expect.any(String),
+        termsVersion: expect.any(String),
+      })
+    );
   });
 });
 
