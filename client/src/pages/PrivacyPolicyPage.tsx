@@ -101,13 +101,6 @@ export function PrivacyPolicyPage() {
 
         <h2>Disclosure of rights</h2>
         <p>
-          <em>
-            This section is a placeholder pending attorney review — which of these rights apply, and to which
-            users, depends on jurisdiction (for example GDPR for EU users, CCPA for California residents) and
-            hasn't been legally confirmed yet.
-          </em>
-        </p>
-        <p>
           Depending on where you live, you may have rights over your personal data, which can include the right
           to access the data we hold about you, correct inaccurate data, delete your data, receive a copy of your
           data in a portable format, and object to or restrict certain uses of your data. Today, you can exercise
