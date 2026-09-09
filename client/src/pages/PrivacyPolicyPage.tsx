@@ -85,11 +85,11 @@ export function PrivacyPolicyPage() {
           remove it. There's no self service deletion button today.
         </p>
         <p>
-          One current gap: the paragraph above describes deletion you request. We also delete accounts
-          automatically in one specific case, accounts created without ever verifying their email and without
-          ever saving a resume. Those are suspended one hour after signup (we'll email a fresh verification
-          link at that point) and, if still unverified, deleted 24 hours after signup. This exists to clear out
-          bot and abandoned signups, not accounts belonging to real users who started onboarding.
+          We also delete some accounts automatically, separate from deletion you request. If you create an
+          account but never verify your email and never save a resume, we suspend it one hour after signup
+          (and email you a fresh verification link) and, if it's still unverified, delete it 24 hours after
+          signup. This is meant to clear out bot and abandoned signups, not accounts belonging to real users
+          who've started onboarding.
         </p>
 
         <h2>Your choices</h2>
