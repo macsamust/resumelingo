@@ -74,9 +74,7 @@ export function PrivacyPolicyPage() {
         <h2>Third parties</h2>
         <p>
           We are not in the business of selling or aggregating data. We don't sell your data, and we don't buy,
-          aggregate, or combine data about you from third-party sources like data brokers or ad networks. The
-          only outside parties who ever touch your data are the service providers named above, each limited to
-          the specific job they do for us, under their own privacy policies (linked where noted on this page).
+          aggregate, or combine data about you from third-party sources like data brokers or ad networks.
         </p>
 
         <h2>How long we keep it</h2>
