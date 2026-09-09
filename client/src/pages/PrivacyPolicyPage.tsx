@@ -46,6 +46,9 @@ export function PrivacyPolicyPage() {
           If you make your resume link public, we record a basic view count and timestamp each time it's loaded,
           nothing more (no visitor identity, location, device, or browsing history is captured today).
         </p>
+        <p>
+          For how long we keep each of these, see "How long we keep it" below.
+        </p>
 
         <h2>AI generated content</h2>
         <p>
@@ -78,6 +81,14 @@ export function PrivacyPolicyPage() {
           Cloudflare for hosting and AI features), each only to do the specific job they're used for here.
         </p>
 
+        <h2>Third parties</h2>
+        <p>
+          We are not in the business of selling or aggregating data. We don't sell your data, and we don't buy,
+          aggregate, or combine data about you from third-party sources like data brokers or ad networks. The
+          only outside parties who ever touch your data are the service providers named above, each limited to
+          the specific job they do for us, under their own privacy policies (linked where noted on this page).
+        </p>
+
         <h2>How long we keep it</h2>
         <p>
           We keep your account and resume data for as long as your account exists. If you'd like your account and
@@ -96,6 +107,29 @@ export function PrivacyPolicyPage() {
         <p>
           You can edit or delete any resume at any time from your dashboard, change your profile details from your
           account settings, and opt out of the weekly view digest email from your profile's email preferences.
+        </p>
+
+        <h2>Disclosure of rights</h2>
+        <p>
+          <em>
+            This section is a placeholder pending attorney review — which of these rights apply, and to which
+            users, depends on jurisdiction (for example GDPR for EU users, CCPA for California residents) and
+            hasn't been legally confirmed yet.
+          </em>
+        </p>
+        <p>
+          Depending on where you live, you may have rights over your personal data, which can include the right
+          to access the data we hold about you, correct inaccurate data, delete your data, receive a copy of your
+          data in a portable format, and object to or restrict certain uses of your data. Today, you can exercise
+          the account and resume-deletion parts of this yourself (see "Your choices" below) or email{" "}
+          <a href="mailto:support@resumelingo.com">support@resumelingo.com</a> for anything else.
+        </p>
+
+        <h2>Changes to this policy</h2>
+        <p>
+          We may update this policy as the product changes. If we make a material change, we'll update the "Last
+          updated" date above; for significant changes, we'll also email account holders. Continued use of
+          ResumeLingo after an update means you accept the revised policy.
         </p>
 
         <h2>Contact</h2>
