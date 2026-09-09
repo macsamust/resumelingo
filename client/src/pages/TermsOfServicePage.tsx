@@ -20,9 +20,14 @@ export function TermsOfServicePage() {
 
         <h2>Subscriptions and billing</h2>
         <p>
-          Starter is free. Professional and Premium are paid monthly subscriptions billed through Stripe. You can
-          cancel at any time; your plan stays active through the end of the period you've already paid for. We don't
-          currently offer prorated refunds for a midcycle cancellation.
+          Starter is free. Professional and Premium are paid monthly subscriptions billed through Stripe, and
+          renew automatically at the start of each new monthly billing period unless canceled before then.
+        </p>
+        <p>
+          You can cancel at any time; your plan stays active through the end of the period you've already paid
+          for, and won't renew or be billed again after that. If you change your mind, you can undo the
+          cancellation and resume the subscription any time before that period ends. We don't currently offer
+          prorated refunds for a midcycle cancellation.
         </p>
 
         <h2>AI generated content</h2>
