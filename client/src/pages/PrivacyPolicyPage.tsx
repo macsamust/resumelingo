@@ -84,6 +84,13 @@ export function PrivacyPolicyPage() {
           its data deleted, email <a href="mailto:support@resumelingo.com">support@resumelingo.com</a> and we'll
           remove it. There's no self service deletion button today.
         </p>
+        <p>
+          One current gap: the paragraph above describes deletion you request. We also delete accounts
+          automatically in one specific case, accounts created without ever verifying their email and without
+          ever saving a resume. Those are suspended one hour after signup (we'll email a fresh verification
+          link at that point) and, if still unverified, deleted 24 hours after signup. This exists to clear out
+          bot and abandoned signups, not accounts belonging to real users who started onboarding.
+        </p>
 
         <h2>Your choices</h2>
         <p>
