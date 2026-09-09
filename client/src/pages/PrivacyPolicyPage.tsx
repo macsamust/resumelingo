@@ -1,24 +1,14 @@
 /**
- * DRAFT — see the banner rendered at the top of the page. Written directly
- * from what this codebase actually does (accounts, resume content, Stripe
- * billing, Resend transactional email, Cloudflare Workers AI) rather than
- * generic boilerplate, but this is not a substitute for review by an
- * actual lawyer before launch — data-protection language carries real
- * legal weight (GDPR/CCPA-style obligations, liability for
- * misrepresenting what's collected) that a non-lawyer drafting pass can't
- * responsibly sign off on. Added as part of the Aug 2026 pre-launch
- * review — see TODO.md.
+ * Written directly from what this codebase actually does (accounts, resume
+ * content, Stripe billing, Resend transactional email, Cloudflare Workers
+ * AI) rather than generic boilerplate. Originally added as a draft as part
+ * of the Aug 2026 pre-launch review (see TODO.md); the draft banner was
+ * removed after attorney review confirmed the page (Sep 2026).
  */
 export function PrivacyPolicyPage() {
   return (
     <main>
       <section className="wrap legal-page">
-        <div className="legal-draft-banner">
-          <strong>Draft, not yet reviewed by a lawyer.</strong> This page describes what ResumeLingo actually
-          collects and does with it today, but hasn't had a legal review pass. Don't treat it as final until that
-          happens.
-        </div>
-
         <h1>Privacy Policy</h1>
         <p className="hero-note">Last updated: {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
 

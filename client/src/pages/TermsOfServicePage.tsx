@@ -1,17 +1,12 @@
 /**
- * DRAFT — see PrivacyPolicyPage.tsx's doc comment for why this needs a real
- * legal review before launch (terms of service carry contractual/liability
- * weight a non-lawyer drafting pass shouldn't sign off on as final).
+ * See PrivacyPolicyPage.tsx's doc comment — same drafting approach. The
+ * draft banner was removed after attorney review confirmed the page
+ * (Sep 2026).
  */
 export function TermsOfServicePage() {
   return (
     <main>
       <section className="wrap legal-page">
-        <div className="legal-draft-banner">
-          <strong>Draft, not yet reviewed by a lawyer.</strong> These terms describe how ResumeLingo actually works
-          today, but hasn't had a legal review pass. Don't treat it as final until that happens.
-        </div>
-
         <h1>Terms of Service</h1>
         <p className="hero-note">Last updated: {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
 
