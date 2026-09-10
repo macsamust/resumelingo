@@ -195,7 +195,7 @@ export function createServices(env: Env): Services {
     unsubscribeDigestTokenService,
     env.CLIENT_ORIGIN
   );
-  const staleAccountCleanupService = new StaleAccountCleanupService(userRepo, resumeRepo, emailService, authService);
+  const staleAccountCleanupService = new StaleAccountCleanupService(userRepo, resumeRepo, emailService, authService, adminAuditLogRepository);
   const securityAlertService = new SecurityAlertService(securityEventRepository, adminRepo, emailService, env.ADMIN_EMAIL);
   const securityMonitorService = new SecurityMonitorService(
     adminAuditLogRepository,

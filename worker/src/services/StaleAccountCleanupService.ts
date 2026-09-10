@@ -1,5 +1,6 @@
 import { UserRepository } from "../repositories/UserRepository";
 import { ResumeRepository } from "../repositories/ResumeRepository";
+import { AdminAuditLogRepository } from "../repositories/AdminAuditLogRepository";
 import { EmailService } from "./EmailService";
 import { AuthService } from "./AuthService";
 
@@ -30,6 +31,15 @@ import { AuthService } from "./AuthService";
  * cascade AdminUserController's admin-triggered delete uses (resumes first,
  * then the account).
  *
+ * Every suspend and delete this job performs is also written to the same
+ * admin_audit_log an admin's own manual suspend/delete goes to — via
+ * AdminAuditLogRepository.logSystem, using the literal "system" as the
+ * actor rather than a real Admin — so CJ (or any admin) can see these
+ * automatic actions in the same Audit Log page instead of them being
+ * invisible outside server logs (CJ, Sep 2026: "I'd like to keep track of
+ * all admin activities in the system," after noticing this job's actions
+ * weren't showing up there at all).
+ *
  * Every 15 minutes (not hourly, and not daily like every other cron job in
  * this app) specifically because the suspend window is only 1 hour — an
  * hourly tick's worst case (an account created just after the hour) delayed
@@ -59,7 +69,8 @@ export class StaleAccountCleanupService {
     private readonly users: UserRepository,
     private readonly resumes: ResumeRepository,
     private readonly email: EmailService,
-    private readonly auth: AuthService
+    private readonly auth: AuthService,
+    private readonly auditLog: AdminAuditLogRepository
   ) {}
 
   async run(): Promise<StaleAccountCleanupSummary> {
@@ -73,6 +84,17 @@ export class StaleAccountCleanupService {
         const hoursUntilDeletion = DELETE_AFTER_HOURS - SUSPEND_AFTER_HOURS;
         await this.email.sendAccountSuspendedEmail(userRecord.email, verifyUrl, userRecord.hasResumes, hoursUntilDeletion);
         await this.users.suspendForUnverifiedEmail(userRecord.id, new Date().toISOString());
+        // Reuses AdminUserController's own "user.suspend" action code (see
+        // logSystem's doc comment) rather than a separate code, so this
+        // shows up identically to an admin's manual suspend in the Audit
+        // Log's Action filter — only the "system" in the Admin column tells
+        // the two apart.
+        await this.auditLog.logSystem({
+          action: "user.suspend",
+          targetType: "user",
+          targetId: userRecord.id,
+          detail: `Automatic — unverified email past ${SUSPEND_AFTER_HOURS}h`,
+        });
         summary.suspended++;
       } catch (err) {
         console.error("Stale account suspension failed for user", userRecord.id, err);
@@ -87,6 +109,12 @@ export class StaleAccountCleanupService {
     for (const userRecord of toDelete) {
       await this.resumes.deleteAllForUser(userRecord.id);
       await this.users.delete(userRecord.id);
+      await this.auditLog.logSystem({
+        action: "user.delete",
+        targetType: "user",
+        targetId: userRecord.id,
+        detail: `Automatic — unverified email past ${DELETE_AFTER_HOURS}h`,
+      });
       summary.deleted++;
     }
 
