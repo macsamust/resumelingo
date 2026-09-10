@@ -47,6 +47,19 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
     ),
   },
   {
+    id: "branded-link",
+    question: "I upgraded to Premium, why doesn't my existing resume's link show my name?",
+    answer: (
+      <p>
+        Premium resumes get a branded public link (your name plus the resume title, instead of a random one) —
+        but only resumes created after you upgrade get it automatically. A resume you built before upgrading keeps
+        the link it was created with. If you'd like that same resume to have the branded link, open it and use{" "}
+        <strong>Clone</strong> to make a copy — the clone is created under your current plan, so it'll pick up the
+        branded link right away.
+      </p>
+    ),
+  },
+  {
     id: "link-visibility",
     question: "Who can see my resume link?",
     answer: (
