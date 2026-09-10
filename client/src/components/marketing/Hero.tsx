@@ -8,7 +8,7 @@ export function Hero() {
         <div>
           <span className="eyebrow">We speak Resume.</span>
           <h1>
-            Apply. Interview. Get hired. <span>Stay current.</span> All in one place.
+            Apply. Interview. <span>Get hired.</span> <span>Stay current.</span> All in one place.
           </h1>
           <p className="lead">
             ResumeLingo isn't a resume builder you visit once and forget. It's where you track applications, prep
