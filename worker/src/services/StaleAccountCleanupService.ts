@@ -8,26 +8,27 @@ import { AuthService } from "./AuthService";
  * suspends unverified accounts and deletes bot/abandoned ones — pinned in
  * TODO.md's "Bogus/unverified account protection" entry (Sep 2026).
  *
- * The two steps now have different scopes, on purpose (CJ, Sep 2026):
- * suspension (`SUSPEND_AFTER_HOURS`, 1 — matching the verification link's
- * own TTL) applies to EVERY unverified account, resumes or not — "there
- * should be a suspension, even those accounts with resumes...to make sure
- * these are legitimate email addresses no matter how many resumes there
- * are added." Deletion (`DELETE_AFTER_HOURS`, 24) stays limited to
- * zero-resume accounts, since suspension is reversible the moment someone
- * verifies but deletion isn't — see UserRepository.findEligibleForSuspension
- * vs. findEligibleForStalePurge's doc comments for the full reasoning.
+ * Suspension (`SUSPEND_AFTER_HOURS`, 1 — matching the verification link's
+ * own TTL) applies to EVERY unverified account, resumes or not (CJ, Sep
+ * 2026: "there should be a suspension, even those accounts with resumes...
+ * to make sure these are legitimate email addresses no matter how many
+ * resumes there are added.") — see UserRepository.findEligibleForSuspension.
+ *
+ * Deletion (`DELETE_AFTER_HOURS`, 96) also applies to every unverified
+ * account, resumes or not, on one shared clock — CJ, Sep 2026, after
+ * briefly considering a shorter 24h window for zero-resume accounts and a
+ * longer 96h one for resume-owning accounts: "Lets make both deletion
+ * windows 96 to keep things simple." See
+ * UserRepository.findEligibleForStalePurge.
  *
  * Suspending rather than deleting outright at the 1h mark gives a genuine
  * user a recovery window via the fresh link this step sends — see
- * EmailService.sendAccountSuspendedEmail (which itself branches copy on
- * whether the account has resumes, since only the zero-resume group is
- * actually on a deletion clock) and AuthService.generateFreshVerificationUrl.
- * Deletion reuses the exact same cascade AdminUserController's
- * admin-triggered delete uses (resumes first, then the account) even though
- * these accounts should always have zero resumes by construction — cheap
- * insurance against the eligibility query and the delete step ever drifting
- * out of sync with each other.
+ * EmailService.sendAccountSuspendedEmail (which still branches its wording,
+ * though not its countdown, on hasResumes — telling a resume-owning account
+ * "no resume has been created" would be false) and
+ * AuthService.generateFreshVerificationUrl. Deletion reuses the exact same
+ * cascade AdminUserController's admin-triggered delete uses (resumes first,
+ * then the account).
  *
  * Every 15 minutes (not hourly, and not daily like every other cron job in
  * this app) specifically because the suspend window is only 1 hour — an
@@ -44,7 +45,7 @@ import { AuthService } from "./AuthService";
  * Only accounts *created* on or after this cutoff are ever eligible.
  */
 const SUSPEND_AFTER_HOURS = 1;
-const DELETE_AFTER_HOURS = 24;
+const DELETE_AFTER_HOURS = 96;
 const PROTECTED_BEFORE_ISO = "2026-09-08T00:00:00.000Z";
 
 export interface StaleAccountCleanupSummary {

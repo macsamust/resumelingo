@@ -256,13 +256,14 @@ export class UserRepository extends BaseRepository<UserRecord> {
   }
 
   /**
-   * Accounts due actual deletion — unverified + zero-resumes +
-   * post-rollout-cutoff signal, past `deleteAfterHours`. Unlike
-   * findEligibleForSuspension above, this one IS still conditioned on zero
-   * resumes: suspension is reversible the moment someone verifies, but
-   * deletion isn't, so it stays limited to accounts with nothing at stake
-   * (CJ, Sep 2026, choosing to keep deletion scoped this way when
-   * suspension's resume-count condition was removed).
+   * Accounts due actual deletion — unverified + post-rollout-cutoff signal,
+   * past `deleteAfterHours` (96 for everyone — CJ, Sep 2026: "Lets make
+   * both deletion windows 96 to keep things simple," after briefly
+   * considering separate 24h/96h windows for zero-resume vs. resume-owning
+   * accounts and deciding the single window was simpler). No resume-count
+   * condition: a zero-resume account and a resume-owning account are on the
+   * same clock now, unlike suspension above, which fires at 1h for both —
+   * see findEligibleForSuspension's doc comment.
    *
    * Deliberately not conditioned on the account having already been
    * suspended: if the suspend job somehow missed a run, the account still
@@ -276,7 +277,6 @@ export class UserRepository extends BaseRepository<UserRecord> {
          WHERE "emailVerified" = 0
            AND datetime("createdAt") <= datetime('now', ?)
            AND datetime("createdAt") >= datetime(?)
-           AND NOT EXISTS (SELECT 1 FROM resumes WHERE resumes."userId" = users.id)
          LIMIT 20000`
       )
       .bind(`-${deleteAfterHours} hours`, protectedBeforeIso)

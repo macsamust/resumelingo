@@ -76,36 +76,30 @@ export class EmailService {
   /**
    * StaleAccountCleanupService's suspend-step notice (see
    * UserRepository.findEligibleForSuspension/suspendForUnverifiedEmail),
-   * sent once when an unverified, zero-resume account gets automatically
-   * suspended an hour after signup. Unlike the earlier warning-email design
-   * this replaces, it links straight to a *fresh* verify token — minted via
-   * AuthService.generateFreshVerificationUrl right before this send — rather
-   * than to login, since login is now blocked while the account is
-   * suspended (see AuthService.login's suspensionReason check). Verifying
-   * via this link auto-lifts the suspension (see
+   * sent once when an unverified account gets automatically suspended an
+   * hour after signup — resumes or not (CJ, Sep 2026: suspension applies to
+   * every unverified account). It links straight to a *fresh* verify token
+   * — minted via AuthService.generateFreshVerificationUrl right before this
+   * send — rather than to login, since login is now blocked while the
+   * account is suspended (see AuthService.login's suspensionReason check).
+   * Verifying via this link auto-lifts the suspension (see
    * UserRepository.confirmEmailVerification).
-   */
-  /**
-   * `hasResumes` branches the body copy: a zero-resume account still faces
-   * actual deletion at `hoursUntilDeletion` (see
-   * UserRepository.findEligibleForStalePurge, which stays zero-resume-only),
-   * but an account that's already created a resume is suspended
-   * indefinitely — not on a deletion clock — since suspension now applies to
-   * every unverified account regardless of resume count (CJ, Sep 2026:
-   * "there should be a suspension, even those accounts with resumes...to
-   * make sure these are legitimate email addresses"), while deletion stays
-   * limited to accounts with nothing at stake. Telling a real subscriber
-   * their resume will be "permanently removed in N hours" would be false
-   * for that second group, so this only ever renders that line for the
-   * first.
+   *
+   * `hasResumes` only changes the wording, not the countdown: both
+   * suspension and deletion now apply to every unverified account on the
+   * same schedule regardless of resume count (see
+   * UserRepository.findEligibleForSuspension/findEligibleForStalePurge —
+   * CJ, Sep 2026, first added a resume-owning exemption to deletion, then
+   * simplified to one shared 96h window for everyone: "Lets make both
+   * deletion windows 96 to keep things simple"). Still branches the body
+   * text, though, since telling a resume-owning account "no resume has been
+   * created on this account" would just be false.
    */
   async sendAccountSuspendedEmail(to: string, verifyUrl: string, hasResumes: boolean, hoursUntilDeletion: number): Promise<void> {
     const body = hasResumes
-      ? "Your email address was never verified, so this account has been automatically suspended. Verify your email now to restore access — your resume is safe and waiting for you."
+      ? `Your email address was never verified, so this account — and any resumes on it — has been automatically suspended. Verify your email now to restore access, or the account will be permanently removed in ${hoursUntilDeletion} hours.`
       : `Your email address was never verified, and no resume has been created on this account, so it's been automatically suspended. Verify your email now to restore access — otherwise the account will be permanently removed in ${hoursUntilDeletion} hours.`;
-    const footer = hasResumes
-      ? "If you didn't create this account, no action is needed."
-      : "If you didn't create this account, no action is needed — it'll be removed automatically.";
+    const footer = "If you didn't create this account, no action is needed — it'll be removed automatically.";
     await this.send({
       to,
       subject: "Your ResumeLingo account has been suspended — verify to restore it",
