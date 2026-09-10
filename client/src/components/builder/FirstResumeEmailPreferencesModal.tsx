@@ -67,7 +67,7 @@ export function FirstResumeEmailPreferencesModal({ onClose }: Props) {
     return (
       <Modal title="Nice work!" onClose={onClose}>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
-          <PolyAnimated expression="celebrate" size={64} decorative />
+          <PolyAnimated expression="celebrate" size={120} decorative />
         </div>
         <p className="modal-message">
           You just created your first resume — Poly's celebrating with you. Upgrade any time for more resumes,
