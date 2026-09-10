@@ -6,7 +6,7 @@ export function Hero() {
     <section className="hero">
       <div className="wrap hero-grid">
         <div>
-          <span className="eyebrow">Built for the whole career, not just the resume.</span>
+          <span className="eyebrow">We speak Resume.</span>
           <h1>
             Apply. Interview. <span>Get hired.</span> Stay current. All in one place.
           </h1>
