@@ -17,11 +17,11 @@ const STAGES = [
   },
   {
     label: "Interview",
-    body: "The AI Career Coach preps you on interview questions and salary negotiation. Send a Thank-You Letter the same day.",
+    body: "Walk in with a tailored Cover Letter as your bio and table setter. The AI Career Coach preps you on interview questions and salary negotiation.",
   },
   {
     label: "Get hired",
-    body: "A tailored Cover Letter closes the loop. Your resume lives at one shareable link, not a PDF re-attached every time.",
+    body: "Send a Thank-You Letter the same day to close the loop. Your resume lives at one shareable link, not a PDF re-attached every time.",
   },
   {
     label: "Stay current",
