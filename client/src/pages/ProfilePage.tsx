@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { ConfirmDialog } from "../components/common/ConfirmDialog";
 import { useAuth } from "../context/AuthContext";
@@ -202,6 +203,14 @@ export function ProfilePage() {
           <label>Subscription plan</label>
           <input value={user.plan.name} disabled />
         </div>
+        {user.subscriptionTier === "starter" && (
+          <>
+            <p className="modal-message">Upgrade for more resumes, premium templates, and AI-assisted tools.</p>
+            <Link to="/#pricing" className="btn btn-primary btn-block">
+              Upgrade plan
+            </Link>
+          </>
+        )}
         {(user.subscriptionTier === "professional" || user.subscriptionTier === "premium") && (
           <>
             {cancelError && <div className="form-error">{cancelError}</div>}
