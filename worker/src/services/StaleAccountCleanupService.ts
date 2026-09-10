@@ -5,22 +5,24 @@ import { AuthService } from "./AuthService";
 
 /**
  * Cron job, every 15 minutes (see wrangler.jsonc's `triggers.crons`), that
- * clears out bot/abandoned accounts — pinned in TODO.md's "Bogus/unverified
- * account protection" entry (Sep 2026). CJ's reasoning: this app's
- * onboarding flow is "sign up, then immediately get interviewed into your
- * first resume" — there is no legitimate path where a real signup sits on
- * zero resumes for a full day. An account that's still unverified AND still
- * has zero resumes an hour later is overwhelmingly bot/junk, not a hesitant
- * real user.
+ * suspends unverified accounts and deletes bot/abandoned ones — pinned in
+ * TODO.md's "Bogus/unverified account protection" entry (Sep 2026).
  *
- * Two-step, not a single delete pass: `SUSPEND_AFTER_HOURS` (1 — matching
- * the verification link's own TTL) suspends the account and emails a fresh
- * verification link (UserRepository.suspendForUnverifiedEmail also marks
- * `staleAccountWarnedAt` so this step never re-fires for the same account),
- * then `DELETE_AFTER_HOURS` (24) actually removes it. Suspending rather than
- * deleting outright at the 1h mark gives a genuine user a 23-hour recovery
- * window via the fresh link this step sends — see EmailService's
- * sendAccountSuspendedEmail and AuthService's generateFreshVerificationUrl.
+ * The two steps now have different scopes, on purpose (CJ, Sep 2026):
+ * suspension (`SUSPEND_AFTER_HOURS`, 1 — matching the verification link's
+ * own TTL) applies to EVERY unverified account, resumes or not — "there
+ * should be a suspension, even those accounts with resumes...to make sure
+ * these are legitimate email addresses no matter how many resumes there
+ * are added." Deletion (`DELETE_AFTER_HOURS`, 24) stays limited to
+ * zero-resume accounts, since suspension is reversible the moment someone
+ * verifies but deletion isn't — see UserRepository.findEligibleForSuspension
+ * vs. findEligibleForStalePurge's doc comments for the full reasoning.
+ *
+ * Suspending rather than deleting outright at the 1h mark gives a genuine
+ * user a recovery window via the fresh link this step sends — see
+ * EmailService.sendAccountSuspendedEmail (which itself branches copy on
+ * whether the account has resumes, since only the zero-resume group is
+ * actually on a deletion clock) and AuthService.generateFreshVerificationUrl.
  * Deletion reuses the exact same cascade AdminUserController's
  * admin-triggered delete uses (resumes first, then the account) even though
  * these accounts should always have zero resumes by construction — cheap
@@ -68,7 +70,7 @@ export class StaleAccountCleanupService {
         const verifyUrl = await this.auth.generateFreshVerificationUrl(userRecord.id);
         if (!verifyUrl) continue; // account vanished between the query and here — nothing to do
         const hoursUntilDeletion = DELETE_AFTER_HOURS - SUSPEND_AFTER_HOURS;
-        await this.email.sendAccountSuspendedEmail(userRecord.email, verifyUrl, hoursUntilDeletion);
+        await this.email.sendAccountSuspendedEmail(userRecord.email, verifyUrl, userRecord.hasResumes, hoursUntilDeletion);
         await this.users.suspendForUnverifiedEmail(userRecord.id, new Date().toISOString());
         summary.suspended++;
       } catch (err) {

@@ -85,18 +85,38 @@ export class EmailService {
    * via this link auto-lifts the suspension (see
    * UserRepository.confirmEmailVerification).
    */
-  async sendAccountSuspendedEmail(to: string, verifyUrl: string, hoursUntilDeletion: number): Promise<void> {
+  /**
+   * `hasResumes` branches the body copy: a zero-resume account still faces
+   * actual deletion at `hoursUntilDeletion` (see
+   * UserRepository.findEligibleForStalePurge, which stays zero-resume-only),
+   * but an account that's already created a resume is suspended
+   * indefinitely — not on a deletion clock — since suspension now applies to
+   * every unverified account regardless of resume count (CJ, Sep 2026:
+   * "there should be a suspension, even those accounts with resumes...to
+   * make sure these are legitimate email addresses"), while deletion stays
+   * limited to accounts with nothing at stake. Telling a real subscriber
+   * their resume will be "permanently removed in N hours" would be false
+   * for that second group, so this only ever renders that line for the
+   * first.
+   */
+  async sendAccountSuspendedEmail(to: string, verifyUrl: string, hasResumes: boolean, hoursUntilDeletion: number): Promise<void> {
+    const body = hasResumes
+      ? "Your email address was never verified, so this account has been automatically suspended. Verify your email now to restore access — your resume is safe and waiting for you."
+      : `Your email address was never verified, and no resume has been created on this account, so it's been automatically suspended. Verify your email now to restore access — otherwise the account will be permanently removed in ${hoursUntilDeletion} hours.`;
+    const footer = hasResumes
+      ? "If you didn't create this account, no action is needed."
+      : "If you didn't create this account, no action is needed — it'll be removed automatically.";
     await this.send({
       to,
       subject: "Your ResumeLingo account has been suspended — verify to restore it",
       html: `
         <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
           <h2 style="margin-bottom: 8px;">Your account has been suspended</h2>
-          <p>Your email address was never verified, and no resume has been created on this account, so it's been automatically suspended. Verify your email now to restore access — otherwise the account will be permanently removed in ${hoursUntilDeletion} hours.</p>
+          <p>${body}</p>
           <p style="margin: 24px 0;">
             <a href="${verifyUrl}" style="background: #4f46e5; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Verify email address</a>
           </p>
-          <p style="color: #64748b; font-size: 13px;">If you didn't create this account, no action is needed — it'll be removed automatically.</p>
+          <p style="color: #64748b; font-size: 13px;">${footer}</p>
           <p style="color: #94a3b8; font-size: 12px; word-break: break-all;">Or paste this link into your browser: ${verifyUrl}</p>
         </div>
       `,

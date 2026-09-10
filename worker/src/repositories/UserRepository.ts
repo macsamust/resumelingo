@@ -211,31 +211,40 @@ export class UserRepository extends BaseRepository<UserRecord> {
   }
 
   /**
-   * Accounts due the stale-account warning email — unverified, zero
-   * resumes, older than `warnAfterHours`, never warned before, and created
-   * on or after `protectedBeforeIso` (see StaleAccountCleanupService's doc
-   * comment for both the "zero resumes" reasoning and why every account
-   * that predates this feature's rollout is grandfathered in rather than
-   * retroactively swept up — same precedent as migration 0017 grandfathering
-   * emailVerified for pre-existing accounts). The `NOT EXISTS` subquery
-   * against resumes is cheap: both tables are small relative to most SaaS
-   * user tables, and this only runs once an hour.
+   * Accounts due suspension for an unverified email — older than
+   * `suspendAfterHours`, never warned/suspended before, and created on or
+   * after `protectedBeforeIso` (grandfathers in every account that predates
+   * this feature's rollout rather than retroactively sweeping them up —
+   * same precedent as migration 0017 grandfathering emailVerified for
+   * pre-existing accounts).
+   *
+   * Deliberately NOT conditioned on resume count (unlike
+   * findEligibleForStalePurge below) — CJ, Sep 2026: "If any and ALL
+   * accounts are not verified there should be a suspension, even those
+   * accounts with resumes. The purpose is to make sure these are legitimate
+   * email addresses no matter how many resumes there are added." Suspension
+   * is reversible the moment the account verifies (see
+   * UserRepository.confirmEmailVerification), so applying it to every
+   * unverified account — not just the ones with nothing to lose — is a low
+   * enough cost for that verification guarantee. Deletion (below) stays
+   * zero-resume-only since that one isn't reversible.
    */
-  /** Unverified, zero-resume accounts past `suspendAfterHours` old that haven't already been system-suspended — the pool StaleAccountCleanupService's suspend pass acts on. */
-  async findEligibleForSuspension(suspendAfterHours: number, protectedBeforeIso: string): Promise<UserRecord[]> {
+  async findEligibleForSuspension(
+    suspendAfterHours: number,
+    protectedBeforeIso: string
+  ): Promise<(UserRecord & { hasResumes: boolean })[]> {
     const { results } = await this.db
       .prepare(
-        `SELECT * FROM users
+        `SELECT *, EXISTS (SELECT 1 FROM resumes WHERE resumes."userId" = users.id) as "hasResumes" FROM users
          WHERE "emailVerified" = 0
            AND "staleAccountWarnedAt" IS NULL
            AND datetime("createdAt") <= datetime('now', ?)
            AND datetime("createdAt") >= datetime(?)
-           AND NOT EXISTS (SELECT 1 FROM resumes WHERE resumes."userId" = users.id)
          LIMIT 20000`
       )
       .bind(`-${suspendAfterHours} hours`, protectedBeforeIso)
-      .all<UserRecord>();
-    return results.map(normalizeBooleans);
+      .all<UserRecord & { hasResumes: number }>();
+    return results.map((row) => ({ ...normalizeBooleans(row), hasResumes: !!row.hasResumes }));
   }
 
   /** Marks a user as system-suspended for an unverified email — sets `suspended`, `suspensionReason`, and (reusing the existing column) `staleAccountWarnedAt` as the "already processed by this job" marker so it isn't picked up again. */
@@ -247,9 +256,15 @@ export class UserRepository extends BaseRepository<UserRecord> {
   }
 
   /**
-   * Accounts due actual deletion — same unverified + zero-resumes +
-   * post-rollout-cutoff signal as the suspend query, past `deleteAfterHours`
-   * instead. Deliberately not conditioned on the account having already been
+   * Accounts due actual deletion — unverified + zero-resumes +
+   * post-rollout-cutoff signal, past `deleteAfterHours`. Unlike
+   * findEligibleForSuspension above, this one IS still conditioned on zero
+   * resumes: suspension is reversible the moment someone verifies, but
+   * deletion isn't, so it stays limited to accounts with nothing at stake
+   * (CJ, Sep 2026, choosing to keep deletion scoped this way when
+   * suspension's resume-count condition was removed).
+   *
+   * Deliberately not conditioned on the account having already been
    * suspended: if the suspend job somehow missed a run, the account still
    * gets deleted on schedule rather than silently living forever — the
    * suspend step is a courtesy/recovery window, not a precondition.
