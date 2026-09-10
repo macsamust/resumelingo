@@ -61,7 +61,7 @@ function VerifyEmailBanner() {
       <span>
         {sent
           ? "Verification email sent. Check your inbox."
-          : "Please verify your email address. Check your inbox for a link, or"}
+          : "Please verify your email address within 1 hour of signing up, or your account will be temporarily suspended. Check your inbox for a link, or"}
         {!sent && (
           <>
             {" "}
