@@ -1,7 +1,8 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { ConfirmDialog } from "../components/common/ConfirmDialog";
+import { Modal } from "../components/common/Modal";
+import { Pricing } from "../components/marketing/Pricing";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, authApi, catalogApi } from "../api";
 import { ProfessionSummary } from "../types";
@@ -35,6 +36,12 @@ export function ProfilePage() {
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [resumingSubscription, setResumingSubscription] = useState(false);
   const [resumeError, setResumeError] = useState<string | null>(null);
+  // Starter's "Upgrade plan" opens the same <Pricing> component the
+  // homepage uses, in a modal, rather than linking out to /#pricing — one
+  // fewer navigation, and it stays in sync with that section automatically
+  // (live plan data, checkout wiring, "Current plan" state) with no
+  // duplicated markup to drift out of sync.
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
     catalogApi.listProfessions().then((res) => setProfessions(res.professions)).catch(() => setProfessions([]));
@@ -206,9 +213,9 @@ export function ProfilePage() {
         {user.subscriptionTier === "starter" && (
           <>
             <p className="modal-message">Upgrade for more resumes, premium templates, and AI-assisted tools.</p>
-            <Link to="/#pricing" className="btn btn-primary btn-block">
+            <button type="button" className="btn btn-primary btn-block" onClick={() => setShowUpgradeModal(true)}>
               Upgrade plan
-            </Link>
+            </button>
           </>
         )}
         {(user.subscriptionTier === "professional" || user.subscriptionTier === "premium") && (
@@ -299,6 +306,11 @@ export function ProfilePage() {
           onConfirm={onCancelSubscription}
           onCancel={() => setShowCancelConfirm(false)}
         />
+      )}
+      {showUpgradeModal && (
+        <Modal title="Upgrade your plan" onClose={() => setShowUpgradeModal(false)} wide>
+          <Pricing />
+        </Modal>
       )}
     </AppShell>
   );
