@@ -182,6 +182,13 @@ export function AdminAuditLogPage() {
       <div className="admin-audit-filters">
         <select value={filters.adminId} onChange={(e) => updateFilter("adminId", e.target.value)}>
           <option value="">All admins</option>
+          {/* Not a real admin — StaleAccountCleanupService's automatic
+              suspend/delete actions log under the literal "system" actor
+              (see AdminAuditLogRepository.logSystem) since there's no admin
+              to attribute them to. Listed statically here rather than
+              pulled from listAdmins() (which only returns real admin
+              accounts) so it's filterable the same way a real admin is. */}
+          <option value="system">System (automatic)</option>
           {admins.map((a) => (
             <option key={a.id} value={a.id}>
               {a.name} ({a.email})
