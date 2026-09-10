@@ -108,6 +108,20 @@ section { padding: 84px 0; }
 .feature-card h3 { font-size: 17px; color: var(--navy); margin-bottom: 8px; }
 .feature-card p { color: var(--muted); font-size: 14.5px; }
 
+/* FullCircle.tsx's four-stage "Apply / Interview / Get hired / Stay current"
+   diagram — a wider variant of .steps at 4 columns instead of 3, with the
+   last card (the retention stage the loop closes on) visually distinct via
+   .circle-card-current rather than a fifth color, so it reads as "this is
+   where you come back to" without needing a legend. */
+.circle-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.circle-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 26px 22px; }
+.circle-num { width: 36px; height: 36px; border-radius: 50%; background: var(--navy); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 14px; }
+.circle-card h3 { font-size: 17px; color: var(--navy); margin-bottom: 8px; }
+.circle-card p { color: var(--muted); font-size: 13.5px; }
+.circle-card-current { background: var(--teal); border-color: var(--teal); }
+.circle-card-current .circle-num { background: #fff; color: var(--teal); }
+.circle-card-current h3, .circle-card-current p { color: #fff; }
+
 .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; align-items: stretch; }
 .price-card { background: #fff; border: 1.5px solid var(--border); border-radius: 18px; padding: 34px 28px; display: flex; flex-direction: column; }
 .price-card.featured { border-color: var(--indigo); box-shadow: 0 20px 40px -18px rgba(79,70,229,.35); position: relative; transform: translateY(-8px); }
@@ -1967,7 +1981,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   .career-section { padding: 28px 24px; }
   .career-section-tag { display: none; }
   .hero-grid, .builder-grid { grid-template-columns: 1fr; }
-  .steps, .feature-grid, .pricing-grid, .stories-grid, .resources-grid, .footer-grid, .mission-grid, .link-grid, .answer-grid, .references-grid { grid-template-columns: 1fr 1fr; }
+  .steps, .feature-grid, .pricing-grid, .stories-grid, .resources-grid, .footer-grid, .mission-grid, .link-grid, .answer-grid, .references-grid, .circle-grid { grid-template-columns: 1fr 1fr; }
   .dashboard-grid { grid-template-columns: 1fr 1fr; }
   .price-card.featured { transform: none; }
   .app-shell { flex-direction: column; }
@@ -1986,7 +2000,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 @media (max-width: 640px) {
   .nav-links { display: none; }
   h1 { font-size: 30px; }
-  .steps, .feature-grid, .pricing-grid, .stories-grid, .resources-grid, .footer-grid, .mission-grid, .link-grid, .dashboard-grid, .answer-grid, .references-grid { grid-template-columns: 1fr; }
+  .steps, .feature-grid, .pricing-grid, .stories-grid, .resources-grid, .footer-grid, .mission-grid, .link-grid, .dashboard-grid, .answer-grid, .references-grid, .circle-grid { grid-template-columns: 1fr; }
   /* City/State and Start/End Date pairs in ExperienceEditor, EducationEditor,
      and ReferencesEditor — unlike every other paired-field grid above, these
      had no narrow-screen collapse, so each field shrank to ~150px on a

@@ -1,5 +1,6 @@
 import { useHashScroll } from "../hooks/useHashScroll";
 import { Hero } from "../components/marketing/Hero";
+import { FullCircle } from "../components/marketing/FullCircle";
 import { MissionVision } from "../components/marketing/MissionVision";
 import { ValueProposition } from "../components/marketing/ValueProposition";
 import { HowItWorks } from "../components/marketing/HowItWorks";
@@ -20,6 +21,7 @@ export function LandingPage() {
   return (
     <main>
       <Hero />
+      <FullCircle />
       <MissionVision />
       <ValueProposition />
       <HowItWorks />
