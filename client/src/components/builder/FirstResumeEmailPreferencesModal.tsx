@@ -9,20 +9,32 @@ interface Props {
 }
 
 /**
- * Shown once, right after a Professional/Premium subscriber's *first*
- * resume is successfully created (see ResumeBuilderPage's onSubmit) — not a
- * gate before creation, just a one-time nudge afterward so new subscribers
- * know these two email preferences exist without having to stumble onto
- * Profile's "Email preferences" section on their own. Reads/writes the same
- * fields as that section (see AuthController.updateEmailPreferences) —
- * there's no separate "seen this prompt" flag; a subscriber only ever sees
- * it because ResumeBuilderPage checked their resume count was zero before
- * this create, so it can never resurface on their 2nd+ resume.
+ * Shown once, right after *anyone's* first resume is successfully created
+ * (see ResumeBuilderPage's onSubmit) — not a gate before creation, just a
+ * one-time nudge afterward. There's no separate "seen this prompt" flag; a
+ * subscriber only ever sees it because ResumeBuilderPage checked their
+ * resume count was zero before this create, so it can never resurface on
+ * their 2nd+ resume.
  *
- * Both settings default to their normal opted-in values (see migrations
- * 0016/0037) whether or not this modal ever appears, so skipping it changes
- * nothing — it's purely a chance to opt out or adjust cadence early instead
- * of only discovering these exist by digging through Profile later.
+ * Two different bodies share this one modal shell (title, celebrating Poly,
+ * Skip/Save actions) rather than splitting into two components, since the
+ * only real difference is whether the two email-preference toggles below
+ * apply to this account at all:
+ *
+ * - Professional/Premium: also introduces the weekly resume-view digest and
+ *   AI Resume Refresh nudge — two email preferences a new subscriber would
+ *   otherwise only discover by stumbling onto Profile's "Email preferences"
+ *   section. Reads/writes the same fields as that section (see
+ *   AuthController.updateEmailPreferences). Both default to their normal
+ *   opted-in values (see migrations 0016/0037) whether or not this modal
+ *   ever appears, so skipping it changes nothing — it's purely a chance to
+ *   opt out or adjust cadence early.
+ * - Starter: neither preference does anything for this tier (both are
+ *   gated server-side too — see UserRepository.findEligibleForDigest/
+ *   findEligibleForRefreshNudge, both `WHERE subscriptionTier IN
+ *   (professional, premium)`), so showing the toggles would be a dead end.
+ *   Starter gets just the congratulations + Poly, no settings, no save
+ *   call — closing the modal is the only action.
  */
 export function FirstResumeEmailPreferencesModal({ onClose }: Props) {
   const { user, updateUser } = useAuth();
@@ -31,6 +43,7 @@ export function FirstResumeEmailPreferencesModal({ onClose }: Props) {
   const [resumeRefreshCadenceDays, setResumeRefreshCadenceDays] = useState(user?.resumeRefreshCadenceDays ?? 120);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const isStarter = user?.subscriptionTier === "starter";
 
   const onSave = async () => {
     setError(null);
@@ -49,6 +62,25 @@ export function FirstResumeEmailPreferencesModal({ onClose }: Props) {
       setSaving(false);
     }
   };
+
+  if (isStarter) {
+    return (
+      <Modal title="Nice work!" onClose={onClose}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+          <PolyAnimated expression="celebrate" size={64} decorative />
+        </div>
+        <p className="modal-message">
+          You just created your first resume — Poly's celebrating with you. Upgrade any time for more resumes,
+          premium templates, and AI-assisted tools.
+        </p>
+        <div className="modal-actions">
+          <button type="button" className="btn btn-primary" onClick={onClose}>
+            Got it
+          </button>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal title="Stay in the loop?" onClose={onClose} disableDismiss={saving}>

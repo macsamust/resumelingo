@@ -210,18 +210,19 @@ export function ResumeBuilderPage() {
         awards,
         achievements,
       });
-      // Professional/Premium subscribers get a one-time nudge about the
-      // weekly digest/AI Resume Refresh email preferences right after their
-      // very first resume — shown on the edit page itself (via this router
-      // state flag), not as a gate here before navigating, so the "Resume
-      // created" moment reads as a straightforward success rather than an
-      // interstitial. See FirstResumeEmailPreferencesModal's doc comment.
-      // Starter accounts never get the flag (those preferences don't apply
-      // to that tier), and it can never resurface on a 2nd+ resume since
-      // hadNoResumesBeforeCreate was captured before this create ran.
-      const isProfessionalOrPremium = user?.subscriptionTier === "professional" || user?.subscriptionTier === "premium";
+      // Every subscriber gets a one-time "nice work" nudge (celebrating Poly
+      // included) right after their very first resume — shown on the edit
+      // page itself (via this router state flag), not as a gate here before
+      // navigating, so the "Resume created" moment reads as a
+      // straightforward success rather than an interstitial. See
+      // FirstResumeEmailPreferencesModal's doc comment — Starter accounts
+      // see a shorter version of the same modal (just the celebration, no
+      // email-preference toggles, since the weekly digest/AI Resume Refresh
+      // nudge are Professional/Premium-only features). Can never resurface
+      // on a 2nd+ resume since hadNoResumesBeforeCreate was captured before
+      // this create ran.
       navigate(`/resumes/${resume.id}/edit`, {
-        state: isProfessionalOrPremium && hadNoResumesBeforeCreate ? { justCreatedFirstResume: true } : undefined,
+        state: hadNoResumesBeforeCreate ? { justCreatedFirstResume: true } : undefined,
       });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong creating your resume.");
