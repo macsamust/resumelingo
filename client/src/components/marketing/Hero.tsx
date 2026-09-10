@@ -6,14 +6,14 @@ export function Hero() {
     <section className="hero">
       <div className="wrap hero-grid">
         <div>
-          <span className="eyebrow">Not a resume builder. A living career profile.</span>
+          <span className="eyebrow">Built for the whole career, not just the resume.</span>
           <h1>
-            Your resume, reimagined as a <span>living, cloud hosted professional identity</span>.
+            Apply. Interview. <span>Get hired.</span> Stay current. All in one place.
           </h1>
           <p className="lead">
-            ResumeLingo interviews you about your profession, uses AI to turn your answers into polished,
-            achievement driven bullets, and publishes it all to one link that's always current. No more
-            emailing five different PDFs.
+            ResumeLingo isn't a resume builder you visit once and forget. It's where you track applications, prep
+            for interviews, land the offer, and keep your achievements current for whatever comes next, all from
+            one living profile.
           </p>
           <div className="hero-actions">
             <Link to="/signup" className="btn btn-primary">
