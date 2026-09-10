@@ -123,11 +123,20 @@ export function ResumeBuilderPage() {
   useEffect(() => {
     catalogApi.listProfessions().then((res) => {
       setProfessions(res.professions);
-      if (res.professions.length > 0) setProfessionKey(res.professions[0].key);
+      // Prefer the profession the user picked at signup (User.profession —
+      // see AuthService.register) over the catalog's first entry, so a
+      // Sales signup doesn't land on "Software Engineer" by default just
+      // because it happens to sort first. Falls back to the old behavior
+      // if the account has no profession on file (e.g. pre-dates this
+      // signup field, or it was left blank) or if that value somehow isn't
+      // a real catalog key.
+      const fromSignup = user?.profession && res.professions.some((p) => p.key === user.profession) ? user.profession : null;
+      if (fromSignup) setProfessionKey(fromSignup);
+      else if (res.professions.length > 0) setProfessionKey(res.professions[0].key);
     });
     catalogApi.listTemplates().then((res) => setTemplates(res.templates));
     catalogApi.popularTemplatesByProfession().then((res) => setPopularTemplates(res.popularTemplates));
-  }, []);
+  }, [user?.profession]);
 
   useEffect(() => {
     if (!professionKey) return;
