@@ -1,6 +1,6 @@
 const FEATURES = [
   { icon: "🧭", title: "Profession aware interview", body: "Select your profession and the questionnaire adapts: Software Engineer, Nurse, Teacher, Executive, Sales, and more each get a completely different question set." },
-  { icon: "🤖", title: "AI Resume Generator", body: "Turns your answers into a professional summary, achievement driven bullets, skills, certifications, and a leadership summary. No writing required." },
+  { icon: "🤖", title: "Poly, your AI writing partner", body: "Turns your answers into a professional summary, achievement driven bullets, skills, certifications, and a leadership summary. Poly has a name and a personality, so it never feels like a generic algorithm doing the work." },
   { icon: "🎨", title: "15+ professional templates", body: "Executive, Modern, Government, Federal, Technical, Military Transition, Healthcare, Academic, and more. Preview instantly, no rebuilding." },
   { icon: "👁️", title: "Live preview", body: "Every change instantly updates across PDF, website, printable resume, and mobile view." },
   { icon: "📄", title: "Multiple resume versions", body: "Clone your resume instead of rewriting it: a Cloud Architect version, a Program Manager version, a Solutions Architect version, each with its own summary and keywords." },

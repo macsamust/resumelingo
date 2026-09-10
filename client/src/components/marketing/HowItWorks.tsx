@@ -5,9 +5,9 @@ const STEPS = [
       "Software Engineer, Nurse, Teacher, Executive, Project Manager, Government Contractor, Military, Sales, Marketing, Construction, and more. Selecting one changes the questions you're asked, from certifications and clinical experience to CI/CD and GitHub.",
   },
   {
-    title: "Let AI write the resume",
+    title: "Let Poly write the resume",
     body:
-      'Instead of "Managed team," ResumeLingo\'s AI generates "Led a cross functional engineering team of twelve professionals delivering secure cloud modernization initiatives supporting Department of Defense customers," plus your summary, skills, and achievements.',
+      'Instead of "Managed team," Poly, your AI writing partner, generates "Led a cross functional engineering team of twelve professionals delivering secure cloud modernization initiatives supporting Department of Defense customers," plus your summary, skills, and achievements. It\'s a name and a personality behind the writing, not a faceless algorithm.',
   },
   {
     title: "Preview, publish, share",
