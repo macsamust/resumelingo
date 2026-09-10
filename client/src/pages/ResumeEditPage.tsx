@@ -19,6 +19,7 @@ import { Modal } from "../components/common/Modal";
 import { TemplateUpgradeModal } from "../components/builder/TemplateUpgradeModal";
 import { FirstResumeEmailPreferencesModal } from "../components/builder/FirstResumeEmailPreferencesModal";
 import { VersionHistoryPanel } from "../components/common/VersionHistoryPanel";
+import { PolyAnimated } from "../components/brand/PolyAnimated";
 import { ApiError, authApi, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL, templateHasSkillsAndTools } from "../utils/templateAccess";
@@ -138,6 +139,13 @@ export function ResumeEditPage() {
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // Brief celebratory Poly toast after an explicit "Save changes" click —
+  // deliberately NOT tied to the on-blur autosave (autoSaveState below),
+  // which fires silently and often, so popping Poly up on every single
+  // field blur would turn a cute moment into visual noise. Auto-dismisses;
+  // see the cleanup effect further down.
+  const [showSavedCelebration, setShowSavedCelebration] = useState(false);
+  const savedCelebrationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [loading, setLoading] = useState(true);
   const [forceOpen, setForceOpen] = useState<ForceOpenSignal | undefined>(undefined);
   /** Whether the "Expand" modal (a larger copy of the sidebar's live preview) is open. */
@@ -698,12 +706,21 @@ export function ResumeEditPage() {
     try {
       await persist();
       setAutoSaveState("idle");
+      setShowSavedCelebration(true);
+      if (savedCelebrationTimeoutRef.current) clearTimeout(savedCelebrationTimeoutRef.current);
+      savedCelebrationTimeoutRef.current = setTimeout(() => setShowSavedCelebration(false), 2200);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong saving your resume.");
     } finally {
       setSaving(false);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (savedCelebrationTimeoutRef.current) clearTimeout(savedCelebrationTimeoutRef.current);
+    };
+  }, []);
 
   // Autosaves to the server (not just localStorage) as soon as a field
   // loses focus, so "Save changes" becomes a manual fallback rather than
@@ -1618,6 +1635,12 @@ export function ResumeEditPage() {
       <p className="form-footnote">
         <Link to="/dashboard">← Back to dashboard</Link>
       </p>
+      {showSavedCelebration && (
+        <div className="poly-save-toast" role="status" aria-live="polite">
+          <PolyAnimated expression="happy" size={48} decorative />
+          <span>Saved! Poly's got your back.</span>
+        </div>
+      )}
       {showBackToTop && (
         <button
           type="button"
