@@ -17,7 +17,7 @@ const STAGES = [
   },
   {
     label: "Interview",
-    body: "Walk in with a tailored Cover Letter as your bio and table setter. The AI Career Coach preps you on interview questions and salary negotiation.",
+    body: "The AI Career Coach preps you on interview questions and salary negotiation. Walk in with a tailored Cover Letter as your bio and table-setter.",
   },
   {
     label: "Get hired",
