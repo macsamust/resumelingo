@@ -74,10 +74,24 @@ import {
  */
 const app = new Hono<{ Bindings: Env }>();
 
+// CLIENT_ORIGIN is a required var in wrangler.jsonc (set for both prod and
+// local dev — see .dev.vars) and should always be present. The old fallback
+// here was `c.env.CLIENT_ORIGIN || "*"`: if that var were ever missing
+// (a misconfigured preview/staging env, a future refactor, a typo in
+// wrangler.jsonc), CORS would silently fail OPEN — reflecting every request
+// as if it came from the real site, for every origin on the internet, with
+// no error or log to notice it happened. Auth here uses a Bearer token
+// rather than cookies, so a wildcard alone can't be used to ride a victim's
+// session (no ambient credential a hostile page can piggyback on), but it
+// would still let any site read responses from resumelingo's public API
+// endpoints server-to-browser, which is unnecessary exposure with zero
+// upside. Fail closed instead: fall back to the known production origin so
+// a missing var narrows access rather than removing it entirely.
+const PRODUCTION_ORIGIN = "https://resumelingo.com";
 app.use(
   "/api/*",
   cors({
-    origin: (_origin, c) => c.env.CLIENT_ORIGIN || "*",
+    origin: (_origin, c) => c.env.CLIENT_ORIGIN || PRODUCTION_ORIGIN,
   })
 );
 app.use("/api/*", withServices);
