@@ -11,10 +11,15 @@ const MAX_RECRUITER_CODE_FAILURES = 10;
 const RECRUITER_CODE_WINDOW_MINUTES = 15;
 
 export class PublicController {
-  getBySlug = async (c: Context<AppEnv>) => {
+  /**
+   * Shared by getBySlug (always called with password=undefined — a plain
+   * page load is never a password attempt) and unlockPassword (the POST
+   * route, called with whatever the visitor submitted). Kept as one method
+   * so the throttle/error-shape logic can't drift between the two callers.
+   */
+  private loadAndThrottle = async (c: Context<AppEnv>, password: string | undefined) => {
     const { resumeService, publicResumePasswordIpLogRepository, securityAlertService } = c.get("services");
     const slug = c.req.param("slug")!;
-    const password = c.req.query("password");
     const user = c.get("user");
     const ip = c.req.header("CF-Connecting-IP") || c.req.header("x-forwarded-for") || "unknown";
 
@@ -70,6 +75,22 @@ export class PublicController {
       }
       throw err;
     }
+  };
+
+  /** Never reads a password from the query string — see unlockPassword below for why. A plain load of a password-protected link just gets the "password required" response; the visitor's actual attempt goes through that POST route instead. */
+  getBySlug = async (c: Context<AppEnv>) => this.loadAndThrottle(c, undefined);
+
+  /**
+   * POST, not a `?password=` query string on getBySlug (which is how this
+   * used to work) — a password sitting in a URL lands in server access
+   * logs, browser history, and any Referer header sent onward. Same fix
+   * already applied to the recruiter code below; this closes the identical,
+   * longer-standing gap for the resume's own password.
+   */
+  unlockPassword = async (c: Context<AppEnv>) => {
+    const body = await c.req.json().catch(() => ({} as { password?: string }));
+    const password = typeof body.password === "string" ? body.password : undefined;
+    return this.loadAndThrottle(c, password);
   };
 
   /**

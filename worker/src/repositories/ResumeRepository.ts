@@ -24,7 +24,10 @@ export interface CreateResumeInput {
   profession: string;
   templateKey: string;
   visibility: LinkVisibility;
+  /** Legacy plaintext — see ResumeService.create, which no longer populates this (always null) and hashes into accessPasswordHash instead. */
   accessPassword: string | null;
+  /** Already hashed by the time it reaches here — see ResumeService.create's sha256Hex call. Never the raw password. */
+  accessPasswordHash?: string | null;
   accessPasswordExpiresAt?: string | null;
   coverLetterEnabled?: boolean;
   generatedCoverLetter?: string;
@@ -54,7 +57,10 @@ export interface UpdateResumeInput {
   profession?: string;
   templateKey?: string;
   visibility?: LinkVisibility;
+  /** Legacy plaintext — see ResumeService.update, which hashes into accessPasswordHash instead and clears this to null on every save. */
   accessPassword?: string | null;
+  /** Already hashed by the time it reaches here — see ResumeService.update, which calls sha256Hex before passing this through. Never the raw password. */
+  accessPasswordHash?: string | null;
   accessPasswordExpiresAt?: string | null;
   active?: boolean;
   coverLetterEnabled?: boolean;
@@ -397,6 +403,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       templateKey: input.templateKey,
       visibility: input.visibility,
       accessPassword: input.accessPassword,
+      accessPasswordHash: input.accessPasswordHash ?? null,
       accessPasswordExpiresAt: input.accessPasswordExpiresAt ?? null,
       active: true,
       coverLetterEnabled: input.coverLetterEnabled ?? false,
@@ -460,6 +467,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       templateKey: input.templateKey ?? existing.templateKey,
       visibility: input.visibility ?? existing.visibility,
       accessPassword: input.accessPassword !== undefined ? input.accessPassword : existing.accessPassword,
+      accessPasswordHash: input.accessPasswordHash !== undefined ? input.accessPasswordHash : existing.accessPasswordHash,
       accessPasswordExpiresAt:
         input.accessPasswordExpiresAt !== undefined ? input.accessPasswordExpiresAt : existing.accessPasswordExpiresAt,
       active: input.active !== undefined ? input.active : existing.active,
@@ -562,6 +570,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       templateKey: overrides.templateKey,
       visibility: LinkVisibility.Private,
       accessPassword: null,
+      accessPasswordHash: null,
       accessPasswordExpiresAt: null,
       active: true,
       viewCount: 0,

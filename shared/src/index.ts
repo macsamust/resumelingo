@@ -393,7 +393,10 @@ export interface ResumeRecord {
   profession: string;
   templateKey: string;
   visibility: LinkVisibility;
+  /** Legacy plaintext — no longer written to; see accessPasswordHash and Resume.isPasswordCorrect. */
   accessPassword: string | null;
+  /** sha256Hex of the resume's own access password. Null for a resume saved before this hashing change that hasn't been re-saved since (falls back to the legacy accessPassword column above). */
+  accessPasswordHash: string | null;
   /** ISO timestamp. Once past, a password-protected link is deactivated even with the correct password (see Resume.isPasswordExpired). NULL means no expiration. */
   accessPasswordExpiresAt: string | null;
   /**

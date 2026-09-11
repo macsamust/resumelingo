@@ -60,6 +60,8 @@ export class VersionHistoryAccessError extends Error {}
 export class VersionNotFoundError extends Error {}
 /** Thrown from update() when recruiterModeEnabled would end up true with no recruiterAccessCodeHash on file (existing or newly provided) — see that method's recruiter-code block. Closes the Sep 2026 finding that Recruiter Mode's card had no access control beyond the resume's own general visibility. */
 export class RecruiterAccessCodeRequiredError extends Error {}
+/** Thrown from update() when visibility would end up PasswordProtected with no password on file (existing or newly provided) — see that method's access-password block. Mirrors RecruiterAccessCodeRequiredError above, closing the same class of "turned a gate on with no key" gap for the resume's own visibility instead of Recruiter Mode's card. */
+export class AccessPasswordRequiredError extends Error {}
 /** Thrown from unlockRecruiterCard() when the submitted code doesn't match, Recruiter Mode isn't on, or no code has ever been set — PublicController treats all three identically (generic "incorrect code" response) so a wrong guess can't be used to enumerate which resumes have Recruiter Mode on at all. */
 export class RecruiterCodeInvalidError extends Error {}
 
@@ -309,7 +311,14 @@ export class ResumeService {
       // yet, not just publishing. Private is the safe default instead;
       // they can switch to Public once verified.
       visibility: input.visibility ?? (user.emailVerified ? LinkVisibility.Public : LinkVisibility.Private),
-      accessPassword: input.accessPassword ?? null,
+      // Hashed here too, not just in update() — today's client never sends
+      // a password at creation time (every builder flow creates as
+      // Public/Private and adds a password later via Edit Resume), but the
+      // API itself accepts one, and that's exactly the kind of path that
+      // let the plaintext-storage gap in an earlier version of update() go
+      // unnoticed. accessPassword itself is never populated here anymore.
+      accessPassword: null,
+      accessPasswordHash: input.accessPassword?.trim() ? await sha256Hex(input.accessPassword.trim()) : null,
       accessPasswordExpiresAt: input.accessPasswordExpiresAt ?? null,
       coverLetterEnabled,
       generatedCoverLetter,
@@ -333,9 +342,18 @@ export class ResumeService {
     const existing = await this.getOwned(userId, resumeId); // throws if not found/owned
 
     // Pulled off input immediately — see ResumeUpdateInput's doc comment for
-    // why the raw code must never reach ResumeRepository.update via a
-    // `...input` spread further down.
-    const { recruiterAccessCode, ...restInput } = input;
+    // why the raw code/password must never reach ResumeRepository.update via
+    // a `...input` spread further down. `accessPassword` here is still the
+    // raw plaintext the client sends (that wire shape is unchanged), but its
+    // meaning changed in a Sep 2026 pass: it used to be written straight to
+    // the (plaintext) accessPassword column on every save, including a blank
+    // value silently overwriting an existing password to "" (see
+    // ResumeUpdateInput's old doc comment on this exact quirk). It's now
+    // hashed below into accessPasswordHash, and a blank/omitted value means
+    // "no change" instead — the client (ResumeEditPage) was updated to match,
+    // only including this field in a save when the subscriber actually typed
+    // a new password.
+    const { recruiterAccessCode, accessPassword: rawAccessPassword, ...restInput } = input;
     input = restInput;
 
     // Computed from the raw request keys before any of the fields below get
@@ -429,6 +447,51 @@ export class ResumeService {
       );
     }
 
+    // Sep 2026 security pass: the resume's own access password used to be
+    // stored in plain text and compared with a raw `===` (see
+    // Resume.isPasswordCorrect and migration 0043's doc comment) — now
+    // hashed the same way the recruiter code above is. `undefined` here
+    // means "no change" (leave whatever's already on file, hashed or
+    // legacy-plaintext, alone); an explicit `null` means the caller wants
+    // the password removed entirely.
+    let accessPasswordHash: string | undefined | null;
+    let accessPasswordLegacyClear: string | null | undefined;
+    const trimmedAccessPassword = rawAccessPassword?.trim();
+    if (trimmedAccessPassword) {
+      accessPasswordHash = await sha256Hex(trimmedAccessPassword);
+      accessPasswordLegacyClear = null; // never leave a plaintext copy once we have a hash
+    } else if (rawAccessPassword === null) {
+      accessPasswordHash = null;
+      accessPasswordLegacyClear = null;
+    }
+    // A resume switching TO password-protection with no password ever set
+    // would otherwise save successfully but become unlockable by literally
+    // nobody but the owner (an empty/missing password can never match a
+    // real visitor's submission) — same "required before it can be turned
+    // on" guard as the recruiter code, just for the resume's own visibility
+    // gate this time.
+    //
+    // Deliberately scoped to `visibilityChanging` — i.e. only the moment
+    // visibility is actively being switched to PasswordProtected in this
+    // exact request — rather than re-checking on every future save the way
+    // the recruiter code guard above does. A resume that's already sitting
+    // at PasswordProtected (even a pre-existing one broken by the old
+    // blank-overwrites-to-empty bug this same pass fixed) shouldn't have
+    // every *unrelated* future edit blocked until the owner happens to
+    // notice and fix the password — only the deliberate act of turning
+    // protection on should require a password at that moment.
+    if (
+      visibilityChanging &&
+      input.visibility === LinkVisibility.PasswordProtected &&
+      accessPasswordHash === undefined &&
+      !existing.accessPasswordHash &&
+      !existing.accessPassword
+    ) {
+      throw new AccessPasswordRequiredError(
+        "Set a password before making this resume password protected — otherwise no one, including anyone you share the link with, would be able to unlock it."
+      );
+    }
+
     assertPhotoSizeOk(input.photoUrl);
     assertGeneratedContentSizeOk(input.generatedSummary, input.generatedBullets);
 
@@ -516,6 +579,8 @@ export class ResumeService {
         recruiterModeEnabled,
         referencesEnabled,
         ...(recruiterAccessCodeHash !== undefined ? { recruiterAccessCodeHash } : {}),
+        ...(accessPasswordHash !== undefined ? { accessPasswordHash } : {}),
+        ...(accessPasswordLegacyClear !== undefined ? { accessPassword: accessPasswordLegacyClear } : {}),
       },
       { bumpUpdatedAt: !isLinkOnlyChange }
     );
@@ -651,7 +716,7 @@ export class ResumeService {
     if (!isOwner && resume.isPasswordExpired) {
       throw new ResumeAccessError("This link has expired and is no longer accessible.", "expired");
     }
-    if (!resume.isAccessibleBy(requestingUserId, password)) {
+    if (!(await resume.isAccessibleBy(requestingUserId, password))) {
       throw new ResumeAccessError(
         resume.visibility === LinkVisibility.PasswordProtected
           ? "This resume is password protected."
@@ -705,7 +770,7 @@ export class ResumeService {
     const isOwner = !!requestingUserId && requestingUserId === resume.userId;
     if (!isOwner && !resume.active) throw new RecruiterCodeInvalidError("Incorrect access code.");
     if (!isOwner && resume.isPasswordExpired) throw new RecruiterCodeInvalidError("Incorrect access code.");
-    if (!resume.isAccessibleBy(requestingUserId, password)) throw new RecruiterCodeInvalidError("Incorrect access code.");
+    if (!(await resume.isAccessibleBy(requestingUserId, password))) throw new RecruiterCodeInvalidError("Incorrect access code.");
     if (!resume.recruiterModeEnabled) throw new RecruiterCodeInvalidError("Incorrect access code.");
     if (!(await resume.isRecruiterCodeValid(code))) {
       throw new RecruiterCodeInvalidError("Incorrect access code.");

@@ -26,6 +26,7 @@ import { InvalidUnsubscribeTokenError } from "./controllers/AuthController";
 import { InvalidNudgeTokenError } from "./controllers/ResumeRefreshController";
 import { AdminAuthError } from "./services/AdminService";
 import {
+  AccessPasswordRequiredError,
   ActiveToggleAccessError,
   CloneAccessError,
   EmailVerificationRequiredError,
@@ -153,6 +154,8 @@ app.onError((err, c) => {
       : err instanceof GeneratedContentTooLargeError
       ? 400
       : err instanceof RecruiterAccessCodeRequiredError
+      ? 400
+      : err instanceof AccessPasswordRequiredError
       ? 400
       : err instanceof RecruiterCodeInvalidError
       ? 403

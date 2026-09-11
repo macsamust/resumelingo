@@ -255,8 +255,12 @@ export function PublicResumePage() {
     if (!slug) return;
     setLoading(true);
     setError(null);
-    catalogApi
-      .getPublicResume(slug, pwd)
+    // pwd only ever has a value when this call came from onSubmitPassword
+    // actually submitting an attempt — routed through the POST endpoint
+    // (see CatalogApi.unlockPasswordProtectedResume) rather than a query
+    // string, so the password never lands in a URL, server log, or Referer
+    // header.
+    (pwd ? catalogApi.unlockPasswordProtectedResume(slug, pwd) : catalogApi.getPublicResume(slug))
       .then((res) => {
         setResume(res.resume);
         setPasswordRequired(false);

@@ -58,9 +58,20 @@ export class CatalogApi extends ApiClient {
     return this.get<DashboardSummary>("/dashboard/summary");
   }
 
-  getPublicResume(slug: string, password?: string) {
-    const suffix = password ? `?password=${encodeURIComponent(password)}` : "";
-    return this.get<{ resume: PublicResume }>(`/public/${slug}${suffix}`);
+  /** Never takes a password anymore — see unlockPasswordProtectedResume below. A password-protected resume just comes back with a 403/"password" reason on this plain load. */
+  getPublicResume(slug: string) {
+    return this.get<{ resume: PublicResume }>(`/public/${slug}`);
+  }
+
+  /**
+   * POST body, not `getPublicResume(slug, password)`'s old `?password=`
+   * query string (Sep 2026 security pass) — a password sitting in a URL
+   * leaks into server access logs, browser history, and any Referer header
+   * sent onward. Same fix as unlockRecruiterCard below, just for the
+   * resume's own password this time.
+   */
+  unlockPasswordProtectedResume(slug: string, password: string) {
+    return this.post<{ resume: PublicResume }>(`/public/${slug}/password`, { password });
   }
 
   /**

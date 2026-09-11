@@ -29,7 +29,19 @@ export class Resume {
   readonly profession: string;
   readonly templateKey: string;
   readonly visibility: LinkVisibility;
+  /**
+   * Legacy plaintext password — no longer written to on save (see
+   * ResumeService.update, which now hashes into accessPasswordHash instead
+   * and clears this column). Kept readable only so isPasswordCorrect below
+   * can still validate a resume that was password-protected before this
+   * hashing change shipped and hasn't been saved since. Once every
+   * pre-existing password-protected resume has been saved at least once
+   * (which happens automatically the next time its owner touches Edit
+   * Resume), this column will be null everywhere and could be dropped.
+   */
   readonly accessPassword: string | null;
+  /** sha256Hex of the resume's own access password — see isPasswordCorrect. Null for a resume that predates this hashing change and hasn't been re-saved yet (falls back to the legacy accessPassword column above). */
+  readonly accessPasswordHash: string | null;
   readonly accessPasswordExpiresAt: string | null;
   readonly active: boolean;
   readonly coverLetterEnabled: boolean;
@@ -42,12 +54,10 @@ export class Resume {
   readonly recruiterExpectedSalary: string;
   readonly recruiterRemotePreference: string;
   /**
-   * Hashed (sha256Hex), never plaintext — a deliberate departure from
-   * accessPassword above, which this codebase stores in plain text (see
-   * that field's isAccessibleBy check). Recruiter Mode data (salary,
-   * clearance, work authorization) is more sensitive than a resume's own
-   * password-gated visibility, so it doesn't get the same shortcut. See
-   * isRecruiterCodeValid below and ResumeService's hashing on save.
+   * Hashed (sha256Hex), never plaintext — same treatment accessPasswordHash
+   * above now gets too (that used to be a plaintext-only field; fixed in a
+   * Sep 2026 security pass). See isRecruiterCodeValid below and
+   * ResumeService's hashing on save.
    */
   readonly recruiterAccessCodeHash: string | null;
   readonly combineExperienceFormat: boolean;
@@ -82,6 +92,7 @@ export class Resume {
     this.templateKey = record.templateKey;
     this.visibility = record.visibility;
     this.accessPassword = record.accessPassword;
+    this.accessPasswordHash = record.accessPasswordHash;
     this.accessPasswordExpiresAt = record.accessPasswordExpiresAt;
     this.active = !!record.active;
     this.coverLetterEnabled = !!record.coverLetterEnabled;
@@ -223,13 +234,33 @@ export class Resume {
     return Math.min(score, 100);
   }
 
+  /**
+   * True if `password` matches this resume's stored password. Hash-compares
+   * against accessPasswordHash when present (every resume saved since this
+   * hashing change shipped); falls back to a plain `===` against the legacy
+   * accessPassword column only for a resume that was password-protected
+   * before then and hasn't been saved since (see accessPasswordHash's doc
+   * comment) — that fallback goes away on its own as those resumes get
+   * re-saved.
+   */
+  async isPasswordCorrect(password?: string): Promise<boolean> {
+    if (!password) return false;
+    if (this.accessPasswordHash) {
+      return (await sha256Hex(password)) === this.accessPasswordHash;
+    }
+    if (this.accessPassword) {
+      return password === this.accessPassword;
+    }
+    return false;
+  }
+
   /** userId is the *requesting* user, if any (undefined for anonymous visitors). */
-  isAccessibleBy(userId?: string, password?: string): boolean {
+  async isAccessibleBy(userId?: string, password?: string): Promise<boolean> {
     if (userId && userId === this.userId) return true; // owner can always view their own resume, any visibility
     if (this.visibility === LinkVisibility.Public) return true;
     if (this.visibility === LinkVisibility.PasswordProtected) {
       if (this.isPasswordExpired) return false;
-      return !!password && password === this.accessPassword;
+      return this.isPasswordCorrect(password);
     }
     return false; // private — owner-only, and the owner case is already handled above
   }
@@ -250,7 +281,12 @@ export class Resume {
       templateKey: this.templateKey,
       template: this.template,
       visibility: this.visibility,
-      hasPassword: !!this.accessPassword,
+      // Checks both columns — a resume saved since the hashing change has
+      // accessPasswordHash set and accessPassword null; one that predates it
+      // and hasn't been re-saved yet still has the legacy plaintext column
+      // populated instead. Either way this stays a true/false indicator,
+      // never the actual secret (see accessPasswordHash's doc comment).
+      hasPassword: !!this.accessPassword || !!this.accessPasswordHash,
       accessPasswordExpiresAt: this.accessPasswordExpiresAt,
       active: this.active,
       coverLetterEnabled: this.coverLetterEnabled,

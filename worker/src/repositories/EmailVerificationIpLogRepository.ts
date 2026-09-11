@@ -37,6 +37,41 @@ export class EmailVerificationIpLogRepository {
       .run();
   }
 
+  /**
+   * The authoritative throttle decision — see
+   * PublicResumeRecruiterCodeIpLogRepository.recordFailureIfUnderLimit's doc
+   * comment for the full reasoning (same check-then-write race exists here:
+   * AuthController's login/register/password-reset/verify/resend routes all
+   * read countRecentAttempts, decide, and only write via recordAttempt
+   * afterward — two attempts landing close together can each read a stale
+   * under-the-limit count before either has recorded itself). This closes
+   * that gap the same way: the count-check and the insert happen as one
+   * atomic SQL statement, so no concurrent call to this method (regardless
+   * of which action) can interleave with another's write. Returns whether
+   * the attempt was actually recorded — callers should decide "too many
+   * attempts" from this, not from a separate, racy countRecentAttempts call.
+   */
+  async recordAttemptIfUnderLimit(
+    ip: string,
+    action: EmailVerificationIpAction,
+    windowMinutes: number,
+    max: number
+  ): Promise<boolean> {
+    const since = new Date(Date.now() - windowMinutes * 60000).toISOString();
+    const result = await this.db
+      .prepare(
+        `INSERT INTO email_verification_ip_log (id, ip, action, "createdAt")
+         SELECT ?, ?, ?, ?
+         WHERE (
+           SELECT COUNT(*) FROM email_verification_ip_log
+           WHERE ip = ? AND action = ? AND "createdAt" >= ?
+         ) < ?`
+      )
+      .bind(nanoid(12), ip, action, new Date().toISOString(), ip, action, since, max)
+      .run();
+    return result.meta.changes === 1;
+  }
+
   /** Attempts of this action from this IP in the last `windowMinutes`. */
   async countRecentAttempts(ip: string, action: EmailVerificationIpAction, windowMinutes: number): Promise<number> {
     const since = new Date(Date.now() - windowMinutes * 60000).toISOString();

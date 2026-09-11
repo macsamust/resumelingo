@@ -32,6 +32,10 @@ export class AdminAuthController {
     // attacker rotating across many admin emails (or guessing non-existent
     // ones) from the same network.
     const ip = c.req.header("CF-Connecting-IP") || c.req.header("x-forwarded-for") || "unknown";
+    // Cheap early exit only — NOT the authoritative decision. See
+    // recordFailureIfUnderLimit in the catch block below for the atomic
+    // check that actually closes the race a burst of concurrent wrong
+    // guesses could otherwise slip through.
     const recentFailures = await adminLoginIpLogRepository.countRecentFailures(ip, IP_WINDOW_MINUTES);
     if (recentFailures >= MAX_IP_FAILURES) {
       await securityAlertService.recordIfNew({
@@ -52,8 +56,18 @@ export class AdminAuthController {
         return c.json({ error: err.message, reason: "totp_required" }, 401);
       }
       if (err instanceof AdminAuthError) {
-        await adminLoginIpLogRepository.recordFailure(ip);
+        const recorded = await adminLoginIpLogRepository.recordFailureIfUnderLimit(ip, IP_WINDOW_MINUTES, MAX_IP_FAILURES);
         await adminLoginIpLogRepository.pruneOlderThan(IP_WINDOW_MINUTES);
+        if (!recorded) {
+          await securityAlertService.recordIfNew({
+            type: "admin_login_brute_force",
+            severity: "critical",
+            ip,
+            detail: { attemptedEmail: email },
+            dedupeWindowMinutes: IP_WINDOW_MINUTES,
+          });
+          return c.json({ error: "Too many login attempts from this network. Please try again later." }, 429);
+        }
       }
       throw err;
     }

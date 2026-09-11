@@ -1,0 +1,12 @@
+-- Sep 2026 security pass: resumes.accessPassword (the resume's own
+-- password-protection secret, distinct from Recruiter Mode's
+-- recruiterAccessCodeHash added in migration 0042) was stored in plain
+-- text and compared with a raw `===`, unlike the recruiter code, which was
+-- built hashed from day one. This adds a hashed column; the legacy
+-- accessPassword column stays for now purely as a fallback so a resume
+-- that's already password-protected doesn't lose access before its owner
+-- next saves it (see Resume.isPasswordCorrect and ResumeService.update,
+-- which hashes into this column and clears the legacy one on every future
+-- save). Once no row has a non-null legacy accessPassword left, that column
+-- can be dropped in a later migration.
+ALTER TABLE resumes ADD COLUMN "accessPasswordHash" TEXT;

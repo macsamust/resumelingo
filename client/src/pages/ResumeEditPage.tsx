@@ -95,6 +95,12 @@ export function ResumeEditPage() {
   const [title, setTitle] = useState("");
   const [templateKey, setTemplateKey] = useState("");
   const [visibility, setVisibility] = useState<LinkVisibility>("public");
+  // Blank means "leave the existing password alone" (Sep 2026 fix — this
+  // used to always send whatever was in this field, including blank, which
+  // silently overwrote a working password to an unusable empty one on any
+  // unrelated autosave; see buildSavePayload below and ResumeUpdateInput's
+  // accessPassword handling on the server). Same "never redisplay a saved
+  // secret, blank input means unchanged" convention as recruiterAccessCode.
   const [accessPassword, setAccessPassword] = useState("");
   // Local-time "datetime-local" input value, converted to/from ISO on load/save.
   const [accessPasswordExpiresAt, setAccessPasswordExpiresAt] = useState("");
@@ -356,6 +362,7 @@ export function ResumeEditPage() {
     professionKey,
     templateKey,
     visibility,
+    accessPassword,
     accessPasswordExpiresAt,
     answers,
     experience,
@@ -627,15 +634,19 @@ export function ResumeEditPage() {
     profession: professionKey,
     templateKey,
     visibility,
-    accessPassword: visibility === "password" ? accessPassword : null,
+    // Omitted entirely (not sent as "") when blank — same "blank means no
+    // change" convention as recruiterAccessCode below now, fixed from the
+    // old behavior where this always sent whatever was in the field,
+    // including blank, silently clearing a working password on any
+    // unrelated autosave (see the state declaration's doc comment above).
+    ...(visibility === "password" && accessPassword ? { accessPassword } : {}),
     accessPasswordExpiresAt:
       visibility === "password" && accessPasswordExpiresAt ? new Date(accessPasswordExpiresAt).toISOString() : null,
     coverLetterEnabled,
     recruiterModeEnabled,
     // Omitted entirely (not sent as "") when blank — blank means "leave the
-    // existing code alone," never "clear it." See the state declaration's
-    // doc comment above for why this deliberately doesn't mirror
-    // accessPassword's blank-overwrites-to-empty behavior just above.
+    // existing code alone," never "clear it." Same convention as
+    // accessPassword just above.
     ...(recruiterAccessCode ? { recruiterAccessCode } : {}),
     recruiterLocation,
     recruiterAvailability,
@@ -667,6 +678,11 @@ export function ResumeEditPage() {
     // avoids resending the same code on every subsequent autosave.
     setRecruiterAccessCode("");
     setHasRecruiterAccessCode(updated.hasRecruiterAccessCode);
+    // Same treatment as the recruiter code above — never leave a just-typed
+    // secret sitting in state after it's been saved, and rely on
+    // resume.hasPassword (the render's own indicator) rather than the raw
+    // value for "is one set" messaging.
+    setAccessPassword("");
   };
 
   /** Saves the hand-edited Summary/Bullets text and marks it manually edited, so it survives an unrelated content edit elsewhere on this page (see ResumeService.update). */
@@ -1156,7 +1172,17 @@ export function ResumeEditPage() {
               <>
                 <div className="field">
                   <label>Access password</label>
-                  <input value={accessPassword} onChange={(e) => setAccessPassword(e.target.value)} placeholder="Set a password" />
+                  <input
+                    value={accessPassword}
+                    onChange={(e) => setAccessPassword(e.target.value)}
+                    placeholder={resume.hasPassword ? "Leave blank to keep the current password" : "Set a password"}
+                    autoComplete="off"
+                  />
+                  <p className="hero-note" style={{ marginTop: 4 }}>
+                    {resume.hasPassword
+                      ? "A password is currently set — it won't be shown here again, but leaving this blank keeps it unchanged."
+                      : "Required before this link can actually be password protected."}
+                  </p>
                 </div>
                 <div className="field">
                   <label>Link expires (optional)</label>

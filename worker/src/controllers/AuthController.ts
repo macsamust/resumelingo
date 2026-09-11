@@ -42,6 +42,15 @@ export class AuthController {
   register = async (c: Context<AppEnv>) => {
     const { authService, emailVerificationIpLogRepository, securityAlertService } = c.get("services");
     const ip = clientIp(c);
+    // Cheap early exit only — skips even parsing the body when obviously
+    // well over budget. NOT the authoritative decision; see
+    // recordAttemptIfUnderLimit below for why a plain read here has a race
+    // under concurrent requests, and why the real gate has to sit right
+    // before the actual account-creation work rather than after it (unlike
+    // login/verifyEmail's failure-only throttle further down, this one
+    // records on every attempt regardless of outcome — see this class's
+    // "register" doc comment — so the gate has to come *before* the work to
+    // actually prevent it, not after).
     const recentAttempts = await emailVerificationIpLogRepository.countRecentAttempts(ip, "register", REGISTER_WINDOW_MINUTES);
     if (recentAttempts >= MAX_REGISTER_ATTEMPTS) {
       await securityAlertService.recordIfNew({
@@ -72,9 +81,32 @@ export class AuthController {
     if (!acceptedTerms) {
       return c.json({ error: "You must accept the Terms of Service to create an account." }, 400);
     }
-    const { user, token } = await authService.register({ name, email, password, profession, acceptedTerms });
-    await emailVerificationIpLogRepository.recordAttempt(ip, "register");
+
+    // The authoritative decision, and — unlike the password/recruiter-code
+    // throttles' equivalent check — deliberately placed *before* the real
+    // work (authService.register) rather than after it. This action records
+    // on every attempt regardless of outcome, so reserving the slot here is
+    // what actually prevents a concurrent burst from creating more accounts
+    // than the budget allows; recording only after the fact would let every
+    // account in the burst be created before any of them got blocked.
+    const recorded = await emailVerificationIpLogRepository.recordAttemptIfUnderLimit(
+      ip,
+      "register",
+      REGISTER_WINDOW_MINUTES,
+      MAX_REGISTER_ATTEMPTS
+    );
     await emailVerificationIpLogRepository.pruneOlderThan(REGISTER_WINDOW_MINUTES);
+    if (!recorded) {
+      await securityAlertService.recordIfNew({
+        type: "register_burst",
+        severity: "warning",
+        ip,
+        dedupeWindowMinutes: REGISTER_WINDOW_MINUTES,
+      });
+      return c.json({ error: "Too many signup attempts from this network. Please try again later." }, 429);
+    }
+
+    const { user, token } = await authService.register({ name, email, password, profession, acceptedTerms });
     return c.json({ user: user.toPublicJSON(), token }, 201);
   };
 
@@ -87,6 +119,10 @@ export class AuthController {
   login = async (c: Context<AppEnv>) => {
     const { authService, emailVerificationIpLogRepository, securityAlertService } = c.get("services");
     const ip = clientIp(c);
+    // Cheap early exit only — NOT the authoritative decision. See
+    // recordAttemptIfUnderLimit below, used in the catch block, for the
+    // atomic check that actually closes the race a burst of concurrent
+    // wrong-password attempts could otherwise slip through.
     const recentFailures = await emailVerificationIpLogRepository.countRecentAttempts(ip, "login", LOGIN_WINDOW_MINUTES);
     if (recentFailures >= MAX_LOGIN_FAILURES) {
       await securityAlertService.recordIfNew({
@@ -108,8 +144,22 @@ export class AuthController {
       return c.json({ user: user.toPublicJSON(), token });
     } catch (err) {
       if (err instanceof AuthError) {
-        await emailVerificationIpLogRepository.recordAttempt(ip, "login");
+        const recorded = await emailVerificationIpLogRepository.recordAttemptIfUnderLimit(
+          ip,
+          "login",
+          LOGIN_WINDOW_MINUTES,
+          MAX_LOGIN_FAILURES
+        );
         await emailVerificationIpLogRepository.pruneOlderThan(LOGIN_WINDOW_MINUTES);
+        if (!recorded) {
+          await securityAlertService.recordIfNew({
+            type: "login_brute_force",
+            severity: "critical",
+            ip,
+            dedupeWindowMinutes: LOGIN_WINDOW_MINUTES,
+          });
+          return c.json({ error: "Too many login attempts from this network. Please try again later." }, 429);
+        }
       }
       throw err;
     }
@@ -149,7 +199,10 @@ export class AuthController {
     const { authService, emailVerificationIpLogRepository, securityAlertService } = c.get("services");
     // Checked before anything else, including the format validation below —
     // an attacker probing for the rate limit shouldn't be able to burn zero
-    // attempts by sending intentionally-malformed emails first.
+    // attempts by sending intentionally-malformed emails first. Cheap early
+    // exit only, not the authoritative decision — see the atomic
+    // recordAttemptIfUnderLimit call further down, which is what actually
+    // gates the real work.
     const ip = clientIp(c);
     const recentAttempts = await emailVerificationIpLogRepository.countRecentAttempts(
       ip,
@@ -177,9 +230,29 @@ export class AuthController {
     if (!isValidEmail(email)) {
       return c.json({ error: "Please enter a valid email address." }, 400);
     }
-    await authService.requestPasswordReset(email);
-    await emailVerificationIpLogRepository.recordAttempt(ip, "password-reset");
+
+    // The authoritative decision, placed before the real work for the same
+    // reason as register's above — this records on every valid-format
+    // attempt regardless of outcome, so the reservation has to happen
+    // before requestPasswordReset actually sends anything, not after.
+    const recorded = await emailVerificationIpLogRepository.recordAttemptIfUnderLimit(
+      ip,
+      "password-reset",
+      FORGOT_PASSWORD_WINDOW_MINUTES,
+      MAX_FORGOT_PASSWORD_ATTEMPTS
+    );
     await emailVerificationIpLogRepository.pruneOlderThan(FORGOT_PASSWORD_WINDOW_MINUTES);
+    if (!recorded) {
+      await securityAlertService.recordIfNew({
+        type: "password_reset_spam",
+        severity: "warning",
+        ip,
+        dedupeWindowMinutes: FORGOT_PASSWORD_WINDOW_MINUTES,
+      });
+      return c.json({ error: "Too many requests from this network. Please try again later." }, 429);
+    }
+
+    await authService.requestPasswordReset(email);
     // Always the same response, whether or not the email matched an account.
     return c.json({ success: true });
   };
@@ -268,6 +341,8 @@ export class AuthController {
   verifyEmail = async (c: Context<AppEnv>) => {
     const { authService, emailVerificationIpLogRepository, securityAlertService } = c.get("services");
     const ip = clientIp(c);
+    // Cheap early exit only — see recordAttemptIfUnderLimit in the catch
+    // block below for the atomic, authoritative decision.
     const recentFailures = await emailVerificationIpLogRepository.countRecentAttempts(ip, "verify", VERIFY_WINDOW_MINUTES);
     if (recentFailures >= MAX_VERIFY_FAILURES) {
       await securityAlertService.recordIfNew({
@@ -289,8 +364,22 @@ export class AuthController {
       return c.json({ success: true });
     } catch (err) {
       if (err instanceof InvalidVerificationTokenError) {
-        await emailVerificationIpLogRepository.recordAttempt(ip, "verify");
+        const recorded = await emailVerificationIpLogRepository.recordAttemptIfUnderLimit(
+          ip,
+          "verify",
+          VERIFY_WINDOW_MINUTES,
+          MAX_VERIFY_FAILURES
+        );
         await emailVerificationIpLogRepository.pruneOlderThan(VERIFY_WINDOW_MINUTES);
+        if (!recorded) {
+          await securityAlertService.recordIfNew({
+            type: "verify_brute_force",
+            severity: "warning",
+            ip,
+            dedupeWindowMinutes: VERIFY_WINDOW_MINUTES,
+          });
+          return c.json({ error: "Too many attempts from this network. Please try again later." }, 429);
+        }
       }
       throw err;
     }
@@ -306,6 +395,11 @@ export class AuthController {
   resendVerification = async (c: Context<AppEnv>) => {
     const { authService, emailVerificationIpLogRepository, securityAlertService } = c.get("services");
     const ip = clientIp(c);
+    // Cheap early exit only — the authoritative decision is the atomic
+    // recordAttemptIfUnderLimit call below, placed before the real work for
+    // the same reason as register/forgotPassword above (this records on
+    // every attempt regardless of outcome, so the reservation has to happen
+    // before resendVerificationEmail actually sends anything).
     const recentAttempts = await emailVerificationIpLogRepository.countRecentAttempts(ip, "resend", RESEND_WINDOW_MINUTES);
     if (recentAttempts >= MAX_RESEND_ATTEMPTS) {
       await securityAlertService.recordIfNew({
@@ -317,10 +411,25 @@ export class AuthController {
       return c.json({ error: "Too many resend requests from this network. Please try again later." }, 429);
     }
 
+    const recorded = await emailVerificationIpLogRepository.recordAttemptIfUnderLimit(
+      ip,
+      "resend",
+      RESEND_WINDOW_MINUTES,
+      MAX_RESEND_ATTEMPTS
+    );
+    await emailVerificationIpLogRepository.pruneOlderThan(RESEND_WINDOW_MINUTES);
+    if (!recorded) {
+      await securityAlertService.recordIfNew({
+        type: "resend_spam",
+        severity: "info",
+        ip,
+        dedupeWindowMinutes: RESEND_WINDOW_MINUTES,
+      });
+      return c.json({ error: "Too many resend requests from this network. Please try again later." }, 429);
+    }
+
     const user = c.get("user")!;
     await authService.resendVerificationEmail(user.id);
-    await emailVerificationIpLogRepository.recordAttempt(ip, "resend");
-    await emailVerificationIpLogRepository.pruneOlderThan(RESEND_WINDOW_MINUTES);
     return c.json({ success: true });
   };
 }

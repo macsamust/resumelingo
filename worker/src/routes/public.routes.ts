@@ -7,6 +7,7 @@ const publicRoutes = new Hono<AppEnv>();
 const controller = new PublicController();
 
 publicRoutes.get("/:slug", optionalAuth, controller.getBySlug);
+publicRoutes.post("/:slug/password", optionalAuth, controller.unlockPassword);
 publicRoutes.post("/:slug/recruiter-card", optionalAuth, controller.unlockRecruiterCard);
 
 export default publicRoutes;
