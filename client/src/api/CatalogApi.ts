@@ -1,5 +1,5 @@
 import { ApiClient } from "./ApiClient";
-import { AuthUser, DashboardSummary, ProfessionDefinition, ProfessionSummary, PublicResume, SkillSuggestion, SubscriptionPlan, TemplateDefinition } from "../types";
+import { AuthUser, DashboardSummary, ProfessionDefinition, ProfessionSummary, PublicResume, RecruiterCard, SkillSuggestion, SubscriptionPlan, TemplateDefinition } from "../types";
 
 /** Read-mostly catalog + dashboard + public endpoints, grouped since none need dedicated state. */
 export class CatalogApi extends ApiClient {
@@ -61,5 +61,17 @@ export class CatalogApi extends ApiClient {
   getPublicResume(slug: string, password?: string) {
     const suffix = password ? `?password=${encodeURIComponent(password)}` : "";
     return this.get<{ resume: PublicResume }>(`/public/${slug}${suffix}`);
+  }
+
+  /**
+   * POST body, not a query string — deliberately unlike getPublicResume's
+   * password param above, since a recruiter code sitting in a URL would leak
+   * into server logs, browser history, and any Referer header. `password` is
+   * only needed here for a Private/password-protected resume (the code is an
+   * additional gate stacked on top of that, never a substitute for it — see
+   * ResumeService.unlockRecruiterCard).
+   */
+  unlockRecruiterCard(slug: string, code: string, password?: string) {
+    return this.post<{ recruiterCard: RecruiterCard }>(`/public/${slug}/recruiter-card`, { code, password });
   }
 }

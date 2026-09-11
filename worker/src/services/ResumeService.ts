@@ -12,6 +12,7 @@ import { canUseVisibility, VISIBILITY_LABEL, VISIBILITY_MIN_TIER } from "../conf
 import { getPlan } from "../config/subscriptionPlans";
 import { getProfessionByKey } from "../config/professions";
 import { summarizeVersionChange } from "../utils/versionChangeSummary";
+import { sha256Hex } from "../utils/crypto";
 
 /**
  * SCOPE NOTE (Phase 3 admin console port): the template-tier gate below
@@ -57,6 +58,10 @@ export class CloneAccessError extends Error {}
 export class ActiveToggleAccessError extends Error {}
 export class VersionHistoryAccessError extends Error {}
 export class VersionNotFoundError extends Error {}
+/** Thrown from update() when recruiterModeEnabled would end up true with no recruiterAccessCodeHash on file (existing or newly provided) — see that method's recruiter-code block. Closes the Sep 2026 finding that Recruiter Mode's card had no access control beyond the resume's own general visibility. */
+export class RecruiterAccessCodeRequiredError extends Error {}
+/** Thrown from unlockRecruiterCard() when the submitted code doesn't match, Recruiter Mode isn't on, or no code has ever been set — PublicController treats all three identically (generic "incorrect code" response) so a wrong guess can't be used to enumerate which resumes have Recruiter Mode on at all. */
+export class RecruiterCodeInvalidError extends Error {}
 
 // ~2MB of base64 text comfortably covers a photo resized/compressed
 // client-side before upload; this is a server-side backstop in case that
@@ -157,6 +162,20 @@ export function assertEmailVerifiedForVisibility(emailVerified: boolean, visibil
  * that timestamp only ever reflects a real content edit.
  */
 const LINK_ONLY_UPDATE_KEYS = new Set(["active", "visibility", "accessPassword", "accessPasswordExpiresAt"]);
+
+/**
+ * update()'s own parameter type — extends the repository's UpdateResumeInput
+ * with `recruiterAccessCode`, the raw plaintext code a subscriber types into
+ * ResumeEditPage. Kept separate from UpdateResumeInput itself (which only
+ * knows about `recruiterAccessCodeHash`) so the raw code can never
+ * accidentally reach ResumeRepository.update / a D1 column — update() below
+ * always hashes it via sha256Hex first and strips the raw field before
+ * spreading the rest of `input` into the repository call.
+ */
+export interface ResumeUpdateInput extends UpdateResumeInput {
+  /** Blank/omitted means "no change" — same semantics as leaving accessPassword's client-side input blank, except this one is actually enforced correctly (see update()'s destructuring below) rather than the pre-existing password field's blank-overwrites-to-empty quirk. */
+  recruiterAccessCode?: string;
+}
 
 /** Throws unless `tier` is Professional or Premium — Starter accounts can't pause/resume a resume's public link. */
 export function assertActiveToggleAllowed(tier: User["subscriptionTier"]): void {
@@ -310,8 +329,14 @@ export class ResumeService {
     return resume;
   }
 
-  async update(userId: string, resumeId: string, input: UpdateResumeInput): Promise<Resume> {
+  async update(userId: string, resumeId: string, input: ResumeUpdateInput): Promise<Resume> {
     const existing = await this.getOwned(userId, resumeId); // throws if not found/owned
+
+    // Pulled off input immediately — see ResumeUpdateInput's doc comment for
+    // why the raw code must never reach ResumeRepository.update via a
+    // `...input` spread further down.
+    const { recruiterAccessCode, ...restInput } = input;
+    input = restInput;
 
     // Computed from the raw request keys before any of the fields below get
     // filled in with computed defaults — see LINK_ONLY_UPDATE_KEYS.
@@ -377,6 +402,33 @@ export class ResumeService {
         referencesEnabled = false;
       }
     }
+
+    // Recruiter Mode's card (location, salary, clearance, work
+    // authorization) previously had zero access control beyond the resume's
+    // own general visibility — a fully public resume with Recruiter Mode on
+    // exposed all of it to anyone with the link (Sep 2026 finding). A code
+    // is now required before the card can ever be turned on: either an
+    // existing hash already on file, or a new one provided in this exact
+    // request. Checked against the *final* recruiterModeEnabled (post tier
+    // gate above), not the raw request, so a Starter/Professional account
+    // can't be blocked by this on a request that's about to silently coerce
+    // recruiterModeEnabled back to false anyway.
+    // Trimmed before hashing — the unlock flow (PublicResumePage/
+    // unlockRecruiterCard) trims the visitor's submitted code the same way,
+    // so a code saved with incidental leading/trailing whitespace (e.g.
+    // pasted from somewhere) doesn't silently become impossible to match.
+    // Also means a whitespace-only value is treated as "no code," not as a
+    // real (if useless) one.
+    let recruiterAccessCodeHash: string | undefined;
+    const trimmedRecruiterAccessCode = recruiterAccessCode?.trim();
+    if (trimmedRecruiterAccessCode) {
+      recruiterAccessCodeHash = await sha256Hex(trimmedRecruiterAccessCode);
+    } else if (recruiterModeEnabled && !existing.recruiterAccessCodeHash) {
+      throw new RecruiterAccessCodeRequiredError(
+        "Set a recruiter access code before turning on Recruiter Mode — this protects the card's salary, clearance, and work authorization fields from anyone who just has the resume's link."
+      );
+    }
+
     assertPhotoSizeOk(input.photoUrl);
     assertGeneratedContentSizeOk(input.generatedSummary, input.generatedBullets);
 
@@ -463,6 +515,7 @@ export class ResumeService {
         generatedCoverLetter,
         recruiterModeEnabled,
         referencesEnabled,
+        ...(recruiterAccessCodeHash !== undefined ? { recruiterAccessCodeHash } : {}),
       },
       { bumpUpdatedAt: !isLinkOnlyChange }
     );
@@ -609,5 +662,54 @@ export class ResumeService {
     await this.resumes.incrementViewCount(record.id);
     await this.analytics.recordView(record.id);
     return resume;
+  }
+
+  /**
+   * Separate from getPublicBySlug on purpose: the main public page load
+   * never includes the raw recruiterCard fields at all (see
+   * Resume.toPublicJSON's includeRecruiterCard default) — this is the only
+   * path that can ever return them, and only after the submitted code
+   * checks out. PublicController rate-limits calls to this the same way it
+   * already rate-limits password guesses (see
+   * publicResumeRecruiterCodeIpLogRepository), so this method itself stays
+   * a plain verify-then-return with no throttling of its own.
+   *
+   * Re-runs the exact same active/expired/isAccessibleBy checks
+   * getPublicBySlug does (accepting the resume's own `password` for that
+   * purpose, distinct from `code`) rather than trusting that the caller
+   * already passed them on an earlier request — otherwise a Private or
+   * password-protected resume's recruiter card would be reachable by
+   * anyone who merely guessed or was handed the recruiter code, completely
+   * bypassing the resume's own visibility setting. The recruiter code is an
+   * ADDITIONAL gate stacked on top of normal access, never a substitute
+   * for it.
+   *
+   * Unlike getPublicBySlug/isAccessibleBy, the owner does NOT get a free
+   * pass on the code check itself — fixed after a Sep 2026 report that an
+   * owner previewing their own public link (while logged in, so
+   * requestingUserId matched) could type ANY code, correct or not, and
+   * still see the card. That happened because this method used to skip
+   * isRecruiterCodeValid entirely for isOwner, on the reasoning that an
+   * owner "shouldn't have to prove a code they set themselves" — but from
+   * the owner's seat that reads as "the code check does nothing at all,"
+   * which defeats the whole point of testing it. The owner still bypasses
+   * the resume's own active/expired/password gates below (those are a
+   * separate, pre-existing concern — the owner can always reach their own
+   * resume regardless of its visibility setting), but the recruiter code
+   * itself now has to be correct for anyone, owner included.
+   */
+  async unlockRecruiterCard(slug: string, code: string, password?: string, requestingUserId?: string) {
+    const record = await this.resumes.findBySlug(slug);
+    if (!record) throw new RecruiterCodeInvalidError("Incorrect access code.");
+    const resume = new Resume(record);
+    const isOwner = !!requestingUserId && requestingUserId === resume.userId;
+    if (!isOwner && !resume.active) throw new RecruiterCodeInvalidError("Incorrect access code.");
+    if (!isOwner && resume.isPasswordExpired) throw new RecruiterCodeInvalidError("Incorrect access code.");
+    if (!resume.isAccessibleBy(requestingUserId, password)) throw new RecruiterCodeInvalidError("Incorrect access code.");
+    if (!resume.recruiterModeEnabled) throw new RecruiterCodeInvalidError("Incorrect access code.");
+    if (!(await resume.isRecruiterCodeValid(code))) {
+      throw new RecruiterCodeInvalidError("Incorrect access code.");
+    }
+    return resume.recruiterCard;
   }
 }

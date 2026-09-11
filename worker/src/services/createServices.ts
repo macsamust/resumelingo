@@ -13,6 +13,7 @@ import { AdminAuditLogRepository } from "../repositories/AdminAuditLogRepository
 import { AdminLoginIpLogRepository } from "../repositories/AdminLoginIpLogRepository";
 import { EmailVerificationIpLogRepository } from "../repositories/EmailVerificationIpLogRepository";
 import { PublicResumePasswordIpLogRepository } from "../repositories/PublicResumePasswordIpLogRepository";
+import { PublicResumeRecruiterCodeIpLogRepository } from "../repositories/PublicResumeRecruiterCodeIpLogRepository";
 import { SecurityEventRepository } from "../repositories/SecurityEventRepository";
 import { MarketingEventRepository } from "../repositories/MarketingEventRepository";
 import { TokenService } from "./TokenService";
@@ -60,6 +61,8 @@ export interface Services {
   emailVerificationIpLogRepository: EmailVerificationIpLogRepository;
   /** Backs the IP+slug-based rate limit on password-protected public resume links — see PublicController.getBySlug. */
   publicResumePasswordIpLogRepository: PublicResumePasswordIpLogRepository;
+  /** Backs the IP+slug-based rate limit on Recruiter Mode's access-code unlock — see PublicController.unlockRecruiterCard. Its own table (not shared with the password log) so the two guess budgets can't exhaust each other. */
+  publicResumeRecruiterCodeIpLogRepository: PublicResumeRecruiterCodeIpLogRepository;
   /** Durable log of flagged abuse/anomaly signals — see SecurityEventRepository.ts. Exposed directly for AdminSecurityEventController's Security Report page. */
   securityEventRepository: SecurityEventRepository;
   /** Durable funnel-event log (e.g. plan_clicked) — see MarketingEventRepository.ts. No analytics vendor is wired into this app, so this is the closest thing to one. */
@@ -119,6 +122,7 @@ export function createServices(env: Env): Services {
   const adminLoginIpLogRepository = new AdminLoginIpLogRepository(env.DB);
   const emailVerificationIpLogRepository = new EmailVerificationIpLogRepository(env.DB);
   const publicResumePasswordIpLogRepository = new PublicResumePasswordIpLogRepository(env.DB);
+  const publicResumeRecruiterCodeIpLogRepository = new PublicResumeRecruiterCodeIpLogRepository(env.DB);
   const securityEventRepository = new SecurityEventRepository(env.DB);
   const marketingEventRepository = new MarketingEventRepository(env.DB);
   const resumeAnalyticsRepository = new ResumeAnalyticsRepository(env.DB);
@@ -222,6 +226,7 @@ export function createServices(env: Env): Services {
     adminLoginIpLogRepository,
     emailVerificationIpLogRepository,
     publicResumePasswordIpLogRepository,
+    publicResumeRecruiterCodeIpLogRepository,
     securityEventRepository,
     marketingEventRepository,
     securityAlertService,

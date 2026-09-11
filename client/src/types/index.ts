@@ -223,6 +223,8 @@ export interface Resume {
   recruiterExpectedSalary: string;
   /** One of config/recruiterOptions.ts's REMOTE_PREFERENCE_OPTIONS values, or "" if unset. */
   recruiterRemotePreference: string;
+  /** True once an access code is set for the Recruiter Mode card — required before recruiterModeEnabled can be turned on (server-enforced). Never the raw code itself; ResumeEditPage's input always starts blank, same pattern as hasPassword above. */
+  hasRecruiterAccessCode: boolean;
   /** "Combine Work Experience with Achievements" checkbox — when true, each achievement's bullet is nested under the job it's linked to (see AchievementEntry.experienceId) instead of listed in a separate flat Highlights section. */
   combineExperienceFormat: boolean;
   answers: Record<string, string>;
@@ -275,8 +277,10 @@ export interface PublicResume {
   professionLabel: string;
   templateKey: string;
   template?: TemplateDefinition;
-  /** Null when the resume owner hasn't turned Recruiter Mode on. */
+  /** Null when the resume owner hasn't turned Recruiter Mode on, OR when it's on but locked behind an access code the viewer hasn't entered yet — check recruiterCardLocked to tell the two apart. Populated only after a successful catalogApi.unlockRecruiterCard call. */
   recruiterCard: RecruiterCard | null;
+  /** True when Recruiter Mode is on but recruiterCard is null because the viewer hasn't entered the correct access code yet — see PublicResumePage's locked-card UI. Always false when Recruiter Mode is off. */
+  recruiterCardLocked: boolean;
   /** See Resume.combineExperienceFormat — same toggle, exposed here so the public link renders the same layout the owner chose. */
   combineExperienceFormat: boolean;
   answers: Record<string, string>;

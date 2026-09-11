@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, catalogApi } from "../api";
-import { PublicResume, ReferenceEntry } from "../types";
+import { PublicResume, ReferenceEntry, RecruiterCard } from "../types";
 import { buildContactLine, filterAnswerEntries, formatMonth, isRealContactValue, ResumePreview, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
 import { CLEARANCE_OPTIONS, recruiterOptionLabel, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
 import { groupAchievementsByExperience } from "../utils/starBullet";
@@ -231,6 +231,20 @@ export function PublicResumePage() {
   const [passwordRequired, setPasswordRequired] = useState(false);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(true);
+  // Populated by a successful unlockRecruiterCard call — kept separate from
+  // resume.recruiterCard itself (which stays null from the server until
+  // unlocked). Deliberately in-memory only (no sessionStorage/localStorage):
+  // it resets to null on every fresh page load/reload, which means the
+  // correct code has to be re-entered each time rather than being
+  // remembered — otherwise, an owner who rotates the access code to cut a
+  // specific recruiter off would have no way to actually revoke a card
+  // that recruiter already unlocked once and had cached client-side. See
+  // recruiterCard (the rendered value) below, which merges resume.recruiterCard
+  // and this override.
+  const [recruiterCardOverride, setRecruiterCardOverride] = useState<RecruiterCard | null>(null);
+  const [recruiterCode, setRecruiterCode] = useState("");
+  const [recruiterUnlocking, setRecruiterUnlocking] = useState(false);
+  const [recruiterUnlockError, setRecruiterUnlockError] = useState<string | null>(null);
 
   const load = (pwd?: string) => {
     if (!slug) return;
@@ -241,6 +255,10 @@ export function PublicResumePage() {
       .then((res) => {
         setResume(res.resume);
         setPasswordRequired(false);
+        // A fresh load always starts locked again — see recruiterCardOverride's
+        // doc comment above for why this deliberately doesn't try to restore
+        // a prior unlock from storage.
+        setRecruiterCardOverride(null);
       })
       .catch((err) => {
         if (err instanceof ApiError && err.status === 403 && err.reason === "private") {
@@ -271,6 +289,28 @@ export function PublicResumePage() {
   const onSubmitPassword = (e: FormEvent) => {
     e.preventDefault();
     load(password);
+  };
+
+  /**
+   * `password` here is whatever the visitor already used (if anything) to
+   * get past the resume's own visibility gate above — the recruiter code is
+   * an additional layer on top of that, never a replacement, so the server
+   * re-checks both (see ResumeService.unlockRecruiterCard).
+   */
+  const onSubmitRecruiterCode = (e: FormEvent) => {
+    e.preventDefault();
+    if (!slug || !recruiterCode.trim()) return;
+    setRecruiterUnlocking(true);
+    setRecruiterUnlockError(null);
+    catalogApi
+      .unlockRecruiterCard(slug, recruiterCode.trim(), password || undefined)
+      .then((res) => {
+        setRecruiterCardOverride(res.recruiterCard);
+      })
+      .catch((err) => {
+        setRecruiterUnlockError(err instanceof ApiError ? err.message : "Something went wrong checking that code.");
+      })
+      .finally(() => setRecruiterUnlocking(false));
   };
 
   if (loading) return <PublicResumeSkeleton />;
@@ -308,9 +348,19 @@ export function PublicResumePage() {
     );
   }
 
+  // Server-populated recruiterCard when Recruiter Mode is on and already
+  // unlocked this request, otherwise whatever a cache hit or a successful
+  // in-page unlock produced — see recruiterCardOverride's doc comment above.
+  const recruiterCard = resume.recruiterCard ?? recruiterCardOverride;
+
   const onDownloadText = () => {
     const filename = `${(resume.title || "resume").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "resume"}.txt`;
-    downloadTextFile(filename, resumeToPlainText(resume));
+    // Merge in whatever recruiterCard is actually visible on screen (server
+    // value or an unlocked override) — resumeToPlainText only ever looks at
+    // its `resume` argument's own recruiterCard field, so without this a
+    // visitor who just unlocked the card here would still get an export
+    // missing its recruiter-only references.
+    downloadTextFile(filename, resumeToPlainText({ ...resume, recruiterCard }));
   };
 
   // Needed up here (not just inside the "Additional Details" card's own IIFE
@@ -335,61 +385,87 @@ export function PublicResumePage() {
           Download as text (.txt)
         </button>
       </div>
-      {resume.recruiterCard && (
+      {resume.recruiterCardLocked && !recruiterCard && (
+        <div className="public-resume-card public-resume-details" style={{ marginBottom: 24 }}>
+          <h2 className="public-resume-details-heading">Candidate Summary (locked)</h2>
+          <p className="hero-note" style={{ marginBottom: 16 }}>
+            This resume's owner has protected the recruiter summary card (location, availability, expected salary,
+            clearance, work authorization) with a separate access code. Enter the code they shared with you to view
+            it.
+          </p>
+          <form onSubmit={onSubmitRecruiterCode} style={{ maxWidth: 360 }}>
+            <div className="field">
+              <label>Recruiter access code</label>
+              <input
+                type="text"
+                value={recruiterCode}
+                onChange={(e) => setRecruiterCode(e.target.value)}
+                autoComplete="off"
+                autoFocus
+              />
+            </div>
+            {recruiterUnlockError && <p className="form-error">{recruiterUnlockError}</p>}
+            <button className="btn btn-primary" type="submit" disabled={recruiterUnlocking || !recruiterCode.trim()}>
+              {recruiterUnlocking ? "Checking…" : "Unlock candidate summary"}
+            </button>
+          </form>
+        </div>
+      )}
+      {recruiterCard && (
         <div className="public-resume-card public-resume-details" style={{ marginBottom: 24 }}>
           <h2 className="public-resume-details-heading">Candidate Summary</h2>
-          {resume.recruiterCard.candidateSummary && (
-            <p className="recruiter-candidate-summary">{resume.recruiterCard.candidateSummary}</p>
+          {recruiterCard.candidateSummary && (
+            <p className="recruiter-candidate-summary">{recruiterCard.candidateSummary}</p>
           )}
           <div className="answer-grid">
-            {resume.recruiterCard.location && (
+            {recruiterCard.location && (
               <div>
                 <div className="answer-key">Location</div>
-                <div className="answer-value">{resume.recruiterCard.location}</div>
+                <div className="answer-value">{recruiterCard.location}</div>
               </div>
             )}
-            {resume.recruiterCard.availability && (
+            {recruiterCard.availability && (
               <div>
                 <div className="answer-key">Availability</div>
-                <div className="answer-value">{resume.recruiterCard.availability}</div>
+                <div className="answer-value">{recruiterCard.availability}</div>
               </div>
             )}
-            {resume.recruiterCard.expectedSalary && (
+            {recruiterCard.expectedSalary && (
               <div>
                 <div className="answer-key">Expected Salary</div>
-                <div className="answer-value">{resume.recruiterCard.expectedSalary}</div>
+                <div className="answer-value">{recruiterCard.expectedSalary}</div>
               </div>
             )}
-            {resume.recruiterCard.clearance && (
+            {recruiterCard.clearance && (
               <div>
                 <div className="answer-key">Clearance</div>
-                <div className="answer-value">{recruiterOptionLabel(CLEARANCE_OPTIONS, resume.recruiterCard.clearance)}</div>
+                <div className="answer-value">{recruiterOptionLabel(CLEARANCE_OPTIONS, recruiterCard.clearance)}</div>
               </div>
             )}
-            {resume.recruiterCard.workAuthorization && (
+            {recruiterCard.workAuthorization && (
               <div>
                 <div className="answer-key">Work Authorization</div>
                 <div className="answer-value">
-                  {recruiterOptionLabel(WORK_AUTHORIZATION_OPTIONS, resume.recruiterCard.workAuthorization)}
+                  {recruiterOptionLabel(WORK_AUTHORIZATION_OPTIONS, recruiterCard.workAuthorization)}
                 </div>
               </div>
             )}
-            {resume.recruiterCard.remotePreference && (
+            {recruiterCard.remotePreference && (
               <div>
                 <div className="answer-key">Remote Preference</div>
                 <div className="answer-value">
-                  {recruiterOptionLabel(REMOTE_PREFERENCE_OPTIONS, resume.recruiterCard.remotePreference)}
+                  {recruiterOptionLabel(REMOTE_PREFERENCE_OPTIONS, recruiterCard.remotePreference)}
                 </div>
               </div>
             )}
           </div>
-          {resume.recruiterCard.skills.length > 0 && (
+          {recruiterCard.skills.length > 0 && (
             <div style={{ marginTop: 24 }}>
               <div className="answer-key" style={{ marginBottom: 10 }}>
                 Skills
               </div>
               <div className="recruiter-skill-chips">
-                {resume.recruiterCard.skills.map((s) => (
+                {recruiterCard.skills.map((s) => (
                   <span key={s} className="recruiter-skill-chip">
                     {s}
                   </span>
@@ -397,12 +473,12 @@ export function PublicResumePage() {
               </div>
             </div>
           )}
-          {resume.recruiterCard.references.length > 0 && (
+          {recruiterCard.references.length > 0 && (
             <div style={{ marginTop: 24 }}>
               <div className="answer-key" style={{ marginBottom: 10 }}>
                 References
               </div>
-              <ReferencesGrid references={resume.recruiterCard.references} />
+              <ReferencesGrid references={recruiterCard.references} />
             </div>
           )}
         </div>

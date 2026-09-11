@@ -167,6 +167,7 @@ export type SecurityEventType =
   | "resend_spam"
   | "password_reset_spam"
   | "public_resume_password_guessing"
+  | "recruiter_code_guessing"
   | "admin_login_brute_force"
   | "admin_mass_delete";
 
@@ -423,6 +424,8 @@ export interface ResumeRecord {
   recruiterExpectedSalary: string;
   /** One of config/recruiterOptions.ts's REMOTE_PREFERENCE_OPTIONS values, or "" if unset. */
   recruiterRemotePreference: string;
+  /** Hashed (sha256Hex) — see models/Resume.ts's isRecruiterCodeValid and hasRecruiterAccessCode. Null until the owner sets one; required (server-side) before recruiterModeEnabled can be turned on. */
+  recruiterAccessCodeHash: string | null;
   /** "Combine Work Experience with Achievements" checkbox — when true, each achievement's bullet is nested under the job it's linked to (see AchievementEntry.experienceId) instead of listed in a separate flat Highlights section. */
   combineExperienceFormat: boolean;
   answers: string; // JSON-serialized Record<string, string>

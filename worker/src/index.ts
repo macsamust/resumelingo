@@ -31,6 +31,8 @@ import {
   EmailVerificationRequiredError,
   GeneratedContentTooLargeError,
   PhotoTooLargeError,
+  RecruiterAccessCodeRequiredError,
+  RecruiterCodeInvalidError,
   ResumeAccessError,
   ResumeLimitError,
   ResumeNotFoundError,
@@ -150,6 +152,10 @@ app.onError((err, c) => {
       ? 400
       : err instanceof GeneratedContentTooLargeError
       ? 400
+      : err instanceof RecruiterAccessCodeRequiredError
+      ? 400
+      : err instanceof RecruiterCodeInvalidError
+      ? 403
       : err instanceof InvalidResetTokenError
       ? 400
       : err instanceof InvalidUnsubscribeTokenError

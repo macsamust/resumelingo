@@ -66,6 +66,8 @@ export interface UpdateResumeInput {
   recruiterWorkAuthorization?: string;
   recruiterExpectedSalary?: string;
   recruiterRemotePreference?: string;
+  /** Already hashed by the time it reaches here — see ResumeService.update, which calls sha256Hex before passing this through. Never the raw code. */
+  recruiterAccessCodeHash?: string | null;
   combineExperienceFormat?: boolean;
   answers?: Record<string, string>;
   experience?: WorkExperienceEntry[];
@@ -408,6 +410,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       recruiterWorkAuthorization: "",
       recruiterExpectedSalary: "",
       recruiterRemotePreference: "",
+      recruiterAccessCodeHash: null,
       combineExperienceFormat: input.combineExperienceFormat ?? false,
       answers: JSON.stringify(input.answers),
       experience: JSON.stringify(input.experience),
@@ -472,6 +475,8 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
         input.recruiterExpectedSalary !== undefined ? input.recruiterExpectedSalary : existing.recruiterExpectedSalary,
       recruiterRemotePreference:
         input.recruiterRemotePreference !== undefined ? input.recruiterRemotePreference : existing.recruiterRemotePreference,
+      recruiterAccessCodeHash:
+        input.recruiterAccessCodeHash !== undefined ? input.recruiterAccessCodeHash : existing.recruiterAccessCodeHash,
       combineExperienceFormat:
         input.combineExperienceFormat !== undefined ? input.combineExperienceFormat : existing.combineExperienceFormat,
       answers: input.answers ? JSON.stringify(input.answers) : existing.answers,

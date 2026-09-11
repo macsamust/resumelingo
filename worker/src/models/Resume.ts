@@ -3,6 +3,7 @@ import { getTemplateByKey } from "../config/templates";
 import { getProfessionByKey } from "../config/professions";
 import { extractKeywords } from "../utils/keywords";
 import { buildCandidateSummary } from "../utils/candidateSummary";
+import { sha256Hex } from "../utils/crypto";
 
 /**
  * Domain model for a resume. Handles JSON (de)serialization of the
@@ -40,6 +41,15 @@ export class Resume {
   readonly recruiterWorkAuthorization: string;
   readonly recruiterExpectedSalary: string;
   readonly recruiterRemotePreference: string;
+  /**
+   * Hashed (sha256Hex), never plaintext — a deliberate departure from
+   * accessPassword above, which this codebase stores in plain text (see
+   * that field's isAccessibleBy check). Recruiter Mode data (salary,
+   * clearance, work authorization) is more sensitive than a resume's own
+   * password-gated visibility, so it doesn't get the same shortcut. See
+   * isRecruiterCodeValid below and ResumeService's hashing on save.
+   */
+  readonly recruiterAccessCodeHash: string | null;
   readonly combineExperienceFormat: boolean;
   readonly answers: Record<string, string>;
   readonly experience: WorkExperienceEntry[];
@@ -83,6 +93,7 @@ export class Resume {
     this.recruiterWorkAuthorization = record.recruiterWorkAuthorization;
     this.recruiterExpectedSalary = record.recruiterExpectedSalary;
     this.recruiterRemotePreference = record.recruiterRemotePreference;
+    this.recruiterAccessCodeHash = record.recruiterAccessCodeHash;
     this.combineExperienceFormat = !!record.combineExperienceFormat;
     this.answers = JSON.parse(record.answers || "{}");
     this.experience = JSON.parse(record.experience || "[]");
@@ -162,6 +173,30 @@ export class Resume {
     };
   }
 
+  get hasRecruiterAccessCode(): boolean {
+    return !!this.recruiterAccessCodeHash;
+  }
+
+  /**
+   * True if `code` hashes to the stored recruiterAccessCodeHash. Always
+   * false (not an error) when no code has ever been set — see
+   * ResumeService's save-time validation, which requires a code to be set
+   * before Recruiter Mode can be turned on, so this should only be reached
+   * for legacy resumes that had Recruiter Mode enabled before this feature
+   * existed and haven't been saved since (fails closed: the card simply
+   * can't be unlocked until the owner sets a code on their next save,
+   * rather than falling back to showing it unprotected).
+   */
+  async isRecruiterCodeValid(code: string): Promise<boolean> {
+    // Trimmed here (not just by callers) so this is correct regardless of
+    // whether a caller remembers to trim first — ResumeService.update trims
+    // the same way before hashing on save, so a code with incidental
+    // leading/trailing whitespace still matches.
+    const trimmed = code?.trim();
+    if (!this.recruiterAccessCodeHash || !trimmed) return false;
+    return (await sha256Hex(trimmed)) === this.recruiterAccessCodeHash;
+  }
+
   /**
    * References list shown as the resume's own standalone section — empty
    * whenever referencesEnabled is off, and also empty when
@@ -227,6 +262,7 @@ export class Resume {
       recruiterWorkAuthorization: this.recruiterWorkAuthorization,
       recruiterExpectedSalary: this.recruiterExpectedSalary,
       recruiterRemotePreference: this.recruiterRemotePreference,
+      hasRecruiterAccessCode: this.hasRecruiterAccessCode,
       combineExperienceFormat: this.combineExperienceFormat,
       answers: this.answers,
       experience: this.experience,
@@ -248,7 +284,19 @@ export class Resume {
     };
   }
 
-  toPublicJSON() {
+  /**
+   * `includeRecruiterCard` defaults to false — the main public resume load
+   * (PublicController.getBySlug) always calls this with no argument, so the
+   * recruiter card is hidden by default the moment Recruiter Mode is on,
+   * regardless of the resume's own visibility setting. It's only ever true
+   * when ResumeService's separate unlockRecruiterCard flow has already
+   * verified the viewer's submitted code against
+   * isRecruiterCodeValid — see PublicController's recruiter-card route.
+   * `recruiterCardLocked` tells the client the difference between "off" and
+   * "on but not yet unlocked," since recruiterCard is null in both cases.
+   */
+  toPublicJSON(options: { includeRecruiterCard?: boolean } = {}) {
+    const showRecruiterCard = this.recruiterModeEnabled && options.includeRecruiterCard === true;
     return {
       fullName: this.fullName,
       contactEmail: this.contactEmail,
@@ -259,7 +307,8 @@ export class Resume {
       professionLabel: this.professionLabel,
       templateKey: this.templateKey,
       template: this.template,
-      recruiterCard: this.recruiterCard,
+      recruiterCard: showRecruiterCard ? this.recruiterCard : null,
+      recruiterCardLocked: this.recruiterModeEnabled && !showRecruiterCard,
       combineExperienceFormat: this.combineExperienceFormat,
       answers: this.answers,
       experience: this.experience,

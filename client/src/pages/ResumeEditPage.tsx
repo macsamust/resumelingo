@@ -114,6 +114,15 @@ export function ResumeEditPage() {
   const [coverLetterEnabled, setCoverLetterEnabled] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
   const [recruiterModeEnabled, setRecruiterModeEnabled] = useState(false);
+  // Blank means "leave the existing code alone" — unlike accessPassword
+  // above (which the save payload blanks out to `null` on an empty visible
+  // field, a pre-existing quirk left as-is elsewhere on this page), this
+  // field is only ever included in the save payload when non-blank (see
+  // buildSavePayload below), so it can never accidentally erase a code the
+  // owner already set. hasRecruiterAccessCode (loaded from the server) drives
+  // the "a code is already set" messaging beneath the input.
+  const [recruiterAccessCode, setRecruiterAccessCode] = useState("");
+  const [hasRecruiterAccessCode, setHasRecruiterAccessCode] = useState(false);
   const [recruiterLocation, setRecruiterLocation] = useState("");
   const [recruiterAvailability, setRecruiterAvailability] = useState("");
   const [recruiterClearance, setRecruiterClearance] = useState("");
@@ -263,6 +272,8 @@ export function ResumeEditPage() {
         setAccessPasswordExpiresAt(r.accessPasswordExpiresAt ? isoToDatetimeLocal(r.accessPasswordExpiresAt) : "");
         setCoverLetterEnabled(r.coverLetterEnabled);
         setRecruiterModeEnabled(r.recruiterModeEnabled);
+        setHasRecruiterAccessCode(r.hasRecruiterAccessCode);
+        setRecruiterAccessCode("");
         setRecruiterLocation(r.recruiterLocation);
         setRecruiterAvailability(r.recruiterAvailability);
         setRecruiterClearance(r.recruiterClearance);
@@ -355,6 +366,7 @@ export function ResumeEditPage() {
     languages,
     coverLetterEnabled,
     recruiterModeEnabled,
+    recruiterAccessCode,
     recruiterLocation,
     recruiterAvailability,
     recruiterClearance,
@@ -620,6 +632,11 @@ export function ResumeEditPage() {
       visibility === "password" && accessPasswordExpiresAt ? new Date(accessPasswordExpiresAt).toISOString() : null,
     coverLetterEnabled,
     recruiterModeEnabled,
+    // Omitted entirely (not sent as "") when blank — blank means "leave the
+    // existing code alone," never "clear it." See the state declaration's
+    // doc comment above for why this deliberately doesn't mirror
+    // accessPassword's blank-overwrites-to-empty behavior just above.
+    ...(recruiterAccessCode ? { recruiterAccessCode } : {}),
     recruiterLocation,
     recruiterAvailability,
     recruiterClearance,
@@ -644,6 +661,12 @@ export function ResumeEditPage() {
     const { resume: updated } = await resumeApi.update(id, buildSavePayload());
     setResume(updated);
     setIsDirty(false);
+    // Blank the input back out and trust the server's hasRecruiterAccessCode
+    // flag instead of leaving the typed code sitting in the field — same
+    // "never redisplay the secret" treatment as the initial load above, and
+    // avoids resending the same code on every subsequent autosave.
+    setRecruiterAccessCode("");
+    setHasRecruiterAccessCode(updated.hasRecruiterAccessCode);
   };
 
   /** Saves the hand-edited Summary/Bullets text and marks it manually edited, so it survives an unrelated content edit elsewhere on this page (see ResumeService.update). */
@@ -1448,6 +1471,24 @@ export function ResumeEditPage() {
               </label>
               {recruiterModeEnabled && (
                 <>
+                  <div className="field">
+                    <label>Recruiter access code</label>
+                    <input
+                      type="text"
+                      value={recruiterAccessCode}
+                      onChange={(e) => setRecruiterAccessCode(e.target.value)}
+                      placeholder={hasRecruiterAccessCode ? "Leave blank to keep the current code" : "Set a code to share with recruiters"}
+                      autoComplete="off"
+                    />
+                    <p className="hero-note" style={{ marginTop: 4 }}>
+                      This card is hidden from anyone viewing your resume link until they enter this code — separate
+                      from your resume's own visibility/password setting above, so the link itself can stay public
+                      while this card stays just for the recruiters you share the code with.{" "}
+                      {hasRecruiterAccessCode
+                        ? "A code is currently set."
+                        : "Required before Recruiter Mode can be turned on."}
+                    </p>
+                  </div>
                   <div className="field">
                     <label>Location</label>
                     <input
