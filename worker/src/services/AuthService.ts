@@ -67,7 +67,7 @@ export class AuthService {
       termsVersion: TERMS_VERSION,
     });
     const user = new User(record);
-    const token = await this.tokens.sign({ userId: user.id, email: user.email });
+    const token = await this.tokens.sign({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion });
     // Registration succeeds regardless of whether the verification email
     // actually sends — a Resend outage or bad address shouldn't turn a
     // successful account creation into a failed signup response (which
@@ -183,7 +183,7 @@ export class AuthService {
     }
 
     const user = new User(record);
-    const token = await this.tokens.sign({ userId: user.id, email: user.email });
+    const token = await this.tokens.sign({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion });
     return { user, token };
   }
 
@@ -249,8 +249,24 @@ export class AuthService {
     return user;
   }
 
-  /** Requires the current password to confirm identity before setting a new one. */
-  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+  /**
+   * Requires the current password to confirm identity before setting a new
+   * one. Also bumps tokenVersion, invalidating every other already-issued
+   * session — the standard "changing your password should sign out anyone
+   * else who had a session" security expectation, previously unsupported
+   * since a JWT here was otherwise stateless.
+   *
+   * Unlike revokeSessions below (an explicit "log out everywhere, including
+   * me" action, where self-logout is the whole point — see
+   * AdminSecurityController.revokeSessions' identical precedent on the
+   * admin side), someone changing their own password isn't asking to be
+   * logged out of the tab they're sitting in. So this mints and returns a
+   * fresh token carrying the new tokenVersion, and the caller
+   * (AuthController) hands it back to the client to replace its stored one
+   * — the current session keeps working uninterrupted while every other
+   * device's old token stops matching.
+   */
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<string> {
     const record = await this.users.findById(userId);
     if (!record) throw new AuthError("User not found.");
 
@@ -259,6 +275,22 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await this.users.updatePasswordHash(userId, passwordHash);
+    const tokenVersion = await this.users.bumpTokenVersion(userId);
+    return this.tokens.sign({ userId, email: record.email, tokenVersion });
+  }
+
+  /**
+   * Invalidates every previously-issued JWT for this user at once — the
+   * self-service "log out of all other devices" action (see
+   * AuthController.revokeSessions), useful if a token might have leaked
+   * (lost/stolen device, a session left open somewhere) without needing to
+   * change the password too. Mirrors AdminService.revokeSessions — same
+   * "signs out the calling session too" contract; the client that just
+   * called this should expect its own next authenticated request to fail
+   * and treat that as an ordinary logout, not an error.
+   */
+  async revokeSessions(userId: string): Promise<void> {
+    await this.users.bumpTokenVersion(userId);
   }
 
   /**
@@ -334,5 +366,13 @@ export class AuthService {
     }
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await this.users.resetPassword(record.id, passwordHash);
+    // Unlike changePassword above, there's no "current session" to preserve
+    // here — this flow is reached from an emailed link, not an
+    // authenticated request, so the caller has no JWT to begin with and
+    // will log in fresh afterward regardless. Just invalidate every
+    // existing session outright; particularly relevant here since this
+    // flow exists precisely for "I think someone else has my password,"
+    // which is exactly when any of their sessions should die too.
+    await this.users.bumpTokenVersion(record.id);
   }
 }

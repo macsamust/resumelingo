@@ -4,7 +4,7 @@ import { ConfirmDialog } from "../components/common/ConfirmDialog";
 import { Modal } from "../components/common/Modal";
 import { Pricing } from "../components/marketing/Pricing";
 import { useAuth } from "../context/AuthContext";
-import { ApiError, authApi, catalogApi } from "../api";
+import { ApiError, authApi, catalogApi, setAuthToken } from "../api";
 import { ProfessionSummary } from "../types";
 
 /**
@@ -13,7 +13,7 @@ import { ProfessionSummary } from "../types";
  * (see DashboardPage's "Manage billing" button, which goes through Stripe).
  */
 export function ProfilePage() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const [professions, setProfessions] = useState<ProfessionSummary[]>([]);
 
   const [name, setName] = useState(user?.name ?? "");
@@ -31,6 +31,10 @@ export function ProfilePage() {
 
   const [digestError, setDigestError] = useState<string | null>(null);
   const [savingDigest, setSavingDigest] = useState(false);
+
+  const [showRevokeConfirm, setShowRevokeConfirm] = useState(false);
+  const [revokeError, setRevokeError] = useState<string | null>(null);
+  const [revoking, setRevoking] = useState(false);
 
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
@@ -69,7 +73,12 @@ export function ProfilePage() {
     setPasswordSuccess(false);
     setSavingPassword(true);
     try {
-      await authApi.changePassword({ currentPassword, newPassword });
+      // Changing your password invalidates every other session server-side
+      // (see AuthService.changePassword) but hands back a fresh token for
+      // this one — persist it or the next authenticated call from this tab
+      // fails and looks like a random logout.
+      const { token } = await authApi.changePassword({ currentPassword, newPassword });
+      setAuthToken(token);
       setCurrentPassword("");
       setNewPassword("");
       setPasswordSuccess(true);
@@ -77,6 +86,20 @@ export function ProfilePage() {
       setPasswordError(err instanceof ApiError ? err.message : "Something went wrong changing your password.");
     } finally {
       setSavingPassword(false);
+    }
+  };
+
+  const onRevokeSessions = async () => {
+    setRevokeError(null);
+    setRevoking(true);
+    try {
+      await authApi.revokeSessions();
+      // This tab's own token is now invalid too — same self-logout contract
+      // as the admin console's equivalent action.
+      logout();
+    } catch (err) {
+      setRevokeError(err instanceof ApiError ? err.message : "Something went wrong signing out other sessions.");
+      setRevoking(false);
     }
   };
 
@@ -205,6 +228,23 @@ export function ProfilePage() {
       </div>
 
       <div className="builder-panel" style={{ maxWidth: 520, marginBottom: 28 }}>
+        <h2>Sessions</h2>
+        {revokeError && <div className="form-error">{revokeError}</div>}
+        <p className="modal-message">
+          If you think a device or browser still has you signed in somewhere you don't recognize, you can sign out
+          everywhere at once — including this session.
+        </p>
+        <button
+          type="button"
+          className="btn btn-secondary btn-block"
+          onClick={() => setShowRevokeConfirm(true)}
+          disabled={revoking}
+        >
+          {revoking ? "Signing out…" : "Log out of all other devices"}
+        </button>
+      </div>
+
+      <div className="builder-panel" style={{ maxWidth: 520, marginBottom: 28 }}>
         <h2>Subscription</h2>
         <div className="field">
           <label>Subscription plan</label>
@@ -297,6 +337,19 @@ export function ProfilePage() {
         </div>
       )}
 
+      {showRevokeConfirm && (
+        <ConfirmDialog
+          title="Log out of all other devices"
+          message="This signs every device and browser out of your account, including this one — you'll need to log in again here too. Continue?"
+          confirmLabel="Log out everywhere"
+          danger
+          onConfirm={() => {
+            setShowRevokeConfirm(false);
+            onRevokeSessions();
+          }}
+          onCancel={() => setShowRevokeConfirm(false)}
+        />
+      )}
       {showCancelConfirm && (
         <ConfirmDialog
           title="Cancel subscription"

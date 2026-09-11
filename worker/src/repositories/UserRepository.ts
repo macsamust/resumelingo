@@ -86,9 +86,17 @@ export class UserRepository extends BaseRepository<UserRecord> {
       suspensionReason: null,
       termsAcceptedAt: input.termsAcceptedAt,
       termsVersion: input.termsVersion,
+      tokenVersion: 0,
     };
     await this.insertRow(record as unknown as Record<string, unknown>);
     return record;
+  }
+
+  /** Invalidates every previously-issued JWT for this user at once — see AuthService.revokeSessions and requireAuth/optionalAuth's tokenVersion check. Separate UPDATE + SELECT rather than `RETURNING`, matching AdminRepository.bumpTokenVersion and every other write in this codebase. */
+  async bumpTokenVersion(id: string): Promise<number> {
+    await this.db.prepare(`UPDATE users SET "tokenVersion" = "tokenVersion" + 1 WHERE id = ?`).bind(id).run();
+    const row = await this.db.prepare(`SELECT "tokenVersion" FROM users WHERE id = ?`).bind(id).first<{ tokenVersion: number }>();
+    return row?.tokenVersion ?? 0;
   }
 
   /** Profile fields only — name/email/profession. Password changes go through updatePasswordHash. */

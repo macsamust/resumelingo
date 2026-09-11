@@ -33,6 +33,7 @@ function makeUserRecord(overrides: Partial<UserRecord> = {}): UserRecord {
     suspensionReason: null,
     termsAcceptedAt: new Date().toISOString(),
     termsVersion: "2026-09-09",
+    tokenVersion: 0,
     ...overrides,
   };
 }
@@ -59,6 +60,11 @@ function makeUsersMock(overrides: Partial<UserRepository> = {}) {
     // logging harmless-but-noisy "setVerificationToken is not a function"
     // stderr output.
     setVerificationToken: vi.fn(),
+    // changePassword/resetPassword both bump tokenVersion to invalidate
+    // other sessions — without a mock here, those tests throw "not a
+    // function" at runtime (tsc --noEmit won't catch this since the mock
+    // is cast through `unknown`).
+    bumpTokenVersion: vi.fn(async () => 1),
     ...overrides,
   } as unknown as UserRepository;
 }

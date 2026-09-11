@@ -191,7 +191,27 @@ export class AuthController {
     if (!currentPassword || !newPassword) {
       return c.json({ error: "currentPassword and newPassword are required." }, 400);
     }
-    await authService.changePassword(user.id, currentPassword as string, newPassword as string);
+    // Bumps tokenVersion server-side (see AuthService.changePassword),
+    // invalidating every other session — the returned token carries the new
+    // tokenVersion so this exact tab/device keeps working without needing
+    // to log back in. The client must store this in place of its old token.
+    const token = await authService.changePassword(user.id, currentPassword as string, newPassword as string);
+    return c.json({ success: true, token });
+  };
+
+  /**
+   * Signs the calling user out of every session at once (see
+   * AuthService.revokeSessions) — including the one making this request, so
+   * the client should expect the next authenticated call to fail and
+   * redirect to login. Same "log out everywhere" self-service action
+   * AdminSecurityController.revokeSessions already offers admins, useful if
+   * a token might have leaked (lost/stolen device, a session left open
+   * somewhere) without needing to change the password too.
+   */
+  revokeSessions = async (c: Context<AppEnv>) => {
+    const { authService } = c.get("services");
+    const user = c.get("user")!;
+    await authService.revokeSessions(user.id);
     return c.json({ success: true });
   };
 

@@ -13,6 +13,13 @@ import { AppEnv } from "./servicesMiddleware";
  * This isn't an extra D1 read: getUserById() below already runs on every
  * authenticated request (to attach the full user record via c.set), so
  * checking the flag it already returns is free.
+ *
+ * Also checks the token's `tokenVersion` claim against the user's current
+ * value (bumped by AuthService.changePassword/resetPassword/revokeSessions)
+ * — same reasoning, and the identical check requireAdminAuth already does
+ * for admin sessions. Without this, a JWT would otherwise stay valid for
+ * its full lifetime even after a password change or an explicit "log out
+ * of all other devices," with no way to force an earlier logout.
  */
 export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
   const header = c.req.header("Authorization");
@@ -27,6 +34,9 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
     const user = await authService.getUserById(payload.userId);
     if (!user) return c.json({ error: "User no longer exists." }, 401);
     if (user.suspended) return c.json({ error: "This account has been suspended. Contact support at support@resumelingo.com for help." }, 401);
+    if (payload.tokenVersion !== user.tokenVersion) {
+      return c.json({ error: "This session has been signed out. Please log in again." }, 401);
+    }
     c.set("user", user);
     await next();
   } catch {
@@ -54,7 +64,10 @@ export const optionalAuth = createMiddleware<AppEnv>(async (c, next) => {
     try {
       const payload = await authService.verifyToken(token);
       const user = await authService.getUserById(payload.userId);
-      if (user && !user.suspended) c.set("user", user);
+      // Same tokenVersion check as requireAuth — a signed-out (password
+      // changed/reset, or explicit "log out everywhere") token shouldn't
+      // grant owner-level treatment on a public route either.
+      if (user && !user.suspended && payload.tokenVersion === user.tokenVersion) c.set("user", user);
     } catch {
       // invalid/expired token on a public route — proceed as anonymous
     }

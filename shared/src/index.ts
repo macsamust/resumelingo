@@ -127,6 +127,8 @@ export interface UserRecord {
   termsAcceptedAt: string | null;
   /** Which TERMS_VERSION was in effect when termsAcceptedAt was recorded — null whenever termsAcceptedAt is null. A fixed point-in-time record, not a live pointer to "the current terms." */
   termsVersion: string | null;
+  /** Same tokenVersion-based revocation as AdminRecord below — a JWT is otherwise stateless and valid until it naturally expires, with no way to force an earlier logout. Bumped by AuthService.revokeSessions (self-service "log out of all other devices") and automatically on password change/reset, so a leaked token or an old device's session dies immediately rather than staying valid for its full lifetime. See requireAuth/optionalAuth's tokenVersion check. Starts at 0 for every account (migration 0044). */
+  tokenVersion: number;
 }
 
 /**
@@ -509,6 +511,8 @@ export interface JobApplicationRecord {
 export interface AuthTokenPayload {
   userId: string;
   email: string;
+  /** Must match UserRecord.tokenVersion at verify time — see requireAuth/optionalAuth. Lets a stateless JWT still be revoked early (password change/reset, or the self-service "log out of all other devices" action). */
+  tokenVersion: number;
 }
 
 export interface AdminTokenPayload {

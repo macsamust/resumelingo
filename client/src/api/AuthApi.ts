@@ -23,8 +23,21 @@ export class AuthApi extends ApiClient {
     return this.put<{ user: AuthUser }>("/auth/me", input);
   }
 
+  /**
+   * Changing your password bumps the account's tokenVersion server-side,
+   * which invalidates every other already-issued session — but the
+   * response hands back a freshly-signed token for THIS session so it
+   * keeps working uninterrupted. Callers must persist the returned token
+   * (see setAuthToken) or the very next authenticated request from this
+   * tab will itself get logged out.
+   */
   changePassword(input: { currentPassword: string; newPassword: string }) {
-    return this.put<{ success: true }>("/auth/me/password", input);
+    return this.put<{ success: true; token: string }>("/auth/me/password", input);
+  }
+
+  /** Self-service "log out of all other devices" — bumps tokenVersion, invalidating every previously-issued token including this tab's. The caller should expect to be logged out immediately after this resolves. */
+  revokeSessions() {
+    return this.post<{ success: true }>("/auth/me/revoke-sessions", {});
   }
 
   /** Always resolves the same way whether or not the email matches an account — see AuthService.requestPasswordReset. */
