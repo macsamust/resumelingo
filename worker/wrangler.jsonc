@@ -5,15 +5,19 @@
   "compatibility_date": "2026-01-01",
   "compatibility_flags": ["nodejs_compat"],
 
-  // Serves the built React app (client/dist) directly from Cloudflare's edge.
-  // Static files are matched first; anything under /api/* always hits the
-  // Worker (see run_worker_first), and anything else that doesn't match a
-  // real file falls back to index.html for client-side routing.
+  // Serves the built React app (client/dist) from Cloudflare's edge.
+  // run_worker_first must be true: with it false, `/` and other HTML
+  // routes were served as raw Static Assets and never reached src/index.ts,
+  // so they could not get an HTTP→HTTPS redirect or security headers
+  // (observed on resumelingo.com, 2026-09-11). The Worker now runs first
+  // for every request, stamps headers / redirects, then falls through to
+  // ASSETS via the Hono notFound handler. /api/* is handled in-Worker as
+  // before. A `_headers` file would not apply to those Worker responses.
   "assets": {
     "directory": "../client/dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": false
+    "run_worker_first": true
   },
 
   // Created via `npm run db:create` — copy the database_id it prints into
