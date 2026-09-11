@@ -8,7 +8,7 @@ Two testers are enough: one acting as the **resume owner** (logged in), one acti
 
 ## Prerequisites
 
-- Test account on Professional or Premium tier (Recruiter Mode is a paid-tier feature).
+- Test account on the Premium tier (Recruiter Mode is Premium-only — Professional does not have access to it).
 - Migration `0042_recruiter_access_code.sql` applied to whichever database you're testing against (local or production D1). If you see `D1_ERROR: no such table`, the migration hasn't been applied yet — stop and apply it first.
 
 ## Part 1 — Owner setup (Edit Resume page)

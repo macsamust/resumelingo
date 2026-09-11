@@ -24,6 +24,34 @@ export class PublicResumePasswordIpLogRepository {
       .run();
   }
 
+  /**
+   * The authoritative throttle decision — see
+   * PublicResumeRecruiterCodeIpLogRepository.recordFailureIfUnderLimit's doc
+   * comment for the full reasoning (this repository has the identical
+   * check-then-write race in its plain countRecentFailures + recordFailure
+   * pair above, closed here the same way: the count-check and the insert
+   * happen as one atomic SQL statement, so concurrent failures can't both
+   * read a stale under-the-limit count before either has recorded itself).
+   * Returns whether the failure was actually recorded — PublicController
+   * should decide "too many attempts" from this return value, not from a
+   * separate, racy countRecentFailures call.
+   */
+  async recordFailureIfUnderLimit(ip: string, slug: string, windowMinutes: number, max: number): Promise<boolean> {
+    const since = new Date(Date.now() - windowMinutes * 60000).toISOString();
+    const result = await this.db
+      .prepare(
+        `INSERT INTO public_resume_password_ip_log (id, ip, slug, "createdAt")
+         SELECT ?, ?, ?, ?
+         WHERE (
+           SELECT COUNT(*) FROM public_resume_password_ip_log
+           WHERE ip = ? AND slug = ? AND "createdAt" >= ?
+         ) < ?`
+      )
+      .bind(nanoid(12), ip, slug, new Date().toISOString(), ip, slug, since, max)
+      .run();
+    return result.meta.changes === 1;
+  }
+
   /** Failed attempts against this slug from this IP in the last `windowMinutes`. */
   async countRecentFailures(ip: string, slug: string, windowMinutes: number): Promise<number> {
     const since = new Date(Date.now() - windowMinutes * 60000).toISOString();

@@ -229,6 +229,11 @@ export function PublicResumePage() {
   const [resume, setResume] = useState<PublicResume | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [passwordRequired, setPasswordRequired] = useState(false);
+  // Distinct from passwordRequired itself so the form can tell "first time
+  // being asked" apart from "you just got it wrong" — a Sep 2026 QA pass
+  // found the wrong-password case re-rendered the exact same blank prompt
+  // with no feedback at all, indistinguishable from a fresh page load.
+  const [passwordError, setPasswordError] = useState(false);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(true);
   // Populated by a successful unlockRecruiterCard call — kept separate from
@@ -255,6 +260,7 @@ export function PublicResumePage() {
       .then((res) => {
         setResume(res.resume);
         setPasswordRequired(false);
+        setPasswordError(false);
         // A fresh load always starts locked again — see recruiterCardOverride's
         // doc comment above for why this deliberately doesn't try to restore
         // a prior unlock from storage.
@@ -275,6 +281,11 @@ export function PublicResumePage() {
           setError("This resume link has been deactivated by its owner.");
         } else if (err instanceof ApiError && err.status === 403) {
           setPasswordRequired(true);
+          // pwd is only ever non-empty here when this call came from
+          // onSubmitPassword actually submitting an attempt — the very
+          // first, password-less load that lands in this same branch
+          // shouldn't claim the visitor got anything "wrong."
+          setPasswordError(!!pwd);
         } else if (err instanceof ApiError && err.status === 404) {
           setError("This resume link doesn't exist or was removed.");
         } else {
@@ -326,6 +337,7 @@ export function PublicResumePage() {
               <label>Password</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus />
             </div>
+            {passwordError && <p className="form-error">Incorrect password. Please try again.</p>}
             <button className="btn btn-primary btn-block" type="submit">
               View resume
             </button>

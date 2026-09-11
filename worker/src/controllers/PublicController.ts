@@ -18,9 +18,11 @@ export class PublicController {
     const user = c.get("user");
     const ip = c.req.header("CF-Connecting-IP") || c.req.header("x-forwarded-for") || "unknown";
 
-    // Only checked once a password has actually been submitted — a plain
-    // page load prompting for a password isn't a guess, so it shouldn't
-    // burn down this slug's attempt budget the way a wrong guess should.
+    // Cheap early exit only — NOT the authoritative throttle decision (see
+    // recordFailureIfUnderLimit below for why a plain read-then-later-write
+    // like this has a race under concurrent requests). This just skips
+    // attempting the password check at all when we're already obviously
+    // well over budget, saving the work.
     if (password) {
       const recentFailures = await publicResumePasswordIpLogRepository.countRecentFailures(ip, slug, PASSWORD_WINDOW_MINUTES);
       if (recentFailures >= MAX_PASSWORD_FAILURES) {
@@ -44,8 +46,27 @@ export class PublicController {
       // counting them would throttle someone who just bookmarked a link
       // that got deactivated, not an attacker.
       if (password && err instanceof ResumeAccessError && err.reason === "password") {
-        await publicResumePasswordIpLogRepository.recordFailure(ip, slug);
+        // The authoritative decision: recordFailureIfUnderLimit's own atomic
+        // SQL statement re-checks the count as part of the same write, so a
+        // burst of concurrent wrong guesses can't all slip through on a
+        // stale read the way the early exit above could in isolation.
+        const recorded = await publicResumePasswordIpLogRepository.recordFailureIfUnderLimit(
+          ip,
+          slug,
+          PASSWORD_WINDOW_MINUTES,
+          MAX_PASSWORD_FAILURES
+        );
         await publicResumePasswordIpLogRepository.pruneOlderThan(PASSWORD_WINDOW_MINUTES);
+        if (!recorded) {
+          await securityAlertService.recordIfNew({
+            type: "public_resume_password_guessing",
+            severity: "critical",
+            ip,
+            detail: { slug },
+            dedupeWindowMinutes: PASSWORD_WINDOW_MINUTES,
+          });
+          return c.json({ error: "Too many attempts from this network. Please try again later." }, 429);
+        }
       }
       throw err;
     }
@@ -67,6 +88,8 @@ export class PublicController {
     const user = c.get("user");
     const ip = c.req.header("CF-Connecting-IP") || c.req.header("x-forwarded-for") || "unknown";
 
+    // Cheap early exit only, same caveat as getBySlug's own pre-check above
+    // — the authoritative decision is recordFailureIfUnderLimit below.
     const recentFailures = await publicResumeRecruiterCodeIpLogRepository.countRecentFailures(
       ip,
       slug,
@@ -88,8 +111,28 @@ export class PublicController {
       return c.json({ recruiterCard });
     } catch (err) {
       if (err instanceof RecruiterCodeInvalidError) {
-        await publicResumeRecruiterCodeIpLogRepository.recordFailure(ip, slug);
+        // The authoritative decision — see
+        // PublicResumeRecruiterCodeIpLogRepository.recordFailureIfUnderLimit's
+        // doc comment for why this (not the plain pre-check above) is what
+        // actually closes the race a burst of concurrent wrong guesses could
+        // otherwise slip through.
+        const recorded = await publicResumeRecruiterCodeIpLogRepository.recordFailureIfUnderLimit(
+          ip,
+          slug,
+          RECRUITER_CODE_WINDOW_MINUTES,
+          MAX_RECRUITER_CODE_FAILURES
+        );
         await publicResumeRecruiterCodeIpLogRepository.pruneOlderThan(RECRUITER_CODE_WINDOW_MINUTES);
+        if (!recorded) {
+          await securityAlertService.recordIfNew({
+            type: "recruiter_code_guessing",
+            severity: "critical",
+            ip,
+            detail: { slug },
+            dedupeWindowMinutes: RECRUITER_CODE_WINDOW_MINUTES,
+          });
+          return c.json({ error: "Too many attempts from this network. Please try again later." }, 429);
+        }
       }
       throw err;
     }
