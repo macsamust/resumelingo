@@ -132,7 +132,7 @@ describe("AuthService.register", () => {
     });
     expect(user.email).toBe("jordan@example.com");
     expect(token).toBe("signed-token");
-    expect(tokens.sign).toHaveBeenCalledWith({ userId: created.id, email: created.email });
+    expect(tokens.sign).toHaveBeenCalledWith({ userId: created.id, email: created.email, tokenVersion: created.tokenVersion });
   });
 
   it("stamps termsAcceptedAt and termsVersion on the created record when terms are accepted", async () => {
