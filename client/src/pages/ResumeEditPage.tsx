@@ -18,6 +18,7 @@ import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
 import { Modal } from "../components/common/Modal";
 import { TemplateUpgradeModal } from "../components/builder/TemplateUpgradeModal";
 import { FirstResumeEmailPreferencesModal } from "../components/builder/FirstResumeEmailPreferencesModal";
+import { CareerLoopIntroModal } from "../components/builder/CareerLoopIntroModal";
 import { VersionHistoryPanel } from "../components/common/VersionHistoryPanel";
 import { PolyAnimated } from "../components/brand/PolyAnimated";
 import { ApiError, authApi, careerLoopApi, catalogApi, resumeApi } from "../api";
@@ -72,15 +73,17 @@ export function ResumeEditPage() {
   const [showFirstResumePrompt, setShowFirstResumePrompt] = useState(
     () => (location.state as { justCreatedFirstResume?: boolean } | null)?.justCreatedFirstResume === true
   );
-  // "Full Circle" — introduces the "loop" term right after publish, without
-  // a modal (see docs/full-circle-coach-build-brief.md's revision history:
-  // the earlier post-publish sheet + dashboard checklist card were both
-  // dropped in favor of a permanent per-resume badge, ResumeLoopBadge.tsx,
-  // on the dashboard's "My Resumes" grid). This just fires a one-time,
-  // non-blocking toast naming the loop, plus sets a short-lived
-  // sessionStorage flag so that resume's badge pulses once the first time
-  // it's actually seen on the dashboard — the toast introduces the word,
-  // the pulse points at where it actually lives.
+  // "Full Circle" — the post-publish modal (see
+  // docs/full-circle-coach-build-brief.md's revision history: this went
+  // through a dashboard checklist card, then a plain toast, before landing
+  // here — a modal, same as the very first version, but built from the
+  // same narrative "journey" ledger classes as ResumeLoopBadge.tsx's
+  // popover instead of a locked checklist, so the introduction and the
+  // ongoing per-resume badge speak the same visual language). Rendered
+  // once, right after ResumeBuilderPage creates a new resume. Also sets a
+  // short-lived sessionStorage flag so that resume's badge pulses once the
+  // first time it's actually seen on the dashboard afterward.
+  const [showLoopIntro, setShowLoopIntro] = useState(false);
   useEffect(() => {
     const justPublishedResumeId = (location.state as { justPublishedResumeId?: string } | null)
       ?.justPublishedResumeId;
@@ -88,8 +91,7 @@ export function ResumeEditPage() {
     careerLoopApi
       .getProgress(id)
       .then(() => {
-        setShowLoopCelebration(true);
-        setTimeout(() => setShowLoopCelebration(false), 4000);
+        setShowLoopIntro(true);
         sessionStorage.setItem(`resumelingo:loop-pulse:${id}`, "1");
       })
       .catch(() => {
@@ -97,8 +99,7 @@ export function ResumeEditPage() {
         // Full Circle surface staying invisible while the flag is off.
       })
       .finally(() => {
-        // Clears router state so a page refresh doesn't re-fire this —
-        // window.history.state otherwise survives a hard reload, same
+        // Clears router state so a page refresh doesn't re-show this — same
         // reasoning as showFirstResumePrompt's onClose elsewhere in this
         // file. Safe even when justCreatedFirstResume was also set: that
         // flag was already captured into React state above by this point.
@@ -195,11 +196,6 @@ export function ResumeEditPage() {
   // see the cleanup effect further down.
   const [showSavedCelebration, setShowSavedCelebration] = useState(false);
   const savedCelebrationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // "Full Circle" post-publish moment — Poly's own celebration bubble
-  // (same pattern as showSavedCelebration/poly-save-toast just above),
-  // rather than a plain text toast, so introducing the loop feels like the
-  // rest of Poly's brand presence instead of a generic system message.
-  const [showLoopCelebration, setShowLoopCelebration] = useState(false);
   const [loading, setLoading] = useState(true);
   const [forceOpen, setForceOpen] = useState<ForceOpenSignal | undefined>(undefined);
   /** Whether the "Expand" modal (a larger copy of the sidebar's live preview) is open. */
@@ -1749,11 +1745,13 @@ export function ResumeEditPage() {
           <span>Saved! Poly's got your back.</span>
         </div>
       )}
-      {showLoopCelebration && (
-        <div className="poly-save-toast" role="status" aria-live="polite">
-          <PolyAnimated expression="celebrate" size={48} decorative />
-          <span>Nice — your career loop is live! Find it on your resume's card.</span>
-        </div>
+      {!showFirstResumePrompt && showLoopIntro && resume && user && (
+        <CareerLoopIntroModal
+          resumeId={resume.id}
+          resumeSlug={resume.slug}
+          subscriptionTier={user.subscriptionTier}
+          onClose={() => setShowLoopIntro(false)}
+        />
       )}
       {showBackToTop && (
         <button
