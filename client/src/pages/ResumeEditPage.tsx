@@ -18,7 +18,6 @@ import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
 import { Modal } from "../components/common/Modal";
 import { TemplateUpgradeModal } from "../components/builder/TemplateUpgradeModal";
 import { FirstResumeEmailPreferencesModal } from "../components/builder/FirstResumeEmailPreferencesModal";
-import { useToast } from "../components/common/Toast";
 import { VersionHistoryPanel } from "../components/common/VersionHistoryPanel";
 import { PolyAnimated } from "../components/brand/PolyAnimated";
 import { ApiError, authApi, careerLoopApi, catalogApi, resumeApi } from "../api";
@@ -64,7 +63,6 @@ export function ResumeEditPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, refresh } = useAuth();
-  const { showToast } = useToast();
   const [resume, setResume] = useState<Resume | null>(null);
   // Set only on the navigate() call right after creating a Professional/
   // Premium account's very first resume — see ResumeBuilderPage.onSubmit.
@@ -90,7 +88,8 @@ export function ResumeEditPage() {
     careerLoopApi
       .getProgress(id)
       .then(() => {
-        showToast("success", "Your career loop is live — find it on your resume's card on the dashboard.");
+        setShowLoopCelebration(true);
+        setTimeout(() => setShowLoopCelebration(false), 4000);
         sessionStorage.setItem(`resumelingo:loop-pulse:${id}`, "1");
       })
       .catch(() => {
@@ -196,6 +195,11 @@ export function ResumeEditPage() {
   // see the cleanup effect further down.
   const [showSavedCelebration, setShowSavedCelebration] = useState(false);
   const savedCelebrationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // "Full Circle" post-publish moment — Poly's own celebration bubble
+  // (same pattern as showSavedCelebration/poly-save-toast just above),
+  // rather than a plain text toast, so introducing the loop feels like the
+  // rest of Poly's brand presence instead of a generic system message.
+  const [showLoopCelebration, setShowLoopCelebration] = useState(false);
   const [loading, setLoading] = useState(true);
   const [forceOpen, setForceOpen] = useState<ForceOpenSignal | undefined>(undefined);
   /** Whether the "Expand" modal (a larger copy of the sidebar's live preview) is open. */
@@ -1743,6 +1747,12 @@ export function ResumeEditPage() {
         <div className="poly-save-toast" role="status" aria-live="polite">
           <PolyAnimated expression="happy" size={48} decorative />
           <span>Saved! Poly's got your back.</span>
+        </div>
+      )}
+      {showLoopCelebration && (
+        <div className="poly-save-toast" role="status" aria-live="polite">
+          <PolyAnimated expression="celebrate" size={48} decorative />
+          <span>Nice — your career loop is live! Find it on your resume's card.</span>
         </div>
       )}
       {showBackToTop && (
