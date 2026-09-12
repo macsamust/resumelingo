@@ -544,17 +544,48 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .builder-progress-fill { height: 100%; background: var(--teal); border-radius: 999px; transition: width .2s ease; }
 
 /* "Full Circle" post-publish coach, dashboard-card state — see
-   CareerLoopCard.tsx. Sits directly under the dashboard's welcome header. */
-.career-loop-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; margin-bottom: 24px; }
-.career-loop-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+   CareerLoopCard.tsx. Sits directly under the dashboard's welcome header.
+   Tinted gradient background (rather than plain white, like every other
+   dashboard tile) so it reads as its own distinct, ongoing thing rather
+   than one more stat tile. */
+.career-loop-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: linear-gradient(135deg, rgba(20,184,166,.10), rgba(79,70,229,.07));
+  border: 1px solid rgba(20,184,166,.25);
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+.career-loop-body { flex: 1; min-width: 0; }
+.career-loop-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .career-loop-title { font-weight: 600; font-size: 14.5px; }
 .career-loop-dismiss { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 2px 4px; }
 .career-loop-dismiss:hover { color: var(--navy); text-decoration: underline; }
-.career-loop-bar { display: flex; gap: 6px; margin-bottom: 14px; }
-.career-loop-bar-step { flex: 1; height: 4px; border-radius: 999px; background: var(--bg); }
-.career-loop-bar-step.is-done { background: var(--teal); }
 .career-loop-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .career-loop-next { font-size: 13px; color: var(--muted); }
+
+/* The circular 4-segment progress ring (Resume/Share/Track/Letters) that
+   replaced a straight progress bar — ties visually into the "full circle"
+   theme itself rather than looking like any other loading bar. See
+   CareerLoopRing in CareerLoopCard.tsx for the segment math. */
+.career-loop-ring-wrap { position: relative; width: 60px; height: 60px; flex-shrink: 0; }
+.career-loop-ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.career-loop-card-celebrate {
+  background: linear-gradient(135deg, rgba(20,184,166,.16), rgba(79,70,229,.10));
+  border-color: rgba(20,184,166,.4);
+}
+.career-loop-celebrate-body { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 
 /* "Full Circle" post-publish coach, one-time sheet (CareerLoopSheet.tsx) —
    a richer treatment than the dashboard card since this is the one moment
