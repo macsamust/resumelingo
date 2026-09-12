@@ -222,7 +222,17 @@ export function ResumeBuilderPage() {
       // on a 2nd+ resume since hadNoResumesBeforeCreate was captured before
       // this create ran.
       navigate(`/resumes/${resume.id}/edit`, {
-        state: hadNoResumesBeforeCreate ? { justCreatedFirstResume: true } : undefined,
+        // justPublishedResumeId triggers the "Full Circle" post-publish
+        // sheet (see CareerLoopSheet.tsx) on every new resume, not just the
+        // account's first ever one — the loop is per-resume, so it starts
+        // fresh each time. It coexists with justCreatedFirstResume rather
+        // than replacing it: a first-time creator sees the email-prefs
+        // celebration modal first, then the loop sheet once that's
+        // dismissed (see ResumeEditPage's showCareerLoopSheet effect).
+        state: {
+          ...(hadNoResumesBeforeCreate ? { justCreatedFirstResume: true } : {}),
+          justPublishedResumeId: resume.id,
+        },
       });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong creating your resume.");

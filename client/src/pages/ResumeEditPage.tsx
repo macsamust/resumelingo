@@ -18,9 +18,10 @@ import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
 import { Modal } from "../components/common/Modal";
 import { TemplateUpgradeModal } from "../components/builder/TemplateUpgradeModal";
 import { FirstResumeEmailPreferencesModal } from "../components/builder/FirstResumeEmailPreferencesModal";
+import { CareerLoopSheet } from "../components/builder/CareerLoopSheet";
 import { VersionHistoryPanel } from "../components/common/VersionHistoryPanel";
 import { PolyAnimated } from "../components/brand/PolyAnimated";
-import { ApiError, authApi, catalogApi, resumeApi } from "../api";
+import { ApiError, authApi, careerLoopApi, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL, templateHasSkillsAndTools } from "../utils/templateAccess";
 import { titleCase } from "../utils/textFormat";
@@ -72,6 +73,24 @@ export function ResumeEditPage() {
   const [showFirstResumePrompt, setShowFirstResumePrompt] = useState(
     () => (location.state as { justCreatedFirstResume?: boolean } | null)?.justCreatedFirstResume === true
   );
+  // "Full Circle" post-publish coach's one-time sheet — see
+  // CareerLoopSheet.tsx and ResumeBuilderPage.onSubmit, which sets this
+  // router state on every new resume (not just the account's first). Read
+  // once on mount, same reasoning as showFirstResumePrompt above. Rendered
+  // only once showFirstResumePrompt is false (see below) so a first-time
+  // creator sees the email-prefs celebration first, then this.
+  const [showLoopSheet, setShowLoopSheet] = useState(
+    () => (location.state as { justPublishedResumeId?: string } | null)?.justPublishedResumeId === id
+  );
+  // The sheet itself (unlike CareerLoopCard) doesn't fetch progress before
+  // rendering, so this is the only check confirming CAREER_LOOP_ENABLED is
+  // actually on before showing it — the endpoint 404s while it's off, same
+  // signal the card relies on.
+  useEffect(() => {
+    if (!showLoopSheet || !id) return;
+    careerLoopApi.getProgress(id).catch(() => setShowLoopSheet(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [professions, setProfessions] = useState<ProfessionSummary[]>([]);
   const [professionKey, setProfessionKey] = useState("");
   const [professionDetail, setProfessionDetail] = useState<ProfessionDefinition | null>(null);
@@ -1694,7 +1713,20 @@ export function ResumeEditPage() {
             setShowFirstResumePrompt(false);
             // Clears the router state so a page refresh doesn't re-show
             // this — window.history.state otherwise survives a hard reload,
-            // unlike React state.
+            // unlike React state. Left with justPublishedResumeId cleared
+            // too since showLoopSheet was already captured into React
+            // state above by this point.
+            navigate(location.pathname, { replace: true, state: {} });
+          }}
+        />
+      )}
+      {!showFirstResumePrompt && showLoopSheet && resume && user && (
+        <CareerLoopSheet
+          resumeId={resume.id}
+          resumeSlug={resume.slug}
+          subscriptionTier={user.subscriptionTier}
+          onClose={() => {
+            setShowLoopSheet(false);
             navigate(location.pathname, { replace: true, state: {} });
           }}
         />
