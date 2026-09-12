@@ -553,16 +553,30 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .resume-loop-badge-wrap { position: relative; }
 .resume-loop-badge {
   display: block;
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   padding: 0;
-  background: none;
+  background: rgba(20,184,166,.08);
   border: none;
   border-radius: 50%;
   cursor: pointer;
   line-height: 0;
+  transition: background .15s ease;
 }
-.resume-loop-badge:hover { background: var(--bg); }
+.resume-loop-badge:hover { background: rgba(20,184,166,.16); }
+/* Continuous "breathing" glow while there's still something left in this
+   resume's loop — stops once complete (the ring's already fully teal by
+   then, so a glow on top would just be noise rather than meaning
+   anything). Slow and soft on purpose: this sits on every resume tile at
+   once, so it needs to read as ambient presence, not a flashing alert. */
+.resume-loop-badge-glow { animation: resume-loop-glow 2.6s ease-in-out infinite; }
+@keyframes resume-loop-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(20,184,166,.35); }
+  50% { box-shadow: 0 0 0 6px rgba(20,184,166,0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .resume-loop-badge-glow { animation: none; box-shadow: 0 0 0 3px rgba(20,184,166,.25); }
+}
 .resume-loop-badge-pulse { animation: resume-loop-pulse 1.6s ease-out 3; }
 @keyframes resume-loop-pulse {
   0% { box-shadow: 0 0 0 0 rgba(20,184,166,.45); }

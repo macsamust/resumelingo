@@ -14,10 +14,11 @@ interface Props {
 
 // Same 4-segment ring geometry as the earlier dashboard-card version, just
 // smaller — this is now a permanent, always-on badge on every resume tile
-// rather than a temporary card, so it has to stay visually quiet.
-const RING_SIZE = 30;
-const RING_RADIUS = 12;
-const RING_STROKE = 4;
+// rather than a temporary card. Sized up slightly (was 30/12/4) after
+// feedback that the badge needed more presence.
+const RING_SIZE = 36;
+const RING_RADIUS = 14;
+const RING_STROKE = 5;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 const RING_GAP_DEG = 10;
 const RING_SEGMENT_DEG = 90 - RING_GAP_DEG;
@@ -76,6 +77,14 @@ export function ResumeLoopBadge({ resumeId, resumeSlug, resumeCreatedAt, subscri
     if (sessionStorage.getItem(key) === "1") {
       sessionStorage.removeItem(key);
       setPulse(true);
+      // Auto-clears once the pulse animation's done (3 iterations of the
+      // 1.6s keyframe). Both this class and the continuous glow class set
+      // the `animation` shorthand, so as long as `pulse` stayed true
+      // forever (previously only cleared on click), it would permanently
+      // win the cascade and silently suppress the glow on any resume
+      // nobody happened to click right after publishing.
+      const timer = setTimeout(() => setPulse(false), 4800);
+      return () => clearTimeout(timer);
     }
     careerLoopApi
       .getProgress(resumeId)
@@ -134,7 +143,9 @@ export function ResumeLoopBadge({ resumeId, resumeSlug, resumeCreatedAt, subscri
     <div className="resume-loop-badge-wrap" ref={wrapRef}>
       <button
         type="button"
-        className={`resume-loop-badge ${pulse ? "resume-loop-badge-pulse" : ""}`}
+        className={`resume-loop-badge ${pulse ? "resume-loop-badge-pulse" : ""} ${
+          !progress.completed ? "resume-loop-badge-glow" : ""
+        }`}
         onClick={(e) => {
           e.stopPropagation();
           setOpen((v) => !v);
