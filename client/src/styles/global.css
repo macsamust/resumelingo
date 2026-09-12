@@ -556,6 +556,76 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .career-loop-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .career-loop-next { font-size: 13px; color: var(--muted); }
 
+/* "Full Circle" post-publish coach, one-time sheet (CareerLoopSheet.tsx) —
+   a richer treatment than the dashboard card since this is the one moment
+   the coach interrupts the user, right after publishing. */
+.career-loop-sheet-header { display: flex; align-items: center; gap: 14px; margin: -4px 0 18px; }
+.career-loop-sheet-intro { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.5; }
+.career-loop-sheet-intro span { color: var(--teal); font-weight: 600; }
+.career-loop-sheet-steps { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+.career-loop-sheet-step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  cursor: default;
+  transition: border-color .15s ease, background .15s ease;
+}
+.career-loop-sheet-step:hover,
+.career-loop-sheet-step:focus-visible { border-color: var(--teal); background: #fff; outline: none; }
+.career-loop-sheet-step.is-done { background: rgba(20,184,166,.08); border-color: rgba(20,184,166,.35); }
+.career-loop-sheet-step.is-current { border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
+.career-loop-sheet-step-icon { font-size: 18px; line-height: 1; }
+.career-loop-sheet-step-label { font-size: 14px; font-weight: 600; flex: 1; }
+.career-loop-sheet-step-tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: var(--indigo);
+  background: rgba(79,70,229,.1);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.career-loop-sheet-step-check { width: 18px; text-align: center; color: var(--teal); font-weight: 700; }
+.career-loop-sheet-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* Hover/focus tooltip shared by each step row — CSS-only, no JS. Anchored
+   to the step row (position: relative above) so it floats just above it. */
+.career-loop-tooltip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 8px);
+  background: var(--navy, #1e293b);
+  color: #fff;
+  font-size: 12.5px;
+  line-height: 1.45;
+  padding: 10px 12px;
+  border-radius: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: opacity .15s ease, transform .15s ease;
+  pointer-events: none;
+  z-index: 5;
+  box-shadow: 0 8px 20px -6px rgba(0,0,0,.35);
+}
+.career-loop-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 24px;
+  border: 6px solid transparent;
+  border-top-color: var(--navy, #1e293b);
+}
+.career-loop-sheet-step:hover .career-loop-tooltip,
+.career-loop-sheet-step:focus-visible .career-loop-tooltip { opacity: 1; visibility: visible; transform: translateY(0); }
+
 /* A small inset card for an inline, expandable helper inside a builder
    section — currently just AchievementGeneratorPanel's "Generate from
    keywords" form, kept visually distinct (subtle background + border)

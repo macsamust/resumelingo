@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "../common/Modal";
+import { PolyAvatar } from "../brand/PolyAvatar";
 import { careerLoopApi } from "../../api";
 import { SubscriptionTier } from "../../types";
 import { useToast } from "../common/Toast";
@@ -14,12 +15,26 @@ interface Props {
 
 type StepKey = "resume" | "share" | "track" | "letters";
 
-const STEPS: { key: StepKey; label: string }[] = [
-  { key: "resume", label: "Resume" },
-  { key: "share", label: "Share" },
-  { key: "track", label: "Track" },
-  { key: "letters", label: "Letters" },
-];
+const STEP_INFO: Record<StepKey, { icon: string; label: string; description: string }> = {
+  resume: { icon: "📝", label: "Resume", description: "Your resume is built." },
+  share: {
+    icon: "🔗",
+    label: "Share",
+    description: "Share one clean URL in LinkedIn, email, or applications — no more PDF versions.",
+  },
+  track: {
+    icon: "📋",
+    label: "Track",
+    description: "Log the job applications you sent — a record of where, when, and what happened next.",
+  },
+  letters: {
+    icon: "✉️",
+    label: "Letters",
+    description: "Generate a cover or thank-you letter that matches the resume you just published.",
+  },
+};
+
+const STEP_ORDER: StepKey[] = ["resume", "share", "track", "letters"];
 
 /**
  * "Full Circle" post-publish coach, one-time (post-publish sheet) state —
@@ -68,16 +83,13 @@ export function CareerLoopSheet({ resumeId, resumeSlug, subscriptionTier, onClos
     navigate("/job-applications");
   };
 
-  const goToLetters = () => {
-    onClose();
-    navigate("/cover-letter");
-  };
-
   let primaryLabel = "Copy my link";
   let primaryAction: (() => void) | null = copyLink;
   let softUpgradeCopy: string | null = null;
+  let currentStep: StepKey = "share";
 
   if (shared) {
+    currentStep = "track";
     if (trackLocked) {
       softUpgradeCopy = "Tracking unlocks on Professional — for when you're running a real search.";
       primaryAction = null;
@@ -89,44 +101,38 @@ export function CareerLoopSheet({ resumeId, resumeSlug, subscriptionTier, onClos
 
   return (
     <Modal title="Your career loop is live" onClose={onClose}>
-      <p className="hero-note" style={{ marginTop: -4, marginBottom: 16 }}>
-        One step done. Keep the circle moving.
-      </p>
-      <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
-        {STEPS.map((s, i) => {
-          const done = s.key === "resume" || (s.key === "share" && shared);
+      <div className="career-loop-sheet-header">
+        <PolyAvatar size={52} decorative />
+        <p className="career-loop-sheet-intro">
+          One step done. Keep the circle moving — <span>hover a step for what it does.</span>
+        </p>
+      </div>
+
+      <div className="career-loop-sheet-steps">
+        {STEP_ORDER.map((key) => {
+          const info = STEP_INFO[key];
+          const done = key === "resume" || (key === "share" && shared);
+          const isCurrent = key === currentStep;
+          const locked = (key === "track" && trackLocked) || (key === "letters" && lettersLocked);
           return (
             <div
-              key={s.key}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "8px 0",
-                borderTop: i === 0 ? "none" : "1px solid var(--border)",
-              }}
+              key={key}
+              tabIndex={0}
+              className={`career-loop-sheet-step ${done ? "is-done" : ""} ${isCurrent ? "is-current" : ""}`}
             >
-              <span style={{ color: done ? "var(--teal)" : "var(--muted)", fontSize: 16, width: 18, textAlign: "center" }}>
-                {done ? "✓" : "○"}
+              <span className="career-loop-sheet-step-icon">{info.icon}</span>
+              <span className="career-loop-sheet-step-label">{info.label}</span>
+              {locked && <span className="career-loop-sheet-step-tag">{key === "track" ? "Pro+" : "Premium"}</span>}
+              <span className="career-loop-sheet-step-check">{done ? "✓" : ""}</span>
+              <span className="career-loop-tooltip" role="tooltip">
+                {info.description}
               </span>
-              <span style={{ fontSize: 14, color: done ? "var(--muted)" : "inherit", textDecoration: done ? "line-through" : "none" }}>
-                {s.label}
-              </span>
-              {s.key === "letters" && lettersLocked && (
-                <span className="career-loop-next" style={{ marginLeft: "auto" }}>
-                  Premium
-                </span>
-              )}
-              {s.key === "track" && trackLocked && (
-                <span className="career-loop-next" style={{ marginLeft: "auto" }}>
-                  Professional+
-                </span>
-              )}
             </div>
           );
         })}
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+
+      <div className="career-loop-sheet-footer">
         <button className="career-loop-dismiss" onClick={onClose} type="button">
           Skip for now
         </button>
