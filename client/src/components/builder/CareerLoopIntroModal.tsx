@@ -57,12 +57,12 @@ export function CareerLoopIntroModal({ resumeId, resumeSlug, subscriptionTier, o
 
   return (
     <Modal title="Your career loop is live" onClose={onClose}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "-4px 0 16px" }}>
-        <PolyAnimated expression="celebrate" size={44} decorative />
-        <p style={{ margin: 0, fontSize: 13.5, color: "var(--muted)", lineHeight: 1.5 }}>
-          Nice — this resume's journey starts now.
-        </p>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+        <PolyAnimated expression="celebrate" size={150} decorative />
       </div>
+      <p className="modal-message" style={{ textAlign: "center" }}>
+        Nice — this resume's journey starts now.
+      </p>
 
       <p className="resume-loop-popover-title" style={{ margin: "0 0 10px" }}>
         This resume's journey
