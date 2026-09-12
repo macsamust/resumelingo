@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { Env } from "./types";
 import { withServices } from "./middleware/servicesMiddleware";
+import { fetchWithEdgeSecurity } from "./middleware/edgeSecurity";
 import { createServices } from "./services/createServices";
 import authRoutes from "./routes/auth.routes";
 import resumeRoutes from "./routes/resume.routes";
@@ -59,16 +60,12 @@ import {
 
 /**
  * Entry point for the whole Worker. wrangler.jsonc's `run_worker_first` is
- * `false` (the installed Wrangler version's schema only supports a plain
- * boolean here, not a per-route array), which means Cloudflare tries a
- * static-asset match first for every request, but still invokes this fetch
- * handler whenever nothing under client/dist matches — including
- * client-side-only routes like /r/:slug (the public resume link) on a
- * fresh page load rather than in-app navigation. Hono's own 404 (below)
- * used to short-circuit those with a hardcoded JSON error instead of
- * letting them reach the real page; the notFound handler now falls back to
- * the ASSETS binding for anything outside /api/*, which serves the actual
- * static file if one exists, or index.html (via `not_found_handling:
+ * `true` so this fetch handler sees HTML and API traffic alike — required
+ * for the HTTP→HTTPS redirect and browser security headers in
+ * edgeSecurity.ts (SEC-01 / SEC-02). Static files and SPA routes still
+ * land here: Hono has no page routes, so the notFound handler falls back
+ * to the ASSETS binding for anything outside /api/*, which serves the
+ * real file if one exists, or index.html (via `not_found_handling:
  * "single-page-application"` in wrangler.jsonc) so React Router can take
  * over client-side. Only /api/* misses still return the JSON 404.
  */
@@ -207,7 +204,9 @@ app.notFound((c) => {
 });
 
 export default {
-  fetch: app.fetch,
+  fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    return fetchWithEdgeSecurity(request, (incoming) => app.fetch(incoming, env, ctx));
+  },
   /**
    * Fired by any of the four Cron Triggers in wrangler.jsonc's
    * `triggers.crons` — "0 14 * * 1" (weekly, the view digest), "0 13 * * *"
