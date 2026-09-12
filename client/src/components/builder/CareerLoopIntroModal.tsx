@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { Modal } from "../common/Modal";
 import { PolyAnimated } from "../brand/PolyAnimated";
 import { careerLoopApi } from "../../api";
@@ -89,9 +88,13 @@ export function CareerLoopIntroModal({ resumeId, resumeSlug, subscriptionTier, o
               Add tracking to this resume's story <span className="resume-loop-tag">Pro+</span>
             </span>
           ) : (
-            <Link to="/job-applications" className="resume-loop-ledger-action" onClick={onClose}>
-              Log an application
-            </Link>
+            // Deliberately not a link to /job-applications here, unlike
+            // Share above: there's nothing real to log yet seconds after
+            // publishing, so sending someone to an empty tracker right now
+            // would be a non-sequitur. This step becomes actionable from
+            // ResumeLoopBadge's popover once there's actually something to
+            // track — see the closing line below.
+            <span className="resume-loop-ledger-invite">Log an application when you send this resume out</span>
           )}
         </div>
         <div className="resume-loop-ledger-row">
@@ -101,15 +104,13 @@ export function CareerLoopIntroModal({ resumeId, resumeSlug, subscriptionTier, o
               Add a letter to this resume's story <span className="resume-loop-tag">Premium</span>
             </span>
           ) : (
-            <Link to="/cover-letter" className="resume-loop-ledger-action" onClick={onClose}>
-              Write a cover letter
-            </Link>
+            <span className="resume-loop-ledger-invite">Write a cover letter when you're ready</span>
           )}
         </div>
       </div>
 
       <p style={{ margin: 0, fontSize: 12.5, color: "var(--muted)" }}>
-        Find this resume's journey any time from its badge on your dashboard.
+        Come back to this resume's journey any time from its badge on your dashboard, once there's more to add.
       </p>
     </Modal>
   );
