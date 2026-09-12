@@ -74,6 +74,56 @@ import {
  */
 const app = new Hono<{ Bindings: Env }>();
 
+// Applies to every request (not just /api/*) — a pentest pass found
+// http://resumelingo.com/ served the SPA over plain HTTP with no redirect,
+// a first-visit MITM window since HSTS (below) can't protect a request that
+// was never HTTPS to begin with. Cloudflare's dashboard has an "Always Use
+// HTTPS" zone setting that covers this at the edge, but that's account
+// configuration outside this repo and easy to silently drift (a zone
+// re-provision, a new domain added without checking the setting) — this
+// app-level redirect makes the behavior a durable part of the codebase
+// instead of a fact about the Cloudflare account.
+app.use("*", async (c, next) => {
+  const url = new URL(c.req.url);
+  // Exempt localhost so `wrangler dev` (which serves plain HTTP) keeps
+  // working — only ever matters for local development, since the real
+  // domain always terminates as HTTPS at Cloudflare's edge.
+  const isLocalhost = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+  if (url.protocol === "http:" && !isLocalhost) {
+    url.protocol = "https:";
+    return c.redirect(url.toString(), 301);
+  }
+  await next();
+});
+
+// Standard hardening headers on every response. None of these were present
+// before (flagged in the Sep 2026 pentest pass) — HSTS pins the browser to
+// HTTPS for future visits (pairs with the redirect above), CSP/X-Frame-
+// Options are defense-in-depth against XSS/clickjacking, and the rest are
+// low-cost best practice with no functional downside for this app.
+app.use("*", async (c, next) => {
+  await next();
+  c.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+  c.header("X-Content-Type-Options", "nosniff");
+  c.header("X-Frame-Options", "DENY");
+  c.header("Referrer-Policy", "strict-origin-when-cross-origin");
+  c.header("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  // 'unsafe-inline'/'unsafe-eval' on script-src are required by the current
+  // Vite-built client bundle (no nonce/hash pipeline yet) — tightening this
+  // further needs a build-time change, tracked separately, not something to
+  // silently narrow here and break the app. style-src/font-src allow Google
+  // Fonts (see client/index.html's preconnect + stylesheet link — the only
+  // third-party origins the app actually loads from). Checkout/billing goes
+  // through a full-page redirect to Stripe's hosted page (see
+  // DashboardPage's `window.location.href = url`), not an embedded
+  // Stripe.js/iframe, so no stripe.com allowance is needed here — add one
+  // if that ever changes to an embedded Elements/Checkout flow.
+  c.header(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+  );
+});
+
 // CLIENT_ORIGIN is a required var in wrangler.jsonc (set for both prod and
 // local dev — see .dev.vars) and should always be present. The old fallback
 // here was `c.env.CLIENT_ORIGIN || "*"`: if that var were ever missing
@@ -96,7 +146,11 @@ app.use(
 );
 app.use("/api/*", withServices);
 
-app.get("/api/health", (c) => c.json({ status: "ok", service: "resumelingo-worker" }));
+// Deliberately doesn't name the internal service ("resumelingo-worker") or
+// expose any other implementation detail — a pentest pass flagged the old
+// response as low-severity info disclosure. This endpoint is unauthenticated
+// by design (used for uptime checks), so it should say only "it's up."
+app.get("/api/health", (c) => c.json({ status: "ok" }));
 app.route("/api/auth", authRoutes);
 app.route("/api/resumes", resumeRoutes);
 // Deliberately its own top-level path, not nested under /api/resumes/*

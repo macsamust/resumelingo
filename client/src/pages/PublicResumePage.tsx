@@ -339,7 +339,13 @@ export function PublicResumePage() {
           <form onSubmit={onSubmitPassword}>
             <div className="field">
               <label>Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus />
+              <input
+                type="password"
+                autoComplete="off"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoFocus
+              />
             </div>
             {passwordError && <p className="form-error">Incorrect password. Please try again.</p>}
             <button className="btn btn-primary btn-block" type="submit">

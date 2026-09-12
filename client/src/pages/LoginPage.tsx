@@ -34,11 +34,25 @@ export function LoginPage() {
         <form onSubmit={onSubmit}>
           <div className="field">
             <label>Email</label>
-            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+            <input
+              type="email"
+              required
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+            />
           </div>
           <div className="field">
             <label>Password</label>
-            <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+            <input
+              type="password"
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+            />
           </div>
           <p className="form-footnote" style={{ textAlign: "right", marginTop: -8 }}>
             <Link to="/forgot-password">Forgot password?</Link>

@@ -84,15 +84,30 @@ export function SignupPage() {
         <form onSubmit={onSubmit}>
           <div className="field">
             <label>Full name</label>
-            <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Jordan Lee" />
+            <input required autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Jordan Lee" />
           </div>
           <div className="field">
             <label>Email</label>
-            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+            <input
+              type="email"
+              required
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+            />
           </div>
           <div className="field">
             <label>Password</label>
-            <input type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
+            <input
+              type="password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="At least 8 characters"
+            />
           </div>
           <div className="field">
             <label>Profession (optional)</label>

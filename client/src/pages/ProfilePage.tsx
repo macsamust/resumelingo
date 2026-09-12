@@ -177,7 +177,7 @@ export function ProfilePage() {
           </div>
           <div className="field">
             <label>Email</label>
-            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input type="email" required autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="field">
             <label>Profession</label>
@@ -206,6 +206,7 @@ export function ProfilePage() {
             <input
               type="password"
               required
+              autoComplete="current-password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
             />
@@ -216,6 +217,7 @@ export function ProfilePage() {
               type="password"
               required
               minLength={8}
+              autoComplete="new-password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="At least 8 characters"
