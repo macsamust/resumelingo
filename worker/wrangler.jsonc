@@ -77,6 +77,15 @@
     // sandbox address, which silently refuses to deliver to any recipient
     // other than the Resend account's own email. Not secret — update this
     // directly if the sending domain ever changes.
-    "RESEND_FROM_EMAIL": "ResumeLingo <noreply@resumelingo.com>"
+    "RESEND_FROM_EMAIL": "ResumeLingo <noreply@resumelingo.com>",
+    // Kill switch for the "Full Circle" post-publish coach (Sep 2026 build —
+    // see migrations/0045_full_circle_loop_progress.sql and
+    // services/CareerLoopService.ts). Ships defaulted to "false" on purpose:
+    // this is a brand-new, opinionated piece of UI landing on every
+    // subscriber's dashboard, and the whole point of gating it behind one
+    // var is that turning it off again — if it doesn't earn its keep — is a
+    // one-line config change and redeploy, not a revert. Set to "true" here
+    // (or override per-environment) once ready to actually show it.
+    "CAREER_LOOP_ENABLED": "false"
   }
 }

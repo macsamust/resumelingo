@@ -38,4 +38,6 @@ export interface Env {
   /** Resend (email) — see services/EmailService.ts. Optional so the app still runs without it configured; password reset requests will just fail until it's set. */
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string;
+  /** Kill switch for the "Full Circle" post-publish coach — see wrangler.jsonc's `vars` entry and services/CareerLoopService.ts. Wrangler vars are always strings, so this is compared against the literal "true", not treated as a boolean. */
+  CAREER_LOOP_ENABLED?: string;
 }

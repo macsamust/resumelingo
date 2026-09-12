@@ -35,6 +35,8 @@ import { StaleAccountCleanupService } from "./StaleAccountCleanupService";
 import { AiCareerCoachGenerator, ICareerCoachGenerator } from "./CareerCoachGenerator";
 import { SecurityAlertService } from "./SecurityAlertService";
 import { SecurityMonitorService } from "./SecurityMonitorService";
+import { CareerLoopProgressRepository } from "../repositories/CareerLoopProgressRepository";
+import { CareerLoopService, isCareerLoopEnabled } from "./CareerLoopService";
 
 export interface Services {
   authService: AuthService;
@@ -100,6 +102,10 @@ export interface Services {
   /** Daily cron consumer — see index.ts's `scheduled` export. */
   resumeRefreshNudgeService: ResumeRefreshNudgeService;
   staleAccountCleanupService: StaleAccountCleanupService;
+  /** "Full Circle" post-publish coach — see CareerLoopService.ts. Bare (no fallback), same as the other non-critical-path services; this is pure D1 reads/writes with no AI dependency to fall back from. */
+  careerLoopService: CareerLoopService;
+  /** True only when Env.CAREER_LOOP_ENABLED is the literal string "true" — see isCareerLoopEnabled's doc comment. Every Full Circle route/controller checks this before doing anything, so the whole feature is a single config flip to disable. */
+  careerLoopEnabled: boolean;
 }
 
 /**
@@ -128,6 +134,7 @@ export function createServices(env: Env): Services {
   const resumeAnalyticsRepository = new ResumeAnalyticsRepository(env.DB);
   const resumeVersionRepository = new ResumeVersionRepository(env.DB);
   const jobApplicationRepository = new JobApplicationRepository(env.DB);
+  const careerLoopProgressRepository = new CareerLoopProgressRepository(env.DB);
 
   const tokenService = new TokenService<AuthTokenPayload>(env.JWT_SECRET);
   // 12h, not the default 7d — shrinks how long a leaked/stolen admin token
@@ -200,6 +207,8 @@ export function createServices(env: Env): Services {
     env.CLIENT_ORIGIN
   );
   const staleAccountCleanupService = new StaleAccountCleanupService(userRepo, resumeRepo, emailService, authService, adminAuditLogRepository);
+  const careerLoopService = new CareerLoopService(careerLoopProgressRepository, jobApplicationRepository);
+  const careerLoopEnabled = isCareerLoopEnabled(env);
   const securityAlertService = new SecurityAlertService(securityEventRepository, adminRepo, emailService, env.ADMIN_EMAIL);
   const securityMonitorService = new SecurityMonitorService(
     adminAuditLogRepository,
@@ -248,5 +257,7 @@ export function createServices(env: Env): Services {
     resumeRefreshNudgeTokenService,
     resumeRefreshNudgeService,
     staleAccountCleanupService,
+    careerLoopService,
+    careerLoopEnabled,
   };
 }

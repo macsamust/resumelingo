@@ -508,6 +508,33 @@ export interface JobApplicationRecord {
   updatedAt: string;
 }
 
+/**
+ * Raw DB row for the "Full Circle" post-publish coach — see
+ * worker/migrations/0045_full_circle_loop_progress.sql and
+ * CareerLoopService.ts, which turns this into the four-step progress shape
+ * the client actually renders (Resume/Track are derived, not stored here).
+ */
+export interface CareerLoopProgressRecord {
+  resumeId: string;
+  userId: string;
+  sharedAt: string | null;
+  lettersAt: string | null;
+  dismissedAt: string | null;
+  dismissedUntil: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Computed, client-facing shape returned by CareerLoopService.getProgress — booleans only, no raw timestamps the client would have to interpret itself. */
+export interface CareerLoopProgress {
+  resume: true;
+  share: boolean;
+  track: boolean;
+  letters: boolean;
+  dismissedUntil: string | null;
+  completed: boolean;
+}
+
 export interface AuthTokenPayload {
   userId: string;
   email: string;

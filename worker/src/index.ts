@@ -21,6 +21,7 @@ import coverLetterRoutes from "./routes/coverLetter.routes";
 import marketingEventRoutes from "./routes/marketingEvent.routes";
 import webhookRoutes from "./routes/webhooks.routes";
 import jobApplicationRoutes from "./routes/jobApplication.routes";
+import careerLoopRoutes from "./routes/careerLoop.routes";
 import resumeRefreshRoutes from "./routes/resumeRefresh.routes";
 import { AuthError, InvalidResetTokenError, InvalidVerificationTokenError } from "./services/AuthService";
 import { InvalidUnsubscribeTokenError } from "./controllers/AuthController";
@@ -134,6 +135,7 @@ app.route("/api/marketing-events", marketingEventRoutes);
 app.route("/api/webhooks", webhookRoutes);
 app.route("/api/job-applications", jobApplicationRoutes);
 app.route("/api/resume-refresh", resumeRefreshRoutes);
+app.route("/api/career-loop", careerLoopRoutes);
 
 app.onError((err, c) => {
   const status =
