@@ -5,7 +5,7 @@ import { ParrotLogo } from "../components/brand/ParrotLogo";
 import { ConfirmDialog } from "../components/common/ConfirmDialog";
 import { useToast } from "../components/common/Toast";
 import { useAuth } from "../context/AuthContext";
-import { ApiError, jobApplicationApi, resumeApi } from "../api";
+import { ApiError, careerLoopApi, jobApplicationApi, resumeApi } from "../api";
 import { JobApplication, JobApplicationStatus, JobApplicationStatusHistoryEntry, Resume } from "../types";
 import { formatUpdatedDate } from "../utils/time";
 
@@ -172,14 +172,34 @@ export function JobApplicationsPage() {
     setCreating(true);
     setError(null);
     try {
+      const resumeIdForCelebration = newApp.resumeId || null;
+      // Checked BEFORE creating the application, same reasoning as
+      // CoverLetterPage's markLettersUsed: Track is derived live from
+      // job_applications (see worker's CareerLoopService.ts), so without
+      // this "was it already true" check, logging a 2nd/3rd application
+      // against an already-complete resume would re-fire the "full circle"
+      // celebration every time. Swallowed on failure (including
+      // CAREER_LOOP_ENABLED being off) since this is bookkeeping, not the
+      // actual point of this action.
+      const before = resumeIdForCelebration ? await careerLoopApi.getProgress(resumeIdForCelebration).catch(() => null) : null;
       await jobApplicationApi.create({
         company: newApp.company.trim(),
         role: newApp.role.trim(),
-        resumeId: newApp.resumeId || null,
+        resumeId: resumeIdForCelebration,
         status: newApp.status,
         appliedDate: newApp.appliedDate || null,
         link: newApp.link.trim(),
       });
+      if (before && !before.progress.track && resumeIdForCelebration) {
+        careerLoopApi
+          .getProgress(resumeIdForCelebration)
+          .then((after) => {
+            if (after.progress.completed) {
+              showToast("success", "Full circle — you've closed the loop on this resume.");
+            }
+          })
+          .catch(() => {});
+      }
       setNewApp(EMPTY_NEW);
       load();
     } catch (err) {

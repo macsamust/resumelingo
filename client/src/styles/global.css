@@ -390,6 +390,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
    (see .resume-menu-dropdown) so only Edit/View link stay as visible
    buttons below (see .resume-item-actions above). */
 .resume-item-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.resume-item-header-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .resume-menu { position: relative; flex-shrink: 0; }
 .resume-menu-trigger { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; font-size: 18px; line-height: 1; border-radius: 8px; border: 1.5px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
 .resume-menu-trigger:hover { border-color: var(--indigo); color: var(--indigo); }
@@ -543,119 +544,61 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .builder-progress-track { height: 6px; border-radius: 999px; background: var(--bg); overflow: hidden; }
 .builder-progress-fill { height: 100%; background: var(--teal); border-radius: 999px; transition: width .2s ease; }
 
-/* "Full Circle" post-publish coach, dashboard-card state — see
-   CareerLoopCard.tsx. Sits directly under the dashboard's welcome header.
-   Tinted gradient background (rather than plain white, like every other
-   dashboard tile) so it reads as its own distinct, ongoing thing rather
-   than one more stat tile. */
-.career-loop-card {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  background: linear-gradient(135deg, rgba(20,184,166,.10), rgba(79,70,229,.07));
-  border: 1px solid rgba(20,184,166,.25);
-  border-radius: 14px;
-  padding: 16px 20px;
-  margin-bottom: 24px;
+/* "Full Circle" — permanent per-resume badge on each "My Resumes" tile
+   (ResumeLoopBadge.tsx). Replaced an earlier dashboard-card + post-publish
+   modal approach that read as a generic SaaS onboarding checklist — this
+   version costs each card nothing beyond a small corner badge, and only
+   reveals its narrative "journey" ledger on click, never a locked/greyed
+   step. */
+.resume-loop-badge-wrap { position: relative; }
+.resume-loop-badge {
+  display: block;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  line-height: 0;
 }
-.career-loop-body { flex: 1; min-width: 0; }
-.career-loop-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.career-loop-title { font-weight: 600; font-size: 14.5px; }
-.career-loop-dismiss { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 2px 4px; }
-.career-loop-dismiss:hover { color: var(--navy); text-decoration: underline; }
-.career-loop-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-.career-loop-next { font-size: 13px; color: var(--muted); }
-
-/* The circular 4-segment progress ring (Resume/Share/Track/Letters) that
-   replaced a straight progress bar — ties visually into the "full circle"
-   theme itself rather than looking like any other loading bar. See
-   CareerLoopRing in CareerLoopCard.tsx for the segment math. */
-.career-loop-ring-wrap { position: relative; width: 60px; height: 60px; flex-shrink: 0; }
-.career-loop-ring-label {
+.resume-loop-badge:hover { background: var(--bg); }
+.resume-loop-badge-pulse { animation: resume-loop-pulse 1.6s ease-out 3; }
+@keyframes resume-loop-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(20,184,166,.45); }
+  70% { box-shadow: 0 0 0 8px rgba(20,184,166,0); }
+  100% { box-shadow: 0 0 0 0 rgba(20,184,166,0); }
+}
+.resume-loop-popover {
   position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--navy);
-}
-.career-loop-card-celebrate {
-  background: linear-gradient(135deg, rgba(20,184,166,.16), rgba(79,70,229,.10));
-  border-color: rgba(20,184,166,.4);
-}
-.career-loop-celebrate-body { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-
-/* "Full Circle" post-publish coach, one-time sheet (CareerLoopSheet.tsx) —
-   a richer treatment than the dashboard card since this is the one moment
-   the coach interrupts the user, right after publishing. */
-.career-loop-sheet-header { display: flex; align-items: center; gap: 14px; margin: -4px 0 18px; }
-.career-loop-sheet-intro { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.5; }
-.career-loop-sheet-intro span { color: var(--teal); font-weight: 600; }
-.career-loop-sheet-steps { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
-.career-loop-sheet-step {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 260px;
+  background: #fff;
   border: 1px solid var(--border);
-  background: var(--bg);
-  cursor: default;
-  transition: border-color .15s ease, background .15s ease;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px -8px rgba(15,23,42,.18);
+  padding: 14px 16px;
+  z-index: 8;
 }
-.career-loop-sheet-step:hover,
-.career-loop-sheet-step:focus-visible { border-color: var(--teal); background: #fff; outline: none; }
-.career-loop-sheet-step.is-done { background: rgba(20,184,166,.08); border-color: rgba(20,184,166,.35); }
-.career-loop-sheet-step.is-current { border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
-.career-loop-sheet-step-icon { font-size: 18px; line-height: 1; }
-.career-loop-sheet-step-label { font-size: 14px; font-weight: 600; flex: 1; }
-.career-loop-sheet-step-tag {
-  font-size: 11px;
+.resume-loop-popover-title { margin: 0 0 10px; font-size: 12.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+.resume-loop-ledger { display: flex; flex-direction: column; gap: 9px; }
+.resume-loop-ledger-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.resume-loop-ledger-row.is-done { color: var(--navy); }
+.resume-loop-ledger-check { width: 16px; text-align: center; color: var(--teal); font-weight: 700; flex-shrink: 0; }
+.resume-loop-ledger-action { background: none; border: none; padding: 0; color: var(--indigo); font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
+.resume-loop-ledger-action:hover { text-decoration: underline; }
+.resume-loop-ledger-invite { display: flex; align-items: center; gap: 6px; }
+.resume-loop-tag {
+  font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .03em;
+  letter-spacing: .02em;
   color: var(--indigo);
   background: rgba(79,70,229,.1);
   border-radius: 999px;
-  padding: 2px 8px;
+  padding: 1px 7px;
 }
-.career-loop-sheet-step-check { width: 18px; text-align: center; color: var(--teal); font-weight: 700; }
-.career-loop-sheet-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-
-/* Hover/focus tooltip shared by each step row — CSS-only, no JS. Anchored
-   to the step row (position: relative above) so it floats just above it. */
-.career-loop-tooltip {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(100% + 8px);
-  background: var(--navy, #1e293b);
-  color: #fff;
-  font-size: 12.5px;
-  line-height: 1.45;
-  padding: 10px 12px;
-  border-radius: 8px;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(4px);
-  transition: opacity .15s ease, transform .15s ease;
-  pointer-events: none;
-  z-index: 5;
-  box-shadow: 0 8px 20px -6px rgba(0,0,0,.35);
-}
-.career-loop-tooltip::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 24px;
-  border: 6px solid transparent;
-  border-top-color: var(--navy, #1e293b);
-}
-.career-loop-sheet-step:hover .career-loop-tooltip,
-.career-loop-sheet-step:focus-visible .career-loop-tooltip { opacity: 1; visibility: visible; transform: translateY(0); }
 
 /* A small inset card for an inline, expandable helper inside a builder
    section — currently just AchievementGeneratorPanel's "Generate from

@@ -4,6 +4,7 @@ import { AppShell } from "../components/layout/AppShell";
 import { ParrotLogo } from "../components/brand/ParrotLogo";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, careerLoopApi, coverLetterApi, resumeApi } from "../api";
+import { useToast } from "../components/common/Toast";
 import { Resume } from "../types";
 
 function downloadTextFile(filename: string, contents: string): void {
@@ -53,6 +54,7 @@ function CoverLetterLocked() {
  */
 export function CoverLetterPage() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [resumeId, setResumeId] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -90,12 +92,24 @@ export function CoverLetterPage() {
     try {
       const res = await coverLetterApi.generate({ resumeId, companyName, roleName, hiringManagerName });
       setLetter(res.letter);
-      // Fire-and-forget: marks the "Letters" step of the Full Circle coach
-      // done for this resume (see CareerLoopCard.tsx). Swallowed on purpose
-      // — this 404s whenever CAREER_LOOP_ENABLED is off, and either way a
-      // coach bookkeeping failure should never surface as an error on a
-      // successful letter generation.
-      careerLoopApi.markLettersUsed(resumeId).catch(() => {});
+      // Fire-and-forget: marks the "Letters" step of the Full Circle loop
+      // done for this resume (see ResumeLoopBadge.tsx). Swallowed on
+      // purpose — this 404s whenever CAREER_LOOP_ENABLED is off, and either
+      // way a bookkeeping failure should never surface as an error on a
+      // successful letter generation. Checks progress BEFORE marking so the
+      // celebratory toast only fires the one time this actually closes the
+      // loop — without that check, regenerating a letter after the loop is
+      // already complete would re-fire "full circle" every single time.
+      careerLoopApi
+        .getProgress(resumeId)
+        .then((before) =>
+          careerLoopApi.markLettersUsed(resumeId).then((after) => {
+            if (!before.progress.letters && after.progress.completed) {
+              showToast("success", "Full circle — you've closed the loop on this resume.");
+            }
+          })
+        )
+        .catch(() => {});
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong generating your letter.");
     } finally {

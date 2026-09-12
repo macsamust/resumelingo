@@ -18,7 +18,7 @@ import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
 import { Modal } from "../components/common/Modal";
 import { TemplateUpgradeModal } from "../components/builder/TemplateUpgradeModal";
 import { FirstResumeEmailPreferencesModal } from "../components/builder/FirstResumeEmailPreferencesModal";
-import { CareerLoopSheet } from "../components/builder/CareerLoopSheet";
+import { useToast } from "../components/common/Toast";
 import { VersionHistoryPanel } from "../components/common/VersionHistoryPanel";
 import { PolyAnimated } from "../components/brand/PolyAnimated";
 import { ApiError, authApi, careerLoopApi, catalogApi, resumeApi } from "../api";
@@ -64,6 +64,7 @@ export function ResumeEditPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, refresh } = useAuth();
+  const { showToast } = useToast();
   const [resume, setResume] = useState<Resume | null>(null);
   // Set only on the navigate() call right after creating a Professional/
   // Premium account's very first resume — see ResumeBuilderPage.onSubmit.
@@ -73,22 +74,37 @@ export function ResumeEditPage() {
   const [showFirstResumePrompt, setShowFirstResumePrompt] = useState(
     () => (location.state as { justCreatedFirstResume?: boolean } | null)?.justCreatedFirstResume === true
   );
-  // "Full Circle" post-publish coach's one-time sheet — see
-  // CareerLoopSheet.tsx and ResumeBuilderPage.onSubmit, which sets this
-  // router state on every new resume (not just the account's first). Read
-  // once on mount, same reasoning as showFirstResumePrompt above. Rendered
-  // only once showFirstResumePrompt is false (see below) so a first-time
-  // creator sees the email-prefs celebration first, then this.
-  const [showLoopSheet, setShowLoopSheet] = useState(
-    () => (location.state as { justPublishedResumeId?: string } | null)?.justPublishedResumeId === id
-  );
-  // The sheet itself (unlike CareerLoopCard) doesn't fetch progress before
-  // rendering, so this is the only check confirming CAREER_LOOP_ENABLED is
-  // actually on before showing it — the endpoint 404s while it's off, same
-  // signal the card relies on.
+  // "Full Circle" — introduces the "loop" term right after publish, without
+  // a modal (see docs/full-circle-coach-build-brief.md's revision history:
+  // the earlier post-publish sheet + dashboard checklist card were both
+  // dropped in favor of a permanent per-resume badge, ResumeLoopBadge.tsx,
+  // on the dashboard's "My Resumes" grid). This just fires a one-time,
+  // non-blocking toast naming the loop, plus sets a short-lived
+  // sessionStorage flag so that resume's badge pulses once the first time
+  // it's actually seen on the dashboard — the toast introduces the word,
+  // the pulse points at where it actually lives.
   useEffect(() => {
-    if (!showLoopSheet || !id) return;
-    careerLoopApi.getProgress(id).catch(() => setShowLoopSheet(false));
+    const justPublishedResumeId = (location.state as { justPublishedResumeId?: string } | null)
+      ?.justPublishedResumeId;
+    if (!justPublishedResumeId || justPublishedResumeId !== id) return;
+    careerLoopApi
+      .getProgress(id)
+      .then(() => {
+        showToast("success", "Your career loop is live — find it on your resume's card on the dashboard.");
+        sessionStorage.setItem(`resumelingo:loop-pulse:${id}`, "1");
+      })
+      .catch(() => {
+        // CAREER_LOOP_ENABLED is off — say nothing, same as every other
+        // Full Circle surface staying invisible while the flag is off.
+      })
+      .finally(() => {
+        // Clears router state so a page refresh doesn't re-fire this —
+        // window.history.state otherwise survives a hard reload, same
+        // reasoning as showFirstResumePrompt's onClose elsewhere in this
+        // file. Safe even when justCreatedFirstResume was also set: that
+        // flag was already captured into React state above by this point.
+        navigate(location.pathname, { replace: true, state: {} });
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [professions, setProfessions] = useState<ProfessionSummary[]>([]);
@@ -1716,17 +1732,6 @@ export function ResumeEditPage() {
             // unlike React state. Left with justPublishedResumeId cleared
             // too since showLoopSheet was already captured into React
             // state above by this point.
-            navigate(location.pathname, { replace: true, state: {} });
-          }}
-        />
-      )}
-      {!showFirstResumePrompt && showLoopSheet && resume && user && (
-        <CareerLoopSheet
-          resumeId={resume.id}
-          resumeSlug={resume.slug}
-          subscriptionTier={user.subscriptionTier}
-          onClose={() => {
-            setShowLoopSheet(false);
             navigate(location.pathname, { replace: true, state: {} });
           }}
         />
