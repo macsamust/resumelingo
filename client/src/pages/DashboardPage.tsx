@@ -13,6 +13,7 @@ import { RESOURCES as CAREER_RESOURCES } from "../components/marketing/CareerCen
 import { STORIES as SUCCESS_STORIES } from "../components/marketing/SuccessStories";
 import { TOPICS as CAREER_TOPICS } from "./CareerCenterPage";
 import { NotificationBell } from "../components/dashboard/NotificationBell";
+import { CareerLoopCard } from "../components/dashboard/CareerLoopCard";
 import { PolyAvatar } from "../components/brand/PolyAvatar";
 import { formatRelativeTime } from "../utils/time";
 import { DASHBOARD_TEASER_STEPS } from "../config/quickStartSteps";
@@ -183,6 +184,14 @@ export function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {user && summary.myResumes.length > 0 && (
+        <CareerLoopCard
+          resumeId={summary.myResumes[0].id}
+          resumeSlug={summary.myResumes[0].slug}
+          subscriptionTier={user.subscriptionTier}
+        />
+      )}
 
       {checkoutStatus === "success" && (
         <div className="empty-state" style={{ marginBottom: 24 }}>

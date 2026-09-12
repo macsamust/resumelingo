@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { ParrotLogo } from "../components/brand/ParrotLogo";
 import { useAuth } from "../context/AuthContext";
-import { ApiError, coverLetterApi, resumeApi } from "../api";
+import { ApiError, careerLoopApi, coverLetterApi, resumeApi } from "../api";
 import { Resume } from "../types";
 
 function downloadTextFile(filename: string, contents: string): void {
@@ -90,6 +90,12 @@ export function CoverLetterPage() {
     try {
       const res = await coverLetterApi.generate({ resumeId, companyName, roleName, hiringManagerName });
       setLetter(res.letter);
+      // Fire-and-forget: marks the "Letters" step of the Full Circle coach
+      // done for this resume (see CareerLoopCard.tsx). Swallowed on purpose
+      // — this 404s whenever CAREER_LOOP_ENABLED is off, and either way a
+      // coach bookkeeping failure should never surface as an error on a
+      // successful letter generation.
+      careerLoopApi.markLettersUsed(resumeId).catch(() => {});
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong generating your letter.");
     } finally {

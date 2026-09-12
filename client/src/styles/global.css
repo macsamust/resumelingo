@@ -543,6 +543,19 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .builder-progress-track { height: 6px; border-radius: 999px; background: var(--bg); overflow: hidden; }
 .builder-progress-fill { height: 100%; background: var(--teal); border-radius: 999px; transition: width .2s ease; }
 
+/* "Full Circle" post-publish coach, dashboard-card state — see
+   CareerLoopCard.tsx. Sits directly under the dashboard's welcome header. */
+.career-loop-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; margin-bottom: 24px; }
+.career-loop-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.career-loop-title { font-weight: 600; font-size: 14.5px; }
+.career-loop-dismiss { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 2px 4px; }
+.career-loop-dismiss:hover { color: var(--navy); text-decoration: underline; }
+.career-loop-bar { display: flex; gap: 6px; margin-bottom: 14px; }
+.career-loop-bar-step { flex: 1; height: 4px; border-radius: 999px; background: var(--bg); }
+.career-loop-bar-step.is-done { background: var(--teal); }
+.career-loop-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.career-loop-next { font-size: 13px; color: var(--muted); }
+
 /* A small inset card for an inline, expandable helper inside a builder
    section — currently just AchievementGeneratorPanel's "Generate from
    keywords" form, kept visually distinct (subtle background + border)

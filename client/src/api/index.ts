@@ -11,6 +11,7 @@ import { AchievementGenerateApi } from "./AchievementGenerateApi";
 import { JobApplicationApi } from "./JobApplicationApi";
 import { SkillSuggestionAiApi } from "./SkillSuggestionAiApi";
 import { ResumeRefreshApi } from "./ResumeRefreshApi";
+import { CareerLoopApi } from "./CareerLoopApi";
 
 export const authApi = new AuthApi();
 export const resumeApi = new ResumeApi();
@@ -30,6 +31,7 @@ export const skillSuggestionAiApi = new SkillSuggestionAiApi();
 // gated by the signed token in the nudge email, not a logged-in session
 // (see ResumeRefreshApi's doc comment).
 export const resumeRefreshApi = new ResumeRefreshApi();
+export const careerLoopApi = new CareerLoopApi();
 // Deliberately not included in setAuthToken below — the admin token lives
 // under its own storage key and is set via AdminAuthContext instead, so a
 // regular user login/logout never touches the admin session.
@@ -47,6 +49,7 @@ export function setAuthToken(token: string | null) {
   achievementGenerateApi.setToken(token);
   jobApplicationApi.setToken(token);
   skillSuggestionAiApi.setToken(token);
+  careerLoopApi.setToken(token);
 }
 
 export * from "./ApiClient";
@@ -63,3 +66,4 @@ export * from "./AchievementGenerateApi";
 export * from "./JobApplicationApi";
 export * from "./SkillSuggestionAiApi";
 export * from "./ResumeRefreshApi";
+export * from "./CareerLoopApi";

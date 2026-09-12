@@ -504,6 +504,16 @@ export interface ResumeVersion {
   changeSummary: string;
 }
 
+/** "Full Circle" post-publish coach — see worker's CareerLoopService.ts. Fetched per-resume; the API 404s outright while the feature flag is off, so a caller should treat any failure here as "nothing to show" rather than a real error. */
+export interface CareerLoopProgress {
+  resume: true;
+  share: boolean;
+  track: boolean;
+  letters: boolean;
+  dismissedUntil: string | null;
+  completed: boolean;
+}
+
 export interface DashboardSummary {
   myResumes: Resume[];
   sharedLinks: { title: string; slug: string; visibility: LinkVisibility }[];
