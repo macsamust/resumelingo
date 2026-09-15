@@ -76,7 +76,17 @@ export function ResumeLoopBadge({ resumeId, resumeSlug, resumeCreatedAt, subscri
   const [pulse, setPulse] = useState(false);
 
   useEffect(() => {
+    // Pulsing and loading progress are NOT alternatives — this used to be
+    // an if/else (pulse OR fetch), which meant a resume with the pulse flag
+    // set never called getProgress and never set `loaded`, so the badge
+    // rendered nothing at all (see the component's `if (!loaded ||
+    // !progress) return null`) until a later remount found the flag already
+    // consumed and fell through to the real fetch. Both need to happen on
+    // every mount: the badge needs its actual progress to render at all,
+    // independent of whether this particular visit also plays the one-time
+    // pulse animation.
     const key = `resumelingo:loop-pulse:${resumeId}`;
+    let pulseTimer: ReturnType<typeof setTimeout> | undefined;
     if (sessionStorage.getItem(key) === "1") {
       sessionStorage.removeItem(key);
       setPulse(true);
@@ -86,14 +96,16 @@ export function ResumeLoopBadge({ resumeId, resumeSlug, resumeCreatedAt, subscri
       // forever (previously only cleared on click), it would permanently
       // win the cascade and silently suppress the glow on any resume
       // nobody happened to click right after publishing.
-      const timer = setTimeout(() => setPulse(false), 4800);
-      return () => clearTimeout(timer);
+      pulseTimer = setTimeout(() => setPulse(false), 4800);
     }
     careerLoopApi
       .getProgress(resumeId)
       .then((res) => setProgress(res.progress))
       .catch(() => setProgress(null))
       .finally(() => setLoaded(true));
+    return () => {
+      if (pulseTimer) clearTimeout(pulseTimer);
+    };
   }, [resumeId]);
 
   // Close on outside click — same pattern DashboardPage already uses for
