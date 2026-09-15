@@ -164,11 +164,18 @@ function strengthDistribution(resumes: Resume[]): ResumeAnalytics["strengthDistr
   return distribution;
 }
 
-/** What's missing from a resume, in the same terms Resume.strengthScore weighs (plus a couple of purely structural fields it doesn't) — the "why" behind a low score. */
+/**
+ * What's missing from a resume, in the same terms Resume.strengthScore
+ * weighs (plus a couple of purely structural fields it doesn't) — the "why"
+ * behind a low score. Deliberately does NOT flag a missing LinkedIn URL:
+ * not every subscriber has (or wants) a LinkedIn profile, and framing its
+ * absence as a "gap" to close reads as penalizing them for something that
+ * was never a real weakness — same reasoning as why Resume.strengthScore's
+ * own formula never factored it in either.
+ */
 function missingSections(resume: Resume): string[] {
   const missing: string[] = [];
   if (!resume.contactPhone.trim()) missing.push("phone number");
-  if (!resume.contactLinkedIn.trim()) missing.push("LinkedIn URL");
   if (resume.education.length === 0) missing.push("education");
   if (resume.awards.length === 0) missing.push("awards");
   if (resume.achievements.length === 0) missing.push("achievements");
