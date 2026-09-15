@@ -17,10 +17,13 @@ interface Props {
  * creating a resume (see ResumeEditPage's showLoopIntro effect). Earlier
  * versions of this modal (see docs/full-circle-coach-build-brief.md's
  * revision history) used a locked-step checklist look; this reuses the
- * exact same narrative "journey" ledger markup/classes as
+ * exact same narrative "circle" ledger markup/classes as
  * ResumeLoopBadge.tsx's popover instead, so the introduction and the
  * ongoing per-resume badge speak the same visual language — nothing here
  * is ever shown as locked/greyed, an unmet step reads as an invitation.
+ * User-facing copy says "circle," not "journey" or "loop" — "circle" is
+ * the word used everywhere else this feature is visible (the marketing
+ * FullCircle.tsx section, ResumeLoopBadge's popover).
  *
  * Doesn't fetch existing progress: this only ever renders immediately
  * after a brand-new resume is created, so Share/Track/Letters are always
@@ -55,16 +58,16 @@ export function CareerLoopIntroModal({ resumeId, resumeSlug, subscriptionTier, o
   };
 
   return (
-    <Modal title="Your career loop is live" onClose={onClose}>
+    <Modal title="Your circle is live" onClose={onClose}>
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
         <PolyAnimated expression="celebrate" size={150} decorative />
       </div>
       <p className="modal-message" style={{ textAlign: "center" }}>
-        Nice — this resume's journey starts now.
+        Nice — this resume's circle starts now.
       </p>
 
       <p className="resume-loop-popover-title" style={{ margin: "0 0 10px" }}>
-        This resume's journey
+        This resume's circle
       </p>
       <div className="resume-loop-ledger" style={{ marginBottom: 18 }}>
         <div className="resume-loop-ledger-row is-done">
@@ -110,7 +113,7 @@ export function CareerLoopIntroModal({ resumeId, resumeSlug, subscriptionTier, o
       </div>
 
       <p style={{ margin: 0, fontSize: 12.5, color: "var(--muted)" }}>
-        Come back to this resume's journey any time from its badge on your dashboard, once there's more to add.
+        Come back to this resume's circle any time from its badge on your dashboard, once there's more to add.
       </p>
     </Modal>
   );

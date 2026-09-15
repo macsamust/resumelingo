@@ -49,9 +49,12 @@ function RingSegment({ index, done }: { index: number; done: boolean }) {
  * that approach read as a generic SaaS onboarding checklist, which clashed
  * with "full circle career portfolio" as a brand promise. This version is
  * always there, on every resume tile, costs the card layout nothing beyond
- * a small corner badge, and only reveals its narrative "journey" ledger
+ * a small corner badge, and only reveals its narrative "circle" ledger
  * (not a checklist — nothing is ever shown as locked/greyed, an unmet step
- * just reads as an invitation) on hover or click.
+ * just reads as an invitation) on hover or click. Says "circle," never
+ * "journey" — the word doesn't appear anywhere else on the site, and
+ * "circle" is the load-bearing word in the marketing positioning
+ * (FullCircle.tsx) this feature is named after.
  *
  * Renders nothing at all whenever there's no progress to show — same
  * resilience pattern as before: the API 404s outright while
@@ -151,7 +154,7 @@ export function ResumeLoopBadge({ resumeId, resumeSlug, resumeCreatedAt, subscri
           setOpen((v) => !v);
           setPulse(false);
         }}
-        aria-label={`Resume journey: ${doneCount} of 4 steps`}
+        aria-label={`This resume's circle: ${doneCount} of 4 steps`}
         aria-expanded={open}
       >
         <svg width={RING_SIZE} height={RING_SIZE} viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}>
@@ -162,7 +165,7 @@ export function ResumeLoopBadge({ resumeId, resumeSlug, resumeCreatedAt, subscri
       </button>
       {open && (
         <div className="resume-loop-popover" onClick={(e) => e.stopPropagation()}>
-          <p className="resume-loop-popover-title">This resume's journey</p>
+          <p className="resume-loop-popover-title">This resume's circle</p>
           <div className="resume-loop-ledger">
             <div className="resume-loop-ledger-row is-done">
               <span className="resume-loop-ledger-check">✓</span>
