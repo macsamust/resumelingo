@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Modal } from "../common/Modal";
 import { PolyAnimated } from "../brand/PolyAnimated";
 import { careerLoopApi } from "../../api";
@@ -40,8 +40,19 @@ export function CareerLoopIntroModal({ resumeId, resumeSlug, subscriptionTier, o
   // "shown" logging (see migrations/0046_career_loop_events.sql) — this
   // modal only ever renders once, immediately after a brand-new resume is
   // created (see the class doc comment), so mount = shown, no toggle to
-  // guard against like the badge's popover.
+  // guard against like the badge's popover. Guarded with a ref because
+  // React 18 StrictMode intentionally double-invokes mount effects in dev
+  // (mount -> cleanup -> mount) to surface exactly this kind of impurity —
+  // same root cause as the badge's duplicate "shown" bug, just in an effect
+  // instead of a setState updater. The ref survives the StrictMode
+  // remount, so the second invocation is a no-op; a real second mount
+  // (e.g. this component actually unmounting and coming back) would still
+  // only log once per resumeId, which matches the "only ever renders once
+  // per resume" contract above anyway.
+  const loggedShownRef = useRef(false);
   useEffect(() => {
+    if (loggedShownRef.current) return;
+    loggedShownRef.current = true;
     careerLoopApi.logShown(resumeId).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
