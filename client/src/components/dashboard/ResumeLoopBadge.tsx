@@ -113,7 +113,7 @@ export function ResumeLoopBadge({ resumeId, resumeSlug, resumeCreatedAt, subscri
 
   const celebrateIfComplete = (next: CareerLoopProgress) => {
     if (!progress.completed && next.completed) {
-      showToast("success", "Full circle — you've closed the loop on this resume.");
+      showToast("success", "Full circle — you've come back around on this resume.");
     }
   };
 

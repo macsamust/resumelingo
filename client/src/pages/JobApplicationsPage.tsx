@@ -195,7 +195,7 @@ export function JobApplicationsPage() {
           .getProgress(resumeIdForCelebration)
           .then((after) => {
             if (after.progress.completed) {
-              showToast("success", "Full circle — you've closed the loop on this resume.");
+              showToast("success", "Full circle — you've come back around on this resume.");
             }
           })
           .catch(() => {});

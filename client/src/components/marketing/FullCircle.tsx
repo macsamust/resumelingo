@@ -40,12 +40,30 @@ export function FullCircle() {
         </div>
         <div className="circle-grid">
           {STAGES.map((stage, i) => (
-            <div className={`circle-card${i === STAGES.length - 1 ? " circle-card-current" : ""}`} key={stage.label}>
+            <div
+              className={`circle-card${i === STAGES.length - 1 ? " circle-card-current" : ""}${
+                i < STAGES.length - 1 ? " circle-card-arrow" : ""
+              }`}
+              key={stage.label}
+            >
               <div className="circle-num">{i + 1}</div>
               <h3>{stage.label}</h3>
               <p>{stage.body}</p>
             </div>
           ))}
+        </div>
+        {/* Makes "the loop starts again" (stage 4's own copy, above) a visual
+            fact rather than only a sentence — the sequential arrows between
+            cards show the path forward, this closes it. Its own element
+            rather than an arrow drawn from card 4 back to card 1, which
+            would need exact pixel positions that break the moment the grid
+            reflows to 2 or 1 columns on a narrower screen (see the
+            circle-grid media queries) — this reads the same at every width. */}
+        <div className="circle-loop-back">
+          <span className="circle-loop-icon" aria-hidden="true">
+            ↺
+          </span>
+          <span>...and the circle starts again.</span>
         </div>
       </div>
     </section>

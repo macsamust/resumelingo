@@ -8,8 +8,12 @@ export function CTA() {
           <h2>Your resume deserves to be a living career profile, not a static document.</h2>
           <p>Answer a few questions, let AI write it, and share your resume link today.</p>
           <div className="cta-actions">
+            {/* "Start your circle" bookends the page with the same word Hero's
+                circle-tag line opens it with, rather than a generic "Get
+                started" — this is the last thing a visitor reads before
+                signing up or bouncing. */}
             <Link to="/signup" className="btn btn-light">
-              Create your resume, free
+              Start your circle, free
             </Link>
             <a href="#pricing" className="btn btn-ghost" style={{ borderColor: "rgba(255,255,255,.3)", color: "#fff" }}>
               View pricing

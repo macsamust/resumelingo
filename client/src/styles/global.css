@@ -69,7 +69,11 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--indigo); background: #eef2ff; border: 1px solid #e0e7ff; padding: 6px 14px; border-radius: 999px; margin-bottom: 20px; }
 h1 { font-size: 48px; line-height: 1.12; letter-spacing: -0.02em; font-weight: 800; color: var(--navy); margin-bottom: 20px; }
 h1 span { color: var(--indigo); }
-.hero p.lead { font-size: 18px; color: var(--muted); max-width: 520px; margin-bottom: 32px; }
+.hero p.lead { font-size: 18px; color: var(--muted); max-width: 520px; margin-bottom: 14px; }
+/* Seeds the "full circle" positioning (see Hero.tsx) before FullCircle.tsx
+   pays it off further down the page. Small and quiet on purpose — an
+   accent, not a second headline — so it doesn't compete with h1 or .lead. */
+.hero-circle-tag { font-size: 14.5px; font-weight: 600; color: var(--teal); max-width: 520px; margin-bottom: 26px; }
 .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 28px; }
 .hero-note { font-size: 13px; color: var(--muted); }
 .hero-visual { background: linear-gradient(160deg, var(--navy), #111827); border-radius: 22px; padding: 22px; box-shadow: 0 30px 60px -20px rgba(15,23,42,.45); }
@@ -121,6 +125,49 @@ section { padding: 84px 0; }
 .circle-card-current { background: var(--teal); border-color: var(--teal); }
 .circle-card-current .circle-num { background: #fff; color: var(--teal); }
 .circle-card-current h3, .circle-card-current p { color: #fff; }
+
+/* Sequential "1 → 2 → 3 → 4" connectors, desktop (4-column) layout only —
+   positioned in the grid gap so they don't affect card width, and dropped
+   entirely once .circle-grid collapses to 2 or 1 columns (see the 960px/
+   640px media queries below) where a card's "next" neighbor is no longer
+   to its immediate right. */
+@media (min-width: 961px) {
+  .circle-card-arrow { position: relative; }
+  .circle-card-arrow::after {
+    content: "→";
+    position: absolute;
+    top: 50%;
+    right: -30px;
+    transform: translateY(-50%);
+    color: var(--teal);
+    font-size: 18px;
+    font-weight: 800;
+  }
+}
+
+.circle-loop-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 28px;
+  color: var(--muted);
+  font-size: 14.5px;
+  font-style: italic;
+}
+.circle-loop-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--teal);
+  color: var(--teal);
+  font-size: 16px;
+  font-style: normal;
+  flex-shrink: 0;
+}
 
 .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; align-items: stretch; }
 .price-card { background: #fff; border: 1.5px solid var(--border); border-radius: 18px; padding: 34px 28px; display: flex; flex-direction: column; }

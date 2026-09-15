@@ -15,6 +15,13 @@ export function Hero() {
             for interviews, land the offer, and keep your achievements current for whatever comes next, all from
             one living profile.
           </p>
+          {/* Seeds the "full circle" positioning before FullCircle.tsx pays it
+              off further down the page — a visitor should recognize the shape
+              of the idea by the time they reach that section, not encounter
+              it cold. Deliberately one line, not a repeat of the lead
+              paragraph above or the Apply/Interview/Get hired/Stay current
+              headline — just names the shape once. */}
+          <p className="hero-circle-tag">It's not a funnel. It's a circle — and it brings you back around.</p>
           <div className="hero-actions">
             <Link to="/signup" className="btn btn-primary">
               Get started

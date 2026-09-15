@@ -377,6 +377,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       this.db.prepare(`DELETE FROM resume_views WHERE "resumeId" = ?`).bind(id),
       this.db.prepare(`DELETE FROM resume_score_snapshots WHERE "resumeId" = ?`).bind(id),
       this.db.prepare(`DELETE FROM resume_keyword_checks WHERE "resumeId" = ?`).bind(id),
+      this.db.prepare(`DELETE FROM career_loop_progress WHERE "resumeId" = ?`).bind(id),
       // Unlike the DELETEs above, job_applications rows survive — see
       // migrations/0015_job_applications.sql — since losing an application's
       // notes/status history just because the resume it was sent with got
@@ -515,13 +516,15 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
    * Deletes a resume along with every row in the child tables that
    * reference it via `resumeId` (resume_versions, resume_views,
    * resume_score_snapshots, resume_keyword_checks — see migrations 0007/
-   * 0008). D1 now enforces FOREIGN KEY constraints, so deleting the parent
-   * row first (the old, inherited BaseRepository.delete behavior) fails
-   * with SQLITE_CONSTRAINT_FOREIGNKEY whenever any of those child rows
-   * exist — which by the time someone clicks "Delete" is virtually always
-   * true (every resume gets at least one score snapshot on create). Run as
-   * a single D1 batch so this is atomic — either every row for this resume
-   * disappears, or none do.
+   * 0008; career_loop_progress — see migration 0045). D1 now enforces
+   * FOREIGN KEY constraints, so deleting the parent row first (the old,
+   * inherited BaseRepository.delete behavior) fails with
+   * SQLITE_CONSTRAINT_FOREIGNKEY whenever any of those child rows exist —
+   * which by the time someone clicks "Delete" is virtually always true
+   * (every resume gets at least one score snapshot on create, and any
+   * resume that's been through the Full Circle coach at all has a
+   * career_loop_progress row). Run as a single D1 batch so this is atomic —
+   * either every row for this resume disappears, or none do.
    */
   async delete(id: string): Promise<void> {
     await this.db.batch([
@@ -529,6 +532,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       this.db.prepare(`DELETE FROM resume_views WHERE "resumeId" = ?`).bind(id),
       this.db.prepare(`DELETE FROM resume_score_snapshots WHERE "resumeId" = ?`).bind(id),
       this.db.prepare(`DELETE FROM resume_keyword_checks WHERE "resumeId" = ?`).bind(id),
+      this.db.prepare(`DELETE FROM career_loop_progress WHERE "resumeId" = ?`).bind(id),
       // See deleteBulk's comment — job_applications rows survive a resume
       // delete (only the now-dangling resumeId link is cleared), unlike
       // every other child table above.
@@ -545,6 +549,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       this.db.prepare(`DELETE FROM resume_views WHERE "resumeId" IN (${resumeIdSubquery})`).bind(userId),
       this.db.prepare(`DELETE FROM resume_score_snapshots WHERE "resumeId" IN (${resumeIdSubquery})`).bind(userId),
       this.db.prepare(`DELETE FROM resume_keyword_checks WHERE "resumeId" IN (${resumeIdSubquery})`).bind(userId),
+      this.db.prepare(`DELETE FROM career_loop_progress WHERE "resumeId" IN (${resumeIdSubquery})`).bind(userId),
       this.db.prepare(`UPDATE job_applications SET "resumeId" = NULL WHERE "resumeId" IN (${resumeIdSubquery})`).bind(userId),
       this.db.prepare(`DELETE FROM resumes WHERE userId = ?`).bind(userId),
     ]);

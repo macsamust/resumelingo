@@ -105,7 +105,7 @@ export function CoverLetterPage() {
         .then((before) =>
           careerLoopApi.markLettersUsed(resumeId).then((after) => {
             if (!before.progress.letters && after.progress.completed) {
-              showToast("success", "Full circle — you've closed the loop on this resume.");
+              showToast("success", "Full circle — you've come back around on this resume.");
             }
           })
         )
