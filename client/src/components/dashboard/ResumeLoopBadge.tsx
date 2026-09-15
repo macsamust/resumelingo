@@ -164,14 +164,21 @@ export function ResumeLoopBadge({ resumeId, resumeSlug, resumeCreatedAt, subscri
         }`}
         onClick={(e) => {
           e.stopPropagation();
-          setOpen((v) => {
-            const next = !v;
-            // "shown" logging (see migrations/0046_career_loop_events.sql) —
-            // only on the open transition, not every toggle, so repeatedly
-            // opening/closing the same popover doesn't inflate the count.
-            if (next) careerLoopApi.logShown(resumeId).catch(() => {});
-            return next;
-          });
+          // "shown" logging (see migrations/0046_career_loop_events.sql) —
+          // only on the open transition, not every toggle, so repeatedly
+          // opening/closing the same popover doesn't inflate the count.
+          // Computed from the `open` closure variable directly, and the API
+          // call sits outside setOpen's updater — React 18 StrictMode
+          // intentionally double-invokes a setState updater function in
+          // dev to catch exactly this kind of impurity (a side effect
+          // hiding inside what's supposed to be a pure "compute next state"
+          // callback), which was silently double-logging every "shown"
+          // event. A plain single click within one synchronous handler
+          // never sees a stale `open` value, so reading it directly here is
+          // safe, unlike relying on it across renders/effects.
+          const next = !open;
+          setOpen(next);
+          if (next) careerLoopApi.logShown(resumeId).catch(() => {});
           setPulse(false);
         }}
         aria-label={`This resume's circle: ${doneCount} of 4 steps`}
