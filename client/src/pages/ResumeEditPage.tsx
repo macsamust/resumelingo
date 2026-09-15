@@ -191,6 +191,10 @@ export function ResumeEditPage() {
   // the "a code is already set" messaging beneath the input.
   const [recruiterAccessCode, setRecruiterAccessCode] = useState("");
   const [hasRecruiterAccessCode, setHasRecruiterAccessCode] = useState(false);
+  // Focus target for scrollToRecruiterAccessCode below — lets a blocked
+  // save land the person directly on the field that needs fixing instead
+  // of just the top-of-page error banner.
+  const recruiterAccessCodeRef = useRef<HTMLInputElement>(null);
   const [recruiterLocation, setRecruiterLocation] = useState("");
   const [recruiterAvailability, setRecruiterAvailability] = useState("");
   const [recruiterClearance, setRecruiterClearance] = useState("");
@@ -813,6 +817,23 @@ export function ResumeEditPage() {
     e.preventDefault();
     if (!id) return;
     setError(null);
+
+    // Client-side pre-check for the one save-blocking condition we already
+    // know the answer to without asking the server (see
+    // RecruiterAccessCodeRequiredError server-side): Recruiter Mode is on,
+    // but no access code exists yet (blank input) or ever will (no code on
+    // file either). Catching it here means a wrong guess never round-trips
+    // to the server only to land an error banner at the very top of the
+    // page — easy to miss when the person saved from the bottom "Save
+    // changes" button on a long form. Goes straight to the field instead.
+    if (recruiterModeEnabled && !recruiterAccessCode.trim() && !hasRecruiterAccessCode) {
+      setError(
+        "Set a recruiter access code before turning on Recruiter Mode — this protects the card's salary, clearance, and work authorization fields from anyone who just has the resume's link."
+      );
+      scrollToRecruiterAccessCode();
+      return;
+    }
+
     setSaving(true);
     try {
       await persist();
@@ -821,7 +842,17 @@ export function ResumeEditPage() {
       if (savedCelebrationTimeoutRef.current) clearTimeout(savedCelebrationTimeoutRef.current);
       savedCelebrationTimeoutRef.current = setTimeout(() => setShowSavedCelebration(false), 2200);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong saving your resume.");
+      const message = err instanceof ApiError ? err.message : "Something went wrong saving your resume.";
+      setError(message);
+      // Same condition can still come back from the server (e.g. a second
+      // tab cleared the on-file code between load and save) even past the
+      // pre-check above — land on the field either way rather than only
+      // the top banner.
+      if (err instanceof ApiError && err.status === 400 && message.toLowerCase().includes("recruiter access code")) {
+        scrollToRecruiterAccessCode();
+      } else {
+        document.getElementById("edit-resume-title")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     } finally {
       setSaving(false);
     }
@@ -976,6 +1007,23 @@ export function ResumeEditPage() {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         document.getElementById("ats-check-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+  };
+
+  // Same expand-then-scroll shape as scrollToAtsCheck above, landing on the
+  // Recruiter Mode section and focusing its access code field directly —
+  // this used to only surface as a generic error banner at the very top of
+  // the page, easy to miss on a long form saved from the bottom "Save
+  // changes" button. See onSubmit's client-side pre-check below, which
+  // calls this instead of round-tripping to the server for a condition we
+  // already know the answer to client-side.
+  const scrollToRecruiterAccessCode = () => {
+    setForceOpen({ open: true, token: Date.now() });
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.getElementById("recruiter-mode-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        recruiterAccessCodeRef.current?.focus();
       });
     });
   };
@@ -1553,6 +1601,7 @@ export function ResumeEditPage() {
           )}
 
           {isPremium && (
+            <div id="recruiter-mode-section">
             <CollapsibleSection title="Recruiter Mode" forceOpen={forceOpen}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
                 Adds a candidate summary card to the top of your public resume link: skills (pulled automatically
@@ -1572,6 +1621,7 @@ export function ResumeEditPage() {
                   <div className="field">
                     <label>Recruiter access code</label>
                     <input
+                      ref={recruiterAccessCodeRef}
                       type="text"
                       value={recruiterAccessCode}
                       onChange={(e) => setRecruiterAccessCode(e.target.value)}
@@ -1650,6 +1700,7 @@ export function ResumeEditPage() {
                 </>
               )}
             </CollapsibleSection>
+            </div>
           )}
 
           {isPremium && selectedTemplateIsPremium && (
