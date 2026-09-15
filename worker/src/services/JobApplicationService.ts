@@ -159,6 +159,15 @@ export class JobApplicationService {
     // true initial status is genuinely unknown; a brand-new application's
     // creation moment is real data, so recording it here means every
     // application created from now on has a complete, accurate timeline.
+    //
+    // Deliberately createdAt, not appliedDate: this row's real, known-good
+    // timestamp is the moment it was actually created, and appliedDate is
+    // an optional field that may not even be set yet. The client (see
+    // JobApplicationsPage's Status History list) prefers appliedDate for
+    // *displaying* this specific first entry when one's been entered, but
+    // falls back to this same createdAt otherwise — so this value always
+    // has to be the real creation timestamp, never a copy of appliedDate,
+    // for that fallback to mean anything.
     await this.applications.recordStatusChange(application.id, application.status, application.createdAt);
     return application;
   }

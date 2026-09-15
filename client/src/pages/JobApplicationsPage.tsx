@@ -397,18 +397,18 @@ export function JobApplicationsPage() {
             const expanded = expandedId === a.id;
             const href = a.link ? safeExternalHref(a.link) : null;
             // Every status change after the initial "Applied" gets its own
-            // line below the existing "Sent with X · Applied <date>" line,
+            // line below the existing "Sent with X · Created <date>" line,
             // right on the collapsed card — a subscriber who never clicks
             // "Edit" should still be able to see the full timeline, not just
-            // a hint that one exists. "Applied" itself stays on that
-            // existing line, using the dedicated appliedDate field (the
-            // real-world date they applied, editable in the form) rather
-            // than the history timeline's own first entry (when the row was
-            // logged, which can be a different date) — same distinction the
-            // rest of this page already draws. Each later line is formatted
-            // the same "yyyy-mm-dd" way as "Applied {appliedDate}" so every
-            // line reads consistently, rather than switching to a human date
-            // like "Jul 4, 2026".
+            // a hint that one exists. That line uses createdAt (when the row
+            // was added to the tracker) rather than the real-world appliedDate
+            // — the manually-entered "Applied On" date instead lives in the
+            // Status History list below (see its first entry), since that's
+            // the more natural place to read "the day I actually applied"
+            // alongside every later status change. Each later line is
+            // formatted the same "yyyy-mm-dd" way so every line reads
+            // consistently, rather than switching to a human date like
+            // "Jul 4, 2026".
             const laterChanges = timelineFor(a).slice(1);
             // What this application can actually move to next, per the
             // state machine above — enforced again server-side (see
@@ -425,7 +425,7 @@ export function JobApplicationsPage() {
                     </h3>
                     <p className="hero-note">
                       {resumeTitle(a.resumeId) ? `Sent with "${resumeTitle(a.resumeId)}"` : "No resume linked"}
-                      {a.appliedDate ? ` · Applied ${a.appliedDate}` : ""}
+                      {` · Created ${a.createdAt.slice(0, 10)}`}
                       {href && (
                         <>
                           {" · "}
@@ -473,7 +473,16 @@ export function JobApplicationsPage() {
                         {timelineFor(a).map((h, i) => (
                           <li key={i}>
                             <span className={`job-app-status-dot job-app-status-${h.status}`} aria-hidden="true" />
-                            {STATUS_LABEL[h.status]} — {formatUpdatedDate(h.changedAt)}
+                            {/* The first entry is always the initial "applied" status recorded at
+                                creation (see JobApplicationService.create), stamped with createdAt —
+                                but the real-world "Applied On" date the person actually entered is
+                                more useful here than "when I got around to logging this," so this
+                                specific entry prefers appliedDate when it's set (falling back to the
+                                same createdAt shown on the collapsed card's "Created <date>" line
+                                otherwise, e.g. an application that's never had its Applied On date
+                                filled in). */}
+                            {STATUS_LABEL[h.status]} —{" "}
+                            {formatUpdatedDate(i === 0 && h.status === "applied" && a.appliedDate ? a.appliedDate : h.changedAt)}
                           </li>
                         ))}
                       </ul>
