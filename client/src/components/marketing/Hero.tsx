@@ -6,7 +6,7 @@ export function Hero() {
     <section className="hero">
       <div className="wrap hero-grid">
         <div>
-          <span className="eyebrow">We speak Resume.</span>
+          <span className="eyebrow">Come full circle.</span>
           <h1>
             Apply. Interview. <span>Get hired.</span> <span>Stay current.</span> All in one place.
           </h1>
