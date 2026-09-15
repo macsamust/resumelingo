@@ -110,6 +110,33 @@ export function ResumeEditPage() {
   const [professions, setProfessions] = useState<ProfessionSummary[]>([]);
   const [professionKey, setProfessionKey] = useState("");
   const [professionDetail, setProfessionDetail] = useState<ProfessionDefinition | null>(null);
+  // label (lowercased) -> category, from this profession's own curated
+  // Skills & Tools suggestions (the same admin-maintained list
+  // SkillsAndToolsEditor's own picker uses to split "Skills" from "Tools").
+  // Used below by addKeywordToSkills so a missing ATS keyword that happens
+  // to already be a known tool (e.g. "Salesforce", "Figma") lands in the
+  // right bucket instead of always being guessed as a skill.
+  const [skillSuggestionCategoryByLabel, setSkillSuggestionCategoryByLabel] = useState<Map<string, "skill" | "tool">>(
+    new Map()
+  );
+  useEffect(() => {
+    if (!professionKey) return;
+    let cancelled = false;
+    catalogApi
+      .listSkillSuggestions(professionKey)
+      .then((res) => {
+        if (cancelled) return;
+        setSkillSuggestionCategoryByLabel(
+          new Map(res.skillSuggestions.map((s) => [s.label.toLowerCase(), s.category] as const))
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setSkillSuggestionCategoryByLabel(new Map());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [professionKey]);
   const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
   // One templateKey per profession — the most-used non-Classic template for
   // that profession, once it clears a minimum sample size. Feeds the dot
@@ -635,11 +662,21 @@ export function ResumeEditPage() {
    * interaction SkillsAndToolsEditor already uses for its own suggestions.
    * Only offered when the current template has a Skills & Tools section at
    * all (usesSkillsAndTools) — otherwise there's nowhere for this to go.
+   *
+   * Category is looked up against this profession's own curated Skills &
+   * Tools suggestions (skillSuggestionCategoryByLabel, above) rather than
+   * always assumed to be "skill" — a missing ATS keyword is just as likely
+   * to be a known tool (e.g. "Salesforce," "Figma," "Excel") as a skill, and
+   * hardcoding "skill" was silently miscategorizing every tool that came
+   * through this path. Falls back to "skill" only when the word isn't in
+   * that curated list at all, since there's no reliable way to guess
+   * otherwise from a plain word-frequency match.
    */
   const addKeywordToSkills = (word: string) => {
     const label = word.charAt(0).toUpperCase() + word.slice(1);
+    const category = skillSuggestionCategoryByLabel.get(word.toLowerCase()) ?? "skill";
     setSkillsAndTools((prev) =>
-      prev.some((s) => s.label.toLowerCase() === word.toLowerCase()) ? prev : [...prev, { label, category: "skill" }]
+      prev.some((s) => s.label.toLowerCase() === word.toLowerCase()) ? prev : [...prev, { label, category }]
     );
   };
 
