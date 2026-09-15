@@ -12,6 +12,7 @@ import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { ResumeImportPanel } from "../components/builder/ResumeImportPanel";
 import { ResumePreview } from "../components/builder/ResumePreview";
 import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
+import { Modal } from "../components/common/Modal";
 import { TemplateUpgradeModal } from "../components/builder/TemplateUpgradeModal";
 import { ApiError, catalogApi, resumeApi } from "../api";
 import { ImportedResumeData } from "../api/ResumeImportApi";
@@ -61,6 +62,8 @@ export function ResumeBuilderPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [forceOpen, setForceOpen] = useState<ForceOpenSignal | undefined>(undefined);
+  /** Whether the "Expand" modal (a larger copy of the sidebar's live preview) is open — same pattern as ResumeEditPage. */
+  const [previewExpanded, setPreviewExpanded] = useState(false);
 
   // Checked up front, before the form renders at all — the server also
   // rejects a create() past the plan's resume limit (see ResumeService),
@@ -287,6 +290,30 @@ export function ResumeBuilderPage() {
       </AppShell>
     );
   }
+
+  // Shared between the sidebar's scrollable preview column and the
+  // "Expand" modal's larger copy — same reuse pattern as ResumeEditPage's
+  // previewElement, so the two never drift out of sync.
+  const previewElement = (
+    <ResumePreview
+      fullName={fullName}
+      contactEmail={contactEmail}
+      contactPhone={contactPhone}
+      contactLinkedIn={contactLinkedIn}
+      photoUrl={photoUrl}
+      title={title}
+      professionLabel={professionDetail?.label ?? ""}
+      templateKey={templateKey}
+      templateName={templates.find((t) => t.key === templateKey)?.name}
+      summary=""
+      bullets={previewBullets}
+      experience={experience}
+      education={education}
+      awards={awards}
+      showSkillsAndTools={templateHasSkillsAndTools(templateKey)}
+      securityClearance={answers.clearanceLevel}
+    />
+  );
 
   return (
     <AppShell>
@@ -544,25 +571,21 @@ export function ResumeBuilderPage() {
           </button>
         </div>
 
-        <ResumePreview
-          fullName={fullName}
-          contactEmail={contactEmail}
-          contactPhone={contactPhone}
-          contactLinkedIn={contactLinkedIn}
-          photoUrl={photoUrl}
-          title={title}
-          professionLabel={professionDetail?.label ?? ""}
-          templateKey={templateKey}
-          templateName={templates.find((t) => t.key === templateKey)?.name}
-          summary=""
-          bullets={previewBullets}
-          experience={experience}
-          education={education}
-          awards={awards}
-          showSkillsAndTools={templateHasSkillsAndTools(templateKey)}
-          securityClearance={answers.clearanceLevel}
-        />
+        <div className="preview-col preview-col-scrollable">
+          <div className="preview-col-head">
+            <span>Live preview</span>
+            <button type="button" className="preview-expand-btn" onClick={() => setPreviewExpanded(true)}>
+              <span aria-hidden="true">⤢</span> Expand
+            </button>
+          </div>
+          <div className="preview-col-scroll">{previewElement}</div>
+        </div>
       </form>
+      {previewExpanded && (
+        <Modal title="Live preview" wide onClose={() => setPreviewExpanded(false)}>
+          {previewElement}
+        </Modal>
+      )}
       {lockedTemplateModal && (
         <TemplateUpgradeModal
           templateName={lockedTemplateModal.name}
