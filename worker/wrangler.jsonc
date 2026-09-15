@@ -86,6 +86,6 @@
     // var is that turning it off again — if it doesn't earn its keep — is a
     // one-line config change and redeploy, not a revert. Set to "true" here
     // (or override per-environment) once ready to actually show it.
-    "CAREER_LOOP_ENABLED": "false"
+    "CAREER_LOOP_ENABLED": "true"
   }
 }
