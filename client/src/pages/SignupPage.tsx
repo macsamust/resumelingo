@@ -132,8 +132,15 @@ export function SignupPage() {
               style={{ marginTop: 3 }}
             />
             <span className="hero-note" style={{ margin: 0 }}>
-              I agree to the <Link to="/terms">Terms of Service</Link> and{" "}
-              <Link to="/privacy">Privacy Policy</Link>.
+              I agree to the{" "}
+              <Link to="/terms" target="_blank" rel="noopener noreferrer">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link to="/privacy" target="_blank" rel="noopener noreferrer">
+                Privacy Policy
+              </Link>
+              .
             </span>
           </label>
           <button className="btn btn-primary btn-block" type="submit" disabled={submitting || !acceptedTerms}>
