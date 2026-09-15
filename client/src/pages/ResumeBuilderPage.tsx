@@ -20,6 +20,7 @@ import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL, templateHasSkillsAndTool
 import { titleCase } from "../utils/textFormat";
 import { getTemplateStyle } from "../config/templateStyles";
 import { isAtsSafeFamily } from "../utils/atsCheck";
+import { starBulletFromAchievement } from "../utils/starBullet";
 import { withClearanceQuestion } from "../config/clearanceQuestion";
 import {
   AchievementEntry,
@@ -187,6 +188,20 @@ export function ResumeBuilderPage() {
   const additionalQuestions = useMemo(
     () => withClearanceQuestion(professionDetail?.questions ?? [], templateKey),
     [professionDetail, templateKey]
+  );
+
+  // Live-preview bullets for the achievements entered so far. There's no AI
+  // generation step on this page (that happens after creating the resume,
+  // on Edit Resume — see ResumeEditPage's "Generate summary/bullets"), so
+  // unlike ResumeEditPage this can't read resume.generatedBullets; this
+  // computes the same lightweight local conversion the "combine Work
+  // Experience with Achievements" preview already uses elsewhere
+  // (starBulletFromAchievement — see utils/starBullet.ts) so a highlight
+  // typed in here actually shows up on the live preview instead of only
+  // appearing after the resume is created and generated.
+  const previewBullets = useMemo(
+    () => achievements.map(starBulletFromAchievement).filter((b): b is string => !!b),
+    [achievements]
   );
 
   const onSubmit = async (e: FormEvent) => {
@@ -460,9 +475,24 @@ export function ResumeBuilderPage() {
             forceOpen={forceOpen}
             complete={sectionProgress.achievements}
           >
-            <p className="hero-note" style={{ marginBottom: 16 }}>
+            <p className="hero-note" style={{ marginBottom: 8 }}>
               Add a quick one line bullet, or describe a challenge, what you did, and the result for a more detailed,
               structured accomplishment; both turn into resume bullets.
+            </p>
+            {/* Deliberately NOT mirroring Edit Resume's "Combine Work
+                Experience with Achievements" checkbox + per-achievement job
+                dropdown here — this page is the guided, quick-start flow,
+                and asking someone to assign each highlight to a specific
+                job before they've even finished entering their work history
+                (directly above, in section 3) is the kind of upfront
+                complexity that fights the whole point of this page. Same
+                "defer it" pattern as the Awards section's own note just
+                below. The capability still exists — just from Edit Resume,
+                once there's a saved resume and settled job list to link
+                against. */}
+            <p className="hero-note" style={{ marginBottom: 16 }}>
+              Want bullets grouped under the specific job they belong to instead of one flat list? You can link each
+              highlight to a job from the Edit Resume page once this resume is saved.
             </p>
             <AchievementGeneratorPanel
               canGenerate={canUseAiAssist}
@@ -525,7 +555,7 @@ export function ResumeBuilderPage() {
           templateKey={templateKey}
           templateName={templates.find((t) => t.key === templateKey)?.name}
           summary=""
-          bullets={[]}
+          bullets={previewBullets}
           experience={experience}
           education={education}
           awards={awards}
