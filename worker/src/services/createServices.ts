@@ -36,6 +36,7 @@ import { AiCareerCoachGenerator, ICareerCoachGenerator } from "./CareerCoachGene
 import { SecurityAlertService } from "./SecurityAlertService";
 import { SecurityMonitorService } from "./SecurityMonitorService";
 import { CareerLoopProgressRepository } from "../repositories/CareerLoopProgressRepository";
+import { CareerLoopEventRepository } from "../repositories/CareerLoopEventRepository";
 import { CareerLoopService, isCareerLoopEnabled } from "./CareerLoopService";
 
 export interface Services {
@@ -135,6 +136,7 @@ export function createServices(env: Env): Services {
   const resumeVersionRepository = new ResumeVersionRepository(env.DB);
   const jobApplicationRepository = new JobApplicationRepository(env.DB);
   const careerLoopProgressRepository = new CareerLoopProgressRepository(env.DB);
+  const careerLoopEventRepository = new CareerLoopEventRepository(env.DB);
 
   const tokenService = new TokenService<AuthTokenPayload>(env.JWT_SECRET);
   // 12h, not the default 7d — shrinks how long a leaked/stolen admin token
@@ -207,7 +209,7 @@ export function createServices(env: Env): Services {
     env.CLIENT_ORIGIN
   );
   const staleAccountCleanupService = new StaleAccountCleanupService(userRepo, resumeRepo, emailService, authService, adminAuditLogRepository);
-  const careerLoopService = new CareerLoopService(careerLoopProgressRepository, jobApplicationRepository);
+  const careerLoopService = new CareerLoopService(careerLoopProgressRepository, jobApplicationRepository, careerLoopEventRepository);
   const careerLoopEnabled = isCareerLoopEnabled(env);
   const securityAlertService = new SecurityAlertService(securityEventRepository, adminRepo, emailService, env.ADMIN_EMAIL);
   const securityMonitorService = new SecurityMonitorService(

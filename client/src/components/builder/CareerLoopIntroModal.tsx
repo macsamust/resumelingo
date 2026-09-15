@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal } from "../common/Modal";
 import { PolyAnimated } from "../brand/PolyAnimated";
 import { careerLoopApi } from "../../api";
@@ -37,7 +37,17 @@ export function CareerLoopIntroModal({ resumeId, resumeSlug, subscriptionTier, o
   const trackLocked = subscriptionTier === "starter";
   const lettersLocked = subscriptionTier !== "premium";
 
+  // "shown" logging (see migrations/0046_career_loop_events.sql) — this
+  // modal only ever renders once, immediately after a brand-new resume is
+  // created (see the class doc comment), so mount = shown, no toggle to
+  // guard against like the badge's popover.
+  useEffect(() => {
+    careerLoopApi.logShown(resumeId).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const copyLink = async () => {
+    careerLoopApi.logCtaClick(resumeId, "share").catch(() => {});
     const url = `${window.location.origin}/r/${resumeSlug}`;
     try {
       await navigator.clipboard.writeText(url);

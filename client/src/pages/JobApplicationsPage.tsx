@@ -191,6 +191,14 @@ export function JobApplicationsPage() {
         link: newApp.link.trim(),
       });
       if (before && !before.progress.track && resumeIdForCelebration) {
+        // Logs the Track step_done/completed events (see worker's
+        // CareerLoopService.logTrackStepDone's doc comment for why Track
+        // alone needs a dedicated client-triggered call instead of
+        // piggybacking on a mark* mutation like Share/Letters do).
+        // Independent of the toast-decision getProgress call below —
+        // one writes to the event log, the other reads progress to decide
+        // whether to show the toast.
+        careerLoopApi.logTrackDone(resumeIdForCelebration).catch(() => {});
         careerLoopApi
           .getProgress(resumeIdForCelebration)
           .then((after) => {

@@ -122,6 +122,7 @@ export function ResumeLoopBadge({ resumeId, resumeSlug, resumeCreatedAt, subscri
 
   const copyLink = async (e: ReactMouseEvent) => {
     e.stopPropagation();
+    careerLoopApi.logCtaClick(resumeId, "share").catch(() => {});
     const url = `${window.location.origin}/r/${resumeSlug}`;
     try {
       await navigator.clipboard.writeText(url);
@@ -151,7 +152,14 @@ export function ResumeLoopBadge({ resumeId, resumeSlug, resumeCreatedAt, subscri
         }`}
         onClick={(e) => {
           e.stopPropagation();
-          setOpen((v) => !v);
+          setOpen((v) => {
+            const next = !v;
+            // "shown" logging (see migrations/0046_career_loop_events.sql) —
+            // only on the open transition, not every toggle, so repeatedly
+            // opening/closing the same popover doesn't inflate the count.
+            if (next) careerLoopApi.logShown(resumeId).catch(() => {});
+            return next;
+          });
           setPulse(false);
         }}
         aria-label={`This resume's circle: ${doneCount} of 4 steps`}
@@ -190,7 +198,14 @@ export function ResumeLoopBadge({ resumeId, resumeSlug, resumeCreatedAt, subscri
                   Add tracking to this resume's story <span className="resume-loop-tag">Pro+</span>
                 </span>
               ) : (
-                <Link to="/job-applications" className="resume-loop-ledger-action" onClick={() => setOpen(false)}>
+                <Link
+                  to="/job-applications"
+                  className="resume-loop-ledger-action"
+                  onClick={() => {
+                    careerLoopApi.logCtaClick(resumeId, "track").catch(() => {});
+                    setOpen(false);
+                  }}
+                >
                   Log an application
                 </Link>
               )}
@@ -204,7 +219,14 @@ export function ResumeLoopBadge({ resumeId, resumeSlug, resumeCreatedAt, subscri
                   Add a letter to this resume's story <span className="resume-loop-tag">Premium</span>
                 </span>
               ) : (
-                <Link to="/cover-letter" className="resume-loop-ledger-action" onClick={() => setOpen(false)}>
+                <Link
+                  to="/cover-letter"
+                  className="resume-loop-ledger-action"
+                  onClick={() => {
+                    careerLoopApi.logCtaClick(resumeId, "letters").catch(() => {});
+                    setOpen(false);
+                  }}
+                >
                   Write a cover letter
                 </Link>
               )}
