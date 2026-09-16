@@ -137,6 +137,8 @@ export class AdminUserController {
       action: "user.change_tier",
       targetType: "user",
       targetId: id,
+      targetName: existing.name,
+      targetEmail: existing.email,
       detail: `${existing.email}: ${existing.subscriptionTier} → ${tier}`,
     });
     const record = await userRepository.findById(id);
@@ -155,6 +157,8 @@ export class AdminUserController {
       action: suspended ? "user.suspend" : "user.unsuspend",
       targetType: "user",
       targetId: id,
+      targetName: existing.name,
+      targetEmail: existing.email,
       detail: existing.email,
     });
     return c.json({ success: true });
@@ -212,6 +216,8 @@ export class AdminUserController {
       action: "user.send_password_reset",
       targetType: "user",
       targetId: id,
+      targetName: existing.name,
+      targetEmail: existing.email,
       detail: existing.email,
     });
     return c.json({ success: true });
@@ -275,6 +281,8 @@ export class AdminUserController {
       action: "user.delete",
       targetType: "user",
       targetId: id,
+      targetName: existing.name,
+      targetEmail: existing.email,
       detail: existing.email,
     });
     return c.json({ success: true });

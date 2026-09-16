@@ -394,6 +394,9 @@ export interface AdminAuditLogEntry {
   action: string;
   targetType: string;
   targetId: string | null;
+  /** Snapshotted at write time server-side, not a live join — see worker's AdminAuditLogRecord. Null for bulk/no-single-target actions and rows logged before this column existed. */
+  targetName: string | null;
+  targetEmail: string | null;
   detail: string | null;
   createdAt: string;
 }

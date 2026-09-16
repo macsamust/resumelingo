@@ -201,6 +201,10 @@ export interface AdminAuditLogRecord {
   action: string;
   targetType: string;
   targetId: string | null;
+  /** Snapshotted at write time, same as adminEmail — see AdminAuditLogRepository's doc comment on why this can't be a live join (the target user may already be deleted, e.g. for user.delete itself). Null for actions with no single target (bulk actions, exports) and for rows logged before this column existed. */
+  targetName: string | null;
+  /** See targetName above — same snapshot-at-write-time reasoning. */
+  targetEmail: string | null;
   detail: string | null;
   createdAt: string;
   /**

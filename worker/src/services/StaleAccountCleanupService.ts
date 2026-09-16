@@ -93,6 +93,8 @@ export class StaleAccountCleanupService {
           action: "user.suspend",
           targetType: "user",
           targetId: userRecord.id,
+          targetName: userRecord.name,
+          targetEmail: userRecord.email,
           detail: `Automatic — unverified email past ${SUSPEND_AFTER_HOURS}h`,
         });
         summary.suspended++;
@@ -113,6 +115,8 @@ export class StaleAccountCleanupService {
         action: "user.delete",
         targetType: "user",
         targetId: userRecord.id,
+        targetName: userRecord.name,
+        targetEmail: userRecord.email,
         detail: `Automatic — unverified email past ${DELETE_AFTER_HOURS}h`,
       });
       summary.deleted++;

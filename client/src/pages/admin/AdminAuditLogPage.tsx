@@ -226,7 +226,7 @@ export function AdminAuditLogPage() {
       </div>
       {error && <div className="form-error">{error}</div>}
       {loading ? (
-        <AdminTableSkeleton columns={5} />
+        <AdminTableSkeleton columns={6} />
       ) : (
         <table className="admin-table">
           <thead>
@@ -234,6 +234,7 @@ export function AdminAuditLogPage() {
               <th>When</th>
               <th>Admin</th>
               <th>Action</th>
+              <th>Target</th>
               <th>Detail</th>
               <th></th>
             </tr>
@@ -245,6 +246,22 @@ export function AdminAuditLogPage() {
                   <td className="hero-note">{new Date(e.createdAt).toLocaleString()}</td>
                   <td>{e.adminEmail}</td>
                   <td>{ACTION_LABELS[e.action] ?? e.action}</td>
+                  {/* Name/email are snapshotted at write time (see worker's
+                      AdminAuditLogRecord), not a live join — so this still
+                      shows correctly for a user.delete entry even though
+                      the account itself is long gone. Falls back to just
+                      the ID for bulk actions (no single target) and any
+                      row logged before this column existed. */}
+                  <td className="hero-note">
+                    {e.targetName ? (
+                      <>
+                        {e.targetName}
+                        {e.targetEmail ? ` (${e.targetEmail})` : ""}
+                      </>
+                    ) : (
+                      e.targetId ?? "—"
+                    )}
+                  </td>
                   <td className="hero-note">{e.detail ?? "None"}</td>
                   <td>
                     <button
@@ -260,7 +277,7 @@ export function AdminAuditLogPage() {
                 </tr>
                 {expandedId === e.id && (
                   <tr className="admin-expanded-row">
-                    <td colSpan={5}>
+                    <td colSpan={6}>
                       <ul className="admin-audit-detail-list">
                         <li>
                           <span className="hero-note">Entry ID</span> {e.id}
@@ -270,6 +287,12 @@ export function AdminAuditLogPage() {
                         </li>
                         <li>
                           <span className="hero-note">Target ID</span> {e.targetId ?? "None"}
+                        </li>
+                        <li>
+                          <span className="hero-note">Target name</span> {e.targetName ?? "Unknown"}
+                        </li>
+                        <li>
+                          <span className="hero-note">Target email</span> {e.targetEmail ?? "Unknown"}
                         </li>
                         <li>
                           <span className="hero-note">Timestamp (UTC)</span> {e.createdAt}
@@ -282,7 +305,7 @@ export function AdminAuditLogPage() {
             ))}
             {entries.length === 0 && (
               <tr>
-                <td colSpan={5} className="hero-note">
+                <td colSpan={6} className="hero-note">
                   {hasActiveFilters ? "No admin actions match these filters." : "No admin actions logged yet."}
                 </td>
               </tr>
