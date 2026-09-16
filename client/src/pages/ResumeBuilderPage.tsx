@@ -517,10 +517,15 @@ export function ResumeBuilderPage() {
                 below. The capability still exists — just from Edit Resume,
                 once there's a saved resume and settled job list to link
                 against. */}
-            <p className="hero-note" style={{ marginBottom: 16 }}>
-              Want bullets grouped under the specific job they belong to instead of one flat list? You can link each
-              highlight to a job from the Edit Resume page once this resume is saved.
-            </p>
+            <div className="hero-tip-callout">
+              <span className="hero-tip-callout-icon" aria-hidden="true">
+                💡
+              </span>
+              <span>
+                Want bullets grouped under the specific job they belong to instead of one flat list? You can link
+                each highlight to a job from the Edit Resume page once this resume is saved.
+              </span>
+            </div>
             <AchievementGeneratorPanel
               canGenerate={canUseAiAssist}
               professionLabel={professionDetail?.label ?? ""}

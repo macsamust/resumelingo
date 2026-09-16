@@ -670,6 +670,21 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 }
 .hero-note-box textarea { width: 100%; }
 
+/* New Resume page's "combine with Edit Resume later" tip (ResumeBuilderPage.tsx,
+   Highlights & key achievements section) — deliberately amber/notice styling
+   (same palette as .app-banner-notice below) rather than red: this is a
+   friendly heads-up about a capability that exists elsewhere, not an error
+   or something wrong, and red is reserved for actual problems throughout
+   this app (.form-error, .app-banner-danger, .ats-fail). Bold weight plus
+   the icon and tinted box are what earn the attention red italics were
+   asked for, without borrowing an error color for a non-error message. */
+.hero-tip-callout {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px;
+  padding: 12px 14px; margin-bottom: 16px; font-size: 13px; font-weight: 600; color: #92400e; line-height: 1.5;
+}
+.hero-tip-callout-icon { flex: 0 0 auto; font-size: 15px; line-height: 1.4; }
+
 /* AppShell's "verify your email" nudge — amber, standing reminder shown above the page content on every logged-in screen until dismissed or verified. */
 .app-banner {
   display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
