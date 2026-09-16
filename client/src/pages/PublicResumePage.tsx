@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ApiError, catalogApi } from "../api";
 import { PublicResume, ReferenceEntry, RecruiterCard } from "../types";
 import { buildContactLine, filterAnswerEntries, formatMonth, isRealContactValue, ResumePreview, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
+import { ResumeQrCode } from "../components/builder/ResumeQrCode";
 import { CLEARANCE_OPTIONS, recruiterOptionLabel, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
 import { groupAchievementsByExperience } from "../utils/starBullet";
 import { PublicResumeSkeleton } from "../components/common/PublicResumeSkeleton";
@@ -527,6 +528,21 @@ export function PublicResumePage() {
         hideFooterContact={hasTrailingContent}
         securityClearance={resume.answers.clearanceLevel}
       />
+      {/* Print-only — see .print-only-qr in global.css. Never visible on
+          screen; this page already has its own "Print / Save as PDF" action
+          button, so a QR code appearing on screen here would be redundant.
+          Deliberately NOT on the "Download PDF" (jsPDF, ATS-safe) export —
+          that one is a plain single-column layout by design (see
+          utils/pdfExport.ts's doc comment), and an embedded image works
+          against the whole point of an ATS-safe export. This is the
+          human-facing "what it actually looks like" print output instead,
+          where a QR code makes sense: the use case is a physical printed
+          resume handed out in person (job fair, interview), scanning it
+          takes them to the live, always-current version. */}
+      <div className="print-only-qr">
+        <ResumeQrCode url={`${window.location.origin}/r/${resume.slug}`} size={72} showDownload={false} />
+        <span className="hero-note">Scan for the live version of this resume</span>
+      </div>
       {(() => {
         if (answerEntries.length === 0) return null;
         return (

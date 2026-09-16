@@ -4,6 +4,10 @@ import QRCode from "qrcode";
 interface Props {
   /** The resume's own public link — see ResumeEditPage's Sharing section. */
   url: string;
+  /** On-screen/print canvas size in px. Defaults to 160 (the editor's Sharing-section preview size); PublicResumePage's print-only corner code uses a smaller size to match a business-card-scale footprint on the printed page. */
+  size?: number;
+  /** Hides the "Download QR code" button — used on PublicResumePage's print-only corner code, where a download control would never actually be visible (it only renders under @media print, at which point there's nothing to click). Defaults to true. */
+  showDownload?: boolean;
 }
 
 /**
@@ -21,7 +25,7 @@ interface Props {
  * with how the rest of this app treats resume data (no unnecessary
  * third-party data sharing).
  */
-export function ResumeQrCode({ url }: Props) {
+export function ResumeQrCode({ url, size = 160, showDownload = true }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
@@ -29,10 +33,10 @@ export function ResumeQrCode({ url }: Props) {
   useEffect(() => {
     if (!canvasRef.current) return;
     setError(null);
-    QRCode.toCanvas(canvasRef.current, url, { width: 160, margin: 1 }).catch(() => {
+    QRCode.toCanvas(canvasRef.current, url, { width: size, margin: 1 }).catch(() => {
       setError("Couldn't generate a QR code for this link.");
     });
-  }, [url]);
+  }, [url, size]);
 
   const downloadPng = async () => {
     setDownloading(true);
@@ -61,9 +65,11 @@ export function ResumeQrCode({ url }: Props) {
       ) : (
         <>
           <canvas ref={canvasRef} aria-label="QR code linking to this resume's public link" />
-          <button type="button" className="btn btn-ghost btn-sm" disabled={downloading} onClick={downloadPng}>
-            {downloading ? "Preparing…" : "Download QR code"}
-          </button>
+          {showDownload && (
+            <button type="button" className="btn btn-ghost btn-sm" disabled={downloading} onClick={downloadPng}>
+              {downloading ? "Preparing…" : "Download QR code"}
+            </button>
+          )}
         </>
       )}
     </div>

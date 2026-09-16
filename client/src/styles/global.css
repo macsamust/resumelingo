@@ -1833,7 +1833,21 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   .public-resume-page { max-width: none; margin: 0; padding: 0; }
   .public-resume-page .preview-panel { box-shadow: none; border: none; }
   .public-resume-card { box-shadow: none; border: none; page-break-inside: avoid; }
+  /* ResumeQrCode's print-only corner code (PublicResumePage.tsx) — see
+     .print-only-qr below for why this only ever appears here, never
+     on-screen. */
+  .print-only-qr { display: flex !important; }
 }
+/* Wrapper around ResumeQrCode on PublicResumePage's "Print / Save as PDF"
+   output — hidden on screen (this page already has its own on-screen
+   "Print / Save as PDF" action button, no need for a second QR there too),
+   shown only inside the actual printed/saved page, right after the resume
+   content. Small business-card-scale footprint (72px) rather than the
+   Sharing-section editor's 160px preview — this sits alongside the resume
+   itself, not as its own standalone element. */
+.print-only-qr { display: none; align-items: center; gap: 10px; margin: 16px 0 0; page-break-inside: avoid; }
+.print-only-qr canvas { width: 72px; height: 72px; }
+.print-only-qr .resume-qr-code { flex-direction: row; align-items: center; gap: 10px; background: none; border: none; padding: 0; margin: 0; }
 .public-resume-card { background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 44px; margin-bottom: 24px; }
 .public-resume-card:last-child { margin-bottom: 0; }
 .public-resume-details { padding: 32px 44px; }
