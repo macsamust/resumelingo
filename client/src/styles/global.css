@@ -670,6 +670,14 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 }
 .hero-note-box textarea { width: 100%; }
 
+/* ResumeQrCode.tsx (prototype, Sharing section) — small bordered box around
+   the canvas + download button, same visual weight as .hero-note-box above. */
+.resume-qr-code {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+  background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-top: 10px;
+}
+.resume-qr-code canvas { border-radius: 6px; }
+
 /* New Resume page's "combine with Edit Resume later" tip (ResumeBuilderPage.tsx,
    Highlights & key achievements section) — deliberately amber/notice styling
    (same palette as .app-banner-notice below) rather than red: this is a

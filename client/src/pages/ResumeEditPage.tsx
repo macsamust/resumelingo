@@ -14,6 +14,7 @@ import { LanguagesEditor } from "../components/builder/LanguagesEditor";
 import { ReferencesEditor } from "../components/builder/ReferencesEditor";
 import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { isRealContactValue, ResumePreview } from "../components/builder/ResumePreview";
+import { ResumeQrCode } from "../components/builder/ResumeQrCode";
 import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
 import { Modal } from "../components/common/Modal";
 import { TemplateUpgradeModal } from "../components/builder/TemplateUpgradeModal";
@@ -231,6 +232,8 @@ export function ResumeEditPage() {
   const [forceOpen, setForceOpen] = useState<ForceOpenSignal | undefined>(undefined);
   /** Whether the "Expand" modal (a larger copy of the sidebar's live preview) is open. */
   const [previewExpanded, setPreviewExpanded] = useState(false);
+  /** Whether the Sharing section's QR code (ResumeQrCode.tsx) is shown — collapsed by default since most people just want the copyable link, not everyone wants a QR code taking up space. */
+  const [showQrCode, setShowQrCode] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   // The user's other resumes (this one excluded) — powers "Copy from
   // another resume" in Work Experience/Education and the Company/Title/
@@ -1327,6 +1330,19 @@ export function ResumeEditPage() {
             <p className="hero-note" style={{ marginBottom: 0 }}>
               {window.location.origin}/r/{resume.slug}
             </p>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              style={{ marginTop: 8 }}
+              onClick={() => setShowQrCode((v) => !v)}
+              aria-expanded={showQrCode}
+            >
+              {showQrCode ? "Hide QR code" : "Show QR code"}
+            </button>
+            {/* Prototype: a scannable QR code for handing someone a printed
+                resume or business card in person — see ResumeQrCode.tsx's
+                doc comment. Collapsed by default; not tier-gated yet. */}
+            {showQrCode && <ResumeQrCode url={`${window.location.origin}/r/${resume.slug}`} />}
           </CollapsibleSection>
 
           <CollapsibleSection title="Work Experience" forceOpen={forceOpen} complete={sectionProgress.workExperience}>
