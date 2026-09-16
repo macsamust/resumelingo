@@ -123,7 +123,15 @@ export function ResumeLoopBadge({ resumeId, resumeSlug, resumeCreatedAt, subscri
 
   const trackLocked = subscriptionTier === "starter";
   const lettersLocked = subscriptionTier !== "premium";
-  const doneFlags = [true, progress.share, progress.track, progress.letters];
+  // Letters before Track (not the field/API order — progress.track,
+  // progress.letters — which is just historical) — a cover letter is
+  // written as part of applying to a specific job, not after the
+  // application's already been sent and logged, so Published → Share →
+  // Letters → Track is the order that actually matches how someone moves
+  // through a real job search. Ring segments (RingSegment's index prop)
+  // follow this same order so the visual ring and the ledger list beneath
+  // it never disagree about which step is "third."
+  const doneFlags = [true, progress.share, progress.letters, progress.track];
   const doneCount = doneFlags.filter(Boolean).length;
 
   const celebrateIfComplete = (next: CareerLoopProgress) => {
@@ -208,27 +216,6 @@ export function ResumeLoopBadge({ resumeId, resumeSlug, resumeCreatedAt, subscri
                 </button>
               )}
             </div>
-            <div className={`resume-loop-ledger-row ${progress.track ? "is-done" : ""}`}>
-              <span className="resume-loop-ledger-check">{progress.track ? "✓" : ""}</span>
-              {progress.track ? (
-                <span>Applications tracked</span>
-              ) : trackLocked ? (
-                <span className="resume-loop-ledger-invite">
-                  Add tracking to this resume's story <span className="resume-loop-tag">Pro+</span>
-                </span>
-              ) : (
-                <Link
-                  to="/job-applications"
-                  className="resume-loop-ledger-action"
-                  onClick={() => {
-                    careerLoopApi.logCtaClick(resumeId, "track").catch(() => {});
-                    setOpen(false);
-                  }}
-                >
-                  Log an application
-                </Link>
-              )}
-            </div>
             <div className={`resume-loop-ledger-row ${progress.letters ? "is-done" : ""}`}>
               <span className="resume-loop-ledger-check">{progress.letters ? "✓" : ""}</span>
               {progress.letters ? (
@@ -247,6 +234,27 @@ export function ResumeLoopBadge({ resumeId, resumeSlug, resumeCreatedAt, subscri
                   }}
                 >
                   Write a cover letter
+                </Link>
+              )}
+            </div>
+            <div className={`resume-loop-ledger-row ${progress.track ? "is-done" : ""}`}>
+              <span className="resume-loop-ledger-check">{progress.track ? "✓" : ""}</span>
+              {progress.track ? (
+                <span>Applications tracked</span>
+              ) : trackLocked ? (
+                <span className="resume-loop-ledger-invite">
+                  Add tracking to this resume's story <span className="resume-loop-tag">Pro+</span>
+                </span>
+              ) : (
+                <Link
+                  to="/job-applications"
+                  className="resume-loop-ledger-action"
+                  onClick={() => {
+                    careerLoopApi.logCtaClick(resumeId, "track").catch(() => {});
+                    setOpen(false);
+                  }}
+                >
+                  Log an application
                 </Link>
               )}
             </div>

@@ -105,6 +105,20 @@ export function CareerLoopIntroModal({ resumeId, resumeSlug, subscriptionTier, o
             </button>
           )}
         </div>
+        {/* Letters before Track — same order as ResumeLoopBadge's popover
+            (see its doc comment): a cover letter is written as part of
+            applying to a specific job, not after the application's
+            already been logged. */}
+        <div className="resume-loop-ledger-row">
+          <span className="resume-loop-ledger-check" />
+          {lettersLocked ? (
+            <span className="resume-loop-ledger-invite">
+              Add a letter to this resume's story <span className="resume-loop-tag">Premium</span>
+            </span>
+          ) : (
+            <span className="resume-loop-ledger-invite">Write a cover letter when you're ready</span>
+          )}
+        </div>
         <div className="resume-loop-ledger-row">
           <span className="resume-loop-ledger-check" />
           {trackLocked ? (
@@ -119,16 +133,6 @@ export function CareerLoopIntroModal({ resumeId, resumeSlug, subscriptionTier, o
             // ResumeLoopBadge's popover once there's actually something to
             // track — see the closing line below.
             <span className="resume-loop-ledger-invite">Log an application when you send this resume out</span>
-          )}
-        </div>
-        <div className="resume-loop-ledger-row">
-          <span className="resume-loop-ledger-check" />
-          {lettersLocked ? (
-            <span className="resume-loop-ledger-invite">
-              Add a letter to this resume's story <span className="resume-loop-tag">Premium</span>
-            </span>
-          ) : (
-            <span className="resume-loop-ledger-invite">Write a cover letter when you're ready</span>
           )}
         </div>
       </div>

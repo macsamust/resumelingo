@@ -9,12 +9,20 @@ import { CareerLoopEventRepository, CareerLoopEventStep, CareerLoopEventType } f
  * several resumes, each running its own independent loop.
  *
  * Deliberately mixed storage: Share and Letters are explicit events (there
- * is no other durable signal for either — cover/thank-you letters aren't
- * persisted anywhere, see CoverLetterController/ThankYouLetterController's
- * doc comments), so the client calls markShared/markLettersUsed itself.
- * Track is NOT stored here — it's computed live against job_applications
- * so the coach and the real Application Tracker can never disagree about
- * whether the user has actually logged anything.
+ * is no other durable signal for either — a cover letter isn't persisted
+ * anywhere, see CoverLetterController's doc comment), so the client calls
+ * markShared/markLettersUsed itself. Track is NOT stored here — it's
+ * computed live against job_applications so the coach and the real
+ * Application Tracker can never disagree about whether the user has
+ * actually logged anything.
+ *
+ * Letters is cover-letter-only, not "cover/thank-you letters" despite the
+ * name — only CoverLetterPage.tsx calls markLettersUsed. ThankYouLetterPage
+ * is deliberately resume-agnostic (no resumeId at all — see its own doc
+ * comment), so there's no resume for a thank-you letter to attribute
+ * progress to; wiring it in would mean adding a resume picker to that page
+ * first. Decided (Sep 2026) to leave Thank-You Letter as the standalone
+ * tool it is rather than take on that scope.
  */
 export class CareerLoopService {
   constructor(
