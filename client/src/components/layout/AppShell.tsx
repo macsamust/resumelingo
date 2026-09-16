@@ -7,16 +7,19 @@ import { authApi, ApiError } from "../../api";
 const LINKS = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/resumes/new", label: "New Resume" },
+  // Premium only — see CoverLetterPage.tsx/CoverLetterController.ts, which
+  // enforce the same restriction server-side, so this is just tidying the
+  // nav rather than the actual gate. Ordered above Application Tracker and
+  // Thank-You Letter to match the loop (see ResumeLoopBadge.tsx's Full
+  // Circle ledger, reordered the same way Sep 2026): a Cover Letter goes
+  // out with the application itself, before you'd log it in the tracker; a
+  // Thank-You Letter goes out after, once there's actually been an
+  // interview (see FullCircle.tsx's stage copy).
+  { to: "/cover-letter", label: "Cover Letter", minTier: "premium" as const },
   // Professional/Premium only — see JobApplicationService's class comment,
   // which enforces the same restriction server-side, so this is just
   // tidying the nav rather than the actual gate.
   { to: "/job-applications", label: "Application Tracker", minTier: "professional" as const },
-  // Premium only — see CoverLetterPage.tsx/CoverLetterController.ts, which
-  // enforce the same restriction server-side, so this is just tidying the
-  // nav rather than the actual gate. Ordered above Thank-You Letter to match
-  // the loop: a Cover Letter goes out with the application/interview, a
-  // Thank-You Letter goes out after (see FullCircle.tsx's stage copy).
-  { to: "/cover-letter", label: "Cover Letter", minTier: "premium" as const },
   // Premium only — see ThankYouLetterPage.tsx/ThankYouLetterController.ts,
   // which enforce the same restriction server-side, so this is just tidying
   // the nav rather than the actual gate.
