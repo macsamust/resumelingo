@@ -1,5 +1,6 @@
 import { UserRepository } from "../repositories/UserRepository";
 import { ResumeRepository } from "../repositories/ResumeRepository";
+import { JobApplicationRepository } from "../repositories/JobApplicationRepository";
 import { AdminAuditLogRepository } from "../repositories/AdminAuditLogRepository";
 import { EmailService } from "./EmailService";
 import { AuthService } from "./AuthService";
@@ -28,8 +29,8 @@ import { AuthService } from "./AuthService";
  * though not its countdown, on hasResumes — telling a resume-owning account
  * "no resume has been created" would be false) and
  * AuthService.generateFreshVerificationUrl. Deletion reuses the exact same
- * cascade AdminUserController's admin-triggered delete uses (resumes first,
- * then the account).
+ * cascade AdminUserController's admin-triggered delete uses (applications,
+ * then resumes, then the account).
  *
  * Every suspend and delete this job performs is also written to the same
  * admin_audit_log an admin's own manual suspend/delete goes to — via
@@ -68,6 +69,7 @@ export class StaleAccountCleanupService {
   constructor(
     private readonly users: UserRepository,
     private readonly resumes: ResumeRepository,
+    private readonly jobApplications: JobApplicationRepository,
     private readonly email: EmailService,
     private readonly auth: AuthService,
     private readonly auditLog: AdminAuditLogRepository
@@ -109,6 +111,11 @@ export class StaleAccountCleanupService {
     // suspended first.
     const toDelete = await this.users.findEligibleForStalePurge(DELETE_AFTER_HOURS, PROTECTED_BEFORE_ISO);
     for (const userRecord of toDelete) {
+      // Applications before resumes/account — same FOREIGN KEY ordering as
+      // AdminUserController.remove()'s admin-triggered delete (see that
+      // method's doc comment for why job_applications can't just be NULLed
+      // out here the way a single resume deletion NULLs resumeId).
+      await this.jobApplications.deleteAllForUser(userRecord.id);
       await this.resumes.deleteAllForUser(userRecord.id);
       await this.users.delete(userRecord.id);
       await this.auditLog.logSystem({

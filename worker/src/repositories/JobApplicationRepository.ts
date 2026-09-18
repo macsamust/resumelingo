@@ -106,6 +106,31 @@ export class JobApplicationRepository extends BaseRepository<JobApplicationRecor
     await super.delete(id);
   }
 
+  /**
+   * Deletes every application (and their status-history rows) this user
+   * owns — required before the account itself can be deleted, since
+   * job_applications."userId" is NOT NULL REFERENCES users("id") with no
+   * survive-the-deletion option (unlike "resumeId", which
+   * ResumeRepository.delete/deleteBulk/deleteAllForUser NULLs out instead of
+   * deleting the application — an application has nowhere else to belong
+   * once its owning account is gone, so there's no equivalent "keep it
+   * around" choice here). Missing this call is exactly what caused a
+   * FOREIGN KEY constraint failure deleting a user with any tracked
+   * applications (Sep 2026) — AdminUserController.remove()/bulkRemove() and
+   * StaleAccountCleanupService's automatic deletion all call this now, the
+   * same lesson learned twice already for career_loop_progress/
+   * career_loop_events and ResumeRepository's own delete methods.
+   */
+  async deleteAllForUser(userId: string): Promise<void> {
+    const { results } = await this.db.prepare(`SELECT "id" FROM job_applications WHERE "userId" = ?`).bind(userId).all<{ id: string }>();
+    if (results.length === 0) return;
+    const ids = results.map((r) => r.id);
+    await this.db.batch([
+      ...ids.map((id) => this.db.prepare(`DELETE FROM job_application_status_history WHERE "jobApplicationId" = ?`).bind(id)),
+      this.db.prepare(`DELETE FROM job_applications WHERE "userId" = ?`).bind(userId),
+    ]);
+  }
+
   /** Records one status change — called from JobApplicationService.create() (the real initial status) and .update() (only when the status actually changed). See migration 0033's doc comment on why an application's history is never backfilled if it already existed before this shipped. */
   async recordStatusChange(jobApplicationId: string, status: JobApplicationStatus, changedAt: string): Promise<void> {
     await this.db

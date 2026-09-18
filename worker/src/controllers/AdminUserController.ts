@@ -246,9 +246,9 @@ export class AdminUserController {
     return c.json({ success: true, count: ids.length });
   };
 
-  /** Bulk delete for the admin Users page's multi-select action bar — same cascade (resumes, then account) as remove(), just looped per id. */
+  /** Bulk delete for the admin Users page's multi-select action bar — same cascade (applications, resumes, then account) as remove(), just looped per id. */
   bulkRemove = async (c: Context<AppEnv>) => {
-    const { userRepository, resumeRepository, adminAuditLogRepository } = c.get("services");
+    const { userRepository, resumeRepository, jobApplicationRepository, adminAuditLogRepository } = c.get("services");
     const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
     const ids = Array.isArray(body.ids) ? (body.ids as string[]) : [];
     if (ids.length === 0) return c.json({ error: "No users selected." }, 400);
@@ -257,6 +257,7 @@ export class AdminUserController {
     for (const id of ids) {
       const existing = await userRepository.findById(id);
       if (!existing) continue;
+      await jobApplicationRepository.deleteAllForUser(id);
       await resumeRepository.deleteAllForUser(id);
       await userRepository.delete(id);
       deleted++;
@@ -269,12 +270,22 @@ export class AdminUserController {
     return c.json({ success: true, count: deleted });
   };
 
-  /** Deletes the account and every resume it owns (resumes.userId references users, so resumes must go first). */
+  /**
+   * Deletes the account and everything that references it directly —
+   * tracked applications (job_applications."userId"), then every resume it
+   * owns (resumes."userId") — before the account row itself, since D1
+   * enforces both foreign keys. job_applications must go first: unlike a
+   * single resume's own deletion (which just NULLs out an application's
+   * resumeId so application history survives), the account being deleted
+   * means those applications have nowhere else to belong, so they're
+   * deleted outright here rather than orphaned.
+   */
   remove = async (c: Context<AppEnv>) => {
-    const { userRepository, resumeRepository, adminAuditLogRepository } = c.get("services");
+    const { userRepository, resumeRepository, jobApplicationRepository, adminAuditLogRepository } = c.get("services");
     const id = c.req.param("id")!;
     const existing = await userRepository.findById(id);
     if (!existing) return c.json({ error: "User not found." }, 404);
+    await jobApplicationRepository.deleteAllForUser(id);
     await resumeRepository.deleteAllForUser(id);
     await userRepository.delete(id);
     await adminAuditLogRepository.log(c.get("admin")!, {
