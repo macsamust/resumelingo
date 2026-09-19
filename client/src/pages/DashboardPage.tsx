@@ -221,7 +221,20 @@ export function DashboardPage() {
           </div>
         )}
         {showViewsAndStrengthTiles && (
-          <div className="dash-tile">
+          // Sep 2026 QA pass (UX-02): this and the editor's ATS Health Score
+          // (ResumeEditPage's "ATS Check" section) are two genuinely
+          // different measurements — this one tracks how much of your
+          // profile you've filled in (guided answers, a written summary,
+          // generated bullets), the other how well a resume's structure
+          // holds up to an ATS parser — and nothing on either screen said
+          // so, so seeing 90% here and 63% there on the same resume read as
+          // a bug rather than two different questions. A title tooltip
+          // rather than renaming the tile: "Strength Score" is otherwise
+          // used consistently (this component's own strengthTagClass,
+          // Resume.strengthScore server-side), and the two scores living in
+          // different places on different pages is fine once each says
+          // plainly what it measures.
+          <div className="dash-tile" title="How much of your profile you've filled in — guided answers, a written summary, generated bullets. Different from the editor's ATS Health Score, which checks resume structure.">
             <div className="dash-icon">💪</div>
             <p>{summary.profileStrengthScore}% Strength Score</p>
           </div>
@@ -303,7 +316,10 @@ export function DashboardPage() {
                 <span className="visibility-tag">{CARD_VISIBILITY_LABEL[r.visibility] ?? r.visibility}</span>
                 <span className="resume-template-tag">Template: {r.template?.name ?? r.templateKey}</span>
                 {showViewsAndStrengthTiles && (
-                  <span className={`resume-template-tag ${strengthTagClass(r.strengthScore)}`}>
+                  <span
+                    className={`resume-template-tag ${strengthTagClass(r.strengthScore)}`}
+                    title="How much of this resume's profile is filled in — guided answers, a written summary, generated bullets. Different from the editor's ATS Health Score, which checks resume structure."
+                  >
                     Strength {r.strengthScore}%
                   </span>
                 )}

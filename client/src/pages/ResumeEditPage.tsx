@@ -1554,7 +1554,8 @@ export function ResumeEditPage() {
                 <div className="ats-score-row">
                   <div className="ats-score-value">{healthCheck.score}%</div>
                   <p className="hero-note" style={{ margin: 0 }}>
-                    Health Score: how well this resume's structure holds up to an ATS parser.
+                    Health Score: how well this resume's structure holds up to an ATS parser — a different measure
+                    from the dashboard's Strength Score, which tracks how much of your profile you've filled in.
                   </p>
                 </div>
                 <ul className="ats-checklist">
