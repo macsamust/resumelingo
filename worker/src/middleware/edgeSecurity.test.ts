@@ -107,7 +107,9 @@ describe("applyBrowserSecurityHeaders", () => {
     expect(HSTS_VALUE).toContain("includeSubDomains");
     expect(HSTS_VALUE).not.toMatch(/preload/i);
     expect(CSP_ENFORCING).toContain("frame-ancestors 'none'");
-    expect(CSP_REPORT_ONLY).toContain("fonts.googleapis.com");
+    expect(CSP_ENFORCING).toContain("script-src 'self' 'wasm-unsafe-eval'");
+    expect(CSP_ENFORCING).toContain("fonts.googleapis.com");
+    expect(CSP_ENFORCING).toContain("upgrade-insecure-requests");
   });
 
   it("omits HSTS on HTTP (browsers ignore it there; local wrangler stays HTTP)", () => {
