@@ -15,7 +15,7 @@ interface Stage {
 /**
  * The dedicated version of the homepage's FullCircle.tsx teaser (see that
  * component's own doc comment for why the 4-stage framing exists at all —
- * same Apply/Interview/Get hired/Stay current loop, same shipped features,
+ * same Apply/Interview/Get hired/Stay current circle, same shipped features,
  * just with room here to actually explain each stage instead of a one-line
  * card). Linked from the top nav the same way Career Center is: a page of
  * its own, reachable from both the logged-in and logged-out nav rows (see
@@ -46,7 +46,7 @@ const STAGES: Stage[] = [
     label: "Get hired",
     intro: "Send a Thank-You Letter the same day, and keep your resume at one link instead of a re-attached PDF.",
     detail:
-      "Closing the loop matters: a same-day Thank-You Letter keeps you top of mind while the interview is still fresh. And because your resume lives at one shareable link, updating it later doesn't mean tracking down every place you ever sent a PDF.",
+      "Closing the circle matters: a same-day Thank-You Letter keeps you top of mind while the interview is still fresh. And because your resume lives at one shareable link, updating it later doesn't mean tracking down every place you ever sent a PDF.",
     link: { label: "Write a Thank-You Letter", to: "/thank-you-letter" },
   },
   {
@@ -55,7 +55,7 @@ const STAGES: Stage[] = [
     label: "Stay current",
     intro: "ResumeLingo nudges you to keep your resume fresh, so you're always ready for what's next.",
     detail:
-      "A resume that's accurate the day you got hired goes stale fast. We'll nudge you periodically to add a new role, a fresh achievement, or an updated title, so the next opportunity doesn't start with a scramble to rewrite everything from scratch. Then the loop starts again.",
+      "A resume that's accurate the day you got hired goes stale fast. We'll nudge you periodically to add a new role, a fresh achievement, or an updated title, so the next opportunity doesn't start with a scramble to rewrite everything from scratch. Then the circle starts again.",
   },
 ];
 
@@ -76,7 +76,7 @@ export function FullCirclePage() {
             <h1>One platform for the whole career, not just the resume</h1>
             <p>
               ResumeLingo carries you from your first application to your next promotion, not four separate tools
-              stitched together. Here's what each stage of the loop actually does.
+              stitched together. Here's what each stage of the circle actually does.
             </p>
           </div>
           <nav className="career-toc" aria-label="Full Circle stages">
@@ -111,7 +111,7 @@ export function FullCirclePage() {
         <div className="wrap career-cta">
           {user ? (
             <>
-              <h2>Keep the loop going</h2>
+              <h2>Keep the circle going</h2>
               <p>Head back to your dashboard to pick up wherever you left off.</p>
               <Link to="/dashboard" className="btn btn-primary">
                 Go to my dashboard
@@ -119,7 +119,7 @@ export function FullCirclePage() {
             </>
           ) : (
             <>
-              <h2>Ready to start the loop?</h2>
+              <h2>Ready to start the circle?</h2>
               <p>Build your first resume free, and everything above comes with it.</p>
               <Link to="/signup" className="btn btn-primary">
                 Get started

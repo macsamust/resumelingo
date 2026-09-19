@@ -28,11 +28,11 @@ const STAGES = [
   },
   {
     label: "Get hired",
-    body: "Send a Thank-You Letter the same day to close the loop. Your resume lives at one shareable link, not a PDF re-attached every time.",
+    body: "Send a Thank-You Letter the same day to close the circle. Your resume lives at one shareable link, not a PDF re-attached every time.",
   },
   {
     label: "Stay current",
-    body: "ResumeLingo nudges you to keep your resume fresh, so you're always ready for what's next. The loop starts again.",
+    body: "ResumeLingo nudges you to keep your resume fresh, so you're always ready for what's next. The circle starts again.",
   },
 ];
 
@@ -59,7 +59,7 @@ export function FullCircle() {
             </div>
           ))}
         </div>
-        {/* Makes "the loop starts again" (stage 4's own copy, above) a visual
+        {/* Makes "the circle starts again" (stage 4's own copy, above) a visual
             fact rather than only a sentence — the sequential arrows between
             cards show the path forward, this closes it. Its own element
             rather than an arrow drawn from card 4 back to card 1, which
