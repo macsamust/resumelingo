@@ -101,6 +101,28 @@ function averageStrengthScore(resumes: Resume[]): number {
   return Math.round(total / resumes.length);
 }
 
+// Sep 2026 QA pass (UX-06): each key here must exactly match one of
+// missingSections()'s own strings below — that function is the single
+// source of truth for "what's missing" (also feeding the Premium
+// dashboard's Section Gaps card and the strongest/weakest comparison), and
+// suggestImprovements used to run its own separate, narrower heuristic
+// (answered<4, bullets<3, no certifications answer) that could name a
+// completely different gap than Section Gaps named for the very same
+// resume. Sharing missingSections means the two can never disagree again.
+const GAP_SUGGESTIONS: Record<string, string> = {
+  "phone number": "Add a phone number so recruiters and ATS systems can reach you.",
+  education: "Add your education history.",
+  awards: "Add any awards or recognitions you've received.",
+  achievements: "Add achievements to generate impact-focused bullets.",
+  // No separate "impact bullets" entry — missingSections flags that
+  // whenever generatedBullets.length < 3, which an "achievements" gap
+  // (achievements.length === 0) already implies in practice; a resume with
+  // some achievements but still under 3 bullets is covered by that same
+  // suggestion well enough that a second, nearly-identical line isn't
+  // worth the redundancy.
+  "a fuller summary": "Answer a few more interview questions to write a fuller summary.",
+};
+
 function suggestImprovements(resumes: Resume[], tier: SubscriptionTier): string[] {
   if (resumes.length === 0) {
     // Profile Strength Score is a Professional/Premium perk (see
@@ -111,15 +133,20 @@ function suggestImprovements(resumes: Resume[], tier: SubscriptionTier): string[
       ? ["Create your first resume to get started."]
       : ["Create your first resume to get a Profile Strength Score."];
   }
-  const suggestions = new Set<string>();
+  // Most-common gap first, across every resume — same "what's actually
+  // missing, most impactful first" framing as Section Gaps.
+  const gapCounts = new Map<string, number>();
   for (const resume of resumes) {
-    const answered = Object.values(resume.answers).filter((v) => v && v.trim()).length;
-    if (answered < 4) suggestions.add("Answer more interview questions to strengthen your summary.");
-    if (resume.generatedBullets.length < 3) suggestions.add("Add more achievements to generate additional bullets.");
-    if (!resume.answers["certifications"]) suggestions.add("Add certifications relevant to your field.");
+    for (const gap of missingSections(resume)) {
+      gapCounts.set(gap, (gapCounts.get(gap) ?? 0) + 1);
+    }
   }
-  if (suggestions.size === 0) suggestions.add("Your resumes look strong. Check the Career Center for interview prep.");
-  return Array.from(suggestions);
+  const suggestions = Array.from(gapCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([gap]) => GAP_SUGGESTIONS[gap])
+    .filter((s): s is string => !!s);
+  if (suggestions.length === 0) suggestions.push("Your resumes look strong. Check the Career Center for interview prep.");
+  return suggestions;
 }
 
 /**

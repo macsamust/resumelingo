@@ -96,7 +96,20 @@ export function runHealthChecks(input: HealthCheckInput): { items: AtsCheckItem[
   return { items, score };
 }
 
-/** Words too common to be meaningful keyword matches, on top of a plain length filter. */
+/**
+ * Words too common to be meaningful keyword matches, on top of a plain
+ * length filter. Sep 2026 QA pass (UX-06): the original list only covered
+ * generic filler common to most job postings (the, your, responsibilities,
+ * ...) — a posting for a hands-on role (delivery, warehouse, retail,
+ * healthcare) leans on plain-English verbs and connector words describing
+ * physical duties ("delivers packages to homes and businesses along an
+ * assigned route") rather than named tools or certifications, and those
+ * words are exactly as frequent as real skill terms, so simple
+ * word-frequency ranking surfaced them as "keywords you keep missing"
+ * instead of anything a candidate could actually add to their resume.
+ * Expanded with common duty/connector words from that class of posting,
+ * plus generic HR/posting boilerplate this list was still missing.
+ */
 const STOPWORDS = new Set([
   "the", "and", "for", "are", "but", "not", "you", "your", "with", "this", "that", "from", "have", "has",
   "will", "our", "their", "they", "them", "into", "about", "than", "then", "were", "was", "been", "being",
@@ -105,6 +118,19 @@ const STOPWORDS = new Set([
   "job", "role", "work", "team", "years", "year", "including", "etc", "also", "within", "across", "per",
   "per", "using", "use", "used", "ability", "strong", "excellent", "including", "responsibilities",
   "requirements", "required", "preferred", "please", "apply", "candidate", "candidates", "we're", "we'll",
+  // Generic verbs/connectors describing duties rather than naming a skill —
+  // frequent in hands-on/physical-labor postings especially.
+  "along", "assigned", "assign", "assigns", "businesses", "homes", "packages", "package", "delivers",
+  "deliver", "delivering", "delivery", "sorts", "sort", "sorting", "collects", "collect", "collecting",
+  "handles", "handle", "handling", "performs", "perform", "performing", "performed", "provides", "provide",
+  "providing", "provided", "ensures", "ensure", "ensuring", "ensured", "maintains", "maintain",
+  "maintaining", "maintained", "assists", "assist", "assisting", "assisted", "completes", "complete",
+  "completing", "completed", "various", "multiple", "daily", "day", "days", "time", "times", "area",
+  "areas", "location", "locations", "customer", "customers", "duties", "duty", "tasks", "task", "position",
+  "positions", "company", "companies", "employee", "employees", "environment", "schedule", "shift",
+  "shifts", "hour", "hours", "physical", "needed", "needs", "need", "looking", "seeking", "opportunity",
+  "opportunities", "ideal", "great", "good", "well", "make", "makes", "making", "take", "takes", "taking",
+  "get", "gets", "getting", "help", "helps", "helping", "helped", "including", "based", "basis",
 ]);
 
 interface KeywordCount {
