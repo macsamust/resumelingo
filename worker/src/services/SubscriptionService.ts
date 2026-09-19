@@ -80,6 +80,19 @@ export class SubscriptionService {
   /** Finds or creates the Stripe Customer for this user and persists its id. */
   private async ensureStripeCustomer(user: User): Promise<string> {
     if (user.stripeCustomerId) return user.stripeCustomerId;
+    return this.createAndPersistStripeCustomer(user);
+  }
+
+  /**
+   * Creates a brand-new Stripe customer and overwrites whatever
+   * `stripeCustomerId` (if any) was already on file. Used both by
+   * ensureStripeCustomer (no id yet) and by the stale-customer recovery in
+   * createCheckoutSession/createPortalSession below (an id already on file
+   * that the currently-configured Stripe mode doesn't recognize — see
+   * handleWebhookEvent's mode-gating doc comment for how such an id could
+   * get written in the first place).
+   */
+  private async createAndPersistStripeCustomer(user: User): Promise<string> {
     const customer = await this.stripe.createCustomer({
       email: user.email,
       name: user.name,
@@ -87,6 +100,20 @@ export class SubscriptionService {
     });
     await this.users.setStripeCustomerId(user.id, customer.id);
     return customer.id;
+  }
+
+  /**
+   * True for the one Stripe error createCheckoutSession/createPortalSession
+   * recover from below: a customer id we have on file that this mode of
+   * Stripe has never heard of. Distinguishing this from any other Stripe
+   * failure matters — retrying by creating a brand-new customer is the right
+   * move for "resource_missing" on the "id" param specifically, but would be
+   * wrong (and would mask the real problem) for almost anything else Stripe
+   * could throw here (a card error, a misconfigured Price id, a genuine API
+   * outage).
+   */
+  private isUnknownCustomerError(err: unknown): boolean {
+    return err instanceof Stripe.errors.StripeInvalidRequestError && err.code === "resource_missing" && err.param === "id";
   }
 
   /**
@@ -102,13 +129,28 @@ export class SubscriptionService {
       throw new Error(`No Stripe price configured for "${tier}". Check STRIPE_PRICE_* secrets.`);
     }
     const customerId = await this.ensureStripeCustomer(user);
-    const session = await this.stripe.createCheckoutSession({
-      customerId,
-      priceId,
-      userId: user.id,
-      successUrl: `${origin}/dashboard?checkout=success`,
-      cancelUrl: `${origin}/dashboard?checkout=cancelled`,
-    });
+    let session: Stripe.Response<Stripe.Checkout.Session>;
+    try {
+      session = await this.stripe.createCheckoutSession({
+        customerId,
+        priceId,
+        userId: user.id,
+        successUrl: `${origin}/dashboard?checkout=success`,
+        cancelUrl: `${origin}/dashboard?checkout=cancelled`,
+      });
+    } catch (err) {
+      if (!this.isUnknownCustomerError(err)) throw err;
+      // See createPortalSession's identical recovery below for why this can
+      // happen even on an id we just read off the user's own row.
+      const freshCustomerId = await this.createAndPersistStripeCustomer(user);
+      session = await this.stripe.createCheckoutSession({
+        customerId: freshCustomerId,
+        priceId,
+        userId: user.id,
+        successUrl: `${origin}/dashboard?checkout=success`,
+        cancelUrl: `${origin}/dashboard?checkout=cancelled`,
+      });
+    }
     if (!session.url) throw new Error("Stripe did not return a Checkout URL.");
     return session.url;
   }
@@ -118,8 +160,29 @@ export class SubscriptionService {
     if (!user.stripeCustomerId) {
       throw new Error("No billing account yet. Subscribe to a paid plan first.");
     }
-    const session = await this.stripe.createPortalSession(user.stripeCustomerId, `${origin}/dashboard`);
-    return session.url;
+    try {
+      const session = await this.stripe.createPortalSession(user.stripeCustomerId, `${origin}/dashboard`);
+      return session.url;
+    } catch (err) {
+      if (!this.isUnknownCustomerError(err)) throw err;
+      // The id on file doesn't exist in this Stripe mode. Root cause (found
+      // via a QA report on ffox@email.com, Sep 2026): this Worker's one
+      // webhook URL accepts both live- and test-mode Stripe events (see
+      // StripeService.constructWebhookEvent), and handleWebhookEvent used to
+      // act on either regardless of which mode this Worker's own
+      // STRIPE_SECRET_KEY is in — so a test-mode checkout could write a
+      // test-mode customer id into this same column, which the live API
+      // (what this method always calls) then rejects outright. Now guarded
+      // against for NEW occurrences by handleWebhookEvent's mode check
+      // below; this recovers any account that already has a stale id from
+      // before that guard existed, by replacing it with a real customer in
+      // the currently-configured mode and retrying once, rather than
+      // surfacing Stripe's raw "No such customer" straight to the Manage
+      // Billing button.
+      const customerId = await this.createAndPersistStripeCustomer(user);
+      const session = await this.stripe.createPortalSession(customerId, `${origin}/dashboard`);
+      return session.url;
+    }
   }
 
   /**
@@ -261,8 +324,35 @@ export class SubscriptionService {
     }
   }
 
-  /** Entry point for the Stripe webhook route. See routes/subscription.routes.ts. */
+  /**
+   * Entry point for the Stripe webhook route. See routes/subscription.routes.ts.
+   *
+   * Guards against a mode mismatch first: this Worker only ever holds one
+   * Stripe secret key (live in production), but StripeService.constructWebhookEvent
+   * accepts signatures from BOTH Stripe's live and test webhook secrets at
+   * this one URL — a deliberate choice so test traffic doesn't need its own
+   * endpoint. Left unchecked, that meant a test-mode checkout/subscription
+   * event could still arrive here successfully signed and get acted on as
+   * if it were real: `checkout.session.completed` would write a test-mode
+   * customer id into `users.stripeCustomerId`, and syncSubscription would
+   * apply a test-mode subscription's tier — both columns createPortalSession/
+   * createCheckoutSession then read and hand to the LIVE Stripe API, which
+   * rejects a test-mode id outright ("No such customer"). Found via a QA
+   * report on ffox@email.com (Sep 2026) whose Manage Billing button failed
+   * exactly that way; see createPortalSession's stale-customer recovery for
+   * the fix on the read side, and this check for closing the write side.
+   * Ignoring (not throwing on) a mismatched event still acks the webhook
+   * with 200 so Stripe doesn't retry it forever — it just never gets acted on.
+   */
   async handleWebhookEvent(event: Stripe.Event): Promise<void> {
+    if (event.livemode !== this.stripe.isLiveMode()) {
+      console.warn(
+        `Ignoring Stripe webhook event ${event.id} (${event.type}): event.livemode=${event.livemode} but this Worker is configured for ${
+          this.stripe.isLiveMode() ? "live" : "test"
+        } mode.`
+      );
+      return;
+    }
     switch (event.type) {
       case "checkout.session.completed": {
         // Link the Stripe customer to our user as early as possible. The

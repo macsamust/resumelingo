@@ -22,12 +22,26 @@ import Stripe from "stripe";
 export class StripeService {
   private readonly client: Stripe | null;
 
-  constructor(secretKey: string | undefined) {
+  constructor(private readonly secretKey: string | undefined) {
     this.client = secretKey
       ? new Stripe(secretKey, {
           httpClient: Stripe.createFetchHttpClient(),
         })
       : null;
+  }
+
+  /**
+   * True when the configured secret key is a live-mode key (`sk_live_...`),
+   * false for a test-mode key (`sk_test_...`) or when Stripe isn't
+   * configured at all. This Worker only ever holds one key at a time, but
+   * `constructWebhookEvent` above accepts signatures from BOTH Stripe's
+   * live and test webhook secrets at this one URL — so a test-mode event
+   * can still arrive successfully signed even when this key is live. See
+   * SubscriptionService.handleWebhookEvent's doc comment for what that
+   * mismatch causes and why events must be checked against this.
+   */
+  isLiveMode(): boolean {
+    return !!this.secretKey?.startsWith("sk_live_");
   }
 
   private requireClient(): Stripe {
