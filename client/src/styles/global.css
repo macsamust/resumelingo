@@ -195,7 +195,14 @@ section { padding: 84px 0; }
    of hugging the left edge with empty space on the right. The narrow-screen
    media queries below still target .resources-grid generically, so this
    still collapses to 1 column on mobile like every other grid on the page. */
-.future-grid { grid-template-columns: repeat(2, minmax(0, 320px)); justify-content: center; }
+/* auto-fit (not a fixed repeat(2, ...)) so this still centers correctly
+   whether FuturePremium.tsx's FUTURE array has one card or two — a fixed
+   2-column track reserves an empty second column next to a lone card, which
+   `justify-content: center` centers as a whole, leaving the one real card
+   sitting visibly left of center instead of centered (found removing the
+   Digital business card entry once it shipped, Sep 2026 UX review, UX-11,
+   dropping FUTURE to a single item). */
+.future-grid { grid-template-columns: repeat(auto-fit, minmax(0, 320px)); justify-content: center; }
 
 .stories-bg { background: linear-gradient(180deg, #fff, var(--bg)); border-top: 1px solid var(--border); }
 .stories-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }

@@ -28,6 +28,18 @@ const LINKS = [
   // enforce the same restriction server-side, so this is just tidying the
   // nav rather than the actual gate.
   { to: "/career-coach", label: "Ask Poly", minTier: "premium" as const },
+  // Professional/Premium only — see CareerCenterPage.tsx's ALLOWED_TIERS,
+  // which enforces the same restriction server-side (a Starter subscriber
+  // hitting this link directly gets CareerCenterLocked, not a 404), so this
+  // is just tidying the nav rather than the actual gate. Placed last, after
+  // Ask Poly, rather than ordered into the Cover Letter/Tracker/Thank-You
+  // Letter sequence above — those follow one person's path through a single
+  // job search (see that sequence's own comment), while this is reference
+  // material, not a step in it. Added Sep 2026 UX review (UX-11): the page
+  // existed and had real content, but was reachable in-app only via a long
+  // scroll down the Dashboard or a stray footer/navbar link — never from
+  // here.
+  { to: "/career-center", label: "Career Center", minTier: "professional" as const },
 ];
 
 /**

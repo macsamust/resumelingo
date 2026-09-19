@@ -1,7 +1,10 @@
-// AI Career Coach, Recruiter Mode, and Professional References have all
-// shipped (see CareerCoachPage.tsx, ResumeEditPage.tsx's "Recruiter Mode"
-// section, and its "References" section/ReferencesEditor.tsx) — removed
-// from this "coming soon" list accordingly.
+// AI Career Coach, Recruiter Mode, Professional References, and the Digital
+// business card (QR code) have all shipped (see CareerCoachPage.tsx,
+// ResumeEditPage.tsx's "Recruiter Mode" section, its "References" section/
+// ReferencesEditor.tsx, and ResumeQrCode.tsx — the QR feature landed the
+// same month this "coming soon" entry was caught still advertising it as
+// future, Sep 2026 UX review, UX-11) — removed from this "coming soon" list
+// accordingly.
 //
 // "Custom domain" briefly sat here after being pulled from Pricing.tsx as
 // overpromised — it turned out to describe an already-shipped feature
@@ -22,10 +25,7 @@
 // and testimonials is a different product, with its own media-hosting and
 // moderation surface, and doesn't make the actual resumes any better. See
 // TODO.md.
-const FUTURE = [
-  { tag: "Networking", title: "Digital business card", body: "Scan a QR code for instant access to your resume." },
-  { tag: "Video", title: "Video introduction", body: "A one-minute video introduction. Recruiters love this." },
-];
+const FUTURE = [{ tag: "Video", title: "Video introduction", body: "A one-minute video introduction. Recruiters love this." }];
 
 export function FuturePremium() {
   return (
@@ -36,11 +36,13 @@ export function FuturePremium() {
           <h2>What's coming to Premium</h2>
           <p>We're building toward a complete professional identity platform.</p>
         </div>
-        {/* Only 2 cards since "Career Portfolio" was pulled (see the comment
-            above) — the shared 4-column .resources-grid (also used by
-            CareerCenter.tsx's 6-card teaser) would otherwise leave 2 cards
-            stranded on the left with a lopsided gap on the right. .future-grid
-            caps it to 2 centered columns instead, just for this section. */}
+        {/* Down to 1 card now (Digital business card removed once it shipped
+            — see the top-of-file comment; Career Portfolio was pulled
+            entirely earlier). The shared 4-column .resources-grid (also used
+            by CareerCenter.tsx's 6-card teaser) would strand a lone card on
+            the left with a wide empty gap on the right — .future-grid uses
+            auto-fit instead of a fixed column count so this stays correctly
+            centered whether FUTURE holds 1 card or grows back to more. */}
         <div className="resources-grid future-grid">
           {FUTURE.map((f) => (
             <div className="resource-card" key={f.title}>
