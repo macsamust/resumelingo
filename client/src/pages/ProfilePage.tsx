@@ -4,7 +4,7 @@ import { ConfirmDialog } from "../components/common/ConfirmDialog";
 import { Modal } from "../components/common/Modal";
 import { Pricing } from "../components/marketing/Pricing";
 import { useAuth } from "../context/AuthContext";
-import { ApiError, authApi, catalogApi, setAuthToken } from "../api";
+import { ApiError, authApi, catalogApi } from "../api";
 import { PasswordField } from "../components/common/PasswordField";
 import { ProfessionSummary } from "../types";
 
@@ -75,11 +75,10 @@ export function ProfilePage() {
     setSavingPassword(true);
     try {
       // Changing your password invalidates every other session server-side
-      // (see AuthService.changePassword) but hands back a fresh token for
-      // this one — persist it or the next authenticated call from this tab
-      // fails and looks like a random logout.
-      const { token } = await authApi.changePassword({ currentPassword, newPassword });
-      setAuthToken(token);
+      // (see AuthService.changePassword) — the worker sets fresh
+      // access+refresh cookies for this tab in the same response, so
+      // there's no client-side token to persist anymore (SEC-A01).
+      await authApi.changePassword({ currentPassword, newPassword });
       setCurrentPassword("");
       setNewPassword("");
       setPasswordSuccess(true);

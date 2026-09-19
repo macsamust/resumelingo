@@ -18,39 +18,25 @@ export const resumeApi = new ResumeApi();
 export const catalogApi = new CatalogApi();
 export const thankYouLetterApi = new ThankYouLetterApi();
 export const coverLetterApi = new CoverLetterApi();
-// Deliberately not included in setAuthToken below — this endpoint is
-// unauthenticated by design (fires from the logged-out Pricing page too),
-// so there's no session to keep in sync.
+// Unauthenticated by design (fires from the logged-out Pricing page too) —
+// still runs in ApiClient's default cookie mode like everything else here,
+// but that's harmless: the route behind it never reads the cookie.
 export const marketingEventApi = new MarketingEventApi();
 export const careerCoachApi = new CareerCoachApi();
 export const resumeImportApi = new ResumeImportApi();
 export const achievementGenerateApi = new AchievementGenerateApi();
 export const jobApplicationApi = new JobApplicationApi();
 export const skillSuggestionAiApi = new SkillSuggestionAiApi();
-// Deliberately not included in setAuthToken below — every call here is
-// gated by the signed token in the nudge email, not a logged-in session
-// (see ResumeRefreshApi's doc comment).
+// Every call here is gated by the signed token in the nudge email, not a
+// logged-in session (see ResumeRefreshApi's doc comment) — same "harmless
+// unused cookie" note as marketingEventApi above.
 export const resumeRefreshApi = new ResumeRefreshApi();
 export const careerLoopApi = new CareerLoopApi();
-// Deliberately not included in setAuthToken below — the admin token lives
-// under its own storage key and is set via AdminAuthContext instead, so a
-// regular user login/logout never touches the admin session.
+// SEC-A01 (Sep 2026) deliberately doesn't touch AdminApi — it keeps its own
+// bearer-token mechanism (own storage key, set via AdminAuthContext) rather
+// than ApiClient's default cookie mode; see AdminApi's constructor
+// (`useCookies: false`). Admin auth is a separate, later decision.
 export const adminApi = new AdminApi();
-
-/** Propagate a fresh/cleared token to every regular-user API client instance at once. */
-export function setAuthToken(token: string | null) {
-  authApi.setToken(token);
-  resumeApi.setToken(token);
-  catalogApi.setToken(token);
-  thankYouLetterApi.setToken(token);
-  coverLetterApi.setToken(token);
-  careerCoachApi.setToken(token);
-  resumeImportApi.setToken(token);
-  achievementGenerateApi.setToken(token);
-  jobApplicationApi.setToken(token);
-  skillSuggestionAiApi.setToken(token);
-  careerLoopApi.setToken(token);
-}
 
 export * from "./ApiClient";
 export * from "./AuthApi";

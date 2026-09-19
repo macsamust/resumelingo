@@ -23,7 +23,7 @@ import webhookRoutes from "./routes/webhooks.routes";
 import jobApplicationRoutes from "./routes/jobApplication.routes";
 import careerLoopRoutes from "./routes/careerLoop.routes";
 import resumeRefreshRoutes from "./routes/resumeRefresh.routes";
-import { AuthError, InvalidResetTokenError, InvalidVerificationTokenError } from "./services/AuthService";
+import { AuthError, InvalidRefreshTokenError, InvalidResetTokenError, InvalidVerificationTokenError } from "./services/AuthService";
 import { InvalidUnsubscribeTokenError } from "./controllers/AuthController";
 import { InvalidNudgeTokenError } from "./controllers/ResumeRefreshController";
 import { AdminAuthError } from "./services/AdminService";
@@ -101,6 +101,14 @@ app.use(
   "/api/*",
   cors({
     origin: (_origin, c) => c.env.CLIENT_ORIGIN || PRODUCTION_ORIGIN,
+    // SEC-A01 (Sep 2026): subscriber auth now rides an HttpOnly cookie
+    // (see utils/authCookies.ts) instead of a bearer token the client
+    // attaches itself, so the browser needs to be told it's allowed to send
+    // that cookie cross-origin (local dev only — prod is same-origin, see
+    // vite.config.ts's dev proxy) and receive Set-Cookie back. Safe with a
+    // single explicit origin above (never a wildcard) — `credentials: true`
+    // combined with `origin: "*"` is what the fetch spec forbids, not this.
+    credentials: true,
   })
 );
 app.use("/api/*", withServices);
@@ -140,6 +148,8 @@ app.route("/api/career-loop", careerLoopRoutes);
 app.onError((err, c) => {
   const status =
     err instanceof AuthError
+      ? 401
+      : err instanceof InvalidRefreshTokenError
       ? 401
       : err instanceof AdminAuthError
       ? 401

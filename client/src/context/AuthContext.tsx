@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
-import { authApi, setAuthToken } from "../api";
+import { authApi } from "../api";
 import { AuthUser } from "../types";
 
 interface AuthContextValue {
@@ -19,18 +19,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // SEC-A01 (Sep 2026): no localStorage token to check anymore — the
+  // `rl_session`/`rl_refresh` cookies are HttpOnly, so this can't read them
+  // even to check existence. Just ask /auth/me and let the cookie (or
+  // ApiClient's silent refresh-and-retry, if the access token already
+  // expired) answer the question. A logged-out visitor gets a plain 401
+  // here, same as before.
   const refresh = async () => {
-    const token = localStorage.getItem("resumelingo_token");
-    if (!token) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
     try {
       const { user: me } = await authApi.me();
       setUser(me);
     } catch {
-      setAuthToken(null);
       setUser(null);
     } finally {
       setLoading(false);
@@ -43,19 +42,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const register: AuthContextValue["register"] = async (input) => {
-    const { user: newUser, token } = await authApi.register(input);
-    setAuthToken(token);
+    const { user: newUser } = await authApi.register(input);
     setUser(newUser);
   };
 
   const login: AuthContextValue["login"] = async (email, password) => {
-    const { user: loggedInUser, token } = await authApi.login({ email, password });
-    setAuthToken(token);
+    const { user: loggedInUser } = await authApi.login({ email, password });
     setUser(loggedInUser);
   };
 
+  // Fires the server-side logout (revokes the refresh token, clears both
+  // cookies) but doesn't block on it — the UI should feel instant, and a
+  // failed logout call (e.g. offline) shouldn't trap the user in a
+  // logged-in-looking screen when they've already asked to leave.
   const logout = () => {
-    setAuthToken(null);
+    authApi.logout().catch(() => {});
     setUser(null);
   };
 

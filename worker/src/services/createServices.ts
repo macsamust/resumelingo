@@ -1,5 +1,6 @@
 import { AdminTokenPayload, AuthTokenPayload, Env } from "../types";
 import { UserRepository } from "../repositories/UserRepository";
+import { RefreshTokenRepository } from "../repositories/RefreshTokenRepository";
 import { ResumeRepository } from "../repositories/ResumeRepository";
 import { ResumeAnalyticsRepository } from "../repositories/ResumeAnalyticsRepository";
 import { ResumeVersionRepository } from "../repositories/ResumeVersionRepository";
@@ -137,8 +138,13 @@ export function createServices(env: Env): Services {
   const jobApplicationRepository = new JobApplicationRepository(env.DB);
   const careerLoopProgressRepository = new CareerLoopProgressRepository(env.DB);
   const careerLoopEventRepository = new CareerLoopEventRepository(env.DB);
+  const refreshTokenRepository = new RefreshTokenRepository(env.DB);
 
-  const tokenService = new TokenService<AuthTokenPayload>(env.JWT_SECRET);
+  // 20m, not the class default 7d — SEC-A01 (Sep 2026) moved subscriber auth
+  // to a short-lived access-token cookie backed by RefreshTokenRepository's
+  // long-lived, revocable refresh token (see migration 0049's doc comment
+  // and utils/authCookies.ts). Must match ACCESS_TOKEN_TTL_SECONDS.
+  const tokenService = new TokenService<AuthTokenPayload>(env.JWT_SECRET, "20m");
   // 12h, not the default 7d — shrinks how long a leaked/stolen admin token
   // stays usable. Paired with tokenVersion-based revocation (see
   // AdminService.revokeSessions/requireAdminAuth) for the "I need this
@@ -167,7 +173,7 @@ export function createServices(env: Env): Services {
   );
 
   const emailService = new EmailService(env.RESEND_API_KEY, env.RESEND_FROM_EMAIL);
-  const authService = new AuthService(userRepo, tokenService, emailService, env.CLIENT_ORIGIN);
+  const authService = new AuthService(userRepo, tokenService, emailService, env.CLIENT_ORIGIN, refreshTokenRepository);
   const resumeService = new ResumeService(
     resumeRepo,
     userRepo,

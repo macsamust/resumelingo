@@ -1,11 +1,16 @@
 import bcrypt from "bcryptjs";
 import { UserRepository } from "../repositories/UserRepository";
+import { RefreshTokenRepository } from "../repositories/RefreshTokenRepository";
 import { TokenService } from "./TokenService";
 import { EmailService } from "./EmailService";
 import { User } from "../models/User";
 import { AuthTokenPayload, TERMS_VERSION } from "../types";
 import { isValidEmail, normalizeEmail } from "../utils/validation";
 import { randomHex, sha256Hex } from "../utils/crypto";
+import { REFRESH_TOKEN_TTL_SECONDS } from "../utils/authCookies";
+
+/** Thrown when a presented refresh token is missing, unrecognized, expired, or already revoked — mapped to 401 in index.ts's onError, same treatment as AuthError. */
+export class InvalidRefreshTokenError extends Error {}
 
 export class AuthError extends Error {}
 
@@ -41,8 +46,24 @@ export class AuthService {
     private readonly users: UserRepository,
     private readonly tokens: TokenService<AuthTokenPayload>,
     private readonly emailService: EmailService,
-    private readonly clientOrigin: string
+    private readonly clientOrigin: string,
+    private readonly refreshTokens: RefreshTokenRepository
   ) {}
+
+  /**
+   * Mints a fresh refresh token (opaque random value, hashed at rest — see
+   * migration 0049's doc comment), stores it, and returns the plaintext for
+   * AuthController to set as the `rl_refresh` cookie. Shared by
+   * register/login/changePassword — anywhere a fresh session starts.
+   */
+  private async issueRefreshToken(userId: string): Promise<string> {
+    const token = generateRandomToken();
+    const tokenHash = await sha256Hex(token);
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_SECONDS * 1000).toISOString();
+    await this.refreshTokens.create(userId, tokenHash, expiresAt);
+    await this.refreshTokens.pruneExpired();
+    return token;
+  }
 
   async register(input: { name: string; email: string; password: string; profession?: string; acceptedTerms: boolean }) {
     const email = normalizeEmail(input.email);
@@ -68,6 +89,7 @@ export class AuthService {
     });
     const user = new User(record);
     const token = await this.tokens.sign({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion });
+    const refreshToken = await this.issueRefreshToken(user.id);
     // Registration succeeds regardless of whether the verification email
     // actually sends — a Resend outage or bad address shouldn't turn a
     // successful account creation into a failed signup response (which
@@ -87,7 +109,7 @@ export class AuthService {
         termsAcceptedAt: user.termsAcceptedAt,
       })
       .catch((err) => console.error("Failed to send welcome email on register", err));
-    return { user, token };
+    return { user, token, refreshToken };
   }
 
   /** Mints a fresh verification token, stores its hash, and returns the plaintext URL — the shared plumbing behind sendVerificationEmail() and generateFreshVerificationUrl(). */
@@ -184,7 +206,37 @@ export class AuthService {
 
     const user = new User(record);
     const token = await this.tokens.sign({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion });
-    return { user, token };
+    const refreshToken = await this.issueRefreshToken(user.id);
+    return { user, token, refreshToken };
+  }
+
+  /**
+   * Verifies a presented `rl_refresh` cookie value and, if it's still valid
+   * (not expired, not revoked — see RefreshTokenRepository.findValidByHash),
+   * mints a fresh access-token JWT carrying the user's *current*
+   * tokenVersion. No rotation in v1 (the same refresh token keeps working
+   * until it naturally expires, logout revokes it, or a password
+   * change/revoke-sessions action revokes every refresh token for the
+   * user) — see TODO.md's SEC-A01 writeup for why rotation/reuse-detection
+   * was deliberately deferred rather than built now.
+   */
+  async refreshAccessToken(refreshToken: string): Promise<string> {
+    const tokenHash = await sha256Hex(refreshToken);
+    const row = await this.refreshTokens.findValidByHash(tokenHash);
+    if (!row) throw new InvalidRefreshTokenError("This session has expired. Please log in again.");
+    const record = await this.users.findById(row.userId);
+    if (!record || record.suspended) {
+      throw new InvalidRefreshTokenError("This session has expired. Please log in again.");
+    }
+    return this.tokens.sign({ userId: record.id, email: record.email, tokenVersion: record.tokenVersion });
+  }
+
+  /** Revokes exactly the one refresh token being logged out of — doesn't touch the user's other devices/tabs. Silently no-ops if the cookie was already missing/invalid, since logout should always succeed from the client's point of view. */
+  async logout(refreshToken: string | undefined): Promise<void> {
+    if (!refreshToken) return;
+    const tokenHash = await sha256Hex(refreshToken);
+    const row = await this.refreshTokens.findValidByHash(tokenHash);
+    if (row) await this.refreshTokens.revoke(row.id);
   }
 
   async getUserById(userId: string): Promise<User | undefined> {
@@ -265,8 +317,14 @@ export class AuthService {
    * (AuthController) hands it back to the client to replace its stored one
    * — the current session keeps working uninterrupted while every other
    * device's old token stops matching.
+   *
+   * Refresh tokens aren't covered by tokenVersion (they're opaque random
+   * values, not JWTs) — so every existing refresh token for this user is
+   * explicitly revoked here, and a fresh one issued for the calling
+   * session, mirroring the access token's "this session keeps working,
+   * every other one doesn't" treatment.
    */
-  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<string> {
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<{ token: string; refreshToken: string }> {
     const record = await this.users.findById(userId);
     if (!record) throw new AuthError("User not found.");
 
@@ -276,7 +334,10 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await this.users.updatePasswordHash(userId, passwordHash);
     const tokenVersion = await this.users.bumpTokenVersion(userId);
-    return this.tokens.sign({ userId, email: record.email, tokenVersion });
+    await this.refreshTokens.revokeAllForUser(userId);
+    const token = await this.tokens.sign({ userId, email: record.email, tokenVersion });
+    const refreshToken = await this.issueRefreshToken(userId);
+    return { token, refreshToken };
   }
 
   /**
@@ -291,6 +352,7 @@ export class AuthService {
    */
   async revokeSessions(userId: string): Promise<void> {
     await this.users.bumpTokenVersion(userId);
+    await this.refreshTokens.revokeAllForUser(userId);
   }
 
   /**
@@ -372,7 +434,9 @@ export class AuthService {
     // will log in fresh afterward regardless. Just invalidate every
     // existing session outright; particularly relevant here since this
     // flow exists precisely for "I think someone else has my password,"
-    // which is exactly when any of their sessions should die too.
+    // which is exactly when any of their sessions should die too. Refresh
+    // tokens aren't covered by tokenVersion, so they're revoked explicitly.
     await this.users.bumpTokenVersion(record.id);
+    await this.refreshTokens.revokeAllForUser(record.id);
   }
 }

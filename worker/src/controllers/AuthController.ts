@@ -1,7 +1,9 @@
 import { Context } from "hono";
+import { getCookie } from "hono/cookie";
 import { AppEnv } from "../middleware/servicesMiddleware";
 import { isValidEmail } from "../utils/validation";
-import { AuthError, InvalidVerificationTokenError } from "../services/AuthService";
+import { AuthError, InvalidRefreshTokenError, InvalidVerificationTokenError } from "../services/AuthService";
+import { REFRESH_TOKEN_COOKIE, clearAuthCookies, setAuthCookies } from "../utils/authCookies";
 
 /** Thrown when an unsubscribe link's token is missing, malformed, expired, or signed for a different purpose — mapped to 400 in index.ts's onError, same treatment as InvalidResetTokenError. */
 export class InvalidUnsubscribeTokenError extends Error {}
@@ -106,8 +108,9 @@ export class AuthController {
       return c.json({ error: "Too many signup attempts from this network. Please try again later." }, 429);
     }
 
-    const { user, token } = await authService.register({ name, email, password, profession, acceptedTerms });
-    return c.json({ user: user.toPublicJSON(), token }, 201);
+    const { user, token, refreshToken } = await authService.register({ name, email, password, profession, acceptedTerms });
+    setAuthCookies(c, token, refreshToken);
+    return c.json({ user: user.toPublicJSON() }, 201);
   };
 
   /**
@@ -140,8 +143,9 @@ export class AuthController {
       return c.json({ error: "email and password are required." }, 400);
     }
     try {
-      const { user, token } = await authService.login(email, password);
-      return c.json({ user: user.toPublicJSON(), token });
+      const { user, token, refreshToken } = await authService.login(email, password);
+      setAuthCookies(c, token, refreshToken);
+      return c.json({ user: user.toPublicJSON() });
     } catch (err) {
       if (err instanceof AuthError) {
         const recorded = await emailVerificationIpLogRepository.recordAttemptIfUnderLimit(
@@ -163,6 +167,49 @@ export class AuthController {
       }
       throw err;
     }
+  };
+
+  /**
+   * Silent-refresh endpoint the client's ApiClient calls automatically when
+   * a request comes back 401 with an expired access-token cookie (see
+   * client/src/api/ApiClient.ts) — mints a fresh `rl_session` cookie from
+   * the still-valid `rl_refresh` cookie, no request body needed. Public
+   * (not behind requireAuth) since its whole point is to work once the
+   * access token has already expired.
+   */
+  refresh = async (c: Context<AppEnv>) => {
+    const { authService } = c.get("services");
+    const refreshToken = getCookie(c, REFRESH_TOKEN_COOKIE);
+    if (!refreshToken) {
+      return c.json({ error: "No session to refresh." }, 401);
+    }
+    try {
+      const newAccessToken = await authService.refreshAccessToken(refreshToken);
+      setAuthCookies(c, newAccessToken);
+      return c.json({ success: true });
+    } catch (err) {
+      if (err instanceof InvalidRefreshTokenError) {
+        clearAuthCookies(c);
+        return c.json({ error: err.message }, 401);
+      }
+      throw err;
+    }
+  };
+
+  /**
+   * Server-side logout — didn't exist before SEC-A01 (plain localStorage
+   * clearing was the whole "logout" flow). Revokes just this one refresh
+   * token (not every session — see revokeSessions below for "log out
+   * everywhere") and clears both cookies. Public rather than requireAuth:
+   * an already-expired access-token cookie shouldn't block logout from
+   * actually clearing the (still valid) refresh cookie.
+   */
+  logout = async (c: Context<AppEnv>) => {
+    const { authService } = c.get("services");
+    const refreshToken = getCookie(c, REFRESH_TOKEN_COOKIE);
+    await authService.logout(refreshToken);
+    clearAuthCookies(c);
+    return c.json({ success: true });
   };
 
   me = async (c: Context<AppEnv>) => {
@@ -191,12 +238,13 @@ export class AuthController {
     if (!currentPassword || !newPassword) {
       return c.json({ error: "currentPassword and newPassword are required." }, 400);
     }
-    // Bumps tokenVersion server-side (see AuthService.changePassword),
-    // invalidating every other session — the returned token carries the new
-    // tokenVersion so this exact tab/device keeps working without needing
-    // to log back in. The client must store this in place of its old token.
-    const token = await authService.changePassword(user.id, currentPassword as string, newPassword as string);
-    return c.json({ success: true, token });
+    // Bumps tokenVersion + revokes every existing refresh token server-side
+    // (see AuthService.changePassword), invalidating every other session —
+    // the fresh cookies set below carry the new tokenVersion/refresh token
+    // so this exact tab/device keeps working without needing to log back in.
+    const { token, refreshToken } = await authService.changePassword(user.id, currentPassword as string, newPassword as string);
+    setAuthCookies(c, token, refreshToken);
+    return c.json({ success: true });
   };
 
   /**
@@ -212,6 +260,10 @@ export class AuthController {
     const { authService } = c.get("services");
     const user = c.get("user")!;
     await authService.revokeSessions(user.id);
+    // Kills the calling session too (see this method's doc comment above) —
+    // clear its cookies now rather than leaving an already-dead access-token
+    // cookie sitting in the browser until it naturally expires.
+    clearAuthCookies(c);
     return c.json({ success: true });
   };
 

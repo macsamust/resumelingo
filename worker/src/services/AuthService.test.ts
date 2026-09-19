@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import bcrypt from "bcryptjs";
-import { AuthError, AuthService, InvalidResetTokenError } from "./AuthService";
+import { AuthError, AuthService, InvalidRefreshTokenError, InvalidResetTokenError } from "./AuthService";
 import { SubscriptionTier, UserRecord, AuthTokenPayload } from "../types";
 import { UserRepository } from "../repositories/UserRepository";
 import { TokenService } from "./TokenService";
@@ -81,6 +81,20 @@ function makeTokensMock() {
   } as unknown as TokenService<AuthTokenPayload>;
 }
 
+// SEC-A01 (Sep 2026): AuthService now depends on RefreshTokenRepository too
+// (issues/revokes the opaque refresh token behind the `rl_refresh` cookie —
+// see migration 0049's doc comment). Every existing `new AuthService(...)`
+// call site below needs this as its 5th argument.
+function makeRefreshTokensMock() {
+  return {
+    create: vi.fn(async () => {}),
+    findValidByHash: vi.fn(async () => undefined),
+    revoke: vi.fn(async () => {}),
+    revokeAllForUser: vi.fn(async () => {}),
+    pruneExpired: vi.fn(async () => {}),
+  } as unknown as import("../repositories/RefreshTokenRepository").RefreshTokenRepository;
+}
+
 function makeEmailMock() {
   // register() calls sendVerificationEmail (via the private
   // sendVerificationEmail helper) and, since this session's change,
@@ -100,7 +114,7 @@ function makeEmailMock() {
 describe("AuthService.register", () => {
   it("throws if the email is already registered", async () => {
     const users = makeUsersMock({ findByEmail: vi.fn(async () => makeUserRecord()) } as never);
-    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", makeRefreshTokensMock());
     await expect(
       service.register({ name: "A", email: "jordan@example.com", password: "password123", acceptedTerms: true })
     ).rejects.toThrow(AuthError);
@@ -109,7 +123,7 @@ describe("AuthService.register", () => {
   it("throws if terms of service were not accepted, without ever looking up the email", async () => {
     const findByEmail = vi.fn(async () => undefined);
     const users = makeUsersMock({ findByEmail } as never);
-    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", makeRefreshTokensMock());
     await expect(
       service.register({ name: "A", email: "jordan@example.com", password: "password123", acceptedTerms: false })
     ).rejects.toThrow(AuthError);
@@ -123,7 +137,7 @@ describe("AuthService.register", () => {
       create: vi.fn(async () => created),
     } as never);
     const tokens = makeTokensMock();
-    const service = new AuthService(users, tokens, makeEmailMock(), "http://localhost:5173");
+    const service = new AuthService(users, tokens, makeEmailMock(), "http://localhost:5173", makeRefreshTokensMock());
     const { user, token } = await service.register({
       name: "Jordan Lee",
       email: "jordan@example.com",
@@ -138,7 +152,7 @@ describe("AuthService.register", () => {
   it("stamps termsAcceptedAt and termsVersion on the created record when terms are accepted", async () => {
     const create = vi.fn(async (input: Record<string, unknown>) => makeUserRecord(input as never));
     const users = makeUsersMock({ findByEmail: vi.fn(async () => undefined), create } as never);
-    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", makeRefreshTokensMock());
     await service.register({
       name: "Jordan Lee",
       email: "jordan@example.com",
@@ -157,14 +171,14 @@ describe("AuthService.register", () => {
 describe("AuthService.login", () => {
   it("throws for an unknown email", async () => {
     const users = makeUsersMock({ findByEmail: vi.fn(async () => undefined) } as never);
-    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", makeRefreshTokensMock());
     await expect(service.login("nobody@example.com", "password123")).rejects.toThrow(AuthError);
   });
 
   it("throws for a wrong password", async () => {
     const passwordHash = await bcrypt.hash("correct-password", 4);
     const users = makeUsersMock({ findByEmail: vi.fn(async () => makeUserRecord({ passwordHash })) } as never);
-    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", makeRefreshTokensMock());
     await expect(service.login("jordan@example.com", "wrong-password")).rejects.toThrow(AuthError);
   });
 
@@ -173,7 +187,7 @@ describe("AuthService.login", () => {
     const users = makeUsersMock({
       findByEmail: vi.fn(async () => makeUserRecord({ passwordHash, suspended: true })),
     } as never);
-    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", makeRefreshTokensMock());
     await expect(service.login("jordan@example.com", "correct-password")).rejects.toThrow(
       "This account has been suspended. Contact support at support@resumelingo.com for help."
     );
@@ -182,7 +196,7 @@ describe("AuthService.login", () => {
   it("succeeds and returns a token for the correct password on an active account", async () => {
     const passwordHash = await bcrypt.hash("correct-password", 4);
     const users = makeUsersMock({ findByEmail: vi.fn(async () => makeUserRecord({ passwordHash })) } as never);
-    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", makeRefreshTokensMock());
     const { user, token } = await service.login("jordan@example.com", "correct-password");
     expect(user.email).toBe("jordan@example.com");
     expect(token).toBe("signed-token");
@@ -193,7 +207,7 @@ describe("AuthService.changePassword", () => {
   it("throws if the current password is wrong", async () => {
     const passwordHash = await bcrypt.hash("correct-password", 4);
     const users = makeUsersMock({ findById: vi.fn(async () => makeUserRecord({ passwordHash })) } as never);
-    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", makeRefreshTokensMock());
     await expect(service.changePassword("user-1", "wrong-password", "new-password123")).rejects.toThrow(
       "Current password is incorrect."
     );
@@ -206,7 +220,7 @@ describe("AuthService.changePassword", () => {
       findById: vi.fn(async () => makeUserRecord({ passwordHash })),
       updatePasswordHash,
     } as never);
-    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", makeRefreshTokensMock());
     await service.changePassword("user-1", "correct-password", "new-password123");
     expect(updatePasswordHash).toHaveBeenCalledWith("user-1", expect.any(String));
   });
@@ -216,7 +230,7 @@ describe("AuthService.requestPasswordReset", () => {
   it("resolves silently and sends no email when the address doesn't match an account", async () => {
     const sendPasswordResetEmail = vi.fn(async () => {});
     const users = makeUsersMock({ findByEmail: vi.fn(async () => undefined) } as never);
-    const service = new AuthService(users, makeTokensMock(), { sendPasswordResetEmail } as unknown as EmailService, "http://localhost:5173");
+    const service = new AuthService(users, makeTokensMock(), { sendPasswordResetEmail } as unknown as EmailService, "http://localhost:5173", makeRefreshTokensMock());
     await expect(service.requestPasswordReset("nobody@example.com")).resolves.toBeUndefined();
     expect(sendPasswordResetEmail).not.toHaveBeenCalled();
   });
@@ -232,7 +246,7 @@ describe("AuthService.requestPasswordReset", () => {
       users,
       makeTokensMock(),
       { sendPasswordResetEmail } as unknown as EmailService,
-      "http://localhost:5173"
+      "http://localhost:5173", makeRefreshTokensMock()
     );
     await service.requestPasswordReset("jordan@example.com");
 
@@ -265,7 +279,7 @@ describe("AuthService.requestPasswordReset", () => {
       users,
       makeTokensMock(),
       { sendPasswordResetEmail } as unknown as EmailService,
-      "http://localhost:5173"
+      "http://localhost:5173", makeRefreshTokensMock()
     );
 
     await expect(service.requestPasswordReset("jordan@example.com")).resolves.toBeUndefined();
@@ -288,7 +302,7 @@ describe("AuthService.requestPasswordReset", () => {
       users,
       makeTokensMock(),
       { sendPasswordResetEmail } as unknown as EmailService,
-      "http://localhost:5173"
+      "http://localhost:5173", makeRefreshTokensMock()
     );
 
     await expect(service.requestPasswordReset("jordan@example.com")).resolves.toBeUndefined();
@@ -297,10 +311,65 @@ describe("AuthService.requestPasswordReset", () => {
   });
 });
 
+describe("AuthService.refreshAccessToken", () => {
+  it("throws InvalidRefreshTokenError when the presented token isn't found/valid", async () => {
+    const refreshTokens = makeRefreshTokensMock();
+    const users = makeUsersMock();
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", refreshTokens);
+    await expect(service.refreshAccessToken("bogus")).rejects.toThrow(InvalidRefreshTokenError);
+  });
+
+  it("throws InvalidRefreshTokenError for a suspended account even with a valid refresh token", async () => {
+    const refreshTokens = {
+      ...makeRefreshTokensMock(),
+      findValidByHash: vi.fn(async () => ({ id: "rt-1", userId: "user-1", tokenHash: "h", createdAt: "", expiresAt: "", revokedAt: null })),
+    } as unknown as import("../repositories/RefreshTokenRepository").RefreshTokenRepository;
+    const users = makeUsersMock({ findById: vi.fn(async () => makeUserRecord({ suspended: true })) } as never);
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", refreshTokens);
+    await expect(service.refreshAccessToken("valid-looking")).rejects.toThrow(InvalidRefreshTokenError);
+  });
+
+  it("mints a fresh access token carrying the user's current tokenVersion when the refresh token is valid", async () => {
+    const refreshTokens = {
+      ...makeRefreshTokensMock(),
+      findValidByHash: vi.fn(async () => ({ id: "rt-1", userId: "user-1", tokenHash: "h", createdAt: "", expiresAt: "", revokedAt: null })),
+    } as unknown as import("../repositories/RefreshTokenRepository").RefreshTokenRepository;
+    const users = makeUsersMock({ findById: vi.fn(async () => makeUserRecord({ tokenVersion: 3 })) } as never);
+    const tokens = makeTokensMock();
+    const service = new AuthService(users, tokens, makeEmailMock(), "http://localhost:5173", refreshTokens);
+    const accessToken = await service.refreshAccessToken("valid-looking");
+    expect(accessToken).toBe("signed-token");
+    expect(tokens.sign).toHaveBeenCalledWith({ userId: "user-1", email: "jordan@example.com", tokenVersion: 3 });
+  });
+});
+
+describe("AuthService.logout", () => {
+  it("no-ops when no refresh token is presented", async () => {
+    const refreshTokens = makeRefreshTokensMock();
+    const users = makeUsersMock();
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", refreshTokens);
+    await expect(service.logout(undefined)).resolves.toBeUndefined();
+    expect(refreshTokens.findValidByHash).not.toHaveBeenCalled();
+  });
+
+  it("revokes exactly the presented refresh token", async () => {
+    const revoke = vi.fn(async () => {});
+    const refreshTokens = {
+      ...makeRefreshTokensMock(),
+      findValidByHash: vi.fn(async () => ({ id: "rt-1", userId: "user-1", tokenHash: "h", createdAt: "", expiresAt: "", revokedAt: null })),
+      revoke,
+    } as unknown as import("../repositories/RefreshTokenRepository").RefreshTokenRepository;
+    const users = makeUsersMock();
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", refreshTokens);
+    await service.logout("some-refresh-token");
+    expect(revoke).toHaveBeenCalledWith("rt-1");
+  });
+});
+
 describe("AuthService.updateProfile", () => {
   it("throws for a suspended account", async () => {
     const users = makeUsersMock({ findById: vi.fn(async () => makeUserRecord({ suspended: true })) } as never);
-    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", makeRefreshTokensMock());
     await expect(service.updateProfile("user-1", { name: "New Name" })).rejects.toThrow(
       "This account has been suspended. Contact support at support@resumelingo.com for help."
     );
@@ -313,7 +382,7 @@ describe("AuthService.updateProfile", () => {
       .mockResolvedValueOnce(makeUserRecord())
       .mockResolvedValueOnce(makeUserRecord({ name: "New Name" }));
     const users = makeUsersMock({ findById, update } as never);
-    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", makeRefreshTokensMock());
     const result = await service.updateProfile("user-1", { name: "New Name" });
     expect(result.name).toBe("New Name");
     expect(update).toHaveBeenCalledWith("user-1", expect.objectContaining({ name: "New Name" }));
@@ -323,7 +392,7 @@ describe("AuthService.updateProfile", () => {
 describe("AuthService.resetPassword", () => {
   it("throws InvalidResetTokenError when no user matches the token", async () => {
     const users = makeUsersMock({ findByResetTokenHash: vi.fn(async () => undefined) } as never);
-    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", makeRefreshTokensMock());
     await expect(service.resetPassword("some-token", "new-password123")).rejects.toThrow(InvalidResetTokenError);
   });
 
@@ -332,7 +401,7 @@ describe("AuthService.resetPassword", () => {
     const users = makeUsersMock({
       findByResetTokenHash: vi.fn(async () => makeUserRecord({ resetTokenHash: "irrelevant", resetTokenExpiresAt: expired })),
     } as never);
-    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", makeRefreshTokensMock());
     await expect(service.resetPassword("some-token", "new-password123")).rejects.toThrow(InvalidResetTokenError);
   });
 
@@ -343,7 +412,7 @@ describe("AuthService.resetPassword", () => {
       findByResetTokenHash: vi.fn(async () => makeUserRecord({ resetTokenHash: "irrelevant", resetTokenExpiresAt: future })),
       resetPassword,
     } as never);
-    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173");
+    const service = new AuthService(users, makeTokensMock(), makeEmailMock(), "http://localhost:5173", makeRefreshTokensMock());
     await service.resetPassword("some-token", "new-password123");
     expect(resetPassword).toHaveBeenCalledWith("user-1", expect.any(String));
   });

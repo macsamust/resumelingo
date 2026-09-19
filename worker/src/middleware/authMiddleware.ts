@@ -1,5 +1,7 @@
 import { createMiddleware } from "hono/factory";
+import { getCookie } from "hono/cookie";
 import { AppEnv } from "./servicesMiddleware";
+import { ACCESS_TOKEN_COOKIE } from "../utils/authCookies";
 
 /**
  * Hono equivalent of the Express requireAuth middleware. Must run after
@@ -20,13 +22,19 @@ import { AppEnv } from "./servicesMiddleware";
  * for admin sessions. Without this, a JWT would otherwise stay valid for
  * its full lifetime even after a password change or an explicit "log out
  * of all other devices," with no way to force an earlier logout.
+ *
+ * SEC-A01 (Sep 2026): reads the `rl_session` HttpOnly cookie instead of an
+ * `Authorization: Bearer` header — see utils/authCookies.ts. The access
+ * token itself is unchanged (same JWT, same claims, same 401-on-expiry
+ * behavior); only where it's carried changed. The client is expected to
+ * silently call POST /api/auth/refresh and retry on a 401 here before
+ * treating it as a real logout — see client/src/api/ApiClient.ts.
  */
 export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
-  const header = c.req.header("Authorization");
-  if (!header?.startsWith("Bearer ")) {
-    return c.json({ error: "Missing or invalid Authorization header." }, 401);
+  const token = getCookie(c, ACCESS_TOKEN_COOKIE);
+  if (!token) {
+    return c.json({ error: "Missing or expired session." }, 401);
   }
-  const token = header.slice("Bearer ".length);
   const { authService } = c.get("services");
 
   try {
@@ -57,9 +65,8 @@ export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {
  * loses their logged-in-owner treatment rather than getting rejected.
  */
 export const optionalAuth = createMiddleware<AppEnv>(async (c, next) => {
-  const header = c.req.header("Authorization");
-  if (header?.startsWith("Bearer ")) {
-    const token = header.slice("Bearer ".length);
+  const token = getCookie(c, ACCESS_TOKEN_COOKIE);
+  if (token) {
     const { authService } = c.get("services");
     try {
       const payload = await authService.verifyToken(token);

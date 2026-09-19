@@ -1,9 +1,11 @@
 import { ApiClient } from "./ApiClient";
 import { AuthUser } from "../types";
 
+// SEC-A01 (Sep 2026): no `token` field anymore — login/register set the
+// access+refresh cookies server-side (see AuthController.ts); the client
+// never sees the token value at all.
 export interface AuthResponse {
   user: AuthUser;
-  token: string;
 }
 
 export class AuthApi extends ApiClient {
@@ -24,20 +26,24 @@ export class AuthApi extends ApiClient {
   }
 
   /**
-   * Changing your password bumps the account's tokenVersion server-side,
-   * which invalidates every other already-issued session — but the
-   * response hands back a freshly-signed token for THIS session so it
-   * keeps working uninterrupted. Callers must persist the returned token
-   * (see setAuthToken) or the very next authenticated request from this
-   * tab will itself get logged out.
+   * Changing your password bumps the account's tokenVersion server-side and
+   * revokes every other refresh token, which invalidates every other
+   * already-issued session — the worker sets fresh access+refresh cookies
+   * for THIS session in the same response, so it keeps working
+   * uninterrupted with no client-side token handling needed.
    */
   changePassword(input: { currentPassword: string; newPassword: string }) {
-    return this.put<{ success: true; token: string }>("/auth/me/password", input);
+    return this.put<{ success: true }>("/auth/me/password", input);
   }
 
-  /** Self-service "log out of all other devices" — bumps tokenVersion, invalidating every previously-issued token including this tab's. The caller should expect to be logged out immediately after this resolves. */
+  /** Self-service "log out of all other devices" — bumps tokenVersion and revokes every refresh token, invalidating every previously-issued session including this tab's (the worker also clears this tab's cookies in the same response). The caller should expect to be logged out immediately after this resolves. */
   revokeSessions() {
     return this.post<{ success: true }>("/auth/me/revoke-sessions", {});
+  }
+
+  /** Server-side logout (see AuthController.logout) — revokes this session's refresh token and clears both auth cookies. Always call this rather than just clearing client state, now that there's a real server-side session to end. */
+  logout() {
+    return this.post<{ success: true }>("/auth/logout", {});
   }
 
   /** Always resolves the same way whether or not the email matches an account — see AuthService.requestPasswordReset. */

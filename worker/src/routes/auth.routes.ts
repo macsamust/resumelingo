@@ -8,6 +8,11 @@ const controller = new AuthController();
 
 auth.post("/register", controller.register);
 auth.post("/login", controller.login);
+// Public — see AuthController.refresh/logout for why neither is behind
+// requireAuth (their whole point is to work once the access-token cookie
+// has already expired).
+auth.post("/refresh", controller.refresh);
+auth.post("/logout", controller.logout);
 auth.post("/forgot-password", controller.forgotPassword);
 auth.post("/reset-password", controller.resetPassword);
 auth.get("/me", requireAuth, controller.me);
