@@ -45,7 +45,7 @@ function resumeToPlainText(resume: PublicResume): string {
   const lines: string[] = [];
 
   if (resume.fullName) lines.push(resume.fullName);
-  lines.push(resume.title || "Untitled Resume");
+  lines.push(resume.headline || resume.title || "Untitled Resume");
   const contactLine = [resume.contactEmail, resume.contactPhone, resume.contactLinkedIn].filter(isRealContactValue).join("  |  ");
   if (contactLine) lines.push(contactLine);
   lines.push("");
@@ -510,7 +510,7 @@ export function PublicResumePage() {
         contactPhone={resume.contactPhone}
         contactLinkedIn={resume.contactLinkedIn}
         photoUrl={resume.photoUrl}
-        title={resume.title}
+        title={resume.headline}
         professionLabel={resume.professionLabel}
         templateKey={resume.templateKey}
         summary={resume.generatedSummary}

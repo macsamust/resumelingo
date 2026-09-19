@@ -182,7 +182,7 @@ export function downloadResumePdf(resume: PublicResume): void {
   const w = new ResumePdfWriter();
 
   if (resume.fullName) w.name(resume.fullName);
-  w.subtitle(resume.title || "Untitled Resume");
+  w.subtitle(resume.headline || resume.title || "Untitled Resume");
   const contactLine = [resume.contactEmail, resume.contactPhone, resume.contactLinkedIn].filter(isRealContactValue).join("   |   ");
   if (contactLine) w.subtitle(contactLine);
   w.spacer(4);

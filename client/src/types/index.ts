@@ -276,6 +276,8 @@ export interface PublicResume {
   contactLinkedIn: string;
   photoUrl: string;
   title: string;
+  /** Resolved display headline (server's Resume.displayHeadline) — already falls back to title when no override is set, so renderers should read this instead of title for anything shown to a visitor. title itself stays here only for the plain-text export's internal-name line. */
+  headline: string;
   professionLabel: string;
   templateKey: string;
   template?: TemplateDefinition;
