@@ -1227,24 +1227,15 @@ export function ResumeEditPage() {
             </div>
           </CollapsibleSection>
 
-          {usesSkillsAndTools && (
-            <CollapsibleSection title="Skills & Tools" forceOpen={forceOpen} complete={sectionProgress.skills}>
-              <p className="hero-note" style={{ marginBottom: 16 }}>
-                Available on every Premium template. Click a suggested keyword to add it. Skills and tools are
-                grouped separately in both the picker and the resume itself.
-              </p>
-              <SkillsAndToolsEditor
-                professionKey={professionKey}
-                professionLabel={professionDetail?.label ?? resume.professionLabel}
-                value={skillsAndTools}
-                onChange={setSkillsAndTools}
-                resumeTitle={title}
-                answers={answers}
-                canUseAi={canUseAiAssist}
-              />
-            </CollapsibleSection>
-          )}
-
+          {/* Directly after Template, above Skills & Tools — CJ: the link
+              settings should read as part of "set up this resume" (Info,
+              Template, Sharing), not buried below a template-specific
+              extra that only some templates even show. Skills & Tools
+              moved below this for the same reason it's fine to be lower:
+              it's conditional (usesSkillsAndTools) and specific to
+              Premium's photo-banner-sidebar family, not something every
+              resume has to think about the way Sharing's link/visibility
+              is. */}
           <CollapsibleSection title="Sharing" forceOpen={forceOpen}>
             <div className="field">
               <label>Link visibility</label>
@@ -1355,6 +1346,24 @@ export function ResumeEditPage() {
                 doc comment. Collapsed by default; not tier-gated yet. */}
             {showQrCode && <ResumeQrCode url={`${window.location.origin}/r/${resume.slug}`} />}
           </CollapsibleSection>
+
+          {usesSkillsAndTools && (
+            <CollapsibleSection title="Skills & Tools" forceOpen={forceOpen} complete={sectionProgress.skills}>
+              <p className="hero-note" style={{ marginBottom: 16 }}>
+                Available on every Premium template. Click a suggested keyword to add it. Skills and tools are
+                grouped separately in both the picker and the resume itself.
+              </p>
+              <SkillsAndToolsEditor
+                professionKey={professionKey}
+                professionLabel={professionDetail?.label ?? resume.professionLabel}
+                value={skillsAndTools}
+                onChange={setSkillsAndTools}
+                resumeTitle={title}
+                answers={answers}
+                canUseAi={canUseAiAssist}
+              />
+            </CollapsibleSection>
+          )}
 
           <CollapsibleSection title="Work Experience" forceOpen={forceOpen} complete={sectionProgress.workExperience}>
             <CopyFromResume
