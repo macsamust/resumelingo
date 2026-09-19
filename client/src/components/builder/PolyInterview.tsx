@@ -1,8 +1,10 @@
 import { FormEvent, useState } from "react";
 import { PolyAvatar } from "../brand/PolyAvatar";
+import { PolyLoader } from "../brand/PolyLoader";
 import { MonthYearField } from "./MonthYearField";
-import { EducationEntry, WorkExperienceEntry } from "../../types";
+import { AchievementEntry, EducationEntry, WorkExperienceEntry } from "../../types";
 import { generateId } from "../../utils/id";
+import { ApiError, achievementGenerateApi } from "../../api";
 
 interface Props {
   fullName: string;
@@ -13,21 +15,37 @@ interface Props {
   onExperienceChange: (experience: WorkExperienceEntry[]) => void;
   education: EducationEntry[];
   onEducationChange: (education: EducationEntry[]) => void;
+  achievements: AchievementEntry[];
+  onAchievementsChange: (achievements: AchievementEntry[]) => void;
+  /** Same gate AchievementGeneratorPanel uses (Professional/Premium — see AchievementGenerateController) — when false, the interview skips straight from Education to done and Achievements stays a classic-form-only, hand-written section, same as today. */
+  canGenerateAchievements: boolean;
+  /** Passed straight through to achievementGenerateApi.generate, same as AchievementGeneratorPanel — usually empty here, since Profession (classic form's section 1) isn't part of this interview and so isn't chosen yet by the time Achievements comes up. The generator call tolerates an empty label fine; it just can't lean on it to calibrate seniority. */
+  professionLabel: string;
   /** Bails out to the classic stacked-accordion form at any point — available on every step, not just up front, since someone might start the interview and decide partway through it's not for them. */
   onSwitchToClassic: () => void;
-  /** Called once Work Experience and Education are both settled — hands off to the classic form (already pre-filled) for Template, Awards, and everything else. This component never itself creates the resume. */
+  /** Called once Work Experience, Education, and (if applicable) Achievements are all settled — hands off to the classic form (already pre-filled) for Template, Awards, and everything else. This component never itself creates the resume. */
   onComplete: () => void;
 }
 
-type Step = "info" | "experience-form" | "experience-loop" | "education-form" | "education-loop" | "done";
+type Step =
+  | "info"
+  | "experience-form"
+  | "experience-loop"
+  | "education-form"
+  | "education-loop"
+  | "achievement-ask"
+  | "achievement-followup"
+  | "done";
 
-/** Which of the 4 progress dots is lit — matches the same 4 key sections the classic form's "X of 4 key sections complete" counts (Info, Template, Work Experience, Education are 3 of those 4 plus Achievements; Template has no interview step, so this only ever needs 3 dots plus a 4th for "done"). */
+/** Which of the 4 progress dots is lit — matches the same 4 key sections the classic form's "X of 4 key sections complete" counts (Info, Work Experience, Education, Achievements; Template has no interview step and isn't one of the 4). */
 const STEP_DOT: Record<Step, number> = {
   info: 0,
   "experience-form": 1,
   "experience-loop": 1,
   "education-form": 2,
   "education-loop": 2,
+  "achievement-ask": 3,
+  "achievement-followup": 3,
   done: 3,
 };
 
@@ -72,6 +90,10 @@ export function PolyInterview({
   onExperienceChange,
   education,
   onEducationChange,
+  achievements,
+  onAchievementsChange,
+  canGenerateAchievements,
+  professionLabel,
   onSwitchToClassic,
   onComplete,
 }: Props) {
@@ -84,6 +106,14 @@ export function PolyInterview({
   // instead of nagging forever. Reset whenever a fresh loop starts.
   const [experienceZeroNudge, setExperienceZeroNudge] = useState(false);
   const [educationZeroNudge, setEducationZeroNudge] = useState(false);
+  // Which job in `experience` Achievements is currently asking about — one
+  // question per job entered (the agreed Phase 2 cap), in the same order
+  // they were added. Not used at all if canGenerateAchievements is false or
+  // no jobs were entered; see startAchievements below.
+  const [achievementJobIndex, setAchievementJobIndex] = useState(0);
+  const [achKeywords, setAchKeywords] = useState("");
+  const [achStatus, setAchStatus] = useState<"idle" | "generating" | "error">("idle");
+  const [achError, setAchError] = useState<string | null>(null);
 
   const submitInfo = (e: FormEvent) => {
     e.preventDefault();
@@ -139,7 +169,67 @@ export function PolyInterview({
       setEducationZeroNudge(true);
       return;
     }
-    setStep("done");
+    startAchievementsOrDone();
+  };
+
+  // Achievements only runs at all if the account can use AI-assist and at
+  // least one job was entered — otherwise there's nothing to ask about
+  // (Achievements stays available by hand in the classic form either way).
+  const startAchievementsOrDone = () => {
+    if (canGenerateAchievements && experience.length > 0) {
+      setAchievementJobIndex(0);
+      setAchKeywords("");
+      setAchStatus("idle");
+      setAchError(null);
+      setStep("achievement-ask");
+    } else {
+      setStep("done");
+    }
+  };
+
+  const advanceToNextJobOrDone = () => {
+    const next = achievementJobIndex + 1;
+    setAchKeywords("");
+    setAchStatus("idle");
+    setAchError(null);
+    if (next < experience.length) {
+      setAchievementJobIndex(next);
+      setStep("achievement-ask");
+    } else {
+      setStep("done");
+    }
+  };
+
+  const skipAchievementsForJob = () => advanceToNextJobOrDone();
+
+  const generateAchievements = async (followUp: boolean) => {
+    if (!achKeywords.trim()) return;
+    const job = experience[achievementJobIndex];
+    setAchStatus("generating");
+    setAchError(null);
+    try {
+      const { achievements: generated } = await achievementGenerateApi.generate({
+        professionLabel,
+        jobTitle: job?.title,
+        keywords: achKeywords,
+      });
+      if (generated.length === 0) {
+        setAchError("Couldn't generate anything from that. Try adding a bit more detail, or skip this one.");
+        setAchStatus("error");
+        return;
+      }
+      onAchievementsChange([...achievements, ...generated.map((a) => ({ ...a, experienceId: job?.id ?? null }))]);
+      setAchKeywords("");
+      setAchStatus("idle");
+      if (followUp) {
+        advanceToNextJobOrDone();
+      } else {
+        setStep("achievement-followup");
+      }
+    } catch (err) {
+      setAchError(err instanceof ApiError ? err.message : "Something went wrong generating those. You can still write your own in the next step.");
+      setAchStatus("error");
+    }
   };
 
   return (
@@ -372,6 +462,86 @@ export function PolyInterview({
               {educationZeroNudge ? "Add a school" : "Add another school"}
             </button>
           </div>
+        </div>
+      )}
+
+      {step === "achievement-ask" && (
+        <div className="poly-interview-card">
+          <div className="poly-interview-asker">
+            <PolyAvatar size={32} decorative />
+            <span>Poly asks</span>
+          </div>
+          <p className="poly-interview-question">
+            What's one thing you're proud of from your time
+            {experience[achievementJobIndex]?.title ? ` as ${experience[achievementJobIndex].title}` : ""}
+            {experience[achievementJobIndex]?.company ? ` at ${experience[achievementJobIndex].company}` : ""}?
+          </p>
+          <p className="hero-note" style={{ marginBottom: 10 }}>
+            A few fragments are fine — e.g. "led migration to Kubernetes" or "cut deploy time in half". AI turns it into
+            a draft bullet you can edit later; it won't invent numbers you didn't give it.
+          </p>
+          <textarea
+            rows={3}
+            value={achKeywords}
+            onChange={(e) => setAchKeywords(e.target.value)}
+            placeholder="e.g. led migration to Kubernetes, mentored 3 junior engineers"
+            disabled={achStatus === "generating"}
+            autoFocus
+          />
+          {achStatus === "error" && achError && <p className="form-error" style={{ marginTop: 10 }}>{achError}</p>}
+          {achStatus === "generating" ? (
+            <div style={{ marginTop: 14 }}>
+              <PolyLoader label="Generating…" />
+            </div>
+          ) : (
+            <div className="poly-interview-actions">
+              <button type="button" className="poly-interview-switch" onClick={onSwitchToClassic}>
+                Switch to classic form
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={skipAchievementsForJob}>
+                Skip this one
+              </button>
+              <button type="button" className="btn btn-primary" disabled={!achKeywords.trim()} onClick={() => generateAchievements(false)}>
+                Generate
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {step === "achievement-followup" && (
+        <div className="poly-interview-card">
+          <div className="poly-interview-asker">
+            <PolyAvatar size={32} decorative />
+            <span>Poly asks</span>
+          </div>
+          <p className="poly-interview-question">Anything else worth mentioning from that same job?</p>
+          <textarea
+            rows={3}
+            value={achKeywords}
+            onChange={(e) => setAchKeywords(e.target.value)}
+            placeholder="e.g. reduced onboarding time for new hires"
+            disabled={achStatus === "generating"}
+            autoFocus
+          />
+          {achStatus === "error" && achError && <p className="form-error" style={{ marginTop: 10 }}>{achError}</p>}
+          {achStatus === "generating" ? (
+            <div style={{ marginTop: 14 }}>
+              <PolyLoader label="Generating…" />
+            </div>
+          ) : (
+            <div className="poly-interview-actions">
+              <button type="button" className="poly-interview-switch" onClick={onSwitchToClassic}>
+                Switch to classic form
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={advanceToNextJobOrDone}>
+                No, that's it
+              </button>
+              <button type="button" className="btn btn-primary" disabled={!achKeywords.trim()} onClick={() => generateAchievements(true)}>
+                Generate
+              </button>
+            </div>
+          )}
         </div>
       )}
 

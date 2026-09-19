@@ -366,6 +366,10 @@ export function ResumeBuilderPage() {
               onExperienceChange={setExperience}
               education={education}
               onEducationChange={setEducation}
+              achievements={achievements}
+              onAchievementsChange={setAchievements}
+              canGenerateAchievements={canUseAiAssist}
+              professionLabel={professionDetail?.label ?? ""}
               onSwitchToClassic={() => setShowInterview(false)}
               onComplete={() => setShowInterview(false)}
             />
