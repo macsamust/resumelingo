@@ -17,6 +17,8 @@ import { isRealContactValue, ResumePreview } from "../components/builder/ResumeP
 import { ResumeQrCode } from "../components/builder/ResumeQrCode";
 import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
 import { Modal } from "../components/common/Modal";
+import { TextPromptDialog } from "../components/common/TextPromptDialog";
+import { useToast } from "../components/common/Toast";
 import { TemplateUpgradeModal } from "../components/builder/TemplateUpgradeModal";
 import { FirstResumeEmailPreferencesModal } from "../components/builder/FirstResumeEmailPreferencesModal";
 import { CareerLoopIntroModal } from "../components/builder/CareerLoopIntroModal";
@@ -52,6 +54,15 @@ import {
 /** Display order for the Link visibility <select> — cheapest/most-available tier first. */
 const VISIBILITY_OPTIONS: LinkVisibility[] = ["public", "private", "password"];
 
+/** Same normalization as the server's ResumeRepository.slugify — used here only to check whether a resume's existing slug already starts with the subscriber's own name, i.e. already looks branded, not to generate one (the server owns that). */
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
 /** "2024-06-01T14:30:00.000Z" -> "2024-06-01T14:30" (local time) for a `<input type="datetime-local">`'s value. Empty string for a missing/invalid input. */
 function isoToDatetimeLocal(iso: string): string {
   const d = new Date(iso);
@@ -65,6 +76,7 @@ export function ResumeEditPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, refresh } = useAuth();
+  const { showToast } = useToast();
   const [resume, setResume] = useState<Resume | null>(null);
   // Set only on the navigate() call right after creating a Professional/
   // Premium account's very first resume — see ResumeBuilderPage.onSubmit.
@@ -294,6 +306,33 @@ export function ResumeEditPage() {
   // this just keeps the section from appearing for an account that can't
   // use it.
   const canUseReferences = user?.subscriptionTier === "professional" || isPremium;
+
+  // UX-08 follow-up (Sep 2026): a Premium account only gets the branded
+  // {name}-{title} public link on resumes created after upgrading (see
+  // ResumeRepository.generateBrandedSlug) — a resume built before that keeps
+  // its old random-looking slug forever unless cloned. That was previously
+  // explained only in a buried Help FAQ entry; this surfaces the same fix
+  // right next to the actual URL in Sharing instead. The check is a plain
+  // "does this slug already start with my slugified name" test rather than a
+  // stored flag, since there's no dedicated isBranded column — false
+  // negatives (hiding the tip when it'd still help) are fine; a false
+  // positive would require the resume's own title to coincidentally start
+  // with the subscriber's name, which reads as harmless even if it happened.
+  const hasBrandedSlug = !!user?.name && !!resume && resume.slug.startsWith(`${slugify(user.name)}-`);
+  const showBrandedLinkTip = isPremium && !!user?.name && !hasBrandedSlug;
+  const [showBrandedCloneDialog, setShowBrandedCloneDialog] = useState(false);
+
+  // Left uncaught here, same as DashboardPage's own handleClone — a failure
+  // (e.g. the resume-limit cap) needs to reach TextPromptDialog's own error
+  // display, right next to the button just clicked, rather than being
+  // swallowed here and only shown as an easy-to-miss toast.
+  const handleBrandedClone = async (title: string) => {
+    if (!id) return;
+    const { resume: cloned } = await resumeApi.clone(id, { title });
+    setShowBrandedCloneDialog(false);
+    showToast("success", `Cloned as "${title}" with your branded link.`);
+    navigate(`/resumes/${cloned.id}/edit`);
+  };
 
   // The photo upload only applies to templates that actually render a photo
   // (Portrait, Designer, Monochrome, Showcase) — hidden for every other template.
@@ -1367,6 +1406,22 @@ export function ResumeEditPage() {
             <p className="hero-note" style={{ marginBottom: 0 }}>
               {window.location.origin}/r/{resume.slug}
             </p>
+            {showBrandedLinkTip && (
+              <p className="hero-note" style={{ marginTop: 6, marginBottom: 0 }}>
+                <button type="button" className="app-banner-link" onClick={() => setShowBrandedCloneDialog(true)}>
+                  Get your branded link
+                </button>
+                {" · "}
+                <details style={{ display: "inline" }}>
+                  <summary style={{ display: "inline", cursor: "pointer" }}>Want to learn more?</summary>
+                  <span style={{ display: "block", marginTop: 4 }}>
+                    Premium resumes get a branded link (your name plus the resume title) automatically — but only
+                    ones created after you upgraded. This one kept its original link. Cloning it makes a fresh copy
+                    under your current plan, which picks up the branded link right away.
+                  </span>
+                </details>
+              </p>
+            )}
             <button
               type="button"
               className="btn btn-ghost btn-sm"
@@ -1881,6 +1936,17 @@ export function ResumeEditPage() {
           tier={lockedTemplateModal.tier}
           plans={plans}
           onClose={() => setLockedTemplateModal(null)}
+        />
+      )}
+      {showBrandedCloneDialog && (
+        <TextPromptDialog
+          title="Clone resume"
+          message="Give the cloned resume a unique title. This also becomes its public link, and it'll pick up your branded link right away."
+          label="Title"
+          defaultValue={`${title} (Branded Link)`}
+          confirmLabel="Clone"
+          onSubmit={handleBrandedClone}
+          onCancel={() => setShowBrandedCloneDialog(false)}
         />
       )}
       {showFirstResumePrompt && (
