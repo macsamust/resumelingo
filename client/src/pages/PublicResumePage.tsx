@@ -536,11 +536,16 @@ export function PublicResumePage() {
           human-facing "what it actually looks like" print output instead,
           where a QR code makes sense: the use case is a physical printed
           resume handed out in person (job fair, interview), scanning it
-          takes them to the live, always-current version. */}
-      <div className="print-only-qr">
-        <ResumeQrCode url={`${window.location.origin}/r/${resume.slug}`} size={72} showDownload={false} />
-        <span className="hero-note">Scan for the live version of this resume</span>
-      </div>
+          takes them to the live, always-current version. Professional/
+          Premium only (resume.qrCodeEnabled, set server-side from the
+          owner's own account tier) — QR code is a paid feature everywhere,
+          not just the Edit Resume toggle. */}
+      {resume.qrCodeEnabled && (
+        <div className="print-only-qr">
+          <ResumeQrCode url={`${window.location.origin}/r/${resume.slug}`} size={72} showDownload={false} />
+          <span className="hero-note">Scan for the live version of this resume</span>
+        </div>
+      )}
       {(() => {
         if (answerEntries.length === 0) return null;
         return (

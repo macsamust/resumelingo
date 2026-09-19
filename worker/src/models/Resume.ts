@@ -352,9 +352,16 @@ export class Resume {
    * `recruiterCardLocked` tells the client the difference between "off" and
    * "on but not yet unlocked," since recruiterCard is null in both cases.
    */
-  toPublicJSON(options: { includeRecruiterCard?: boolean } = {}) {
+  toPublicJSON(options: { includeRecruiterCard?: boolean; qrCodeEnabled?: boolean } = {}) {
     const showRecruiterCard = this.recruiterModeEnabled && options.includeRecruiterCard === true;
     return {
+      // Whether the owner's account tier allows the print-only QR code (see
+      // PublicResumePage.tsx) — computed by the caller (ResumeService,
+      // which has access to the owner's User record) since Resume itself
+      // has no reference to its owner's subscription tier. Defaults to
+      // false, not true, if the caller omits this — fail closed on a paid
+      // feature rather than silently granting it.
+      qrCodeEnabled: options.qrCodeEnabled === true,
       fullName: this.fullName,
       contactEmail: this.contactEmail,
       contactPhone: this.contactPhone,

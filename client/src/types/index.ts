@@ -299,6 +299,8 @@ export interface PublicResume {
   generatedSummary: string;
   generatedBullets: string[];
   slug: string;
+  /** Whether the owner's account tier allows the print-only QR code (Professional/Premium only) — see server's Resume.toPublicJSON. */
+  qrCodeEnabled: boolean;
 }
 
 export interface AdminAuthUser {

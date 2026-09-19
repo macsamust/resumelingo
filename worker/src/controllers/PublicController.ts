@@ -43,8 +43,8 @@ export class PublicController {
     }
 
     try {
-      const resume = await resumeService.getPublicBySlug(slug, password, user?.id);
-      return c.json({ resume: resume.toPublicJSON() });
+      const { resume, qrCodeEnabled } = await resumeService.getPublicBySlug(slug, password, user?.id);
+      return c.json({ resume: resume.toPublicJSON({ qrCodeEnabled }) });
     } catch (err) {
       // Only a wrong password counts against the throttle — "private"/
       // "inactive"/"expired" reasons aren't password guesses at all, and

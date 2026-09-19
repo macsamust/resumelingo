@@ -697,7 +697,21 @@ export class ResumeService {
     await this.resumes.delete(resumeId);
   }
 
-  async getPublicBySlug(slug: string, password?: string, requestingUserId?: string): Promise<Resume> {
+  /**
+   * `qrCodeEnabled` reflects the resume owner's own subscription tier
+   * (Professional/Premium only, per CJ Sep 2026 — QR code is a paid
+   * feature everywhere, not just the owner's own Edit Resume toggle) —
+   * looked up here rather than stored on the resume record itself, since
+   * tier is account-level and can change independently of any one resume.
+   * A missing/deleted owner account fails closed (no QR code) rather than
+   * throwing, since this is a cosmetic print affordance, not something
+   * worth breaking the whole public page load over.
+   */
+  async getPublicBySlug(
+    slug: string,
+    password?: string,
+    requestingUserId?: string
+  ): Promise<{ resume: Resume; qrCodeEnabled: boolean }> {
     const record = await this.resumes.findBySlug(slug);
     if (!record) throw new ResumeNotFoundError("Resume not found.");
     const resume = new Resume(record);
@@ -726,7 +740,10 @@ export class ResumeService {
     }
     await this.resumes.incrementViewCount(record.id);
     await this.analytics.recordView(record.id);
-    return resume;
+    const owner = await this.users.findById(resume.userId);
+    const qrCodeEnabled =
+      !!owner && (owner.subscriptionTier === SubscriptionTier.Professional || owner.subscriptionTier === SubscriptionTier.Premium);
+    return { resume, qrCodeEnabled };
   }
 
   /**
