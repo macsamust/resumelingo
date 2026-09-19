@@ -77,14 +77,15 @@ export function assertJobApplicationSizeOk(notes: string | undefined, link: stri
 
 // Unlike resumes (ResumeLimitError, plan-tiered), this isn't a paid-feature
 // gate — it's a product-level cap on an active job search, paired with the
-// "approaching the limit" warning (JobApplicationsPage.tsx, at 40/80%) and
+// "approaching the limit" warning (JobApplicationsPage.tsx, at 24/80%) and
 // the stale-cleanup recommendation below so hitting it is avoidable, not a
 // dead end.
-export const MAX_APPLICATIONS_PER_USER = 50;
+export const MAX_APPLICATIONS_PER_USER = 30;
 // Matches the "approaching the limit" warning threshold on the client —
 // kept here too since JobApplicationController.list exposes it in the
 // response so the client doesn't have to hardcode the same number twice.
-export const APPLICATIONS_WARNING_THRESHOLD = 40;
+// Same 80%-of-cap ratio as before the cap changed from 50 to 30 (Sep 2026).
+export const APPLICATIONS_WARNING_THRESHOLD = 24;
 
 export class JobApplicationLimitError extends Error {}
 
