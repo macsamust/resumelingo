@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 import { PublicResume, ReferenceEntry } from "../types";
-import { filterAnswerEntries, formatMonth, isRealContactValue, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
+import { filterAnswerEntries, formatDateRange, formatMonth, isRealContactValue, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
 import { groupAchievementsByExperience } from "./starBullet";
 import { getTemplateStyle } from "../config/templateStyles";
 import { PROFICIENCY_MAX_LEVEL, proficiencyLevel } from "./languageProficiency";
@@ -202,10 +202,10 @@ export function downloadResumePdf(resume: PublicResume): void {
   if (experience.length > 0) {
     w.sectionHeading("Experience");
     for (const job of experience) {
-      const dates = `${formatMonth(job.startDate)} – ${job.current ? "Present" : formatMonth(job.endDate)}`;
+      const dates = formatDateRange(job.startDate, job.endDate, job.current);
       const location = [job.city, job.state].filter(Boolean).join(", ");
       w.entryTitle(
-        `${job.title || "Untitled role"}${job.company ? `, ${job.company}` : ""}${location ? `, ${location}` : ""} (${dates})`
+        `${job.title || "Untitled role"}${job.company ? `, ${job.company}` : ""}${location ? `, ${location}` : ""}${dates ? ` (${dates})` : ""}`
       );
       if (grouped && job.id) {
         for (const bullet of grouped.byExperienceId[job.id] ?? []) w.bullet(bullet);
@@ -219,8 +219,8 @@ export function downloadResumePdf(resume: PublicResume): void {
     w.sectionHeading("Education");
     for (const school of education) {
       const degreeLine = [school.degree, school.fieldOfStudy].filter(Boolean).join(", ");
-      const dates = `${formatMonth(school.startDate)} – ${school.current ? "Present" : formatMonth(school.endDate)}`;
-      w.entryTitle(`${degreeLine}${school.school ? `, ${school.school}` : ""} (${dates})`);
+      const dates = formatDateRange(school.startDate, school.endDate, school.current);
+      w.entryTitle(`${degreeLine}${school.school ? `, ${school.school}` : ""}${dates ? ` (${dates})` : ""}`);
     }
     w.spacer();
   }

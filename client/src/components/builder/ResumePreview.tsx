@@ -67,6 +67,22 @@ export function formatMonth(value: string | null | undefined): string {
 }
 
 /**
+ * "Start – End" (or "Start – Present") for a work/education entry, or null
+ * when there's nothing worth showing. Sep 2026 QA pass (UX-07): previously
+ * rendered unconditionally, so a "current" entry with no start date typed
+ * yet (a mid-edit New Resume, or an imported/QA resume that never got
+ * dates filled in) showed a bare " – Present" on the public page — a
+ * dangling dash with no start, reading as broken rather than just empty.
+ * Requiring a start date before showing anything (including "Present")
+ * means an entry with no dates simply omits the date line entirely, the
+ * same as it already omits the company/city line when those are blank.
+ */
+export function formatDateRange(startDate: string | null | undefined, endDate: string | null | undefined, current: boolean): string | null {
+  if (!startDate) return null;
+  return `${formatMonth(startDate)} – ${current ? "Present" : formatMonth(endDate)}`;
+}
+
+/**
  * Chronological order for a "date range" entry (work experience, education):
  * current first, then most recently ended, falling back to start date as a
  * tiebreak. Sorting happens here (rather than wherever the list is edited)
@@ -392,9 +408,9 @@ export function ResumePreview({
             <div className="tpl-experience-item" key={i}>
               <div className="tpl-experience-head">
                 <span className="tpl-experience-title">{job.title || "Untitled role"}</span>
-                <span className="tpl-experience-dates">
-                  {formatMonth(job.startDate)} – {job.current ? "Present" : formatMonth(job.endDate)}
-                </span>
+                {formatDateRange(job.startDate, job.endDate, job.current) && (
+                  <span className="tpl-experience-dates">{formatDateRange(job.startDate, job.endDate, job.current)}</span>
+                )}
               </div>
               {(job.company || job.city || job.state) && (
                 <div className="tpl-experience-company">
@@ -430,9 +446,9 @@ export function ResumePreview({
                 {school.degree && school.fieldOfStudy ? ", " : ""}
                 {school.fieldOfStudy}
               </span>
-              <span className="tpl-experience-dates">
-                {formatMonth(school.startDate)} – {school.current ? "Present" : formatMonth(school.endDate)}
-              </span>
+              {formatDateRange(school.startDate, school.endDate, school.current) && (
+                <span className="tpl-experience-dates">{formatDateRange(school.startDate, school.endDate, school.current)}</span>
+              )}
             </div>
             {school.school && <div className="tpl-experience-company">{school.school}</div>}
           </div>
