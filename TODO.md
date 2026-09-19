@@ -2,6 +2,12 @@
 
 **See also `protecting-your-app-idea.md`** (repo root) — informal notes from a Sep 5, 2026 conversation on protecting the app idea/business: what's automatically protectable (copyright), what needs action (trademark, patent, trade secret), what actually deters copying in practice vs. what doesn't, and when to bring in a real IP attorney. Not legal advice, not a build item — kept as a standalone reference note rather than folded into this file.
 
+## Working agreement — scoping soft suggestions (Sep 2026)
+
+A QA/bug report's "recommendation" line is often a soft suggestion riding along with a confirmed defect, not itself a confirmed defect. Before turning one of those into a mockup or a shipped feature: weigh "does this reduce real friction someone actually hit" against "does this just add a knob." A one-line recommendation is not, by itself, license to build. When in doubt, flag the idea and ask before scoping/building it, rather than bundling it in with the fix for the actual bug.
+
+(Case in point, reverted: UX-07's report suggested letting the resume owner preview their own locked Recruiter Mode card without entering their own access code. Built as a toggle, then backed out — CJ's call was that entering the real code is the better experience even for the owner: it's consistent with what recruiters actually go through and keeps the code itself fresh in mind. The toggle added a new API field and a parallel UI path for a benefit that amounted to skipping one code entry.)
+
 ## App Improvements — possible future enhancements
 
 **LLM-based ATS keyword matching (proposed, Sep 2026).** `matchKeywords`/`extractKeywords` (`client/src/utils/atsCheck.ts`) rank a pasted job description's most-repeated words and flag which ones are missing from the resume, using plain word-frequency plus a hand-maintained `STOPWORDS` blocklist — deliberately not an AI call, since it runs inside a `useMemo` in `ResumeEditPage.tsx` that recomputes live on every keystroke as the job description is typed/pasted, with no debounce and no network round trip.
