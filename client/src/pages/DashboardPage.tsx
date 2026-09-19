@@ -24,6 +24,19 @@ import { DASHBOARD_TEASER_STEPS } from "../config/quickStartSteps";
 const JOB_SEARCH_RESOURCE_ANCHORS = ["interview-tips", "salary-negotiation", "networking"];
 const CAREER_ARTICLE_IDS = ["career-advice", "promotion-advice", "career-planning", "industry-news"];
 
+// Short labels for the "My Resumes" card's visibility badge — deliberately
+// its own (shorter) map rather than reusing visibilityAccess.ts's
+// VISIBILITY_LABEL, which is written for a <select> option ("Public, anyone
+// with the link") and wraps awkwardly in a small pill. Found via a Sep 2026
+// UX review: the badge used to render the raw LinkVisibility enum value
+// (`r.visibility`) directly, so a password-protected resume's card literally
+// read "PASSWORD" once CSS uppercased it — not "Password protected."
+const CARD_VISIBILITY_LABEL: Record<string, string> = {
+  public: "Public",
+  private: "Private",
+  password: "Password protected",
+};
+
 export function DashboardPage() {
   const { user, refresh: refreshUser } = useAuth();
   const { showToast } = useToast();
@@ -287,7 +300,7 @@ export function DashboardPage() {
           {summary.myResumes.map((r) => (
             <div className="resume-item-card" key={r.id}>
               <div className="resume-item-tags">
-                <span className="visibility-tag">{r.visibility}</span>
+                <span className="visibility-tag">{CARD_VISIBILITY_LABEL[r.visibility] ?? r.visibility}</span>
                 <span className="resume-template-tag">Template: {r.template?.name ?? r.templateKey}</span>
                 {showViewsAndStrengthTiles && (
                   <span className={`resume-template-tag ${strengthTagClass(r.strengthScore)}`}>
@@ -344,6 +357,21 @@ export function DashboardPage() {
                   </div>
                 </div>
               </div>
+              {/* The slug is set once at creation and never changes when the
+                  title is edited later (see ResumeService.update — there's
+                  no slug field on UpdateResumeInput at all), so an
+                  already-shared link keeps working even after a rename.
+                  That's deliberate, but nothing else on the card discloses
+                  it, so a renamed resume's title and public link can quietly
+                  drift apart with no explanation (Sep 2026 UX review: "Fluid
+                  Tech" title next to a /fred-fox-software-engineer-resume
+                  link). Showing the actual slug here turns that invisible
+                  rule into a visible, self-explanatory one — links to Edit
+                  rather than duplicating the visibility/password editor
+                  that already lives in that page's Sharing section. */}
+              <Link to={`/resumes/${r.id}/edit`} className="meta resume-slug-meta" title="Edit sharing settings">
+                /r/{r.slug}
+              </Link>
               <p className="meta">
                 {r.professionLabel}
                 {showViewsAndStrengthTiles && ` · ${r.viewCount} view${r.viewCount === 1 ? "" : "s"}`}
@@ -364,11 +392,27 @@ export function DashboardPage() {
                       type="checkbox"
                       checked={r.active}
                       onChange={() => handleToggleActive(r.id, r.active)}
-                      aria-label={r.active ? "Deactivate this resume link" : "Activate this resume link"}
+                      // State-phrased, not action-phrased — the previous
+                      // "Deactivate this resume link" / "Activate this
+                      // resume link" told a screen reader what clicking
+                      // would DO, while the visible "Active"/"Inactive" text
+                      // next to it says what the link currently IS. The two
+                      // labels were never actually contradictory (a screen
+                      // reader never heard the visible text at all — it's an
+                      // unrelated sibling <span>, not connected via
+                      // aria-describedby/aria-labelledby), but that's the
+                      // problem: two different, disconnected descriptions of
+                      // the same control. aria-describedby below ties them
+                      // together so both channels say the same thing.
+                      aria-label={r.active ? "Resume link is active" : "Resume link is inactive"}
+                      aria-describedby={`resume-active-status-${r.id}`}
                     />
                     <span className="toggle-slider" />
                   </label>
-                  <span className={r.active ? "toggle-status-label active" : "toggle-status-label inactive"}>
+                  <span
+                    id={`resume-active-status-${r.id}`}
+                    className={r.active ? "toggle-status-label active" : "toggle-status-label inactive"}
+                  >
                     {r.active ? "Active" : "Inactive"}
                   </span>
                 </div>
