@@ -283,10 +283,8 @@ export interface PublicResume {
   template?: TemplateDefinition;
   /** Null when the resume owner hasn't turned Recruiter Mode on, OR when it's on but locked behind an access code the viewer hasn't entered yet — check recruiterCardLocked to tell the two apart. Populated only after a successful catalogApi.unlockRecruiterCard call. */
   recruiterCard: RecruiterCard | null;
-  /** True when Recruiter Mode is on but recruiterCard is null because the viewer hasn't entered the correct access code yet — see PublicResumePage's locked-card UI. Always false when Recruiter Mode is off. Stays true for the owner too (see isOwnerPreview) — this only means "locked for the world," not "locked for you." */
+  /** True when Recruiter Mode is on but recruiterCard is null because the viewer hasn't entered the correct access code yet — see PublicResumePage's locked-card UI. Always false when Recruiter Mode is off. */
   recruiterCardLocked: boolean;
-  /** True only when the viewer is this resume's owner, Recruiter Mode is on, and they haven't entered a code — recruiterCard is already populated with the real data in this case. Tells PublicResumePage to render the "Your view / Recruiter view" toggle instead of the real code-entry form. Always false for every other viewer. */
-  isOwnerPreview: boolean;
   /** See Resume.combineExperienceFormat — same toggle, exposed here so the public link renders the same layout the owner chose. */
   combineExperienceFormat: boolean;
   answers: Record<string, string>;

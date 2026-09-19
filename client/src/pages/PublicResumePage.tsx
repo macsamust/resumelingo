@@ -214,75 +214,6 @@ function ReferencesGrid({ references }: { references: ReferenceEntry[] }) {
   );
 }
 
-/** Inner content of the Candidate Summary card — everything but the wrapping card div and heading, since those two render slightly differently for the owner-preview toggle vs. the normal locked/unlocked flow (see the two callers in PublicResumePage's render). */
-function CandidateCardFields({ card }: { card: RecruiterCard }) {
-  return (
-    <>
-      {card.candidateSummary && <p className="recruiter-candidate-summary">{card.candidateSummary}</p>}
-      <div className="answer-grid">
-        {card.location && (
-          <div>
-            <div className="answer-key">Location</div>
-            <div className="answer-value">{card.location}</div>
-          </div>
-        )}
-        {card.availability && (
-          <div>
-            <div className="answer-key">Availability</div>
-            <div className="answer-value">{card.availability}</div>
-          </div>
-        )}
-        {card.expectedSalary && (
-          <div>
-            <div className="answer-key">Expected Salary</div>
-            <div className="answer-value">{card.expectedSalary}</div>
-          </div>
-        )}
-        {card.clearance && (
-          <div>
-            <div className="answer-key">Clearance</div>
-            <div className="answer-value">{recruiterOptionLabel(CLEARANCE_OPTIONS, card.clearance)}</div>
-          </div>
-        )}
-        {card.workAuthorization && (
-          <div>
-            <div className="answer-key">Work Authorization</div>
-            <div className="answer-value">{recruiterOptionLabel(WORK_AUTHORIZATION_OPTIONS, card.workAuthorization)}</div>
-          </div>
-        )}
-        {card.remotePreference && (
-          <div>
-            <div className="answer-key">Remote Preference</div>
-            <div className="answer-value">{recruiterOptionLabel(REMOTE_PREFERENCE_OPTIONS, card.remotePreference)}</div>
-          </div>
-        )}
-      </div>
-      {card.skills.length > 0 && (
-        <div style={{ marginTop: 24 }}>
-          <div className="answer-key" style={{ marginBottom: 10 }}>
-            Skills
-          </div>
-          <div className="recruiter-skill-chips">
-            {card.skills.map((s) => (
-              <span key={s} className="recruiter-skill-chip">
-                {s}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-      {card.references.length > 0 && (
-        <div style={{ marginTop: 24 }}>
-          <div className="answer-key" style={{ marginBottom: 10 }}>
-            References
-          </div>
-          <ReferencesGrid references={card.references} />
-        </div>
-      )}
-    </>
-  );
-}
-
 function downloadTextFile(filename: string, contents: string): void {
   const blob = new Blob([contents], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -321,13 +252,6 @@ export function PublicResumePage() {
   const [recruiterCode, setRecruiterCode] = useState("");
   const [recruiterUnlocking, setRecruiterUnlocking] = useState(false);
   const [recruiterUnlockError, setRecruiterUnlockError] = useState<string | null>(null);
-  // Owner-only toggle (Sep 2026, UX-07 follow-up) — lets the owner flip
-  // between the real candidate summary card (their own data, already sent by
-  // the server whenever resume.isOwnerPreview is true) and a preview of the
-  // locked state a stranger actually sees, without needing to re-enter their
-  // own access code just to check what it looks like. Defaults to "Your
-  // view" so the owner sees their real card immediately on load.
-  const [ownerPreviewLocked, setOwnerPreviewLocked] = useState(false);
 
   const load = (pwd?: string) => {
     if (!slug) return;
@@ -482,76 +406,103 @@ export function PublicResumePage() {
           Download as text (.txt)
         </button>
       </div>
-      {resume.isOwnerPreview ? (
+      {resume.recruiterCardLocked && !recruiterCard && (
         <div className="public-resume-card public-resume-details" style={{ marginBottom: 24 }}>
-          <div
-            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}
-          >
-            <h2 className="public-resume-details-heading" style={{ margin: 0 }}>
-              Candidate Summary{ownerPreviewLocked ? " (locked preview)" : ""}
-            </h2>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
-              <span>{ownerPreviewLocked ? "Recruiter view" : "Your view"}</span>
-              <input
-                type="checkbox"
-                checked={ownerPreviewLocked}
-                onChange={(e) => setOwnerPreviewLocked(e.target.checked)}
-              />
-            </label>
-          </div>
-          <p className="hero-note" style={{ margin: "8px 0 16px" }}>
-            Only you see this toggle — everyone else always sees the locked state below until they enter your access
-            code.
+          <h2 className="public-resume-details-heading">Candidate Summary (locked)</h2>
+          <p className="hero-note" style={{ marginBottom: 16 }}>
+            This resume's owner has protected the recruiter summary card (location, availability, expected salary,
+            clearance, work authorization) with a separate access code. Enter the code they shared with you to view
+            it.
           </p>
-          {ownerPreviewLocked ? (
-            <div style={{ maxWidth: 360 }}>
-              <div className="field">
-                <label>Recruiter access code</label>
-                <input type="text" disabled placeholder="Enter access code" />
-              </div>
-              <button className="btn btn-primary" type="button" disabled>
-                Unlock candidate summary
-              </button>
+          <form onSubmit={onSubmitRecruiterCode} style={{ maxWidth: 360 }}>
+            <div className="field">
+              <label>Recruiter access code</label>
+              <input
+                type="text"
+                value={recruiterCode}
+                onChange={(e) => setRecruiterCode(e.target.value)}
+                autoComplete="off"
+                autoFocus
+              />
             </div>
-          ) : (
-            recruiterCard && <CandidateCardFields card={recruiterCard} />
+            {recruiterUnlockError && <p className="form-error">{recruiterUnlockError}</p>}
+            <button className="btn btn-primary" type="submit" disabled={recruiterUnlocking || !recruiterCode.trim()}>
+              {recruiterUnlocking ? "Checking…" : "Unlock candidate summary"}
+            </button>
+          </form>
+        </div>
+      )}
+      {recruiterCard && (
+        <div className="public-resume-card public-resume-details" style={{ marginBottom: 24 }}>
+          <h2 className="public-resume-details-heading">Candidate Summary</h2>
+          {recruiterCard.candidateSummary && (
+            <p className="recruiter-candidate-summary">{recruiterCard.candidateSummary}</p>
+          )}
+          <div className="answer-grid">
+            {recruiterCard.location && (
+              <div>
+                <div className="answer-key">Location</div>
+                <div className="answer-value">{recruiterCard.location}</div>
+              </div>
+            )}
+            {recruiterCard.availability && (
+              <div>
+                <div className="answer-key">Availability</div>
+                <div className="answer-value">{recruiterCard.availability}</div>
+              </div>
+            )}
+            {recruiterCard.expectedSalary && (
+              <div>
+                <div className="answer-key">Expected Salary</div>
+                <div className="answer-value">{recruiterCard.expectedSalary}</div>
+              </div>
+            )}
+            {recruiterCard.clearance && (
+              <div>
+                <div className="answer-key">Clearance</div>
+                <div className="answer-value">{recruiterOptionLabel(CLEARANCE_OPTIONS, recruiterCard.clearance)}</div>
+              </div>
+            )}
+            {recruiterCard.workAuthorization && (
+              <div>
+                <div className="answer-key">Work Authorization</div>
+                <div className="answer-value">
+                  {recruiterOptionLabel(WORK_AUTHORIZATION_OPTIONS, recruiterCard.workAuthorization)}
+                </div>
+              </div>
+            )}
+            {recruiterCard.remotePreference && (
+              <div>
+                <div className="answer-key">Remote Preference</div>
+                <div className="answer-value">
+                  {recruiterOptionLabel(REMOTE_PREFERENCE_OPTIONS, recruiterCard.remotePreference)}
+                </div>
+              </div>
+            )}
+          </div>
+          {recruiterCard.skills.length > 0 && (
+            <div style={{ marginTop: 24 }}>
+              <div className="answer-key" style={{ marginBottom: 10 }}>
+                Skills
+              </div>
+              <div className="recruiter-skill-chips">
+                {recruiterCard.skills.map((s) => (
+                  <span key={s} className="recruiter-skill-chip">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {recruiterCard.references.length > 0 && (
+            <div style={{ marginTop: 24 }}>
+              <div className="answer-key" style={{ marginBottom: 10 }}>
+                References
+              </div>
+              <ReferencesGrid references={recruiterCard.references} />
+            </div>
           )}
         </div>
-      ) : (
-        <>
-          {resume.recruiterCardLocked && !recruiterCard && (
-            <div className="public-resume-card public-resume-details" style={{ marginBottom: 24 }}>
-              <h2 className="public-resume-details-heading">Candidate Summary (locked)</h2>
-              <p className="hero-note" style={{ marginBottom: 16 }}>
-                This resume's owner has protected the recruiter summary card (location, availability, expected
-                salary, clearance, work authorization) with a separate access code. Enter the code they shared with
-                you to view it.
-              </p>
-              <form onSubmit={onSubmitRecruiterCode} style={{ maxWidth: 360 }}>
-                <div className="field">
-                  <label>Recruiter access code</label>
-                  <input
-                    type="text"
-                    value={recruiterCode}
-                    onChange={(e) => setRecruiterCode(e.target.value)}
-                    autoComplete="off"
-                    autoFocus
-                  />
-                </div>
-                {recruiterUnlockError && <p className="form-error">{recruiterUnlockError}</p>}
-                <button className="btn btn-primary" type="submit" disabled={recruiterUnlocking || !recruiterCode.trim()}>
-                  {recruiterUnlocking ? "Checking…" : "Unlock candidate summary"}
-                </button>
-              </form>
-            </div>
-          )}
-          {recruiterCard && (
-            <div className="public-resume-card public-resume-details" style={{ marginBottom: 24 }}>
-              <h2 className="public-resume-details-heading">Candidate Summary</h2>
-              <CandidateCardFields card={recruiterCard} />
-            </div>
-          )}
-        </>
       )}
       <ResumePreview
         fullName={resume.fullName}

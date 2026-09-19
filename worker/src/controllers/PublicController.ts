@@ -44,11 +44,7 @@ export class PublicController {
 
     try {
       const resume = await resumeService.getPublicBySlug(slug, password, user?.id);
-      // Lets the owner see their own Recruiter Mode card's real content
-      // without needing their own access code — see Resume.toPublicJSON's
-      // isOwner/isOwnerPreview doc comments. Still locked for anyone else.
-      const isOwner = !!user && user.id === resume.userId;
-      return c.json({ resume: resume.toPublicJSON({ isOwner }) });
+      return c.json({ resume: resume.toPublicJSON() });
     } catch (err) {
       // Only a wrong password counts against the throttle — "private"/
       // "inactive"/"expired" reasons aren't password guesses at all, and
