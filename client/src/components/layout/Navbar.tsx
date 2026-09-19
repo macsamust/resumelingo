@@ -5,24 +5,6 @@ import { ParrotLogo } from "../brand/ParrotLogo";
 export function Navbar() {
   const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
-  // Logged-out visitors still see Career Center (it's public marketing
-  // content, same articles used to attract new signups — see
-  // CareerCenterPage.tsx). Once someone's logged in, though, it's a
-  // Professional/Premium perk, same gate as the dashboard's Career Articles
-  // section (DashboardPage.tsx's showCareerArticles) and the Career Coach/
-  // Thank-You Letter links in AppShell.
-  const isProfessional = user?.subscriptionTier === "professional";
-  const isPremium = user?.subscriptionTier === "premium";
-  // `!loading &&` guards the same window nav-actions below guards with
-  // `loading ? null : ...` — while the initial auth check is still in
-  // flight, `user` reads as null regardless of what it resolves to, so
-  // without this a logged-in Starter subscriber would see Career Center
-  // flash in (it's public content, so `!user` alone says "show it") and then
-  // vanish the instant loading finishes and their real tier turns out not to
-  // qualify. Same root cause as the guest-chrome flash this was built to fix
-  // (Sep 2026 UX review, UX-09) — AuthContext's `loading` already existed
-  // for exactly this, it just wasn't being read anywhere in this component.
-  const showCareerCenterLink = !loading && (!user || isProfessional || isPremium);
 
   return (
     <header>
@@ -34,12 +16,31 @@ export function Navbar() {
           </Link>
           <span className="logo-tagline">&ldquo;We Speak Resume.&rdquo;</span>
         </div>
-        <div className="nav-links">
-          <Link to="/#how">How it works</Link>
-          <Link to="/#features">Features</Link>
-          <Link to="/#pricing">Pricing</Link>
-          {showCareerCenterLink && <Link to="/career-center">Career Center</Link>}
-        </div>
+        {/* How it works / Features / Pricing / Career Center only make sense
+            for a logged-out visitor — every one of them points at the public
+            homepage or its own paywalled preview, so on an actual app page
+            (Dashboard, Edit Resume, ...) this whole row was just a way to
+            accidentally navigate out of the app mid-session. Career Center
+            used to also show here for a logged-in Professional/Premium
+            subscriber, which turned out to be the actual problem behind it
+            being "hard to find" (Sep 2026 UX review, UX-11): sitting in this
+            row, next to three links that only make sense logged out, it read
+            as marketing chrome to skim past rather than a real in-app
+            destination. It now lives in AppShell's sidebar instead (gated
+            the same Professional/Premium way), which is the correct single
+            place for it. Gated on `!loading && !user` rather than `!user`
+            alone for the same reason nav-actions below is: `user` starts
+            null on every load, even an already-logged-in one mid-refresh, so
+            gating on `user` alone would flash this row in before hiding it
+            again once loading resolves. */}
+        {!loading && !user && (
+          <div className="nav-links">
+            <Link to="/#how">How it works</Link>
+            <Link to="/#features">Features</Link>
+            <Link to="/#pricing">Pricing</Link>
+            <Link to="/career-center">Career Center</Link>
+          </div>
+        )}
         <div className="nav-actions">
           {/* `loading` comes from AuthContext's own initial token-verification
               fetch — it already existed for exactly this, just wasn't being
