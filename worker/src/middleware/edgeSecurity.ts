@@ -18,34 +18,23 @@
 export const HSTS_VALUE = "max-age=15552000; includeSubDomains";
 
 /**
- * Enforcing CSP is limited to directives that cannot break the existing SPA,
- * Stripe hosted Checkout (full-page redirect, not embedded.js), Google Fonts,
- * or the pdf.js worker used by resume import.
+ * SEC-A02 (2026-09-19): full policy promoted from Report-Only → enforcing.
  *
- * - `frame-ancestors 'none'` — clickjacking control (pairs with X-Frame-Options).
- * - `upgrade-insecure-requests` — mixed-content HTTP subresources become HTTPS.
+ * Matches origins the SPA actually uses (same-origin API + Vite assets,
+ * Google Fonts, data:/blob: photos and object-URLs, pdf.js module worker).
+ * Stripe Checkout is a navigation away from this origin, so it is not listed.
+ * Auth is same-origin `/api`.
  *
- * A tighter policy (script-src / style-src / connect-src) is Report-Only
- * below. Follow-up: add a report-uri, watch for a soak period, then promote
- * the report-only policy to enforcing and drop 'unsafe-inline' if reports
- * stay clean. Do not add `preload` to HSTS until every HTTP hostname under
- * the zone is gone and the HSTS preload submission checklist is documented.
+ * Residual risk: style-src still allows 'unsafe-inline'. Follow-up: soak a
+ * stricter Report-Only without it, then drop. Do not add HSTS `preload` yet.
  */
-export const CSP_ENFORCING =
-  "frame-ancestors 'none'; upgrade-insecure-requests";
-
-/**
- * Conservative report-only policy matching origins the SPA actually uses
- * today (same-origin API + Vite assets, Google Fonts, data:/blob: photos
- * and object-URLs, pdf.js module worker). Stripe Checkout is a navigation
- * away from this origin, so it is not listed. Auth is same-origin `/api`.
- */
-export const CSP_REPORT_ONLY = [
+export const CSP_ENFORCING = [
   "default-src 'self'",
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
+  "upgrade-insecure-requests",
   "script-src 'self' 'wasm-unsafe-eval'",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
@@ -54,6 +43,9 @@ export const CSP_REPORT_ONLY = [
   "worker-src 'self' blob:",
   "frame-src 'none'",
 ].join("; ");
+
+/** Next tighten candidate — identical for now; replace when dropping unsafe-inline. */
+export const CSP_REPORT_ONLY = CSP_ENFORCING;
 
 export const PERMISSIONS_POLICY =
   "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()";
