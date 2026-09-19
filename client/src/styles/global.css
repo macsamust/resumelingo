@@ -768,6 +768,14 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   z-index: 40; transition: transform .15s ease, background .15s ease;
 }
 .back-to-top-fab:hover { background: var(--indigo-light); transform: translateY(-2px); }
+/* Sep 2026 QA pass (UX-04): the fab is fixed-position, so without this the
+   last section scrolled to (ATS Check/Recruiter Mode, Premium's last two)
+   could end up with its final lines sitting directly under the button —
+   this reserves enough blank space below the accordion that the button
+   only ever overlaps empty padding, never real content, at any scroll
+   position. See ResumeEditPage.tsx for why this is its own class rather
+   than added to .builder-panel directly. */
+.builder-panel-with-fab { padding-bottom: 90px; }
 .coach-quick-questions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
 .coach-thread { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
 .coach-exchange { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px 24px; }

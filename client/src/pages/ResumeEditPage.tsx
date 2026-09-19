@@ -1074,7 +1074,16 @@ export function ResumeEditPage() {
       </div>
       {error && <div className="form-error">{error}</div>}
       <form id="resume-edit-form" onSubmit={onSubmit} className="builder-grid" onBlur={handleFormBlur}>
-        <div className="builder-panel">
+        {/* builder-panel-with-fab: extra bottom padding so the fixed
+            back-to-top-fab button (only rendered on this page, once
+            showBackToTop flips true) never sits on top of the last lines of
+            whichever section happens to be at the bottom of the accordion —
+            ATS Check and Recruiter Mode are Premium's last two sections, so
+            they were the ones a Sep 2026 QA pass caught it covering. Scoped
+            to this page's panel only (via the extra class, see global.css)
+            rather than the shared .builder-panel rule, since New Resume
+            never renders this button and doesn't need the extra space. */}
+        <div className="builder-panel builder-panel-with-fab">
           <button className="btn btn-primary btn-block" type="submit" disabled={saving} style={{ marginBottom: 8 }}>
             {saving ? "Saving…" : "Save changes"}
           </button>
