@@ -342,20 +342,26 @@ export function ResumeBuilderPage() {
           <div className="builder-progress">
             <div className="builder-progress-label">
               <span>Resume Build Progress</span>
-              {/* "required sections" (not bare "sections") on purpose — the
-                  form's numbered headers go 1 through 7 (Info, Template,
-                  Work Experience, Education, Highlights & Achievements,
-                  Awards, Answer a few questions), but this fraction only
-                  ever counts 4 of them: Template always starts pre-selected
-                  (nothing to "complete"), and Awards/"Answer a few
-                  questions" are explicitly optional (see their own hero-note
-                  copy below and sectionProgress's doc comment above). The
-                  math was always intentional; the old bare "sections"
-                  wording just didn't say so, so it read as broken to anyone
-                  counting the visible numbered headers (Sep 2026 UX review,
-                  UX-09). */}
+              {/* "key sections" (not bare "sections", and not "required
+                  sections" either) on purpose. The form's numbered headers
+                  go 1 through 7 (Info, Template, Work Experience, Education,
+                  Highlights & Achievements, Awards, Answer a few questions),
+                  but this fraction only ever counts 4 of them: Template
+                  always starts pre-selected (nothing to "complete"), and
+                  Awards/"Answer a few questions" are explicitly optional
+                  (see their own hero-note copy below and sectionProgress's
+                  doc comment above) — bare "sections" read as broken math
+                  next to 7 visible numbered headers (Sep 2026 UX review,
+                  UX-09). "Required" was tried first and rejected (CJ, Sep
+                  2026): nothing in onSubmit actually blocks saving/
+                  publishing on this count being incomplete, so "required"
+                  overstated it — implies a hard gate, like HTML's own
+                  `required` attribute blocking submission, that doesn't
+                  exist here. "Key" says these are the sections that make a
+                  complete, basic resume without claiming anything is
+                  enforced. */}
               <span>
-                {sectionProgress.requiredComplete} of {sectionProgress.requiredTotal} required sections complete
+                {sectionProgress.requiredComplete} of {sectionProgress.requiredTotal} key sections complete
               </span>
             </div>
             <div className="builder-progress-track">
