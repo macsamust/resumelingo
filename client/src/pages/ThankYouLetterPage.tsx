@@ -194,6 +194,9 @@ export function ThankYouLetterPage() {
                     Download as text (.txt)
                   </button>
                 </div>
+                <p className="hero-note" style={{ marginTop: 10, marginBottom: 0 }}>
+                  Copy or download it now — it won't be saved if you leave this page.
+                </p>
               </>
             ) : (
               <p className="hero-note" style={{ fontStyle: "italic" }}>

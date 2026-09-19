@@ -302,6 +302,7 @@ export function JobApplicationsPage() {
       <p className="hero-note" style={{ marginBottom: 20 }}>
         Track which resume you sent where, and what happened after. Clone a resume per target role, then log the
         application here to keep it all in one place.
+        {limit !== null && ` Up to ${limit} at a time — plenty for an active search, and you can always clean up old ones to make room.`}
       </p>
       {error && <div className="form-error">{error}</div>}
 
