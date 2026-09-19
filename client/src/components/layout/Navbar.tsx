@@ -5,6 +5,9 @@ import { ParrotLogo } from "../brand/ParrotLogo";
 export function Navbar() {
   const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
+  const isProfessional = user?.subscriptionTier === "professional";
+  const isPremium = user?.subscriptionTier === "premium";
+  const showCareerCenterLink = isProfessional || isPremium;
 
   return (
     <header>
@@ -16,29 +19,39 @@ export function Navbar() {
           </Link>
           <span className="logo-tagline">&ldquo;We Speak Resume.&rdquo;</span>
         </div>
-        {/* How it works / Features / Pricing / Career Center only make sense
-            for a logged-out visitor — every one of them points at the public
-            homepage or its own paywalled preview, so on an actual app page
-            (Dashboard, Edit Resume, ...) this whole row was just a way to
-            accidentally navigate out of the app mid-session. Career Center
-            used to also show here for a logged-in Professional/Premium
-            subscriber, which turned out to be the actual problem behind it
-            being "hard to find" (Sep 2026 UX review, UX-11): sitting in this
-            row, next to three links that only make sense logged out, it read
-            as marketing chrome to skim past rather than a real in-app
-            destination. It now lives in AppShell's sidebar instead (gated
-            the same Professional/Premium way), which is the correct single
-            place for it. Gated on `!loading && !user` rather than `!user`
-            alone for the same reason nav-actions below is: `user` starts
-            null on every load, even an already-logged-in one mid-refresh, so
-            gating on `user` alone would flash this row in before hiding it
-            again once loading resolves. */}
-        {!loading && !user && (
+        {/* How it works / Features / Pricing only make sense for a
+            logged-out visitor — each is a homepage anchor with no valid
+            destination once you're actually in the app. Logged in, this row
+            switches to Career Center (Professional/Premium — Starter would
+            just hit CareerCenterPage.tsx's own paywall), Help & FAQ, and The
+            Full Circle (the homepage's #full-circle section, explaining the
+            Apply/Interview/Get hired/Stay current loop this app is built
+            around). Career Center briefly moved to AppShell's sidebar
+            instead (Sep 2026 UX review, UX-11) and was pulled back out —
+            CJ preferred it stay up here with Help & FAQ and The Full Circle
+            rather than sit among AppShell's do-something tools (Dashboard,
+            New Resume, Cover Letter, ...), which it doesn't read as one of.
+            Gated on `!loading` (both branches) for the same reason
+            nav-actions below is: `user` starts null on every load, even an
+            already-logged-in one mid-refresh, so this would otherwise flash
+            the wrong row in before swapping to the right one a moment
+            later. */}
+        {!loading && (
           <div className="nav-links">
-            <Link to="/#how">How it works</Link>
-            <Link to="/#features">Features</Link>
-            <Link to="/#pricing">Pricing</Link>
-            <Link to="/career-center">Career Center</Link>
+            {user ? (
+              <>
+                {showCareerCenterLink && <Link to="/career-center">Career Center</Link>}
+                <Link to="/help">Help &amp; FAQ</Link>
+                <Link to="/#full-circle">The Full Circle</Link>
+              </>
+            ) : (
+              <>
+                <Link to="/#how">How it works</Link>
+                <Link to="/#features">Features</Link>
+                <Link to="/#pricing">Pricing</Link>
+                <Link to="/career-center">Career Center</Link>
+              </>
+            )}
           </div>
         )}
         <div className="nav-actions">
