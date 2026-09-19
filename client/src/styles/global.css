@@ -537,14 +537,6 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .toggle-status-label.inactive { color: #b91c1c; }
 .visibility-tag { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: #eef2ff; color: var(--indigo); }
 .resume-item-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-/* Read-only public slug shown on the "My Resumes" card, right under the
-   title — see the Link's own comment in DashboardPage.tsx for why: the slug
-   never changes when the title is edited later, so this is what surfaces
-   that (deliberately) invisible rule instead of leaving a renamed resume's
-   card and public link to silently disagree. Links to Edit rather than
-   opening any controls of its own. */
-.resume-slug-meta { display: block; font-family: var(--font-mono, monospace); font-size: 12px; text-decoration: none; margin: -6px 0 6px; }
-.resume-slug-meta:hover { text-decoration: underline; }
 .resume-template-tag { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
 
 /* Strength tag on a "My Resumes" card — same pill shape as visibility/template

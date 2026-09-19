@@ -357,21 +357,6 @@ export function DashboardPage() {
                   </div>
                 </div>
               </div>
-              {/* The slug is set once at creation and never changes when the
-                  title is edited later (see ResumeService.update — there's
-                  no slug field on UpdateResumeInput at all), so an
-                  already-shared link keeps working even after a rename.
-                  That's deliberate, but nothing else on the card discloses
-                  it, so a renamed resume's title and public link can quietly
-                  drift apart with no explanation (Sep 2026 UX review: "Fluid
-                  Tech" title next to a /fred-fox-software-engineer-resume
-                  link). Showing the actual slug here turns that invisible
-                  rule into a visible, self-explanatory one — links to Edit
-                  rather than duplicating the visibility/password editor
-                  that already lives in that page's Sharing section. */}
-              <Link to={`/resumes/${r.id}/edit`} className="meta resume-slug-meta" title="Edit sharing settings">
-                /r/{r.slug}
-              </Link>
               <p className="meta">
                 {r.professionLabel}
                 {showViewsAndStrengthTiles && ` · ${r.viewCount} view${r.viewCount === 1 ? "" : "s"}`}
@@ -381,7 +366,24 @@ export function DashboardPage() {
                 <Link to={`/resumes/${r.id}/edit`} className="btn btn-primary">
                   Edit
                 </Link>
-                <a href={`/r/${r.slug}`} target="_blank" rel="noreferrer" className="btn btn-ghost">
+                {/* A visible slug line under the title (first attempt at
+                    this fix) read as clutter on a card already stacking
+                    visibility/template/strength tags — see this commit's
+                    predecessor. A `title` tooltip on the link a person is
+                    already looking at when they want to know "what's the
+                    actual URL" gets the same discoverability (slugs are set
+                    once at creation and never change on a later title edit —
+                    see ResumeService.update's doc comment — so a renamed
+                    resume's card and link can otherwise drift apart with no
+                    explanation) at zero visual cost: nothing renders until
+                    someone hovers. */}
+                <a
+                  href={`/r/${r.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-ghost"
+                  title={`${window.location.origin}/r/${r.slug}`}
+                >
                   View link
                 </a>
               </div>
