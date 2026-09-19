@@ -79,6 +79,19 @@ export function ResumeBuilderPage() {
   // the form, not better.
   const [showInterview, setShowInterview] = useState(true);
 
+  // True only when the interview was actually completed (onComplete), not
+  // when someone bailed out early via "Switch to classic form" — set once,
+  // read once (by sections 3/4/5's defaultOpen below, at the moment they
+  // first mount), so it doesn't need to be reset anywhere. Lets the classic
+  // form open on handoff with Work Experience/Education/Achievements
+  // collapsed, since the interview already filled them in, while Section 1
+  // (profession, contact info — none of which the interview asks) and
+  // Section 2 (template) stay open, since those still need attention either
+  // way. A mid-interview bailout skips this because whatever's in
+  // experience/education at that point is likely incomplete and worth
+  // leaving visible rather than tucked away.
+  const [interviewJustCompleted, setInterviewJustCompleted] = useState(false);
+
   // Checked up front, before the form renders at all — the server also
   // rejects a create() past the plan's resume limit (see ResumeService),
   // but that only surfaces as an error after someone has already filled out
@@ -371,7 +384,10 @@ export function ResumeBuilderPage() {
               canGenerateAchievements={canUseAiAssist}
               professionLabel={professionDetail?.label ?? ""}
               onSwitchToClassic={() => setShowInterview(false)}
-              onComplete={() => setShowInterview(false)}
+              onComplete={() => {
+                setShowInterview(false);
+                setInterviewJustCompleted(true);
+              }}
             />
           ) : (
           <form onSubmit={onSubmit}>
@@ -543,11 +559,21 @@ export function ResumeBuilderPage() {
             )}
           </CollapsibleSection>
 
-          <CollapsibleSection title="3. Work experience" forceOpen={forceOpen} complete={sectionProgress.workExperience}>
+          <CollapsibleSection
+            title="3. Work experience"
+            forceOpen={forceOpen}
+            complete={sectionProgress.workExperience}
+            defaultOpen={interviewJustCompleted && experience.length > 0 ? false : undefined}
+          >
             <ExperienceEditor experience={experience} onChange={setExperience} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="4. Education" forceOpen={forceOpen} complete={sectionProgress.education}>
+          <CollapsibleSection
+            title="4. Education"
+            forceOpen={forceOpen}
+            complete={sectionProgress.education}
+            defaultOpen={interviewJustCompleted && education.length > 0 ? false : undefined}
+          >
             <EducationEditor education={education} onChange={setEducation} />
           </CollapsibleSection>
 
@@ -555,6 +581,7 @@ export function ResumeBuilderPage() {
             title="5. Highlights & key achievements"
             forceOpen={forceOpen}
             complete={sectionProgress.achievements}
+            defaultOpen={interviewJustCompleted && achievements.length > 0 ? false : undefined}
           >
             <p className="hero-note" style={{ marginBottom: 8 }}>
               Add a quick one line bullet, or describe a challenge, what you did, and the result for a more detailed,

@@ -22,8 +22,8 @@ export function HowItWorks() {
       <div className="wrap">
         <div className="section-head">
           <span className="section-tag">How it works</span>
-          <h2>The system interviews you, you don't write a thing</h2>
-          <p>Instead of asking you to type an entire resume from scratch, ResumeLingo asks smart, profession aware questions, then builds and hosts your resume for you.</p>
+          <h2>Answer a few quick questions, Poly writes the resume</h2>
+          <p>Start a new resume and Poly interviews you about your experience, one focused question at a time, instead of handing you a blank page — then turns your answers into polished, profession aware bullets and hosts the result for you.</p>
         </div>
         <div className="steps">
           {STEPS.map((step, i) => (
