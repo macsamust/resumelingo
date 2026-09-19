@@ -316,6 +316,12 @@ export function ResumeEditPage() {
   // use it.
   const canUseReferences = user?.subscriptionTier === "professional" || isPremium;
 
+  // QR code (Sharing section) — Professional/Premium only per CJ (Sep 2026);
+  // previously ungated for every tier (see ResumeQrCode.tsx's own doc
+  // comment, "Prototype... not tier-gated yet"). Same tier line as
+  // canUseReferences above.
+  const canUseQrCode = user?.subscriptionTier === "professional" || isPremium;
+
   // UX-08 follow-up (Sep 2026): a Premium account only gets the branded
   // {name}-{title} public link on resumes created after upgrading (see
   // ResumeRepository.generateBrandedSlug) — a resume built before that keeps
@@ -1448,19 +1454,25 @@ export function ResumeEditPage() {
                 </details>
               </p>
             )}
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm"
-              style={{ marginTop: 8 }}
-              onClick={() => setShowQrCode((v) => !v)}
-              aria-expanded={showQrCode}
-            >
-              {showQrCode ? "Hide QR code" : "Show QR code"}
-            </button>
-            {/* Prototype: a scannable QR code for handing someone a printed
-                resume or business card in person — see ResumeQrCode.tsx's
-                doc comment. Collapsed by default; not tier-gated yet. */}
-            {showQrCode && <ResumeQrCode url={`${window.location.origin}/r/${resume.slug}`} />}
+            {canUseQrCode && (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  style={{ marginTop: 8 }}
+                  onClick={() => setShowQrCode((v) => !v)}
+                  aria-expanded={showQrCode}
+                >
+                  {showQrCode ? "Hide QR code" : "Show QR code"}
+                </button>
+                {/* Prototype: a scannable QR code for handing someone a printed
+                    resume or business card in person — see ResumeQrCode.tsx's
+                    doc comment. Collapsed by default. Professional/Premium
+                    only (see canUseQrCode above) — same "just omit it, no
+                    upgrade nudge" treatment as the References section below. */}
+                {showQrCode && <ResumeQrCode url={`${window.location.origin}/r/${resume.slug}`} />}
+              </>
+            )}
           </CollapsibleSection>
 
           {usesSkillsAndTools && (
