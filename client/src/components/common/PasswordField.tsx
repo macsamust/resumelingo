@@ -22,14 +22,15 @@ interface PasswordFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>,
   label: string;
 }
 
-export function PasswordField({ label, className, ...inputProps }: PasswordFieldProps) {
+export function PasswordField({ label, id, className, ...inputProps }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
 
   return (
     <div className="field">
-      <label>{label}</label>
+      {/* htmlFor only does anything when a caller passes `id` — harmless no-op otherwise, so existing callers that don't pass one are unaffected. */}
+      <label htmlFor={id}>{label}</label>
       <div className="password-field-wrap">
-        <input {...inputProps} type={visible ? "text" : "password"} className={className} />
+        <input id={id} {...inputProps} type={visible ? "text" : "password"} className={className} />
         <button
           type="button"
           className="password-field-toggle"

@@ -44,8 +44,9 @@ export function ForgotPasswordPage() {
             {error && <div className="form-error">{error}</div>}
             <form onSubmit={onSubmit}>
               <div className="field">
-                <label>Email</label>
+                <label htmlFor="forgot-password-email">Email</label>
                 <input
+                  id="forgot-password-email"
                   type="email"
                   required
                   autoComplete="username"

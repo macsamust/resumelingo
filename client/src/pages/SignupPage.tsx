@@ -84,12 +84,20 @@ export function SignupPage() {
         {error && <div className="form-error">{error}</div>}
         <form onSubmit={onSubmit}>
           <div className="field">
-            <label>Full name</label>
-            <input required autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Jordan Lee" />
+            <label htmlFor="signup-name">Full name</label>
+            <input
+              id="signup-name"
+              required
+              autoComplete="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Jordan Lee"
+            />
           </div>
           <div className="field">
-            <label>Email</label>
+            <label htmlFor="signup-email">Email</label>
             <input
+              id="signup-email"
               type="email"
               required
               autoComplete="username"
@@ -99,6 +107,7 @@ export function SignupPage() {
             />
           </div>
           <PasswordField
+            id="signup-password"
             label="Password"
             required
             minLength={8}
@@ -108,8 +117,8 @@ export function SignupPage() {
             placeholder="At least 8 characters"
           />
           <div className="field">
-            <label>Profession (optional)</label>
-            <select value={profession} onChange={(e) => setProfession(e.target.value)}>
+            <label htmlFor="signup-profession">Profession (optional)</label>
+            <select id="signup-profession" value={profession} onChange={(e) => setProfession(e.target.value)}>
               <option value="">Select a profession…</option>
               {professions.map((p) => (
                 <option key={p.key} value={p.key}>

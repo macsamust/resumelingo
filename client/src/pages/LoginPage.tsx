@@ -34,8 +34,9 @@ export function LoginPage() {
         {error && <div className="form-error">{error}</div>}
         <form onSubmit={onSubmit}>
           <div className="field">
-            <label>Email</label>
+            <label htmlFor="login-email">Email</label>
             <input
+              id="login-email"
               type="email"
               required
               autoComplete="username"
@@ -45,6 +46,7 @@ export function LoginPage() {
             />
           </div>
           <PasswordField
+            id="login-password"
             label="Password"
             required
             autoComplete="current-password"
