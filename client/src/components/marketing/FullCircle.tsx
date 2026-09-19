@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 /**
  * The homepage's "full-circle career platform" hook — sits directly below
  * Hero so the positioning lands before a visitor scrolls past it, not
@@ -9,6 +11,11 @@
  * rather than a vague promise — Job Tracker, AI Career Coach, Cover/
  * Thank-You Letters, and the resume-refresh nudge — so it never overclaims
  * past what the product actually does.
+ *
+ * Stays a short teaser, same as CareerCenter.tsx's homepage section — the
+ * fuller explanation of each stage, with direct links into the actual
+ * tools, lives at FullCirclePage.tsx (linked from the top nav and this
+ * section's own CTA below), not duplicated here.
  */
 const STAGES = [
   {
@@ -64,6 +71,11 @@ export function FullCircle() {
             ↺
           </span>
           <span>...and the circle starts again.</span>
+        </div>
+        <div className="career-teaser-cta">
+          <Link to="/full-circle" className="btn btn-primary">
+            See how each stage works
+          </Link>
         </div>
       </div>
     </section>
