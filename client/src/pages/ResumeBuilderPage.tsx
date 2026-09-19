@@ -10,6 +10,7 @@ import { AchievementEditor } from "../components/builder/AchievementEditor";
 import { AchievementGeneratorPanel } from "../components/builder/AchievementGeneratorPanel";
 import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { ResumeImportPanel } from "../components/builder/ResumeImportPanel";
+import { PolyInterview } from "../components/builder/PolyInterview";
 import { ResumePreview } from "../components/builder/ResumePreview";
 import { ResumeEditSkeleton } from "../components/common/ResumeEditSkeleton";
 import { Modal } from "../components/common/Modal";
@@ -64,6 +65,19 @@ export function ResumeBuilderPage() {
   const [forceOpen, setForceOpen] = useState<ForceOpenSignal | undefined>(undefined);
   /** Whether the "Expand" modal (a larger copy of the sidebar's live preview) is open — same pattern as ResumeEditPage. */
   const [previewExpanded, setPreviewExpanded] = useState(false);
+
+  // "Let Poly interview me" is the default entry point for a brand-new
+  // resume (Sep 2026 UX review, UX-11's hero-copy discussion — "The system
+  // interviews you" wasn't true for New Resume's key sections before this).
+  // Switches to false — permanently, for the rest of this page's life —
+  // once PolyInterview finishes (onComplete) or someone bails out early
+  // (onSwitchToClassic) to reach the exact same classic stacked-accordion
+  // form this page always had, now pre-filled with whatever the interview
+  // already collected. Also switched off the moment an import succeeds
+  // below: someone who just imported a PDF/docx/txt already has this data,
+  // so re-asking "what's your name" in a chat bubble would be worse than
+  // the form, not better.
+  const [showInterview, setShowInterview] = useState(true);
 
   // Checked up front, before the form renders at all — the server also
   // rejects a create() past the plan's resume limit (see ResumeService),
@@ -335,10 +349,28 @@ export function ResumeBuilderPage() {
           if (data.education.length > 0) setEducation(data.education);
           if (data.awards.length > 0) setAwards(data.awards);
           if (data.achievements.length > 0) setAchievements(data.achievements);
+          // See showInterview's own doc comment — an import already has
+          // this data, so the interview would just be re-asking for it.
+          setShowInterview(false);
         }}
       />
-      <form onSubmit={onSubmit} className="builder-grid">
+      <div className="builder-grid">
         <div className="builder-panel">
+          {showInterview ? (
+            <PolyInterview
+              fullName={fullName}
+              onFullNameChange={setFullName}
+              title={title}
+              onTitleChange={setTitle}
+              experience={experience}
+              onExperienceChange={setExperience}
+              education={education}
+              onEducationChange={setEducation}
+              onSwitchToClassic={() => setShowInterview(false)}
+              onComplete={() => setShowInterview(false)}
+            />
+          ) : (
+          <form onSubmit={onSubmit}>
           <div className="builder-progress">
             <div className="builder-progress-label">
               <span>Resume Build Progress</span>
@@ -592,6 +624,8 @@ export function ResumeBuilderPage() {
           >
             {submitting ? "Generating your resume…" : "Create my resume"}
           </button>
+          </form>
+          )}
         </div>
 
         <div className="preview-col preview-col-scrollable">
@@ -603,7 +637,7 @@ export function ResumeBuilderPage() {
           </div>
           <div className="preview-col-scroll">{previewElement}</div>
         </div>
-      </form>
+      </div>
       {previewExpanded && (
         <Modal title="Live preview" wide onClose={() => setPreviewExpanded(false)}>
           {previewElement}

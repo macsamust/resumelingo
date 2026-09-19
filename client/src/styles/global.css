@@ -616,6 +616,24 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .builder-progress-track { height: 6px; border-radius: 999px; background: var(--bg); overflow: hidden; }
 .builder-progress-fill { height: 100%; background: var(--teal); border-radius: 999px; transition: width .2s ease; }
 
+/* Poly Interview Mode — New Resume's step-by-step alternative to the classic
+   stacked accordion (see PolyInterview.tsx). Lives inside the same
+   .builder-panel the classic form uses, so it inherits that panel's padding
+   and border and only needs to style its own internals. */
+.poly-interview-progress { display: flex; gap: 6px; margin-bottom: 20px; }
+.poly-interview-dot { flex: 1; height: 5px; border-radius: 999px; background: var(--bg); transition: background .2s ease; }
+.poly-interview-dot.is-lit { background: var(--teal); }
+.poly-interview-card { animation: poly-interview-in .18s ease; }
+@keyframes poly-interview-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.poly-interview-asker { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 13px; font-weight: 700; color: var(--indigo); text-transform: uppercase; letter-spacing: .02em; }
+.poly-interview-question { font-size: 17px; font-weight: 600; color: var(--navy-light); line-height: 1.4; margin-bottom: 18px; }
+.poly-interview-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+.poly-interview-actions > :last-child { margin-left: auto; }
+.poly-interview-switch { background: none; border: none; padding: 0; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; text-decoration: underline; }
+.poly-interview-switch:hover { color: var(--navy-light); }
+.poly-interview-list { list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.poly-interview-list li { font-size: 14px; font-weight: 600; color: var(--navy-light); background: var(--bg); border-radius: 8px; padding: 8px 12px; }
+
 /* "Full Circle" — permanent per-resume badge on each "My Resumes" tile
    (ResumeLoopBadge.tsx). Replaced an earlier dashboard-card + post-publish
    modal approach that read as a generic SaaS onboarding checklist — this
