@@ -183,7 +183,10 @@ export class Resume {
       skills,
       candidateSummary: buildCandidateSummary({
         professionLabel: this.professionLabel,
-        title: this.title,
+        // displayHeadline, not the raw internal title — see that getter's doc
+        // comment. This sentence is recruiter-facing, same leak class as
+        // UX-07's original public-headline bug (Sep 2026).
+        title: this.displayHeadline,
         experience: this.experience,
         achievements: this.achievements,
         generatedBullets: this.generatedBullets,
@@ -349,8 +352,17 @@ export class Resume {
    * `recruiterCardLocked` tells the client the difference between "off" and
    * "on but not yet unlocked," since recruiterCard is null in both cases.
    */
-  toPublicJSON(options: { includeRecruiterCard?: boolean } = {}) {
-    const showRecruiterCard = this.recruiterModeEnabled && options.includeRecruiterCard === true;
+  toPublicJSON(options: { includeRecruiterCard?: boolean; isOwner?: boolean } = {}) {
+    const unlockedByCode = this.recruiterModeEnabled && options.includeRecruiterCard === true;
+    // The owner viewing their own public link always gets the real card data
+    // back (never a placeholder), but recruiterCardLocked below still comes
+    // back true — the point isn't to skip the lock, it's to let the owner
+    // see the *actual* card content without having to remember/re-enter
+    // their own access code, while still being able to toggle to see the
+    // locked state exactly as anyone else would (see PublicResumePage.tsx's
+    // owner-preview toggle, added Sep 2026 UX-07 follow-up).
+    const ownerPreview = this.recruiterModeEnabled && options.isOwner === true && !unlockedByCode;
+    const showRecruiterCard = unlockedByCode || ownerPreview;
     return {
       fullName: this.fullName,
       contactEmail: this.contactEmail,
@@ -367,7 +379,9 @@ export class Resume {
       templateKey: this.templateKey,
       template: this.template,
       recruiterCard: showRecruiterCard ? this.recruiterCard : null,
-      recruiterCardLocked: this.recruiterModeEnabled && !showRecruiterCard,
+      recruiterCardLocked: this.recruiterModeEnabled && !unlockedByCode,
+      /** True only for the owner viewing their own resume with Recruiter Mode on and no code entered — tells the client to render the "Your view / Recruiter view" toggle instead of the real code-entry form. Always false for anyone else, including after they've successfully unlocked the card. */
+      isOwnerPreview: ownerPreview,
       combineExperienceFormat: this.combineExperienceFormat,
       answers: this.answers,
       experience: this.experience,
