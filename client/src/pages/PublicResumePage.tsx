@@ -285,6 +285,12 @@ export function PublicResumePage() {
           // Deliberately paused by the owner (see the Deactivate toggle on
           // My Resumes) — no password would work here either, so no prompt.
           setError("This resume link has been deactivated by its owner.");
+        } else if (err instanceof ApiError && err.status === 403 && err.reason === "unverified") {
+          // The owner's account itself hasn't confirmed its email yet (see
+          // ResumeService.getPublicBySlug's owner.emailVerified check) — no
+          // password would ever satisfy this either, same reasoning as the
+          // other special-cased reasons above.
+          setError("This resume's owner hasn't verified their account yet. Only they can view it until then.");
         } else if (err instanceof ApiError && err.status === 403) {
           setPasswordRequired(true);
           // pwd is only ever non-empty here when this call came from

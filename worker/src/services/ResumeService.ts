@@ -46,7 +46,10 @@ export function isPremiumTemplate(templateKey: string): boolean {
 export class ResumeLimitError extends Error {}
 export class ResumeNotFoundError extends Error {}
 export class ResumeAccessError extends Error {
-  constructor(message: string, public readonly reason: "password" | "private" | "forbidden" | "expired" | "inactive" = "forbidden") {
+  constructor(
+    message: string,
+    public readonly reason: "password" | "private" | "forbidden" | "expired" | "inactive" | "unverified" = "forbidden"
+  ) {
     super(message);
   }
 }
@@ -256,10 +259,12 @@ export class ResumeService {
     assertTemplateAllowed(user.subscriptionTier, input.templateKey);
     if (input.visibility) {
       assertVisibilityAllowed(user.subscriptionTier, input.visibility);
-      // Only checked for an *explicit* request — see the defaultVisibility
-      // fallback below for the unrequested case, which quietly defaults an
-      // unverified account to Private instead of throwing on the very first
-      // resume they ever create.
+      // Only checked for an *explicit* request — the unrequested/default
+      // case below always resolves to Public regardless of verification
+      // status, so there's nothing to assert there; an unverified owner's
+      // resume is simply unreachable by anyone else until they verify (see
+      // getPublicBySlug's owner.emailVerified check), which needs no
+      // create-time gate at all.
       assertEmailVerifiedForVisibility(user.emailVerified, input.visibility);
     }
     assertPhotoSizeOk(input.photoUrl);
@@ -305,12 +310,18 @@ export class ResumeService {
       profession: input.profession,
       templateKey: input.templateKey,
       // Every builder flow omits `visibility` entirely and relies on this
-      // default (see ResumeBuilderPage.tsx) — an unverified account
-      // defaulting to Public here would hard-block resume creation itself
-      // on day one for anyone who hasn't clicked their verification email
-      // yet, not just publishing. Private is the safe default instead;
-      // they can switch to Public once verified.
-      visibility: input.visibility ?? (user.emailVerified ? LinkVisibility.Public : LinkVisibility.Private),
+      // default (see ResumeBuilderPage.tsx) — always Public, which is the
+      // one visibility every tier (including Starter) is actually allowed
+      // to use (see visibilityAccess.ts's TIER_ALLOWED_VISIBILITY; "private"
+      // requires Professional). An unverified account's resume being
+      // unreachable by anyone but its owner is enforced separately, at
+      // read time, by getPublicBySlug's owner.emailVerified check below —
+      // not by contorting this default into a value the subscriber's own
+      // plan might not even be allowed to hold (Sep 2026 fix: a Starter
+      // account that hadn't verified yet used to get created as Private,
+      // which is Professional-and-up only, leaving every visibility option
+      // in Edit Resume locked with no way out until upgrading).
+      visibility: input.visibility ?? LinkVisibility.Public,
       // Hashed here too, not just in update() — today's client never sends
       // a password at creation time (every builder flow creates as
       // Public/Private and adds a password later via Edit Resume), but the
@@ -703,9 +714,17 @@ export class ResumeService {
    * feature everywhere, not just the owner's own Edit Resume toggle) —
    * looked up here rather than stored on the resume record itself, since
    * tier is account-level and can change independently of any one resume.
-   * A missing/deleted owner account fails closed (no QR code) rather than
-   * throwing, since this is a cosmetic print affordance, not something
-   * worth breaking the whole public page load over.
+   *
+   * Also enforces the "unverified accounts are owner-only" rule here, at
+   * read time, rather than by forcing the resume's own `visibility` into a
+   * value that stands in for "not verified yet" (see create()'s default
+   * visibility comment — that used to be "Private," which broke for
+   * Starter accounts once Private became a Professional-and-up perk).
+   * This way a resume's visibility always means exactly what it says, for
+   * every tier, and "the owner hasn't verified their email" is its own
+   * independent gate that gets checked first, ahead of active/expired/
+   * password — none of those distinctions matter yet if the account
+   * itself hasn't been confirmed.
    */
   async getPublicBySlug(
     slug: string,
@@ -716,6 +735,18 @@ export class ResumeService {
     if (!record) throw new ResumeNotFoundError("Resume not found.");
     const resume = new Resume(record);
     const isOwner = !!requestingUserId && requestingUserId === resume.userId;
+    // Fetched once, up front — used both for the verified-email gate right
+    // below and for qrCodeEnabled at the end, rather than two separate
+    // lookups. A missing/deleted owner account is treated as unverified
+    // (fails closed) for the same "don't show it to anyone else, but the
+    // owner can still preview" reasoning as every other check here.
+    const owner = await this.users.findById(resume.userId);
+    if (!isOwner && !owner?.emailVerified) {
+      throw new ResumeAccessError(
+        "This resume's owner hasn't verified their account yet. Only they can view it until then.",
+        "unverified"
+      );
+    }
     // Checked first (and, like isPasswordExpired below, before the general
     // isAccessibleBy() check) so a deliberately-paused link reports its own
     // distinct reason ("inactive") instead of looking like a visibility/
@@ -740,7 +771,6 @@ export class ResumeService {
     }
     await this.resumes.incrementViewCount(record.id);
     await this.analytics.recordView(record.id);
-    const owner = await this.users.findById(resume.userId);
     const qrCodeEnabled =
       !!owner && (owner.subscriptionTier === SubscriptionTier.Professional || owner.subscriptionTier === SubscriptionTier.Premium);
     return { resume, qrCodeEnabled };
