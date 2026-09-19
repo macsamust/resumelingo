@@ -384,7 +384,7 @@ export function DashboardPage() {
                   className="btn btn-ghost"
                   title={`${window.location.origin}/r/${r.slug}`}
                 >
-                  View link
+                  View resume
                 </a>
               </div>
               {(isProfessional || isPremium) && (

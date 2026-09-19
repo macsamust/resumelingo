@@ -447,7 +447,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .resume-item-actions .btn { padding: 6px 14px; font-size: 12px; border-radius: 8px; white-space: nowrap; }
 
 /* Title + "more actions" menu, side by side — the menu holds Clone/Delete
-   (see .resume-menu-dropdown) so only Edit/View link stay as visible
+   (see .resume-menu-dropdown) so only Edit/View resume stay as visible
    buttons below (see .resume-item-actions above). */
 .resume-item-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .resume-item-header-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
