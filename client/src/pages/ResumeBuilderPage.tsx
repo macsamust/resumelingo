@@ -342,8 +342,20 @@ export function ResumeBuilderPage() {
           <div className="builder-progress">
             <div className="builder-progress-label">
               <span>Resume Build Progress</span>
+              {/* "required sections" (not bare "sections") on purpose — the
+                  form's numbered headers go 1 through 7 (Info, Template,
+                  Work Experience, Education, Highlights & Achievements,
+                  Awards, Answer a few questions), but this fraction only
+                  ever counts 4 of them: Template always starts pre-selected
+                  (nothing to "complete"), and Awards/"Answer a few
+                  questions" are explicitly optional (see their own hero-note
+                  copy below and sectionProgress's doc comment above). The
+                  math was always intentional; the old bare "sections"
+                  wording just didn't say so, so it read as broken to anyone
+                  counting the visible numbered headers (Sep 2026 UX review,
+                  UX-09). */}
               <span>
-                {sectionProgress.requiredComplete} of {sectionProgress.requiredTotal} sections complete
+                {sectionProgress.requiredComplete} of {sectionProgress.requiredTotal} required sections complete
               </span>
             </div>
             <div className="builder-progress-track">

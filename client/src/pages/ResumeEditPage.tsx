@@ -1090,8 +1090,17 @@ export function ResumeEditPage() {
           <div className="builder-progress" style={{ marginTop: 12 }}>
             <div className="builder-progress-label">
               <span>Resume Build Progress</span>
+              {/* "required sections" — see New Resume's identical fraction
+                  for why (ResumeBuilderPage.tsx, Sep 2026 UX review,
+                  UX-09): this page has even more numbered/named sections
+                  than New Resume, but the denominator only ever counts the
+                  handful that meaningfully affect the generated resume
+                  (see sectionProgress's doc comment above). Bare "sections"
+                  read as broken arithmetic to anyone counting what's
+                  actually on the page; "required sections" says what's
+                  actually being counted. */}
               <span>
-                {sectionProgress.requiredComplete} of {sectionProgress.requiredTotal} sections complete
+                {sectionProgress.requiredComplete} of {sectionProgress.requiredTotal} required sections complete
               </span>
             </div>
             <div className="builder-progress-track">

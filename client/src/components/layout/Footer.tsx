@@ -1,7 +1,20 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ParrotLogo } from "../brand/ParrotLogo";
+import { useAuth } from "../../context/AuthContext";
 
 export function Footer() {
+  // App.tsx renders this Footer around every route except public-resume and
+  // admin ones — including the Dashboard and every other logged-in page, not
+  // just the marketing site — so a logged-in visitor could always see this
+  // Account column still offering Log in / Sign up (Sep 2026 UX review,
+  // UX-09). Also reads `loading` (same flag Navbar.tsx uses) rather than
+  // just `user`, for the same reason Navbar needs it: `user` starts null on
+  // every load, even an already-logged-in one mid-refresh, so gating on
+  // `user` alone would just move the guest-chrome flash from the header down
+  // to the footer instead of actually fixing it.
+  const { user, loading, logout } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <footer>
       <div className="wrap">
@@ -28,8 +41,26 @@ export function Footer() {
           </div>
           <div className="footer-col">
             <h4>Account</h4>
-            <Link to="/login">Log in</Link>
-            <Link to="/signup">Sign up</Link>
+            {loading ? null : user ? (
+              <>
+                <Link to="/dashboard">Dashboard</Link>
+                <button
+                  type="button"
+                  className="footer-link-button"
+                  onClick={() => {
+                    logout();
+                    navigate("/");
+                  }}
+                >
+                  Log out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">Log in</Link>
+                <Link to="/signup">Sign up</Link>
+              </>
+            )}
             <Link to="/help">Help &amp; FAQ</Link>
           </div>
           <div className="footer-col">

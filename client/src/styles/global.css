@@ -348,6 +348,11 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .footer-col h4 { font-size: 13px; color: var(--navy); margin-bottom: 14px; text-transform: uppercase; letter-spacing: .03em; }
 .footer-col a { display: block; font-size: 14px; color: var(--muted); margin-bottom: 10px; }
 .footer-col a:hover { color: var(--indigo); }
+/* Log out (Footer.tsx's Account column, logged-in state) — same look as the
+   Links around it, just a <button> underneath since it fires logout() +
+   navigate() rather than linking anywhere. */
+.footer-link-button { display: block; font: inherit; font-size: 14px; color: var(--muted); margin-bottom: 10px; background: none; border: none; padding: 0; cursor: pointer; text-align: left; }
+.footer-link-button:hover { color: var(--indigo); }
 .footer-bottom { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 24px; font-size: 13px; color: var(--muted); flex-wrap: wrap; gap: 12px; }
 
 /* AUTH FORMS */
