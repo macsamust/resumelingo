@@ -131,6 +131,23 @@ const STOPWORDS = new Set([
   "shifts", "hour", "hours", "physical", "needed", "needs", "need", "looking", "seeking", "opportunity",
   "opportunities", "ideal", "great", "good", "well", "make", "makes", "making", "take", "takes", "taking",
   "get", "gets", "getting", "help", "helps", "helping", "helped", "including", "based", "basis",
+  // Second real-world pass (a warehouse/delivery posting) surfaced another
+  // batch of the same class of word — generic enough to describe almost
+  // any physical-labor duty, not specific enough to be worth adding to a
+  // resume. Deliberately NOT filtering genuinely resume-worthy terms from
+  // that same posting (driver, truck, machinery, license, valid) — "valid
+  // driver's license" and "operates heavy machinery" are real, addable
+  // skills, unlike "able" or "organized" on their own.
+  "able", "assistant", "organized", "organize", "organizing", "organization", "organizations", "move",
+  "moving", "moved", "store", "stores", "storing", "stored", "items", "item", "products", "product",
+  "proper", "properly", "efficient", "efficiently", "monitors", "monitor", "monitoring", "quality",
+  "pace", "paced", "independently", "independent", "detail", "details", "attention", "regulations",
+  "regulation", "procedure", "procedures", "dictated", "dictate", "follow", "follows", "following",
+  "state", "stand", "sit", "squat", "walk", "climb", "lift", "pounds", "verbal", "written",
+  "communication", "receive", "received", "receiving", "report", "reports", "reporting", "supervisor",
+  "remove", "removing", "removed", "update", "updates", "updating", "logs", "process", "processing",
+  "space", "free", "debris", "hazards", "aisles", "active", "member", "complete", "goals", "degree",
+  "equivalent", "during", "course", "excellent",
 ]);
 
 interface KeywordCount {
