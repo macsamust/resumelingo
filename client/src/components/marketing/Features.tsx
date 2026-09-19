@@ -4,7 +4,13 @@ const FEATURES = [
   { icon: "🎨", title: "15+ professional templates", body: "Executive, Modern, Government, Federal, Technical, Military Transition, Healthcare, Academic, and more. Preview instantly, no rebuilding." },
   { icon: "👁️", title: "Live preview", body: "Every change instantly updates across PDF, website, printable resume, and mobile view." },
   { icon: "📄", title: "Multiple resume versions", body: "Clone your resume instead of rewriting it: a Cloud Architect version, a Program Manager version, a Solutions Architect version, each with its own summary and keywords." },
-  { icon: "🔒", title: "Public or private sharing", body: "Set links public, password protected, recruiter only, or one time use, with optional expiration dates." },
+  // Sep 2026 QA pass (UX-03): previously promised "recruiter only" and "one
+  // time use" link types plus expiration on every link — none of that
+  // exists. The real Sharing section (ResumeEditPage) has three visibility
+  // modes (Public, Private, Password protected, with expiration only on
+  // Password protected) plus Recruiter Mode as a separate access-code
+  // feature, not a link type. Rewritten to match.
+  { icon: "🔒", title: "Public, private, or password protected sharing", body: "Set your link's visibility to public, private (owner only), or password protected with an optional expiration date. Recruiter Mode adds a separate access code that unlocks extra detail for whoever you give it to." },
   // "trend over time" was previously an unqualified promise here, but the
   // view-count is the only part every plan actually gets — the trend
   // chart/score history is Premium-only (DashboardController.buildResumeAnalytics).

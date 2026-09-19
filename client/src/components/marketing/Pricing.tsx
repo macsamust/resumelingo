@@ -4,10 +4,20 @@ import { catalogApi, marketingEventApi } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { SubscriptionPlan } from "../../types";
 
+// Sep 2026 QA pass (UX-03): Professional's "Analytics" and Premium's
+// "Resume analytics" read as the same feature repeated, when they're not —
+// every plan gets a running view count, Professional's own addition is
+// Resume scoring (already listed separately below), and Premium is what
+// actually adds trend charts and score history over time (see
+// DashboardController.buildResumeAnalytics and Features.tsx's matching
+// "Resume analytics" card). Worded to match instead of overlapping.
+// NOTE: this array is a client-side fallback only — SubscriptionController
+// serves the live plan list from the D1 `plans` table (admin-editable via
+// AdminPlanController), so the same wording fix belongs there too.
 const FALLBACK_PLANS: SubscriptionPlan[] = [
   { tier: "starter", name: "Starter", priceMonthly: 0, resumeLimit: 1, features: ["One resume", "Basic template", "PDF download", "Public link", "Basic tips"] },
-  { tier: "professional", name: "Professional", priceMonthly: 9.99, resumeLimit: 3, features: ["Three resumes", "Unlimited edits", "Template library", "Private sharing", "Analytics", "Resume scoring", "Career Center", "AI assistance", "Application Tracker"] },
-  { tier: "premium", name: "Premium", priceMonthly: 19.99, resumeLimit: -1, features: ["Everything in Professional", "Unlimited resumes", "Premium templates", "Branded resume link", "Resume analytics", "Interview preparation", "Career coaching resources", "ATS optimization", "AI cover letters & thank-you letters", "AI Career Coach"] },
+  { tier: "professional", name: "Professional", priceMonthly: 9.99, resumeLimit: 3, features: ["Three resumes", "Unlimited edits", "Template library", "Private sharing", "View count analytics", "Resume scoring", "Career Center", "AI assistance", "Application Tracker"] },
+  { tier: "premium", name: "Premium", priceMonthly: 19.99, resumeLimit: -1, features: ["Everything in Professional", "Unlimited resumes", "Premium templates", "Branded resume link", "Analytics trend charts & score history", "Interview preparation", "Career coaching resources", "ATS optimization", "AI cover letters & thank-you letters", "AI Career Coach"] },
 ];
 
 export function Pricing() {
