@@ -107,13 +107,27 @@ export class SubscriptionService {
    * recover from below: a customer id we have on file that this mode of
    * Stripe has never heard of. Distinguishing this from any other Stripe
    * failure matters — retrying by creating a brand-new customer is the right
-   * move for "resource_missing" on the "id" param specifically, but would be
-   * wrong (and would mask the real problem) for almost anything else Stripe
-   * could throw here (a card error, a misconfigured Price id, a genuine API
-   * outage).
+   * move for "resource_missing" specifically, but would be wrong (and would
+   * mask the real problem) for almost anything else Stripe could throw here
+   * (a card error, a misconfigured Price id, a genuine API outage).
+   *
+   * Deliberately does NOT also require `param === "id"` — an earlier version
+   * of this check did, copied from a Stripe CLI `customers retrieve` test
+   * (where the id is a path parameter literally named "id"), but
+   * createPortalSession/createCheckoutSession both pass the customer id as a
+   * *body* field named "customer" (`billingPortal.sessions.create({customer:
+   * ...})`, `checkout.sessions.create({customer: ...})`), so Stripe reports
+   * the invalid param as "customer" there, not "id" — the param-name check
+   * silently never matched, which is exactly why the first version of this
+   * recovery never fired in production (confirmed live against
+   * cus_V6xLF2iezJFsFg, Sep 2026: the account's stripeCustomerId stayed
+   * unchanged and the raw Stripe error kept reaching the user after
+   * deploying the param==="id" version). The error `code` alone
+   * ("resource_missing") is Stripe's stable, documented signal for this
+   * case regardless of which param name carried the bad id.
    */
   private isUnknownCustomerError(err: unknown): boolean {
-    return err instanceof Stripe.errors.StripeInvalidRequestError && err.code === "resource_missing" && err.param === "id";
+    return err instanceof Stripe.errors.StripeInvalidRequestError && err.code === "resource_missing";
   }
 
   /**
