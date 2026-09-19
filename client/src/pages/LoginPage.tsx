@@ -2,6 +2,7 @@ import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ApiError } from "../api";
+import { PasswordField } from "../components/common/PasswordField";
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -43,17 +44,14 @@ export function LoginPage() {
               placeholder="you@example.com"
             />
           </div>
-          <div className="field">
-            <label>Password</label>
-            <input
-              type="password"
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-            />
-          </div>
+          <PasswordField
+            label="Password"
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+          />
           <p className="form-footnote" style={{ textAlign: "right", marginTop: -8 }}>
             <Link to="/forgot-password">Forgot password?</Link>
           </p>

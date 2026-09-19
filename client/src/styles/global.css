@@ -364,6 +364,19 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .field textarea { resize: vertical; min-height: 70px; }
 .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--indigo); }
 
+/* PasswordField — eye-icon show/hide toggle, app-wide (Sep 2026). The
+   wrapper is only needed so the toggle button can sit absolutely inside the
+   input's own box instead of taking up separate layout space next to it. */
+.password-field-wrap { position: relative; }
+.password-field-wrap input { padding-right: 42px; }
+.password-field-toggle {
+  position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; padding: 0; border: none; background: transparent;
+  color: var(--muted); cursor: pointer; border-radius: 6px;
+}
+.password-field-toggle:hover { color: var(--navy-light); background: var(--border); }
+
 /* MonthYearField — replaces <input type="month"> (unreliable cross-browser,
    e.g. Firefox falls back to free text) with a calendar-icon trigger that
    opens a constrained Month + Year dropdown pair. Used by

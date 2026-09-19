@@ -5,6 +5,7 @@ import { ConfirmDialog } from "../../components/common/ConfirmDialog";
 import { useToast } from "../../components/common/Toast";
 import { useAdminAuth } from "../../context/AdminAuthContext";
 import { adminApi, ApiError } from "../../api";
+import { PasswordField } from "../../components/common/PasswordField";
 import { AdminAccount } from "../../types";
 
 const EMPTY_NEW = { name: "", email: "", password: "" };
@@ -114,17 +115,14 @@ export function AdminAdminsPage() {
               required
             />
           </div>
-          <div className="field">
-            <label>Password</label>
-            <input
-              type="password"
-              minLength={8}
-              placeholder="At least 8 characters"
-              value={newAdmin.password}
-              onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
-              required
-            />
-          </div>
+          <PasswordField
+            label="Password"
+            minLength={8}
+            placeholder="At least 8 characters"
+            value={newAdmin.password}
+            onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
+            required
+          />
         </div>
         <button className="btn btn-primary" type="submit" disabled={creating}>
           {creating ? "Adding…" : "Add admin"}

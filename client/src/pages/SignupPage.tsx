@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, catalogApi } from "../api";
 import { ProfessionSummary, SubscriptionPlan } from "../types";
+import { PasswordField } from "../components/common/PasswordField";
 
 /** Only these two are ever worth carrying through signup — Starter needs no upgrade step, and anything else in the query param is ignored rather than trusted. */
 const UPGRADABLE_TIERS = new Set(["professional", "premium"]);
@@ -97,18 +98,15 @@ export function SignupPage() {
               placeholder="you@example.com"
             />
           </div>
-          <div className="field">
-            <label>Password</label>
-            <input
-              type="password"
-              required
-              minLength={8}
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 8 characters"
-            />
-          </div>
+          <PasswordField
+            label="Password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="At least 8 characters"
+          />
           <div className="field">
             <label>Profession (optional)</label>
             <select value={profession} onChange={(e) => setProfession(e.target.value)}>

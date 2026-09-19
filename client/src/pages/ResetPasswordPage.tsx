@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { authApi, ApiError } from "../api";
+import { PasswordField } from "../components/common/PasswordField";
 
 export function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -59,30 +60,24 @@ export function ResetPasswordPage() {
             <p className="sub">Choose a new password for your account.</p>
             {error && <div className="form-error">{error}</div>}
             <form onSubmit={onSubmit}>
-              <div className="field">
-                <label>New password</label>
-                <input
-                  type="password"
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="At least 8 characters"
-                />
-              </div>
-              <div className="field">
-                <label>Confirm new password</label>
-                <input
-                  type="password"
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Reenter your new password"
-                />
-              </div>
+              <PasswordField
+                label="New password"
+                required
+                minLength={8}
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="At least 8 characters"
+              />
+              <PasswordField
+                label="Confirm new password"
+                required
+                minLength={8}
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Reenter your new password"
+              />
               <button className="btn btn-primary btn-block" type="submit" disabled={submitting}>
                 {submitting ? "Resetting…" : "Reset password"}
               </button>

@@ -6,6 +6,7 @@ import { Modal } from "../../components/common/Modal";
 import { useToast } from "../../components/common/Toast";
 import { useAdminAuth } from "../../context/AdminAuthContext";
 import { adminApi, ApiError } from "../../api";
+import { PasswordField } from "../../components/common/PasswordField";
 
 /**
  * Self-service security settings for the *calling* admin's own account —
@@ -203,16 +204,13 @@ export function AdminSecurityPage() {
       {confirmDisable && (
         <Modal title="Turn off two factor authentication" onClose={() => setConfirmDisable(false)} disableDismiss={disabling}>
           <p className="modal-message">Enter your password to confirm turning off two factor authentication.</p>
-          <div className="field">
-            <label>Password</label>
-            <input
-              type="password"
-              autoFocus
-              value={disablePassword}
-              onChange={(e) => setDisablePassword(e.target.value)}
-              placeholder="••••••••"
-            />
-          </div>
+          <PasswordField
+            label="Password"
+            autoFocus
+            value={disablePassword}
+            onChange={(e) => setDisablePassword(e.target.value)}
+            placeholder="••••••••"
+          />
           <div className="modal-actions">
             <button type="button" className="btn btn-ghost" onClick={() => setConfirmDisable(false)} disabled={disabling}>
               Cancel

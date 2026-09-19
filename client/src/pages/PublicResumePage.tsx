@@ -4,6 +4,7 @@ import { ApiError, catalogApi } from "../api";
 import { PublicResume, ReferenceEntry, RecruiterCard } from "../types";
 import { buildContactLine, filterAnswerEntries, formatMonth, isRealContactValue, ResumePreview, sortAwards, sortByDateRange } from "../components/builder/ResumePreview";
 import { ResumeQrCode } from "../components/builder/ResumeQrCode";
+import { PasswordField } from "../components/common/PasswordField";
 import { CLEARANCE_OPTIONS, recruiterOptionLabel, REMOTE_PREFERENCE_OPTIONS, WORK_AUTHORIZATION_OPTIONS } from "../config/recruiterOptions";
 import { groupAchievementsByExperience } from "../utils/starBullet";
 import { PublicResumeSkeleton } from "../components/common/PublicResumeSkeleton";
@@ -338,16 +339,13 @@ export function PublicResumePage() {
           <h1>Password required</h1>
           <p className="sub">This resume is password protected.</p>
           <form onSubmit={onSubmitPassword}>
-            <div className="field">
-              <label>Password</label>
-              <input
-                type="password"
-                autoComplete="off"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoFocus
-              />
-            </div>
+            <PasswordField
+              label="Password"
+              autoComplete="off"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoFocus
+            />
             {passwordError && <p className="form-error">Incorrect password. Please try again.</p>}
             <button className="btn btn-primary btn-block" type="submit">
               View resume

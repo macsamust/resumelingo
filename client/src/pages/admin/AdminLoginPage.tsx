@@ -2,6 +2,7 @@ import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../../context/AdminAuthContext";
 import { ApiError } from "../../api";
+import { PasswordField } from "../../components/common/PasswordField";
 
 export function AdminLoginPage() {
   const { login } = useAdminAuth();
@@ -56,17 +57,14 @@ export function AdminLoginPage() {
                   placeholder="admin@resumelingo.app"
                 />
               </div>
-              <div className="field">
-                <label>Password</label>
-                <input
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                />
-              </div>
+              <PasswordField
+                label="Password"
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+              />
             </>
           ) : (
             <div className="field">

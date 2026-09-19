@@ -5,6 +5,7 @@ import { Modal } from "../components/common/Modal";
 import { Pricing } from "../components/marketing/Pricing";
 import { useAuth } from "../context/AuthContext";
 import { ApiError, authApi, catalogApi, setAuthToken } from "../api";
+import { PasswordField } from "../components/common/PasswordField";
 import { ProfessionSummary } from "../types";
 
 /**
@@ -201,28 +202,22 @@ export function ProfilePage() {
         {passwordError && <div className="form-error">{passwordError}</div>}
         {passwordSuccess && <div className="empty-state">Password changed.</div>}
         <form onSubmit={onChangePassword}>
-          <div className="field">
-            <label>Current password</label>
-            <input
-              type="password"
-              required
-              autoComplete="current-password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label>New password</label>
-            <input
-              type="password"
-              required
-              minLength={8}
-              autoComplete="new-password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="At least 8 characters"
-            />
-          </div>
+          <PasswordField
+            label="Current password"
+            required
+            autoComplete="current-password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+          />
+          <PasswordField
+            label="New password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="At least 8 characters"
+          />
           <button className="btn btn-primary btn-block" type="submit" disabled={savingPassword}>
             {savingPassword ? "Changing…" : "Change password"}
           </button>
