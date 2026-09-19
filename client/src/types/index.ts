@@ -198,6 +198,8 @@ export interface Resume {
   contactLinkedIn: string;
   photoUrl: string;
   title: string;
+  /** Optional public-facing headline shown under the name on the public link/PDF — see server's Resume.displayHeadline. Null/blank falls back to title. */
+  headline: string | null;
   profession: string;
   professionLabel: string;
   templateKey: string;

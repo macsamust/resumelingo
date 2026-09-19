@@ -156,6 +156,10 @@ export function ResumeEditPage() {
   const [contactLinkedIn, setContactLinkedIn] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
   const [title, setTitle] = useState("");
+  // Optional public-facing headline override (Sep 2026, UX-07) — see
+  // types/index.ts Resume.headline. Blank means "fall back to title", same
+  // convention as the server's displayHeadline getter.
+  const [headline, setHeadline] = useState("");
   const [templateKey, setTemplateKey] = useState("");
   const [visibility, setVisibility] = useState<LinkVisibility>("public");
   // Blank means "leave the existing password alone" (Sep 2026 fix — this
@@ -342,6 +346,7 @@ export function ResumeEditPage() {
         setContactLinkedIn(isRealContactValue(r.contactLinkedIn) ? r.contactLinkedIn : "");
         setPhotoUrl(r.photoUrl);
         setTitle(r.title);
+        setHeadline(r.headline ?? "");
         setTemplateKey(r.templateKey);
         setVisibility(r.visibility);
         setAccessPasswordExpiresAt(r.accessPasswordExpiresAt ? isoToDatetimeLocal(r.accessPasswordExpiresAt) : "");
@@ -428,6 +433,7 @@ export function ResumeEditPage() {
     contactLinkedIn,
     photoUrl,
     title,
+    headline,
     professionKey,
     templateKey,
     visibility,
@@ -710,6 +716,10 @@ export function ResumeEditPage() {
     contactLinkedIn,
     photoUrl,
     title,
+    // Blank means "fall back to title" — send null rather than "" so the
+    // server's Resume.displayHeadline `?.trim() || title` fallback is what
+    // decides, not an empty-string headline that would technically be "set".
+    headline: headline.trim() === "" ? null : headline,
     profession: professionKey,
     templateKey,
     visibility,
@@ -1042,6 +1052,7 @@ export function ResumeEditPage() {
       contactLinkedIn={contactLinkedIn}
       photoUrl={photoUrl}
       title={title}
+      headline={headline}
       professionLabel={professionDetail?.label ?? resume.professionLabel}
       templateKey={templateKey}
       templateName={templates.find((t) => t.key === templateKey)?.name}
@@ -1161,6 +1172,21 @@ export function ResumeEditPage() {
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={(e) => setTitle(titleCase(e.target.value))}
               />
+              <p className="hero-note" style={{ margin: "4px 0 0" }}>
+                Shows on your My Resumes dashboard — not shown to recruiters unless you leave Public headline blank
+                below.
+              </p>
+            </div>
+            <div className="field">
+              <label>Public headline (optional)</label>
+              <input
+                value={headline}
+                onChange={(e) => setHeadline(e.target.value)}
+                placeholder={title || "Defaults to your resume title"}
+              />
+              <p className="hero-note" style={{ margin: "4px 0 0" }}>
+                What shows under your name on the public link and PDF. Leave blank to use the resume title above.
+              </p>
             </div>
             <div className="field">
               <label>Profession</label>

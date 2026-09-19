@@ -12,6 +12,8 @@ interface Props {
   /** Data: URL of an uploaded personal photo — only rendered by photo-capable template families (Portrait, Designer, Monochrome, Showcase); other templates ignore it. */
   photoUrl?: string;
   title: string;
+  /** Optional public-facing headline override — see types/index.ts Resume.headline. When set, wins over `title` for the on-page/PDF heading; `title` itself is never shown here otherwise. */
+  headline?: string | null;
   professionLabel: string;
   templateKey?: string;
   templateName?: string;
@@ -269,6 +271,7 @@ export function ResumePreview({
   contactLinkedIn,
   photoUrl,
   title,
+  headline,
   professionLabel,
   templateKey,
   templateName,
@@ -292,7 +295,7 @@ export function ResumePreview({
     fontFamily: style.font,
   } as CSSProperties;
 
-  const heading = title || "Untitled Resume";
+  const heading = headline?.trim() || title || "Untitled Resume";
 
   // Contact line: email and LinkedIn are hyperlinked (LinkedIn spelled out as
   // its full URL rather than a plain "LinkedIn" label); phone is plain text.

@@ -21,6 +21,8 @@ export interface CreateResumeInput {
   contactLinkedIn: string;
   photoUrl: string;
   title: string;
+  /** Optional public-facing headline override — see shared ResumeRecord.headline / Resume.displayHeadline. Never set at creation time (Sep 2026, UX-07) — only ever added later via Edit Resume. */
+  headline?: string | null;
   profession: string;
   templateKey: string;
   visibility: LinkVisibility;
@@ -54,6 +56,8 @@ export interface UpdateResumeInput {
   contactLinkedIn?: string;
   photoUrl?: string;
   title?: string;
+  /** null clears it back to "fall back to title"; undefined leaves it unchanged — see UpdateResumeInput's other nullable fields for the same convention. */
+  headline?: string | null;
   profession?: string;
   templateKey?: string;
   visibility?: LinkVisibility;
@@ -401,6 +405,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       contactLinkedIn: input.contactLinkedIn,
       photoUrl: input.photoUrl,
       title: input.title,
+      headline: input.headline ?? null,
       profession: input.profession,
       templateKey: input.templateKey,
       visibility: input.visibility,
@@ -465,6 +470,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       contactLinkedIn: input.contactLinkedIn ?? existing.contactLinkedIn,
       photoUrl: input.photoUrl ?? existing.photoUrl,
       title: input.title ?? existing.title,
+      headline: input.headline !== undefined ? input.headline : existing.headline,
       profession: input.profession ?? existing.profession,
       templateKey: input.templateKey ?? existing.templateKey,
       visibility: input.visibility ?? existing.visibility,

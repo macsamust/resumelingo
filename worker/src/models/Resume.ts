@@ -26,6 +26,17 @@ export class Resume {
   readonly contactLinkedIn: string;
   readonly photoUrl: string;
   readonly title: string;
+  /**
+   * Optional public-facing headline, shown under the name on the public
+   * resume page and in the PDF/print export — separate from `title`, which
+   * doubles as the label on the dashboard's My Resumes list and was never
+   * meant to be read by a recruiter (Sep 2026 UX review, UX-07: an internal
+   * QA test title like "Recruiter Access Code QA 0911" was showing as the
+   * public headline). Null/blank means "fall back to title" — see
+   * displayHeadline below, which every public-facing renderer should read
+   * instead of title directly.
+   */
+  readonly headline: string | null;
   readonly profession: string;
   readonly templateKey: string;
   readonly visibility: LinkVisibility;
@@ -88,6 +99,7 @@ export class Resume {
     this.contactLinkedIn = record.contactLinkedIn;
     this.photoUrl = record.photoUrl;
     this.title = record.title;
+    this.headline = record.headline ?? null;
     this.profession = record.profession;
     this.templateKey = record.templateKey;
     this.visibility = record.visibility;
@@ -219,6 +231,11 @@ export class Resume {
     return this.references;
   }
 
+  /** What actually renders under the name on the public page/PDF — the headline if set, else title. See `headline`'s own doc comment for why these are separate fields. */
+  get displayHeadline(): string {
+    return this.headline?.trim() || this.title;
+  }
+
   /**
    * Per-resume Profile Strength Score (0-100) — same formula
    * DashboardController averages across a user's resumes for the dashboard
@@ -276,6 +293,7 @@ export class Resume {
       contactLinkedIn: this.contactLinkedIn,
       photoUrl: this.photoUrl,
       title: this.title,
+      headline: this.headline,
       profession: this.profession,
       professionLabel: this.professionLabel,
       templateKey: this.templateKey,
@@ -340,6 +358,11 @@ export class Resume {
       contactLinkedIn: this.contactLinkedIn,
       photoUrl: this.photoUrl,
       title: this.title,
+      // What actually renders as the on-page headline (see displayHeadline's
+      // own doc comment) — `title` above stays in the public payload only
+      // for the plain-text/filename exports, which want the resume's own
+      // internal name rather than its public headline.
+      headline: this.displayHeadline,
       professionLabel: this.professionLabel,
       templateKey: this.templateKey,
       template: this.template,

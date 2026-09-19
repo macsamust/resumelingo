@@ -396,6 +396,8 @@ export interface ResumeRecord {
    */
   photoUrl: string;
   title: string;
+  /** Optional public-facing headline — see Resume.displayHeadline (worker/src/models/Resume.ts) for the fall-back-to-title logic every renderer should go through instead of reading this column directly. */
+  headline: string | null;
   profession: string;
   templateKey: string;
   visibility: LinkVisibility;
