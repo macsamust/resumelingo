@@ -2,6 +2,19 @@
 
 **See also `protecting-your-app-idea.md`** (repo root) — informal notes from a Sep 5, 2026 conversation on protecting the app idea/business: what's automatically protectable (copyright), what needs action (trademark, patent, trade secret), what actually deters copying in practice vs. what doesn't, and when to bring in a real IP attorney. Not legal advice, not a build item — kept as a standalone reference note rather than folded into this file.
 
+## App Improvements — possible future enhancements
+
+**LLM-based ATS keyword matching (proposed, Sep 2026).** `matchKeywords`/`extractKeywords` (`client/src/utils/atsCheck.ts`) rank a pasted job description's most-repeated words and flag which ones are missing from the resume, using plain word-frequency plus a hand-maintained `STOPWORDS` blocklist — deliberately not an AI call, since it runs inside a `useMemo` in `ResumeEditPage.tsx` that recomputes live on every keystroke as the job description is typed/pasted, with no debounce and no network round trip.
+
+Real-world testing (Sep 19, 2026 UX pass, UX-06) found this approach has a ceiling: any job posting leaning on plain-English duty language rather than named tools/skills (delivery, warehouse, retail, healthcare postings especially) surfaces generic verbs and connectors ("along," "assigned," "delivers," "sorts," "able," "organized," "move," "store") as "missing keywords" just as often as real skill terms, since frequency alone can't distinguish a named skill from a repeated verb. The stopword list was expanded twice against real examples, but a static blocklist can't cover every posting's vocabulary — expect new noise words to keep surfacing as different industries get tested.
+
+The app already uses an LLM (Workers AI) elsewhere for exactly this kind of judgment call — `ContentGenerator.ts` generates summaries/bullets, plus achievements, cover letters, and thank-you letters — but always behind an explicit "Generate" button click, never something that fires automatically while typing. A real fix would move keyword matching to that same pattern instead of trying to out-patch the stopword list forever:
+- A debounced, explicit trigger (e.g., an "Analyze keywords" button) instead of live-per-keystroke, similar to `AchievementGeneratorPanel`'s existing shape (loading state, Professional/Premium-gated).
+- A new Worker endpoint that sends the job description + resume text to Workers AI and gets back real extracted skills/requirements instead of a raw word-frequency list.
+- Accepts real per-call latency and inference cost in exchange for results that generalize to any industry without manual stopword maintenance.
+
+Not started — flagged as a future enhancement, not committed to.
+
 ## P1 — Security anomaly detection: scheduled job + Admin Console report + email alerts (proposed, Sep 2026) — **Shipped.**
 
 Built as scoped below: `security_events` table (migration `0034_security_monitoring.sql`, alongside a new `public_resume_password_ip_log` table for the second prevention gap), `SecurityEventRepository`, `SecurityAlertService` (the single write path every throttled controller calls — dedupes per (type, ip) per window so an ongoing burst writes one row/sends one email, not one per blocked request), `SecurityMonitorService` (new daily Cron Trigger, `"0 13 * * *"`, alongside the existing weekly view-digest one), two new `EmailService` methods (`sendSecurityAlertEmail` fires immediately on critical, `sendSecurityDailyDigestEmail` rolls up everything else once a day), and the Admin Console's new Security Report page (`/admin/security-report`, same filter/pagination conventions as the Audit Log page).
