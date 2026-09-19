@@ -7,6 +7,7 @@ import {
   HSTS_VALUE,
   isHttpsRequest,
   isLocalDevelopmentHost,
+  isSensitiveLookingPath,
   PERMISSIONS_POLICY,
   redirectHttpToHttps,
 } from "./edgeSecurity";
@@ -23,6 +24,22 @@ describe("isLocalDevelopmentHost", () => {
   it("does not treat production hosts as local", () => {
     expect(isLocalDevelopmentHost("resumelingo.com")).toBe(false);
     expect(isLocalDevelopmentHost("www.resumelingo.com")).toBe(false);
+  });
+});
+
+describe("isSensitiveLookingPath", () => {
+  it("flags any dot-prefixed path segment", () => {
+    expect(isSensitiveLookingPath("/.env")).toBe(true);
+    expect(isSensitiveLookingPath("/.git/config")).toBe(true);
+    expect(isSensitiveLookingPath("/.aws/credentials")).toBe(true);
+    expect(isSensitiveLookingPath("/foo/.hidden/bar")).toBe(true);
+  });
+
+  it("does not flag normal app routes or asset paths", () => {
+    expect(isSensitiveLookingPath("/")).toBe(false);
+    expect(isSensitiveLookingPath("/dashboard")).toBe(false);
+    expect(isSensitiveLookingPath("/r/cj-owens-landscaper-extraordinaire")).toBe(false);
+    expect(isSensitiveLookingPath("/assets/index-abc123.js")).toBe(false);
   });
 });
 

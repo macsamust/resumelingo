@@ -96,6 +96,20 @@ export function redirectHttpToHttps(request: Request): Response | null {
   });
 }
 
+/**
+ * True for any path with a dot-prefixed segment — /.env, /.git/config,
+ * /.aws/credentials, /.well-known-lookalikes, etc. (SEC-A04, Sep 2026). The
+ * Vite build never emits a dotfile or dot-directory, so this can't ever
+ * false-positive on a real asset; it exists purely so the SPA catch-all
+ * (which otherwise serves index.html/200 for any unmatched path, including
+ * these) doesn't look like a hit to an automated scanner. Deliberately a
+ * general "any dot segment" rule instead of a specific filename list, since
+ * the list of things scanners probe for only grows.
+ */
+export function isSensitiveLookingPath(pathname: string): boolean {
+  return pathname.split("/").some((segment) => segment.startsWith("."));
+}
+
 /** Clone `response` with browser security headers. Preserves CORS and any other existing headers. */
 export function applyBrowserSecurityHeaders(request: Request, response: Response): Response {
   const headers = new Headers(response.headers);

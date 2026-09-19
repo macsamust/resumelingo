@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { Env } from "./types";
 import { withServices } from "./middleware/servicesMiddleware";
-import { fetchWithEdgeSecurity } from "./middleware/edgeSecurity";
+import { fetchWithEdgeSecurity, isSensitiveLookingPath } from "./middleware/edgeSecurity";
 import { createServices } from "./services/createServices";
 import authRoutes from "./routes/auth.routes";
 import resumeRoutes from "./routes/resume.routes";
@@ -216,6 +216,18 @@ app.onError((err, c) => {
 app.notFound((c) => {
   if (c.req.path.startsWith("/api/")) {
     return c.json({ error: "Route not found." }, 404);
+  }
+  // Sep 2026 security hardening pass (SEC-A04): the SPA catch-all below
+  // serves index.html (200) for literally any unmatched path — including
+  // /.env, /.git/config, /.aws/credentials, etc. Nothing real is actually
+  // exposed (there's no such file on disk; ASSETS.fetch just falls through
+  // to the SPA shell like it would for any other unknown route), but it's
+  // noisy for security scanners and looks worse than it is. The Vite build
+  // never emits a dotfile/dot-directory path, so blocking any path with a
+  // dot-prefixed segment is safe and catches this whole class at once
+  // rather than an ever-growing list of specific filenames.
+  if (isSensitiveLookingPath(c.req.path)) {
+    return c.text("Not found.", 404);
   }
   return c.env.ASSETS.fetch(c.req.raw);
 });
