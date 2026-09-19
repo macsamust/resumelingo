@@ -81,12 +81,20 @@ export function ResumeEditPage() {
   // clone (see handleBrandedClone below) — the original resume this was
   // cloned from is deliberately untouched, so it's easy to end up with two
   // near-duplicate resumes without realizing the old one is now redundant.
-  // Router state only, same "one-time, this one navigation" pattern as
-  // justCreatedFirstResume above — dismissing it (or just navigating away)
-  // doesn't leave anything to clean up.
-  const [clonedFromTitle, setClonedFromTitle] = useState(
-    () => (location.state as { clonedFromTitle?: string } | null)?.clonedFromTitle
-  );
+  // Router state only, same intent as justCreatedFirstResume above, but read
+  // via an effect keyed on `id` rather than a lazy useState initializer:
+  // that navigate() goes from this same page (resume A) to this same page
+  // (resume B) — React Router keeps ResumeEditPage mounted across that,
+  // param change only, so a lazy initializer (which only ever runs on true
+  // mount) would've already run and missed it. justCreatedFirstResume gets
+  // away with the lazy-initializer pattern only because it's always reached
+  // from a genuinely different page (ResumeBuilderPage), which does mount
+  // this component fresh.
+  const [clonedFromTitle, setClonedFromTitle] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    const fromState = (location.state as { clonedFromTitle?: string } | null)?.clonedFromTitle;
+    if (fromState) setClonedFromTitle(fromState);
+  }, [id, location.state]);
   // "Full Circle" — the post-publish modal (see
   // docs/full-circle-coach-build-brief.md's revision history: this went
   // through a dashboard checklist card, then a plain toast, before landing
