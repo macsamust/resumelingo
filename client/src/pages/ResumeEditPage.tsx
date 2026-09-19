@@ -77,6 +77,16 @@ export function ResumeEditPage() {
   const [showFirstResumePrompt, setShowFirstResumePrompt] = useState(
     () => (location.state as { justCreatedFirstResume?: boolean } | null)?.justCreatedFirstResume === true
   );
+  // Housekeeping nudge after landing here via the "Get your branded link"
+  // clone (see handleBrandedClone below) — the original resume this was
+  // cloned from is deliberately untouched, so it's easy to end up with two
+  // near-duplicate resumes without realizing the old one is now redundant.
+  // Router state only, same "one-time, this one navigation" pattern as
+  // justCreatedFirstResume above — dismissing it (or just navigating away)
+  // doesn't leave anything to clean up.
+  const [clonedFromTitle, setClonedFromTitle] = useState(
+    () => (location.state as { clonedFromTitle?: string } | null)?.clonedFromTitle
+  );
   // "Full Circle" — the post-publish modal (see
   // docs/full-circle-coach-build-brief.md's revision history: this went
   // through a dashboard checklist card, then a plain toast, before landing
@@ -317,12 +327,12 @@ export function ResumeEditPage() {
   // (e.g. the resume-limit cap) needs to reach TextPromptDialog's own error
   // display, right next to the button just clicked, rather than being
   // swallowed here and only shown as an easy-to-miss toast.
-  const handleBrandedClone = async (title: string) => {
+  const handleBrandedClone = async (cloneTitle: string) => {
     if (!id) return;
-    const { resume: cloned } = await resumeApi.clone(id, { title });
+    const { resume: cloned } = await resumeApi.clone(id, { title: cloneTitle });
     setShowBrandedCloneDialog(false);
-    showToast("success", `Cloned as "${title}" with your branded link.`);
-    navigate(`/resumes/${cloned.id}/edit`);
+    showToast("success", `Cloned as "${cloneTitle}" with your branded link.`);
+    navigate(`/resumes/${cloned.id}/edit`, { state: { clonedFromTitle: resume?.title } });
   };
 
   // The photo upload only applies to templates that actually render a photo
@@ -1113,6 +1123,22 @@ export function ResumeEditPage() {
           </button>
         </div>
       </div>
+      {clonedFromTitle && (
+        <div className="app-banner app-banner-notice">
+          <span>
+            Your original resume "{clonedFromTitle}" is unchanged — <Link to="/dashboard">delete it from your dashboard</Link> if
+            you don't need it anymore.
+          </span>
+          <button
+            type="button"
+            className="app-banner-dismiss"
+            aria-label="Dismiss"
+            onClick={() => setClonedFromTitle(undefined)}
+          >
+            ×
+          </button>
+        </div>
+      )}
       {error && <div className="form-error">{error}</div>}
       <form id="resume-edit-form" onSubmit={onSubmit} className="builder-grid" onBlur={handleFormBlur}>
         {/* builder-panel-with-fab: extra bottom padding so the fixed
