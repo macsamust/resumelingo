@@ -2,6 +2,23 @@
 
 **See also `protecting-your-app-idea.md`** (repo root) — informal notes from a Sep 5, 2026 conversation on protecting the app idea/business: what's automatically protectable (copyright), what needs action (trademark, patent, trade secret), what actually deters copying in practice vs. what doesn't, and when to bring in a real IP attorney. Not legal advice, not a build item — kept as a standalone reference note rather than folded into this file.
 
+## Receipt — Sep 19, 2026 security hardening assessment: all 8 findings closed
+
+A tester's report (SEC-A01 through SEC-A08) was worked through end to end this session. Final disposition of each, for future reference — full reasoning/detail for each is further down this file or in the relevant code's own comments where noted:
+
+| Finding | Disposition |
+| --- | --- |
+| SEC-A01 — JWT access token in localStorage | **Fixed.** Moved to HttpOnly cookies (short-lived access token + revocable long-lived refresh token). See this file's SEC-A01 section below. |
+| SEC-A02 — Enforcing CSP was thin (report-only) | **Fixed.** `script-src`/`style-src`/etc. promoted from Report-Only to enforcing (PR #2, commit `f5ab54c`). Retested by the tester on prod — Pass. |
+| SEC-A03 — No rate limiting on login | **False negative.** Throttling already existed (`AuthController.ts`, 10 failures/15min) — the tester's 5-request sample didn't reach the threshold. No change needed. |
+| SEC-A04 — SPA catch-all serves 200/HTML for `/.env`, `/.git/config`, etc. | **Fixed.** `isSensitiveLookingPath()` in `edgeSecurity.ts` — any dot-prefixed path segment now 404s before reaching the SPA shell (commit `d9cd571`). |
+| SEC-A05 — Public resume contact info always visible | **Closed, by design — not built.** A public resume link's whole purpose is to be reachable; hiding contact info by default would work against that for the large majority of use. Logged under "App Improvements" below in case real friction ever surfaces. |
+| SEC-A06 — Stripe billing portal (stale customer ID) | **Duplicate.** Already fixed earlier this session as part of the general QA pass (`SubscriptionService.ts`), confirmed live before this report was even reviewed. |
+| SEC-A07 — CSRF exposure | **Confirmed moot.** No cookie existed anywhere in the app until SEC-A01 shipped, so there was nothing for CSRF to ride on. SEC-A01's cookies use `SameSite=Lax` on a single-origin app, which is the right mitigation going forward — revisit only if a cross-origin API surface is ever added. |
+| SEC-A08 — HSTS missing `preload` | **Confirmed correct as-is.** Deliberately withheld until every subdomain is verified HTTPS-only — `preload` is slow to reverse once submitted. `HSTS_VALUE` in `edgeSecurity.ts` documents this. |
+
+Nothing outstanding from this report. The only follow-on work intentionally left for later, not because it's unresolved but because it's a separate decision: migrating admin auth (`AdminApi`/`AdminAuthContext`) to the same cookie pattern SEC-A01 built for subscribers — admin already has its own secret, shorter 12h TTL, and `tokenVersion` revocation, so it wasn't at the same risk level and was deliberately kept out of scope.
+
 ## SEC-A01 — Subscriber auth moved off localStorage JWT to HttpOnly cookies (Sep 2026) — **Shipped (subscriber-side).**
 
 A security hardening report flagged that the subscriber access token lived in `localStorage` and rode an `Authorization: Bearer` header the client attached itself — any XSS could read and replay it until expiry/logout. CJ's call, discussed explicitly: don't just do the minimal fix (a plain HttpOnly cookie with the same 7-day lifetime and no revocation path beyond the existing `tokenVersion` bump) — build the "right-sized" foundation now (short-lived access token + separate long-lived, revocable refresh token) rather than defer it to a second migration later, while still stopping short of full rotation/reuse-detection (a bigger, separate step, not needed at this scale yet).
