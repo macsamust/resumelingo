@@ -30,6 +30,32 @@ interface DropdownPosition {
 const DROPDOWN_MAX_WIDTH = 300;
 const VIEWPORT_MARGIN = 16;
 
+/**
+ * Sep 2026 QA pass (UX-05): DashboardController.buildRecentViews returns up
+ * to 10 raw view events, newest first — the same resume viewed twice in
+ * quick succession (a real, common case for Recruiter Mode: someone opens
+ * the link, then reopens it later the same day) shows as two rows whose
+ * relative-time text often rounds to the exact same string ("7 days ago"
+ * twice), reading as a display bug rather than two real events. Collapsing
+ * consecutive same-resume rows into one, with a "×N" count and the most
+ * recent timestamp, both fixes that and stops one frequently-viewed resume
+ * from crowding all 10 slots and hiding views of everything else.
+ */
+function collapseConsecutive(views: RecentView[]): (RecentView & { count: number })[] {
+  const collapsed: (RecentView & { count: number })[] = [];
+  for (const v of views) {
+    const last = collapsed[collapsed.length - 1];
+    if (last && last.resumeId === v.resumeId) {
+      last.count += 1;
+      // Rows arrive newest-first, so the first one seen per group is
+      // already the most recent — nothing to update on the merge.
+    } else {
+      collapsed.push({ ...v, count: 1 });
+    }
+  }
+  return collapsed;
+}
+
 export function NotificationBell({ recentViews }: { recentViews: RecentView[] }) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<DropdownPosition | null>(null);
@@ -41,8 +67,25 @@ export function NotificationBell({ recentViews }: { recentViews: RecentView[] })
     const onClick = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
     };
-    document.addEventListener("click", onClick);
-    return () => document.removeEventListener("click", onClick);
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    // Capture phase (the `true` below), not bubble — several dashboard
+    // controls (the resume kebab menu's own trigger, notably) call
+    // e.stopPropagation() in their own click handler to manage their own
+    // open/closed state. A bubble-phase listener here never sees a click
+    // that was stopped before it bubbled up to `document`, so clicking the
+    // kebab while this dropdown was open used to leave both open at once,
+    // with this dropdown's higher z-index visually covering Clone/Delete
+    // underneath (Sep 2026 QA pass, UX-05). Capture fires top-down before
+    // any bubble-phase stopPropagation takes effect, so this always sees
+    // the click regardless of what the clicked element does with it after.
+    document.addEventListener("click", onClick, true);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("click", onClick, true);
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, [open]);
 
   // Positioned in JS off the trigger's real bounding box rather than a pure
@@ -73,6 +116,13 @@ export function NotificationBell({ recentViews }: { recentViews: RecentView[] })
 
   if (recentViews.length === 0) return null;
 
+  const grouped = collapseConsecutive(recentViews);
+  // The badge shows the raw event count (matching the server's "last 10
+  // events" cap), which reads as permanently stuck at 10 for any resume
+  // with steady traffic — the header line below spells out that it's the
+  // most recent 10, not an unread count, so the number isn't mistaken for
+  // one that should go down or vary the way an actual unread badge would.
+
   return (
     <div className="notification-bell" ref={containerRef}>
       <button
@@ -95,12 +145,13 @@ export function NotificationBell({ recentViews }: { recentViews: RecentView[] })
           style={{ top: position.top, left: position.left, width: position.width }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="notification-bell-header">Recent Recruiter Mode views</div>
+          <div className="notification-bell-header">Most recent {recentViews.length} Recruiter Mode views</div>
           <ul className="notification-bell-list">
-            {recentViews.map((v, i) => (
+            {grouped.map((v, i) => (
               <li key={`${v.resumeId}-${v.viewedAt}-${i}`}>
                 <span>
                   Someone viewed <strong>{v.title}</strong>
+                  {v.count > 1 ? ` ×${v.count}` : ""}
                 </span>
                 <span className="hero-note">{formatRelativeTime(v.viewedAt)}</span>
               </li>
