@@ -209,41 +209,92 @@ export const TOPICS: CareerTopic[] = [
   },
 ];
 
-/** Career Center is a Professional/Premium perk — Starter ("Basic") accounts and signed-out visitors see an upgrade prompt instead of the content. */
+/** Career Center is a Professional/Premium perk — Starter ("Basic") accounts and signed-out visitors see one real preview article plus an upgrade prompt instead of the rest. */
 const ALLOWED_TIERS = new Set(["professional", "premium"]);
 
-function CareerCenterLocked({ signedIn }: { signedIn: boolean }) {
+/**
+ * The one topic a signed-out visitor or Starter subscriber gets in full —
+ * "Resume Tips" specifically because it's first in TOPICS, it's what most
+ * footer/nav traffic clicking in from "Resume tips" is actually chasing, and
+ * it's the most directly relevant to someone who hasn't built a resume here
+ * yet (unlike, say, Salary Negotiation or Recruiters).
+ *
+ * Before this, CareerCenterPage was a flat wall for anyone not on
+ * Professional/Premium — the footer/navbar linked to it as if it were public
+ * content ("Resume tips," "Interview tips," styled identically to "How it
+ * works" / "Features"), but clicking through revealed zero content of any
+ * kind (Sep 2026 UX review, UX-11). This gives that traffic something real
+ * to read rather than a bare paywall, which also makes it an actual
+ * acquisition tool instead of a dead end.
+ */
+const PREVIEW_TOPIC_ID = "resume-tips";
+
+function CareerCenterPreview({ signedIn }: { signedIn: boolean }) {
+  const previewTopic = TOPICS.find((t) => t.id === PREVIEW_TOPIC_ID)!;
+  const remainingTopics = TOPICS.filter((t) => t.id !== PREVIEW_TOPIC_ID);
+
   return (
     <main className="career-page">
       <section className="career-hero">
         <div className="wrap">
-          <div className="career-locked">
+          <div className="section-head">
             <span className="section-tag">Career Center</span>
-            <h1>This page is for Professional and Premium subscribers</h1>
+            <h1>Everything you need between resumes and offers</h1>
             <p>
-              {signedIn
-                ? "Your current plan doesn't include the Career Center. Upgrade to Professional or Premium to unlock resume tips, interview prep, salary negotiation guidance, and more."
-                : "Sign in with a Professional or Premium account to unlock resume tips, interview prep, salary negotiation guidance, and more. Starting on the free Starter plan? Upgrade any time from your dashboard."}
+              Current, practical guidance across the whole job search and career growth journey, pulled together
+              from the field's most cited career sites and refreshed as hiring trends shift.
             </p>
-            <div className="career-locked-actions">
-              {signedIn ? (
-                <Link to="/dashboard" className="btn btn-primary">
-                  Upgrade my plan
-                </Link>
-              ) : (
-                <>
-                  <Link to="/login" className="btn btn-primary">
-                    Log in
-                  </Link>
-                  <Link to="/signup" className="btn btn-ghost">
-                    Sign up
-                  </Link>
-                </>
-              )}
-              <Link to="/#pricing" className="btn btn-ghost">
-                See plans & pricing
-              </Link>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div className="wrap career-sections">
+          <article className="career-section" id={previewTopic.id}>
+            <span className="career-section-tag">{previewTopic.tag}</span>
+            <h2>
+              {previewTopic.title} <span className="career-updated">(updated {previewTopic.updated})</span>
+            </h2>
+            <p className="career-intro">{previewTopic.intro}</p>
+            <ul className="career-tips">
+              {previewTopic.tips.map((tip, i) => (
+                <li key={i}>{tip}</li>
+              ))}
+            </ul>
+            <div className="career-sources">
+              <span className="career-sources-label">Read more:</span>
+              {previewTopic.sources.map((s) => (
+                <a key={s.url} href={s.url} target="_blank" rel="noreferrer">
+                  {s.label}
+                </a>
+              ))}
             </div>
+          </article>
+        </div>
+      </section>
+
+      <section className="features-bg">
+        <div className="wrap career-cta">
+          <h2>{remainingTopics.length} more guides for Professional and Premium subscribers</h2>
+          <p>{remainingTopics.map((t) => t.title).join(", ")} — all kept current as hiring trends shift.</p>
+          <div className="career-locked-actions">
+            {signedIn ? (
+              <Link to="/dashboard" className="btn btn-primary">
+                Upgrade my plan
+              </Link>
+            ) : (
+              <>
+                <Link to="/signup" className="btn btn-primary">
+                  Sign up
+                </Link>
+                <Link to="/login" className="btn btn-ghost">
+                  Log in
+                </Link>
+              </>
+            )}
+            <Link to="/#pricing" className="btn btn-ghost">
+              See plans & pricing
+            </Link>
           </div>
         </div>
       </section>
@@ -259,7 +310,7 @@ export function CareerCenterPage() {
 
   if (loading) return <div className="spinner-page"><div className="spinner-ring" role="status" aria-label="Loading" /></div>;
   if (!user || !ALLOWED_TIERS.has(user.subscriptionTier)) {
-    return <CareerCenterLocked signedIn={!!user} />;
+    return <CareerCenterPreview signedIn={!!user} />;
   }
 
   return (
