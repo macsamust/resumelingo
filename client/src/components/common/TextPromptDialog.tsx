@@ -10,6 +10,10 @@ interface Props {
   confirmLabel?: string;
   onSubmit: (value: string) => Promise<void> | void;
   onCancel: () => void;
+  /** When set, renders a live "this is the link you'll get" preview under the input as the person types — e.g. Clone's slug preview, so a typo in the title gets caught before the resume (and its link) actually exists, not after. Omit for any other use of this dialog. */
+  preview?: (value: string) => string;
+  /** Label above the preview line — defaults to a generic "Preview" if preview is set but this isn't. */
+  previewLabel?: string;
 }
 
 /**
@@ -18,7 +22,18 @@ interface Props {
  * value before submitting, and shows a loading state on the confirm button
  * while the request is in flight, same pattern as PasswordResetDialog.
  */
-export function TextPromptDialog({ title, message, label, defaultValue = "", placeholder, confirmLabel = "Save", onSubmit, onCancel }: Props) {
+export function TextPromptDialog({
+  title,
+  message,
+  label,
+  defaultValue = "",
+  placeholder,
+  confirmLabel = "Save",
+  onSubmit,
+  onCancel,
+  preview,
+  previewLabel = "Preview",
+}: Props) {
   const [value, setValue] = useState(defaultValue);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +67,11 @@ export function TextPromptDialog({ title, message, label, defaultValue = "", pla
         <div className="field">
           <label>{label}</label>
           <input autoFocus required value={value} onChange={(e) => setValue(e.target.value)} placeholder={placeholder} />
+          {preview && value.trim() && (
+            <p className="hero-note" style={{ marginTop: 6, marginBottom: 0 }}>
+              {previewLabel}: {preview(value.trim())}
+            </p>
+          )}
         </div>
         {error && <div className="form-error">{error}</div>}
         <div className="modal-actions">

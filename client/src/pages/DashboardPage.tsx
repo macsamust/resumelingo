@@ -16,6 +16,7 @@ import { NotificationBell } from "../components/dashboard/NotificationBell";
 import { ResumeLoopBadge } from "../components/dashboard/ResumeLoopBadge";
 import { PolyAvatar } from "../components/brand/PolyAvatar";
 import { formatRelativeTime } from "../utils/time";
+import { slugify } from "../utils/textFormat";
 import { DASHBOARD_TEASER_STEPS } from "../config/quickStartSteps";
 
 // "Job Search Resources" pulls the topics not already covered by the
@@ -551,12 +552,18 @@ export function DashboardPage() {
       {cloneSourceResume && (
         <TextPromptDialog
           title="Clone resume"
-          message="Give the cloned resume a unique title. This also becomes its public link."
+          message="This makes a new, separate resume — the one you're cloning stays unchanged. Give the clone a unique title below (it also becomes part of its public link)."
           label="Title"
           defaultValue={`${cloneSourceResume.title} (Copy)`}
           confirmLabel="Clone"
           onSubmit={handleClone}
           onCancel={() => setCloneSourceResume(null)}
+          previewLabel="Public link"
+          preview={(value) =>
+            user?.subscriptionTier === "premium"
+              ? `${window.location.host}/r/${slugify(user.name)}-${slugify(value)}`
+              : `${window.location.host}/r/${slugify(value)}-xxxxxx (plus a few random characters)`
+          }
         />
       )}
       {confirmDeleteResume && (

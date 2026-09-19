@@ -27,7 +27,7 @@ import { PolyAnimated } from "../components/brand/PolyAnimated";
 import { ApiError, authApi, careerLoopApi, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL, templateHasSkillsAndTools } from "../utils/templateAccess";
-import { titleCase } from "../utils/textFormat";
+import { slugify, titleCase } from "../utils/textFormat";
 import { canUseVisibility, VISIBILITY_LABEL, VISIBILITY_MIN_TIER } from "../utils/visibilityAccess";
 import { getTemplateStyle } from "../config/templateStyles";
 import { buildResumeTextBlob, isAtsSafeFamily, matchKeywords, runHealthChecks } from "../utils/atsCheck";
@@ -53,15 +53,6 @@ import {
 
 /** Display order for the Link visibility <select> — cheapest/most-available tier first. */
 const VISIBILITY_OPTIONS: LinkVisibility[] = ["public", "private", "password"];
-
-/** Same normalization as the server's ResumeRepository.slugify — used here only to check whether a resume's existing slug already starts with the subscriber's own name, i.e. already looks branded, not to generate one (the server owns that). */
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
 
 /** "2024-06-01T14:30:00.000Z" -> "2024-06-01T14:30" (local time) for a `<input type="datetime-local">`'s value. Empty string for a missing/invalid input. */
 function isoToDatetimeLocal(iso: string): string {
@@ -1416,8 +1407,9 @@ export function ResumeEditPage() {
                   <summary style={{ display: "inline", cursor: "pointer" }}>Want to learn more?</summary>
                   <span style={{ display: "block", marginTop: 4 }}>
                     Premium resumes get a branded link (your name plus the resume title) automatically — but only
-                    ones created after you upgraded. This one kept its original link. Cloning it makes a fresh copy
-                    under your current plan, which picks up the branded link right away.
+                    ones created after you upgraded. This one kept its original link. Cloning it makes a new,
+                    separate resume with its own branded link — this resume itself doesn't change, and you can do
+                    this again later for any other resume that still has an old-style link.
                   </span>
                 </details>
               </p>
@@ -1941,12 +1933,14 @@ export function ResumeEditPage() {
       {showBrandedCloneDialog && (
         <TextPromptDialog
           title="Clone resume"
-          message="Give the cloned resume a unique title. This also becomes its public link, and it'll pick up your branded link right away."
+          message="This creates a new, separate resume with your branded link — this resume itself won't change. Give the clone a title below (it also becomes part of the link)."
           label="Title"
           defaultValue={`${title} (Branded Link)`}
           confirmLabel="Clone"
           onSubmit={handleBrandedClone}
           onCancel={() => setShowBrandedCloneDialog(false)}
+          previewLabel="Public link"
+          preview={(value) => `${window.location.host}/r/${slugify(user?.name ?? "")}-${slugify(value)}`}
         />
       )}
       {showFirstResumePrompt && (
