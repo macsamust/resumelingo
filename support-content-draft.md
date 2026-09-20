@@ -2,7 +2,7 @@
 
 Draft for review. Once approved, this becomes real `/help`, `/faq`, and `/quick-start` pages in the app. Nothing here is live yet.
 
-**Setup step needed before this can go live:** `support@resumelingo.com` needs an actual inbox behind it. Since `resumelingo.com`'s DNS already has Cloudflare Email Routing configured (the `route1/2/3.mx.cloudflare.net` records we saw earlier), the fastest path is adding a routing rule in Cloudflare (Email → Email Routing) that forwards `support@resumelingo.com` to whichever inbox you actually check. Takes a couple of minutes, no new infrastructure needed.
+**Setup status:** `support@resumelingo.com` already has a real inbox — no setup step blocks this anymore. This note originally said the fastest path was a Cloudflare Email Routing forward; that plan was superseded during implementation (see TODO.md's Aug 2026 post-launch review) — `resumelingo.com` is now an iCloud+ Custom Email Domain, so `support@resumelingo.com` is a genuine send/receive mailbox through iCloud Mail, not a forward. The old Cloudflare Email Routing MX records were removed to avoid conflicting with Apple's. The address is already live elsewhere in the app (homepage CTA, 404 page, account-suspended error, Privacy/Terms) — this draft's Support/FAQ copy referencing it is safe to publish as-is on that front.
 
 ---
 

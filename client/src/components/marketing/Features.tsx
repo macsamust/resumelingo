@@ -24,6 +24,17 @@ const FEATURES = [
   // on this line's strength would find nothing behind it.
   { icon: "✅", title: "Resume Health Score & ATS optimization (Premium)", body: "Premium unlocks a Health Score, flags for missing metrics or weak summaries, and keyword recommendations scanned against real job titles." },
   { icon: "📚", title: "Career Center", body: "Resume tips, interview tips, salary negotiation, and success stories, all tailored to your profession, right on your dashboard." },
+  // Added Sep 2026 (marketing-copy audit) — four real, shipped
+  // Professional/Premium features with zero prior marketing presence: a
+  // prospective subscriber had no way to learn any of these existed before
+  // signing up. Gating matches the actual code exactly (ResumeBuilderPage's
+  // canUseAiAssist for Import/Achievements/Version History; ResumeService's
+  // referencesEnabled tier check for References) — don't loosen this
+  // wording without checking those gates first.
+  { icon: "📥", title: "Import an existing resume (Professional & Premium)", body: "Upload a PDF, Word doc, or plain text resume and Poly reads it, extracting your experience and education so you're editing, not starting from a blank page." },
+  { icon: "🏅", title: "Achievement generator (Professional & Premium)", body: "Describe what you did in plain language and get a polished, results-oriented bullet point back — the same 'increased X by Y%' framing recruiters look for." },
+  { icon: "🕓", title: "Version history (Professional & Premium)", body: "Every save is recoverable. Revert to an earlier version of a resume if a recent edit didn't work out." },
+  { icon: "📇", title: "Professional References (Professional & Premium)", body: "Add a references section that only shows to whoever you choose to share it with, kept separate from the resume everyone else sees." },
 ];
 
 export function Features() {

@@ -13,10 +13,18 @@ import { SubscriptionPlan } from "../../types";
 // "Resume analytics" card). Worded to match instead of overlapping.
 // NOTE: this array is a client-side fallback only — SubscriptionController
 // serves the live plan list from the D1 `plans` table (admin-editable via
-// AdminPlanController), so the same wording fix belongs there too.
+// AdminPlanController), so the same wording fix belongs there too. Sep 2026
+// marketing-copy audit: added "Resume import", "Achievement generator",
+// "Version history", and "References" to Professional (Premium inherits
+// them via "Everything in Professional") — all four are real, shipped,
+// Professional/Premium-gated features (see ResumeBuilderPage's
+// canUseAiAssist and ResumeService's referencesEnabled) that had no
+// marketing presence anywhere before this. The live D1 `plans` table needs
+// this same addition made through the Admin Plans page — editing this
+// array alone doesn't change what a visitor actually sees.
 const FALLBACK_PLANS: SubscriptionPlan[] = [
   { tier: "starter", name: "Starter", priceMonthly: 0, resumeLimit: 1, features: ["One resume", "Basic template", "PDF download", "Public link", "Basic tips"] },
-  { tier: "professional", name: "Professional", priceMonthly: 9.99, resumeLimit: 3, features: ["Three resumes", "Unlimited edits", "Template library", "Private sharing", "View count analytics", "Resume scoring", "Career Center", "AI assistance", "Application Tracker"] },
+  { tier: "professional", name: "Professional", priceMonthly: 9.99, resumeLimit: 3, features: ["Three resumes", "Unlimited edits", "Template library", "Private sharing", "View count analytics", "Resume scoring", "Career Center", "AI assistance", "Application Tracker", "Resume import", "Achievement generator", "Version history", "References"] },
   { tier: "premium", name: "Premium", priceMonthly: 19.99, resumeLimit: -1, features: ["Everything in Professional", "Unlimited resumes", "Premium templates", "Branded resume link", "Analytics trend charts & score history", "Interview preparation", "Career coaching resources", "ATS optimization", "AI cover letters & thank-you letters", "AI Career Coach"] },
 ];
 

@@ -1,14 +1,13 @@
 const TILES = [
   { icon: "📁", label: "My Resumes" },
-  // A "Career Circle Progress" tile (ResumeLoopBadge.tsx, the real dashboard
-  // feature the FullCircle.tsx section below is named after) was tried here
-  // and deliberately pulled: this homepage section is always-live and
-  // unflagged, but the feature itself is still behind CAREER_LOOP_ENABLED
-  // ("false" in production, no target date to flip it) and hasn't been
-  // validated with real usage yet. Advertising a named feature a fresh
-  // signup can't actually see, with no ship date, risked eroding trust in
-  // every other tile in this list that IS accurate today. Add it back once
-  // the flag is on for real.
+  // Added back Sep 2026 (marketing-copy audit): CAREER_LOOP_ENABLED flipped
+  // to "true" in production (wrangler.jsonc) since this tile was pulled —
+  // the "Full Circle" per-resume progress badge (ResumeLoopBadge.tsx) is
+  // live today, and FullCircle.tsx elsewhere on this same page already
+  // markets it as shipped. Leaving this tile out any longer would have been
+  // the actual accuracy problem — a real, currently-marketed feature
+  // missing from the one dashboard preview it belongs in.
+  { icon: "🔄", label: "Career Circle Progress" },
   { icon: "📊", label: "Resume Analytics" },
   { icon: "🔗", label: "Shared Links" },
   { icon: "👀", label: "Resume Views" },
