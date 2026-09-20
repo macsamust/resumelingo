@@ -1646,15 +1646,27 @@ export function ResumeEditPage() {
               </label>
               {referencesEnabled && (
                 <>
-                  <label className="checkbox-field">
-                    <input
-                      type="checkbox"
-                      checked={referencesRecruiterModeOnly}
-                      onChange={(e) => setReferencesRecruiterModeOnly(e.target.checked)}
-                    />
-                    Only add references to Recruiter Mode printout section when selecting "View resume"
-                  </label>
-                  {referencesRecruiterModeOnly && !recruiterModeEnabled && (
+                  {/* Recruiter Mode itself is Premium-only (recruiterModeEnabled
+                      can only ever be true for a Premium account — see
+                      ResumeService.update's tier check), but References moved
+                      onto Professional too (see canUseReferences above). A
+                      Professional subscriber was seeing this "only show
+                      references in Recruiter Mode" option even though they
+                      have no way to ever turn Recruiter Mode on — a Premium
+                      concept dangling in front of a Pro account with no path
+                      to use it. Gate the option itself on isPremium, not just
+                      its warning text underneath. */}
+                  {isPremium && (
+                    <label className="checkbox-field">
+                      <input
+                        type="checkbox"
+                        checked={referencesRecruiterModeOnly}
+                        onChange={(e) => setReferencesRecruiterModeOnly(e.target.checked)}
+                      />
+                      Only add references to Recruiter Mode printout section when selecting "View resume"
+                    </label>
+                  )}
+                  {isPremium && referencesRecruiterModeOnly && !recruiterModeEnabled && (
                     <p className="hero-note" style={{ marginTop: -8, marginBottom: 16, color: "var(--muted)" }}>
                       References won't appear anywhere until Recruiter Mode is also turned on above.
                     </p>

@@ -407,6 +407,16 @@ export class ResumeService {
     // they never touch the toggle again.
     const referencesRequested = input.referencesEnabled ?? existing.referencesEnabled;
     let referencesEnabled = referencesRequested;
+    // "Only show references in Recruiter Mode" only makes sense for an
+    // account that can actually turn Recruiter Mode on, which is
+    // Premium-only (see recruiterModeEnabled's tier check just below) —
+    // References itself moved to Professional/Premium, but this specific
+    // sub-option didn't move with it. Re-checked here the same way, so a
+    // Premium account that set this and then downgraded to Professional
+    // doesn't end up with references silently hidden everywhere (the
+    // client no longer even shows the toggle to a non-Premium account to
+    // turn it back off — see ResumeEditPage.tsx's References section).
+    let referencesRecruiterModeOnly = input.referencesRecruiterModeOnly ?? existing.referencesRecruiterModeOnly;
     // Activate/Deactivate is a Professional/Premium perk — unlike Recruiter
     // Mode/References above, this one throws (via assertActiveToggleAllowed)
     // rather than silently coercing, since it's an explicit action the user
@@ -426,9 +436,11 @@ export class ResumeService {
         recruiterModeEnabled = recruiterModeRequested && tier === SubscriptionTier.Premium;
         referencesEnabled =
           referencesRequested && (tier === SubscriptionTier.Professional || tier === SubscriptionTier.Premium);
+        referencesRecruiterModeOnly = referencesRecruiterModeOnly && tier === SubscriptionTier.Premium;
       } else {
         recruiterModeEnabled = false;
         referencesEnabled = false;
+        referencesRecruiterModeOnly = false;
       }
     }
 
@@ -589,6 +601,7 @@ export class ResumeService {
         generatedCoverLetter,
         recruiterModeEnabled,
         referencesEnabled,
+        referencesRecruiterModeOnly,
         ...(recruiterAccessCodeHash !== undefined ? { recruiterAccessCodeHash } : {}),
         ...(accessPasswordHash !== undefined ? { accessPasswordHash } : {}),
         ...(accessPasswordLegacyClear !== undefined ? { accessPassword: accessPasswordLegacyClear } : {}),
