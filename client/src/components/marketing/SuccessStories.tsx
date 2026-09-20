@@ -1,8 +1,13 @@
 /**
  * Exported so the Premium dashboard's "Success Stories" section can reuse
- * this same list rather than duplicating it. Michael B. is the first real
- * subscriber quote in this list (Sep 2026) — the other two are still
- * placeholder copy pending real replacements.
+ * this same list rather than duplicating it. Michael B. is the only real
+ * subscriber quote here (Sep 2026). The other two entries that used to sit
+ * here (Priya M., Sam T.) were placeholder copy — fabricated names, roles,
+ * and a specific invented "$28,000 salary increase" figure — presented on
+ * the live site as if they were real customers. Pulled entirely rather
+ * than left in place (marketing-copy audit, Sep 2026): CJ is sourcing two
+ * real replacement testimonials. Add them here as they come in; don't
+ * refill this list with placeholder copy in the meantime.
  */
 export const STORIES = [
   {
@@ -12,8 +17,6 @@ export const STORIES = [
     name: "Michael B.",
     role: "IT Specialist",
   },
-  { initial: "P", quote: "Switching templates and tightening my bullets with the AI generator helped me increase my salary by $28,000.", name: "Priya M.", role: "Program Manager" },
-  { initial: "S", quote: "I used ResumeLingo to reposition my experience and successfully switched careers into tech.", name: "Sam T.", role: "Cloud Architect" },
 ];
 
 export function SuccessStories() {
