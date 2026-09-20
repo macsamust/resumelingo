@@ -34,6 +34,13 @@
 4. **5.2** — Wrong resume password correctly denied access; UI stayed on password prompt with **no explicit error string**.
 5. **7.1** — After 12 wrong codes: `Too many attempts from this network. Please try again later.`
 
+## Update, Sep 20 2026
+
+Re-checked notes 3 and 4 above against current code as part of a broader doc/marketing audit:
+
+- **Note 4 (5.2 — no explicit error string on wrong resume password): already fixed, unrelated to this update.** `PublicResumePage.tsx` now has a `passwordError` state rendering "Incorrect password. Please try again." on a failed attempt, and the recruiter-code unlock form has the equivalent (`recruiterUnlockError`). The code's own comment traces this fix to "a Sep 2026 QA pass" — this report's own finding, evidently addressed sometime after Sep 11 without this report being updated to reflect it. No code change needed now; noting it here so the finding doesn't look outstanding to a future reader.
+- **Note 3 (2.7/2.8 — export verification was visual-only, file artifacts lost to browser download management): verified for real.** Generated an actual PDF using the app's real `jspdf` package (same version, same core technique — real `jsPDF.text()`/`splitTextToSize()` calls, no rasterization) with several distinctive marker strings, then extracted its text with two independent tools (`pdftotext` and Python's `pypdf`). Every marker came back exactly as written — confirms the export produces genuine selectable/searchable text, not an image, which is the actual thing this note left unconfirmed. Sandbox tooling limitations meant this exercised `jspdf` directly rather than literally executing `pdfExport.ts`'s `downloadResumePdf()` end-to-end (production build tooling wasn't runnable in that environment) — a from-a-real-browser check of the exact function would still be the fully airtight version, but the core "is this real text or a screenshot" question is now answered with real bytes, not just a screen glance.
+
 ## Final resume state
 
 - Visibility: **Public**
