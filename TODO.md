@@ -42,6 +42,12 @@ A QA/bug report's "recommendation" line is often a soft suggestion riding along 
 
 (Case in point, reverted: UX-07's report suggested letting the resume owner preview their own locked Recruiter Mode card without entering their own access code. Built as a toggle, then backed out — CJ's call was that entering the real code is the better experience even for the owner: it's consistent with what recruiters actually go through and keeps the code itself fresh in mind. The toggle added a new API field and a parallel UI path for a benefit that amounted to skipping one code entry.)
 
+## Working agreement — no heavy media storage (Sep 2026)
+
+This app doesn't store or host video, or any large binary file, as a resume feature. Not a cost-optimization detail — a product-scope line. Two prior decisions already drew this same line independently (Career Portfolio's "showcase projects/videos/awards" was pulled entirely; a real custom-domain feature was rejected for its own different reasons) before it was named as a standing principle here. Most recently: **"Video introduction" pulled from `FuturePremium.tsx`'s roadmap** — CJ's call was that a video intro isn't aligned with keeping the app lean, and wouldn't move overall product impact enough to justify taking on video storage/moderation as a new surface. `FuturePremium.tsx`'s roadmap section now renders nothing (empty `FUTURE` array) until a real next roadmap item exists that doesn't cross this line.
+
+Applies going forward to any future feature idea that would require storing/serving video, audio, or other large user-uploaded media as part of a resume — flag it against this line before scoping, the same way soft suggestions get checked against the friction-vs-knob test above.
+
 ## App Improvements — possible future enhancements
 
 **Security — Possible Enhancement: hide contact info on public resume link (SEC-A05, Sep 2026, not built).** A security hardening report flagged that `contactEmail`/`contactPhone` — the resume's own contact-section fields (not the account owner's login email) — are always included in the public `/r/:slug` payload and rendered unconditionally, with no visibility gate at all (unlike `visibility`, which only controls whether the resume loads, not which fields show once it does).
