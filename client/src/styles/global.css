@@ -206,12 +206,11 @@ section { padding: 84px 0; }
 
 .stories-bg { background: linear-gradient(180deg, #fff, var(--bg)); border-top: 1px solid var(--border); }
 /* auto-fit, not a fixed repeat(3, ...) — same reasoning as .future-grid
-   above: STORIES is down to one real testimonial (Sep 2026 marketing-copy
-   audit, two placeholder entries pulled), and a fixed 3-column track would
-   reserve two empty columns next to it, which `justify-content: center`
-   centers as a whole rather than centering the one real card. Grows back
-   to a normal-looking 3-across layout on its own once real replacement
-   testimonials are added back to STORIES. */
+   above: STORIES.tsx's own comment documents that its 2 placeholder
+   entries are being swapped for real ones over time, so this needs to
+   look right whether that list holds 1, 2, or 3 cards at any given
+   moment — auto-fit + justify-content:center handles all three without
+   further CSS changes as entries come and go. */
 .stories-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 320px)); justify-content: center; gap: 24px; }
 .story-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
 .story-quote { font-size: 15px; color: var(--navy-light); margin-bottom: 20px; }
