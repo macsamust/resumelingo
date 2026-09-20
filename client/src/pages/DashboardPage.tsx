@@ -56,6 +56,13 @@ export function DashboardPage() {
   // Modal-based dialogs, same pattern as AdminUsersPage.
   const [confirmDeleteResume, setConfirmDeleteResume] = useState<{ id: string; title: string } | null>(null);
   const [cloneSourceResume, setCloneSourceResume] = useState<{ id: string; title: string } | null>(null);
+  // Sep 2026: choosing a clone's title is a Premium perk (it feeds
+  // directly into the public slug — see ResumeService.clone's doc
+  // comment), so a Professional account no longer gets the title-prompt
+  // dialog at all. This is the plain confirm-only path for that tier —
+  // the server auto-titles the clone and assigns a fully random slug
+  // regardless of what (if anything) the client sends.
+  const [cloneConfirmResume, setCloneConfirmResume] = useState<{ id: string; title: string } | null>(null);
 
   const isPremium = user?.subscriptionTier === "premium";
   const isProfessional = user?.subscriptionTier === "professional";
@@ -134,6 +141,23 @@ export function DashboardPage() {
     showToast("success", `Cloned as "${title}".`);
     setCloneSourceResume(null);
     load();
+  };
+
+  // Professional's clone path — no title prompt (see cloneConfirmResume's
+  // doc comment above). Unlike handleClone, errors are caught here rather
+  // than left to an inline dialog field, since ConfirmDialog has no error
+  // display slot of its own; a toast is the right fallback for this
+  // simpler, no-input flow.
+  const handleQuickClone = async () => {
+    if (!cloneConfirmResume) return;
+    try {
+      await resumeApi.clone(cloneConfirmResume.id, { title: `${cloneConfirmResume.title} (Copy)` });
+      showToast("success", "Resume cloned.");
+      setCloneConfirmResume(null);
+      load();
+    } catch (err) {
+      showToast("error", err instanceof Error ? err.message : "Couldn't clone this resume.");
+    }
   };
 
   const handleManageBilling = async () => {
@@ -354,7 +378,13 @@ export function DashboardPage() {
                         <button
                           onClick={() => {
                             setOpenMenuId(null);
-                            setCloneSourceResume({ id: r.id, title: r.title });
+                            // Only Premium gets to pick the clone's title —
+                            // see cloneConfirmResume's doc comment above.
+                            if (isPremium) {
+                              setCloneSourceResume({ id: r.id, title: r.title });
+                            } else {
+                              setCloneConfirmResume({ id: r.id, title: r.title });
+                            }
                           }}
                         >
                           Clone
@@ -550,20 +580,27 @@ export function DashboardPage() {
         </div>
       )}
       {cloneSourceResume && (
+        // Premium only — see cloneConfirmResume's doc comment above for why
+        // Professional gets a plain confirm instead.
         <TextPromptDialog
           title="Clone resume"
-          message="This makes a new, separate resume — the one you're cloning stays unchanged. Give the clone a unique title below (it also becomes part of its public link)."
+          message="This makes a new, separate resume — the one you're cloning stays unchanged. Give the clone a unique title below (it also becomes part of its branded public link)."
           label="Title"
           defaultValue={`${cloneSourceResume.title} (Copy)`}
           confirmLabel="Clone"
           onSubmit={handleClone}
           onCancel={() => setCloneSourceResume(null)}
           previewLabel="Public link"
-          preview={(value) =>
-            user?.subscriptionTier === "premium"
-              ? `${window.location.host}/r/${slugify(user.name)}-${slugify(value)}`
-              : `${window.location.host}/r/${slugify(value)}-xxxxxx (plus a few random characters)`
-          }
+          preview={(value) => `${window.location.host}/r/${slugify(user!.name)}-${slugify(value)}`}
+        />
+      )}
+      {cloneConfirmResume && (
+        <ConfirmDialog
+          title="Clone resume"
+          message={`This makes a new, separate resume — "${cloneConfirmResume.title}" stays unchanged. The clone gets an automatic title and a randomly generated public link; choosing your own title and link is a Premium feature.`}
+          confirmLabel="Clone"
+          onConfirm={handleQuickClone}
+          onCancel={() => setCloneConfirmResume(null)}
         />
       )}
       {confirmDeleteResume && (

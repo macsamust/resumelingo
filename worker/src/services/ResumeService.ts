@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import { generateBrandedSlug, ResumeRepository, UpdateResumeInput } from "../repositories/ResumeRepository";
 import { UserRepository } from "../repositories/UserRepository";
 import { ResumeAnalyticsRepository } from "../repositories/ResumeAnalyticsRepository";
@@ -645,12 +646,24 @@ export class ResumeService {
     const templateKey = input.templateKey ?? record.templateKey;
     assertTemplateAllowed(user.subscriptionTier, templateKey);
 
-    const slug =
-      user.subscriptionTier === SubscriptionTier.Premium
-        ? await generateBrandedSlug(this.resumes, user.name, input.title)
-        : undefined;
+    // Choosing the clone's title is a Premium perk, not just a
+    // side-effect-free label — the title feeds directly into the public
+    // slug for every tier (see ResumeRepository.clone's
+    // `${slugify(title)}-${nanoid(6)}` default), so a Professional account
+    // could shape their URL's readable portion via this field even though
+    // the clean, no-random-suffix "branded" format is Premium-only. CJ's
+    // call (Sep 2026): Professional shouldn't get to customize the title
+    // at clone time at all — an auto title and a fully random, title-blind
+    // slug instead. Enforced here (not just hidden client-side, see
+    // DashboardPage.tsx) since a direct API call could otherwise still
+    // send a custom title.
+    const isPremiumClone = user.subscriptionTier === SubscriptionTier.Premium;
+    const title = isPremiumClone ? input.title : `${record.title} (Copy)`;
+    const slug = isPremiumClone
+      ? await generateBrandedSlug(this.resumes, user.name, title)
+      : nanoid(10);
 
-    const cloned = await this.resumes.clone(record, { title: input.title, templateKey, slug });
+    const cloned = await this.resumes.clone(record, { title, templateKey, slug });
     const resume = new Resume(cloned);
     await this.analytics.recordScoreSnapshot(resume.id, resume.strengthScore);
     return resume;
