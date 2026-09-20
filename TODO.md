@@ -2,6 +2,10 @@
 
 **See also `protecting-your-app-idea.md`** (repo root) — informal notes from a Sep 5, 2026 conversation on protecting the app idea/business: what's automatically protectable (copyright), what needs action (trademark, patent, trade secret), what actually deters copying in practice vs. what doesn't, and when to bring in a real IP attorney. Not legal advice, not a build item — kept as a standalone reference note rather than folded into this file.
 
+## Pre-launch checklist — must resolve before the public launch (app has no real users yet as of Sep 2026)
+
+- **Replace the two placeholder testimonials in `SuccessStories.tsx`.** Priya M. and Sam T. are fabricated names/quotes (Priya's includes a specific invented "$28,000 salary increase" figure) kept live for visual balance until real ones are ready — see that file's own comment. CJ's explicit commitment (Sep 2026): **these will be replaced before go-live**, not left as-is at launch. Swap each entry out in place (don't just add a third real one alongside them) once real testimonials are sourced.
+
 ## Receipt — Sep 19, 2026 security hardening assessment: all 8 findings closed
 
 A tester's report (SEC-A01 through SEC-A08) was worked through end to end this session. Final disposition of each, for future reference — full reasoning/detail for each is further down this file or in the relevant code's own comments where noted:
