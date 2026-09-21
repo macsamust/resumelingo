@@ -4,6 +4,41 @@ import { getProfessionByKey } from "../config/professions";
 import { currentJobFor } from "../services/ResumeRefreshNudgeService";
 import { AchievementEntry } from "../types";
 
+const MAX_ANSWER_VALUE_LENGTH = 300;
+
+/**
+ * Resume titles are typically "{Role} Resume" — same stripping logic as
+ * SkillSuggestionAiController's identically-named helper (kept as its own
+ * copy rather than shared, same "small enough to stay self-contained"
+ * convention as the AI services themselves). Returns undefined for a blank
+ * or generic ("New Resume") title so the AI prompt falls back to the
+ * profession alone instead of anchoring on a meaningless title.
+ */
+function roleFromTitle(title: string | undefined): string | undefined {
+  if (!title) return undefined;
+  const stripped = title.trim().replace(/\s*resume\s*$/i, "").trim();
+  if (!stripped || stripped.toLowerCase() === "new") return undefined;
+  return stripped;
+}
+
+/** Same "Label: value" line-building as SkillSuggestionAiController.buildAnswerLines — grounds the AI keywords in what this specific person actually said (an EMR system they named, years of experience, etc.), not just the title and profession name. */
+function buildAnswerLines(professionKey: string, answersJson: string): string[] {
+  const definition = getProfessionByKey(professionKey);
+  let answers: Record<string, string>;
+  try {
+    answers = JSON.parse(answersJson || "{}");
+  } catch {
+    return [];
+  }
+  return Object.entries(answers)
+    .filter((entry): entry is [string, string] => typeof entry[1] === "string" && entry[1].trim().length > 0)
+    .map(([key, value]) => {
+      const question = definition?.questions.find((q) => q.key === key);
+      const label = question?.label ?? key;
+      return `${label}: ${value.trim().slice(0, MAX_ANSWER_VALUE_LENGTH)}`;
+    });
+}
+
 const MAX_KEYWORDS_LENGTH = 1000;
 const MAX_CAR_FIELD_LENGTH = 500;
 
@@ -70,17 +105,45 @@ export class ResumeRefreshController {
   /** GET /api/resume-refresh/preview?token=... — read-only, safe to prefetch (same reasoning as verify-email: previewing a stale/valid link early is harmless, unlike the unsubscribe/commit actions). */
   preview = async (c: Context<AppEnv>) => {
     const token = c.req.query("token") ?? "";
-    const { skillSuggestionRepository } = c.get("services");
+    const { skillSuggestionRepository, skillSuggestionAiService } = c.get("services");
     const { record } = await this.loadContext(c, token);
     const job = currentJobFor(record.experience);
     const professionLabel = getProfessionByKey(record.profession)?.label ?? record.profession;
-    const suggestions = await skillSuggestionRepository.findByProfession(record.profession);
-    // A wider pick than the email's 5 — this is an interactive picker, not
-    // a glance-and-click email, so showing more curated options here is
-    // fine. Still the same honest, admin-curated catalog — see
-    // SkillSuggestionRepository's doc comment and TODO.md's "I do not
-    // want to oversell features" decision.
-    const keywords = suggestions.slice(0, 12).map((s) => s.label);
+
+    // Tailored to this resume's actual title (e.g. "Senior Backend
+    // Engineer" vs. just "Software Engineer"), not the generic per-
+    // profession catalog — same AI service Edit Resume's "Suggest more
+    // with AI" panel already uses, just as the only source here rather
+    // than an additive extra pass, per CJ's call (Sep 2026): replace, don't
+    // add a second picker. Only reached by Professional/Premium accounts
+    // anyway, since the nudge itself is Professional/Premium-only (see
+    // ResumeRepository.findEligibleForRefreshNudge) — same tier that
+    // already gates this AI service elsewhere, so no separate check needed
+    // here.
+    //
+    // Falls back to the curated per-profession catalog on any AI failure
+    // (timeout, bad model output, Workers AI outage) so the picker is never
+    // just empty — the daily nudge email's own 5-keyword teaser is left on
+    // the curated list too (see ResumeRefreshNudgeService.keywordsFor):
+    // running AI generation for every eligible resume in a batch cron job
+    // isn't worth the added cost/failure surface for a teaser that just
+    // links back to this page.
+    let keywords: string[];
+    try {
+      const { skills, tools } = await skillSuggestionAiService.generate({
+        professionLabel,
+        title: roleFromTitle(record.title),
+        answerLines: buildAnswerLines(record.profession, record.answers),
+      });
+      keywords = [...skills, ...tools].slice(0, 12);
+    } catch (err) {
+      console.error("ResumeRefreshController.preview: AI keyword generation failed, falling back to curated catalog", err);
+      keywords = [];
+    }
+    if (keywords.length === 0) {
+      const suggestions = await skillSuggestionRepository.findByProfession(record.profession);
+      keywords = suggestions.slice(0, 12).map((s) => s.label);
+    }
     return c.json({
       resumeTitle: record.title,
       professionLabel,
