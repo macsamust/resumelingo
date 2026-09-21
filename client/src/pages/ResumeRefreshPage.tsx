@@ -125,6 +125,13 @@ export function ResumeRefreshPage() {
     try {
       const result = await resumeRefreshApi.commit(token, items);
       setSkippedDuplicates(result.skippedDuplicates);
+      // So a second bullet drafted via "Add another" (below) can't re-offer
+      // a keyword chip that just got committed — same "already on this
+      // resume" disabling the picker already does for keywords used before
+      // this visit, just kept in sync for the ones used during it too.
+      if (reviewedFrom === "pickKeyword" && selectedKeywords.length > 0) {
+        setUsedKeywords((prev) => [...prev, ...selectedKeywords]);
+      }
       setStep("done");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong saving that. Please try again.");
@@ -138,6 +145,24 @@ export function ResumeRefreshPage() {
   // close; a tab the person navigated to some other way silently ignores
   // this, so the "Go to ResumeLingo" link stays as the fallback either way.
   const onCloseWindow = () => window.close();
+
+  // "done" previously only offered Close/Go to ResumeLingo — no way back in
+  // to draft a second bullet without reopening the email link. Resets the
+  // per-bullet state (selection + CAR fields + the just-committed drafts)
+  // and drops back to the keyword picker, the same entry point the flow
+  // starts at after "Yes" on the question step. Left as pickKeyword rather
+  // than remembering carForm, since most people take the fast path and this
+  // is one click away either way via "Or describe what you did yourself".
+  const onAddAnother = () => {
+    setSelectedKeywords([]);
+    setCarChallenge("");
+    setCarAction("");
+    setCarResult("");
+    setDraftItems([]);
+    setSkippedDuplicates(0);
+    setError(null);
+    setStep("pickKeyword");
+  };
 
   if (step === "loading") {
     return (
@@ -308,11 +333,14 @@ export function ResumeRefreshPage() {
                 resume, so {skippedDuplicates === 1 ? "it wasn't" : "those weren't"} added again.)
               </p>
             )}
+            <button className="btn btn-primary btn-block" onClick={onAddAnother} style={{ marginBottom: 10 }}>
+              Add another bullet
+            </button>
             <div style={{ display: "flex", gap: 12 }}>
               <button className="btn btn-ghost" style={{ flex: 1 }} onClick={onCloseWindow}>
                 Close this window
               </button>
-              <Link className="btn btn-primary" style={{ flex: 1 }} to="/login">
+              <Link className="btn btn-ghost" style={{ flex: 1 }} to="/login">
                 Go to ResumeLingo
               </Link>
             </div>
