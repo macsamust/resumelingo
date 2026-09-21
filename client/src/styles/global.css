@@ -2193,7 +2193,13 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   .career-section { padding: 28px 24px; }
   .career-section-tag { display: none; }
   .hero-grid, .builder-grid { grid-template-columns: 1fr; }
-  .steps, .feature-grid, .pricing-grid, .stories-grid, .resources-grid, .footer-grid, .mission-grid, .link-grid, .answer-grid, .references-grid, .circle-grid { grid-template-columns: 1fr 1fr; }
+  /* .stories-grid deliberately left out here, same as .future-grid below it
+     never was in this list — both use auto-fit + minmax(0, 320px) already,
+     so a hardcoded 2-column override just fights that and, with an odd
+     card count (3 testimonials), strands the last card alone on its own
+     row instead of letting auto-fit size all of them to fit. Found Sep
+     2026 after restoring the 3rd testimonial re-triggered this. */
+  .steps, .feature-grid, .pricing-grid, .resources-grid, .footer-grid, .mission-grid, .link-grid, .answer-grid, .references-grid, .circle-grid { grid-template-columns: 1fr 1fr; }
   .dashboard-grid { grid-template-columns: 1fr 1fr; }
   .price-card.featured { transform: none; }
   .app-shell { flex-direction: column; }
@@ -2212,7 +2218,7 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 @media (max-width: 640px) {
   .nav-links { display: none; }
   h1 { font-size: 30px; }
-  .steps, .feature-grid, .pricing-grid, .stories-grid, .resources-grid, .footer-grid, .mission-grid, .link-grid, .dashboard-grid, .answer-grid, .references-grid, .circle-grid { grid-template-columns: 1fr; }
+  .steps, .feature-grid, .pricing-grid, .resources-grid, .footer-grid, .mission-grid, .link-grid, .dashboard-grid, .answer-grid, .references-grid, .circle-grid { grid-template-columns: 1fr; }
   /* City/State and Start/End Date pairs in ExperienceEditor, EducationEditor,
      and ReferencesEditor — unlike every other paired-field grid above, these
      had no narrow-screen collapse, so each field shrank to ~150px on a
