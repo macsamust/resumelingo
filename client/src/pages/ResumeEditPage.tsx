@@ -27,7 +27,7 @@ import { PolyAnimated } from "../components/brand/PolyAnimated";
 import { ApiError, authApi, careerLoopApi, catalogApi, resumeApi } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL, templateHasSkillsAndTools } from "../utils/templateAccess";
-import { slugify, titleCase } from "../utils/textFormat";
+import { slugify, titleCase, formatPhoneNumber } from "../utils/textFormat";
 import { canUseVisibility, VISIBILITY_LABEL, VISIBILITY_MIN_TIER } from "../utils/visibilityAccess";
 import { getTemplateStyle } from "../config/templateStyles";
 import { buildResumeTextBlob, isAtsSafeFamily, matchKeywords, runHealthChecks } from "../utils/atsCheck";
@@ -1224,7 +1224,12 @@ export function ResumeEditPage() {
             </div>
             <div className="field">
               <label>Phone</label>
-              <input type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} />
+              <input
+                type="tel"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(formatPhoneNumber(e.target.value))}
+                placeholder="e.g. 555-123-4567"
+              />
             </div>
             <div className="field">
               <label>LinkedIn URL</label>

@@ -19,7 +19,7 @@ import { ApiError, catalogApi, resumeApi } from "../api";
 import { ImportedResumeData } from "../api/ResumeImportApi";
 import { useAuth } from "../context/AuthContext";
 import { canUseTemplate, CATEGORY_MIN_TIER, TIER_LABEL, templateHasSkillsAndTools } from "../utils/templateAccess";
-import { titleCase } from "../utils/textFormat";
+import { titleCase, formatPhoneNumber } from "../utils/textFormat";
 import { getTemplateStyle } from "../config/templateStyles";
 import { isAtsSafeFamily } from "../utils/atsCheck";
 import { starBulletFromAchievement } from "../utils/starBullet";
@@ -453,8 +453,8 @@ export function ResumeBuilderPage() {
               <input
                 type="tel"
                 value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value)}
-                placeholder="e.g. (555) 123-4567"
+                onChange={(e) => setContactPhone(formatPhoneNumber(e.target.value))}
+                placeholder="e.g. 555-123-4567"
               />
             </div>
             <div className="field">
