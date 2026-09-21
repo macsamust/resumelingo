@@ -29,7 +29,13 @@ const STAGES: Stage[] = [
     intro: "Build an ATS-safe resume from guided, profession-specific questions, and keep every application in one place.",
     detail:
       "Poly asks the right questions for your field, from certifications and clinical experience to CI/CD and GitHub, and drafts impact-focused bullets instead of a bare list of duties. Once you've applied, log the role, company, and status in the Job Tracker so you're never guessing what you sent where.",
-    link: { label: "Open the Job Tracker", to: "/job-applications" },
+    // Apply is the "build the resume" stage of the circle — the resume
+    // builder, not the Job Tracker (that's the logging step described in
+    // the copy above, not the doorway itself). Was pointing at
+    // /job-applications, which sent people to log an application before
+    // they'd necessarily built the resume to apply with. Fixed per CJ,
+    // Sep 2026.
+    link: { label: "New Resume", to: "/resumes/new" },
   },
   {
     id: "interview",
