@@ -46,6 +46,21 @@ export function ResumeRefreshPage() {
   // the CAR form with its fields still intact) rather than always going to
   // one hardcoded place.
   const [reviewedFrom, setReviewedFrom] = useState<"pickKeyword" | "carForm">("pickKeyword");
+  // Which review-step bullet boxes are expanded to a taller size. The CSS
+  // `resize: vertical` on .field textarea already lets desktop users drag a
+  // corner handle, but this page is reached from an email link and mostly
+  // opened on mobile, where browsers don't render that drag handle at all —
+  // so a long drafted bullet was stuck in a cramped 3-row box with no way to
+  // see it all short of scrolling inside it. This gives a tap target that
+  // works everywhere.
+  const [expandedBullets, setExpandedBullets] = useState<Set<number>>(new Set());
+  const toggleExpanded = (index: number) =>
+    setExpandedBullets((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
 
   const [carChallenge, setCarChallenge] = useState("");
   const [carAction, setCarAction] = useState("");
@@ -306,8 +321,22 @@ export function ResumeRefreshPage() {
             </p>
             {draftItems.map((item, i) => (
               <div className="field" key={i}>
-                <label>Resume bullet {draftItems.length > 1 ? i + 1 : ""}</label>
-                <textarea rows={3} value={item.bulletText} onChange={(e) => updateDraftBullet(i, e.target.value)} />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <label style={{ marginBottom: 0 }}>Resume bullet {draftItems.length > 1 ? i + 1 : ""}</label>
+                  <button
+                    type="button"
+                    className="btn-link"
+                    style={{ background: "none", border: "none", padding: 0, color: "var(--indigo)", cursor: "pointer", fontSize: 12.5, marginBottom: 6 }}
+                    onClick={() => toggleExpanded(i)}
+                  >
+                    {expandedBullets.has(i) ? "⤡ Collapse" : "⤢ Expand"}
+                  </button>
+                </div>
+                <textarea
+                  rows={expandedBullets.has(i) ? 8 : 3}
+                  value={item.bulletText}
+                  onChange={(e) => updateDraftBullet(i, e.target.value)}
+                />
               </div>
             ))}
             <button
