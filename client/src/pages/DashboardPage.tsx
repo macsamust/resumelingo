@@ -8,7 +8,7 @@ import { TextPromptDialog } from "../components/common/TextPromptDialog";
 import { useToast } from "../components/common/Toast";
 import { useAuth } from "../context/AuthContext";
 import { catalogApi, resumeApi } from "../api";
-import { DashboardSummary } from "../types";
+import { DashboardSummary, SubscriptionPlan } from "../types";
 import { RESOURCES as CAREER_RESOURCES } from "../components/marketing/CareerCenter";
 import { STORIES as SUCCESS_STORIES } from "../components/marketing/SuccessStories";
 import { TOPICS as CAREER_TOPICS } from "./CareerCenterPage";
@@ -63,6 +63,18 @@ export function DashboardPage() {
   // the server auto-titles the clone and assigns a fully random slug
   // regardless of what (if anything) the client sends.
   const [cloneConfirmResume, setCloneConfirmResume] = useState<{ id: string; title: string } | null>(null);
+  // Subscription Management's feature checklist below used to read
+  // user.plan.features straight off the auth payload — but User.plan
+  // (worker/src/models/User.ts) sources that from the static
+  // config/subscriptionPlans.ts file, not the D1 `plans` table Admin >
+  // Plans & Pricing actually edits (that table only ever fed the Pricing
+  // page/upgrade-modal's <Pricing> component). So an admin's edit showed
+  // up everywhere except here. Fetched separately and preferred over
+  // user.plan.features when available, so this card matches Admin's
+  // actual live text; falls back to user.plan.features (stale but never
+  // empty) if this fetch fails, same "never worse than before" fallback
+  // pattern as Pricing.tsx's own FALLBACK_PLANS. CJ flagged, Sep 2026.
+  const [livePlans, setLivePlans] = useState<SubscriptionPlan[] | null>(null);
 
   const isPremium = user?.subscriptionTier === "premium";
   const isProfessional = user?.subscriptionTier === "professional";
@@ -84,6 +96,13 @@ export function DashboardPage() {
   };
 
   useEffect(load, []);
+
+  useEffect(() => {
+    catalogApi
+      .listPlans()
+      .then((res) => setLivePlans(res.plans))
+      .catch(() => setLivePlans(null));
+  }, []);
 
   // Stripe's webhook (which flips subscriptionTier in our DB) can land a
   // beat after the browser gets redirected back here, so on a successful
@@ -569,7 +588,7 @@ export function DashboardPage() {
                 : `${summary.subscription.resumesUsed} of ${summary.subscription.resumeLimit} resumes used`}
             </p>
             <ul className="price-list">
-              {user.plan.features.map((f) => (
+              {(livePlans?.find((p) => p.tier === user.subscriptionTier)?.features ?? user.plan.features).map((f) => (
                 <li key={f}>{f}</li>
               ))}
             </ul>
