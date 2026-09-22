@@ -4,27 +4,22 @@ import { catalogApi, marketingEventApi } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { SubscriptionPlan } from "../../types";
 
-// Sep 2026 QA pass (UX-03): Professional's "Analytics" and Premium's
-// "Resume analytics" read as the same feature repeated, when they're not —
-// every plan gets a running view count, Professional's own addition is
-// Resume scoring (already listed separately below), and Premium is what
-// actually adds trend charts and score history over time (see
-// DashboardController.buildResumeAnalytics and Features.tsx's matching
-// "Resume analytics" card). Worded to match instead of overlapping.
-// NOTE: this array is a client-side fallback only — SubscriptionController
-// serves the live plan list from the D1 `plans` table (admin-editable via
-// AdminPlanController), so the same wording fix belongs there too. Sep 2026
-// marketing-copy audit: added "Resume import", "Achievement generator",
-// "Version history", and "References" to Professional (Premium inherits
-// them via "Everything in Professional") — all four are real, shipped,
-// Professional/Premium-gated features (see ResumeBuilderPage's
-// canUseAiAssist and ResumeService's referencesEnabled) that had no
-// marketing presence anywhere before this. The live D1 `plans` table needs
-// this same addition made through the Admin Plans page — editing this
-// array alone doesn't change what a visitor actually sees.
+// NOTE: this array is a client-side fallback only, used when
+// catalogApi.listPlans() fails — SubscriptionController serves the live
+// plan list from the D1 `plans` table (admin-editable via
+// AdminPlanController/AdminPlansPage), which is the real source of truth
+// visitors normally see. Kept in sync by hand with whatever's live there,
+// so a rare API failure shows the same thing as usual rather than a
+// visibly different (older or incomplete) list. Professional's feature
+// list below matches the live text CJ has configured in Admin > Plans &
+// Pricing as of Sep 2026 (including "QR Code," a real Professional+
+// feature — see qrCodeEnabled/canUseQrCode — that the live list already
+// had but this fallback was still missing). If you edit Professional or
+// Premium's features going forward, make the same edit in Admin > Plans &
+// Pricing (or vice versa) so the two don't drift apart again.
 const FALLBACK_PLANS: SubscriptionPlan[] = [
   { tier: "starter", name: "Starter", priceMonthly: 0, resumeLimit: 1, features: ["One resume", "Basic template", "PDF download", "Public link", "Basic tips"] },
-  { tier: "professional", name: "Professional", priceMonthly: 9.99, resumeLimit: 3, features: ["Three resumes", "Unlimited edits", "Template library", "Private sharing", "View count analytics", "Resume scoring", "Career Center", "AI assistance", "Application Tracker", "Resume import", "Achievement generator", "Version history", "References"] },
+  { tier: "professional", name: "Professional", priceMonthly: 9.99, resumeLimit: 3, features: ["Three resumes", "Template library", "Private sharing", "Resume import", "Resume analytics", "Resume scoring", "Career center", "AI assistance", "QR Code", "Achievement generator", "Job application tracker", "Professional references", "Version history"] },
   { tier: "premium", name: "Premium", priceMonthly: 19.99, resumeLimit: -1, features: ["Everything in Professional", "Unlimited resumes", "Premium templates", "Branded resume link", "Analytics trend charts & score history", "Interview preparation", "Career coaching resources", "ATS optimization", "AI cover letters & thank-you letters", "AI Career Coach"] },
 ];
 
