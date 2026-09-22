@@ -47,7 +47,14 @@ export function CopyFromResume<T>({ otherResumes, getItems, onCopy, transform, l
           </option>
         ))}
       </select>
-      <button type="button" className="btn btn-ghost" disabled={!selectedId} onClick={handleCopy}>
+      <button
+        type="button"
+        className="btn btn-ghost"
+        disabled={!selectedId}
+        onClick={handleCopy}
+        aria-label="Copy the selected resume's entries into this section"
+        title="Adds the selected resume's entries to what's already here — it won't replace or remove anything."
+      >
         Copy
       </button>
     </div>
