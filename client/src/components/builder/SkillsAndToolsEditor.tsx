@@ -179,7 +179,8 @@ export function SkillsAndToolsEditor({ professionKey, professionLabel, value, on
   return (
     <div className="skill-picker">
       <p className="hero-note" style={{ marginBottom: 16 }}>
-        Suggested for <strong>{professionLabel}</strong>: click a keyword to add it.
+        {/* Falls back to professionLabel when the resume has no title yet (new/untitled resumes) — CJ, Sep 2026: show the resume's own title here instead of the profession category. */}
+        Suggested for <strong>{resumeTitle?.trim() || professionLabel}</strong>: click a keyword to add it.
       </p>
       {loading ? (
         <div className="skill-picker-chips">
