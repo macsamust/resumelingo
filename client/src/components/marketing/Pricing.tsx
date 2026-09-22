@@ -19,7 +19,7 @@ import { SubscriptionPlan } from "../../types";
 // Pricing (or vice versa) so the two don't drift apart again.
 const FALLBACK_PLANS: SubscriptionPlan[] = [
   { tier: "starter", name: "Starter", priceMonthly: 0, resumeLimit: 1, features: ["One resume", "Basic template", "PDF download", "Public link", "Basic tips"] },
-  { tier: "professional", name: "Professional", priceMonthly: 9.99, resumeLimit: 3, features: ["Three resumes", "Template library", "Private sharing", "Resume import", "Resume analytics", "Resume scoring", "Career center", "AI assistance", "QR Code", "Achievement generator", "Job application tracker", "Professional references", "Version history"] },
+  { tier: "professional", name: "Professional", priceMonthly: 9.99, resumeLimit: 3, features: ["Three resumes", "Template library", "Private sharing", "Resume import", "Resume analytics", "Resume scoring", "Career Center", "AI assistance", "QR Code", "Achievement generator", "Job application tracker", "Professional references", "Version history"] },
   { tier: "premium", name: "Premium", priceMonthly: 19.99, resumeLimit: -1, features: ["Everything in Professional", "Unlimited resumes", "Premium templates", "Branded resume link", "Analytics trend charts & score history", "Interview preparation", "Career coaching resources", "ATS optimization", "AI cover letters & thank-you letters", "AI Career Coach"] },
 ];
 
