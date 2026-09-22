@@ -66,7 +66,7 @@ export const QUICK_START_STEPS: { title: string; body: JSX.Element }[] = [
     ),
   },
   {
-    title: "Review your AI generated summary",
+    title: "Review the summary Poly wrote",
     body: (
       <p>
         Once you've filled in enough of the above, ResumeLingo writes a professional summary and bullet points for

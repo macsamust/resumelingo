@@ -37,7 +37,7 @@ function ThankYouLetterLocked() {
           <div className="poly-avatar-slot">
             <ParrotLogo size={40} decorative={false} />
           </div>
-          <p style={{ margin: 0 }}>I'd love to help you write one, but AI thank-you letters are a Premium feature. Upgrade your plan to write one.</p>
+          <p style={{ margin: 0 }}>I'd love to help you write one, but thank-you letters written by Poly are a Premium feature. Upgrade your plan to write one.</p>
         </div>
         <Link to="/dashboard" className="btn btn-primary" style={{ marginTop: 16 }}>
           Upgrade my plan

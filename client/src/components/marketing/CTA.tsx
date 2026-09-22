@@ -6,7 +6,7 @@ export function CTA() {
       <div className="wrap">
         <div className="cta-band">
           <h2>Your resume deserves to be a living career profile, not a static document.</h2>
-          <p>Answer a few questions, let AI write it, and share your resume link today.</p>
+          <p>Answer a few questions, let Poly write it, and share your resume link today.</p>
           <div className="cta-actions">
             {/* "Start your circle" bookends the page with the same word Hero's
                 circle-tag line opens it with, rather than a generic "Get

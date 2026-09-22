@@ -248,7 +248,7 @@ export function ProfilePage() {
         </div>
         {user.subscriptionTier === "starter" && (
           <>
-            <p className="modal-message">Upgrade for more resumes, premium templates, and AI-assisted tools.</p>
+            <p className="modal-message">Upgrade for more resumes, premium templates, and Poly's AI-assisted tools.</p>
             <button type="button" className="btn btn-primary btn-block" onClick={() => setShowUpgradeModal(true)}>
               Upgrade plan
             </button>
@@ -305,7 +305,7 @@ export function ProfilePage() {
           </div>
 
           <div className="field" style={{ marginTop: 20 }}>
-            <label style={{ marginBottom: 4 }}>AI Resume Refresh nudge</label>
+            <label style={{ marginBottom: 4 }}>Poly's Resume Refresh nudge</label>
             <p className="hero-note" style={{ marginTop: 0, marginBottom: 8 }}>
               If a resume goes quiet, we'll check in and offer a couple of keywords worth considering for your
               role — no login needed to act on it from the email.

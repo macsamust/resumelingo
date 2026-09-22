@@ -52,11 +52,11 @@ export function UnsubscribePage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h1>{isRefreshNudge ? "AI Resume Refresh nudge" : "Weekly resume digest"}</h1>
+        <h1>{isRefreshNudge ? "Poly's Resume Refresh nudge" : "Weekly resume digest"}</h1>
         {done ? (
           <p className="sub">
             {isRefreshNudge
-              ? "You've been unsubscribed from the AI Resume Refresh nudge. You can reenable it anytime from your Profile page."
+              ? "You've been unsubscribed from Poly's Resume Refresh nudge. You can reenable it anytime from your Profile page."
               : "You've been unsubscribed from the weekly resume view digest. You can reenable it anytime from your Profile page."}
           </p>
         ) : (

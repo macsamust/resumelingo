@@ -67,7 +67,7 @@ export function ResumeImportPanel({ canImport, onImported }: Props) {
       <div className="builder-panel" style={{ marginBottom: 24 }}>
         <h2>Import an existing resume</h2>
         <p className="hero-note" style={{ marginBottom: 12 }}>
-          Upload a resume (PDF, Word, or text) and let AI pull your work history, education, and skills into the form
+          Upload a resume (PDF, Word, or text) and let Poly pull your work history, education, and skills into the form
           below automatically. This requires the Professional or Premium plan. Upgrading opens in a new tab, so
           whatever you've already filled in below stays right where it is.
         </p>
@@ -82,7 +82,7 @@ export function ResumeImportPanel({ canImport, onImported }: Props) {
     <div className="builder-panel" style={{ marginBottom: 24 }}>
       <h2>Import an existing resume</h2>
       <p className="hero-note" style={{ marginBottom: 12 }}>
-        Upload a resume (PDF, Word .docx, or plain text) and AI will pull your work history, education, and skills
+        Upload a resume (PDF, Word .docx, or plain text) and Poly will pull your work history, education, and skills
         into the form below. Review and edit everything before saving.
       </p>
       <input
@@ -101,7 +101,7 @@ export function ResumeImportPanel({ canImport, onImported }: Props) {
       {status === "analyzing" && (
         <div className="import-status" role="status" aria-live="polite">
           <span className="spinner-ring" aria-hidden="true" />
-          Analyzing your resume with AI, this can take up to 30 seconds…
+          Poly is analyzing your resume, this can take up to 30 seconds…
         </div>
       )}
       {status === "error" && error && (

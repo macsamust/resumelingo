@@ -71,7 +71,7 @@ export function FirstResumeEmailPreferencesModal({ onClose }: Props) {
         </div>
         <p className="modal-message">
           You just created your first resume — Poly's celebrating with you. Upgrade any time for more resumes,
-          premium templates, and AI-assisted tools.
+          premium templates, and Poly's AI-assisted tools.
         </p>
         <div className="modal-actions">
           <button type="button" className="btn btn-primary" onClick={onClose}>
@@ -110,7 +110,7 @@ export function FirstResumeEmailPreferencesModal({ onClose }: Props) {
       </div>
 
       <div className="field" style={{ marginTop: 20 }}>
-        <label style={{ marginBottom: 4 }}>AI Resume Refresh nudge</label>
+        <label style={{ marginBottom: 4 }}>Poly's Resume Refresh nudge</label>
         <p className="hero-note" style={{ marginTop: 0, marginBottom: 8 }}>
           If a resume goes quiet, we'll check in and offer a couple of keywords worth considering for your role — no
           login needed to act on it from the email.

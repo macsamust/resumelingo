@@ -64,7 +64,7 @@ export function AchievementGeneratorPanel({ canGenerate, professionLabel, jobTit
         <>
           <p className="hero-note" style={{ marginBottom: 10 }}>
             List a few things you did, one per line or separated by commas. Plain fragments are fine (e.g. "led migration
-            to Kubernetes", "mentored 3 junior engineers", "cut deploy time"). AI will turn each into a draft bullet you
+            to Kubernetes", "mentored 3 junior engineers", "cut deploy time"). Poly will turn each into a draft bullet you
             can edit before saving. It won't invent numbers or specifics you didn't give it.
           </p>
           <textarea

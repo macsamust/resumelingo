@@ -20,11 +20,11 @@ import { Link } from "react-router-dom";
 const STAGES = [
   {
     label: "Apply",
-    body: "Guided, profession-specific questions build an ATS-safe resume with AI-drafted bullets. Log every application in the Job Tracker.",
+    body: "Guided, profession-specific questions build an ATS-safe resume with bullets drafted by Poly. Log every application in the Job Tracker.",
   },
   {
     label: "Interview",
-    body: "The AI Career Coach preps you on interview questions and salary negotiation. Walk in with a tailored Cover Letter as your bio and table-setter.",
+    body: "Poly, your AI Career Coach, preps you on interview questions and salary negotiation. Walk in with a tailored Cover Letter as your bio and table-setter.",
   },
   {
     label: "Get hired",

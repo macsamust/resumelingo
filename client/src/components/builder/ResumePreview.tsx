@@ -365,7 +365,7 @@ export function ResumePreview({
         <p className="preview-summary">{summary}</p>
       ) : (
         <p className="preview-summary" style={{ color: "var(--muted)", fontStyle: "italic" }}>
-          Your AI generated summary will appear here once you save.
+          Your summary, written by Poly, will appear here once you save.
         </p>
       )}
     </div>
@@ -964,7 +964,7 @@ export function ResumePreview({
                 <p className="tpl-photolist-intro">{summary}</p>
               ) : (
                 <p className="tpl-photolist-intro" style={{ color: "var(--muted)", fontStyle: "italic" }}>
-                  Your AI generated summary will appear here once you save.
+                  Your summary, written by Poly, will appear here once you save.
                 </p>
               )}
             </div>

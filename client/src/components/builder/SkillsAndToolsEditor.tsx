@@ -163,7 +163,7 @@ export function SkillsAndToolsEditor({ professionKey, professionLabel, value, on
                 className={`skill-picker-chip skill-picker-chip-ai ${selected ? "selected" : ""}`}
                 onClick={() => toggle(item, category)}
                 aria-pressed={selected}
-                title="Suggested by AI for this resume's title"
+                title="Suggested by Poly for this resume's title"
               >
                 <span aria-hidden="true">✨ </span>
                 {item}
@@ -199,14 +199,14 @@ export function SkillsAndToolsEditor({ professionKey, professionLabel, value, on
           <div className="skill-picker-ai" style={{ marginTop: 4, marginBottom: 16 }}>
             <button type="button" className="btn btn-ai" onClick={onSuggestWithAi} disabled={aiStatus === "loading"}>
               <span aria-hidden="true">✨</span>{" "}
-              {aiStatus === "loading" ? "Suggesting…" : aiSkills.length > 0 || aiTools.length > 0 ? "Suggest more with AI" : "Suggest more with AI for this title"}
+              {aiStatus === "loading" ? "Suggesting…" : aiSkills.length > 0 || aiTools.length > 0 ? "Suggest more with Poly" : "Ask Poly for more, tailored to this title"}
             </button>
             {aiStatus === "error" && aiError && <div className="form-error" style={{ marginTop: 8 }}>{aiError}</div>}
           </div>
         ) : (
           <div className="hero-note-box" style={{ marginTop: 4, marginBottom: 16 }}>
             <p className="hero-note" style={{ marginBottom: 8 }}>
-              AI suggestions tailored to this resume's title require the Professional or Premium plan. Upgrading
+              Poly's suggestions tailored to this resume's title require the Professional or Premium plan. Upgrading
               opens in a new tab, so your progress here stays right where it is.
             </p>
             <Link to="/#pricing" target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">

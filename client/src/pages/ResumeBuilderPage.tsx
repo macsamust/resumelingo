@@ -554,7 +554,7 @@ export function ResumeBuilderPage() {
                   checked={coverLetterEnabled}
                   onChange={(e) => setCoverLetterEnabled(e.target.checked)}
                 />
-                Generate an AI cover letter for this resume
+                Have Poly write a cover letter for this resume
               </label>
             )}
           </CollapsibleSection>

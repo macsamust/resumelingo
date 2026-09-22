@@ -95,7 +95,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
   },
   {
     id: "edit-summary",
-    question: "Can I edit the AI generated summary and bullet points?",
+    question: "Can I edit the summary and bullet points Poly writes?",
     answer: (
       <p>
         Yes. In the <strong>Generated Summary &amp; Bullets</strong> section of the editor, both the Summary and

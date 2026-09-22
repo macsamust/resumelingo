@@ -41,7 +41,7 @@ const STAGES: Stage[] = [
     id: "interview",
     tag: "02",
     label: "Interview",
-    intro: "Prep with an AI Career Coach and walk in with a tailored Cover Letter as your bio and table-setter.",
+    intro: "Prep with Poly, your AI Career Coach, and walk in with a tailored Cover Letter as your bio and table-setter.",
     detail:
       "Ask Poly to run through likely interview questions for the role, get help structuring a STAR answer, or talk through salary negotiation before you're in the room. A Cover Letter built from your resume gives the interviewer a table-setter before you've said a word.",
     link: { label: "Ask Poly", to: "/career-coach" },
