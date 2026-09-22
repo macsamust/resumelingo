@@ -66,6 +66,7 @@ export class EmailService {
           <p style="margin: 24px 0;">
             <a href="${verifyUrl}" style="background: #4f46e5; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Verify email address</a>
           </p>
+          <p style="color: #64748b; font-size: 13px;">Until this is confirmed, any resume you share stays visible to you only — no one else can open the link yet.</p>
           <p style="color: #64748b; font-size: 13px;">If you didn't create this account or make this change, you can safely ignore this email.</p>
           <p style="color: #94a3b8; font-size: 12px; word-break: break-all;">Or paste this link into your browser: ${verifyUrl}</p>
         </div>
@@ -97,7 +98,7 @@ export class EmailService {
    */
   async sendAccountSuspendedEmail(to: string, verifyUrl: string, hasResumes: boolean, hoursUntilDeletion: number): Promise<void> {
     const body = hasResumes
-      ? `Your email address was never verified, so this account — and any resumes on it — has been automatically suspended. Verify your email now to restore access, or the account will be permanently removed in ${hoursUntilDeletion} hours.`
+      ? `Your email address was never verified, so this account has been automatically suspended. Any resume you shared has been visible only to you this whole time — the link doesn't open for anyone else until your email is verified. Verify now to restore access, or the account will be permanently removed in ${hoursUntilDeletion} hours.`
       : `Your email address was never verified, and no resume has been created on this account, so it's been automatically suspended. Verify your email now to restore access — otherwise the account will be permanently removed in ${hoursUntilDeletion} hours.`;
     const footer = "If you didn't create this account, no action is needed — it'll be removed automatically.";
     await this.send({
