@@ -32,6 +32,16 @@ export function canUseTemplate(tier: SubscriptionTier, category: TemplateCategor
  * Professional-tier all along. Section *availability* per template and
  * *tier gating* per template are two independent decisions now; don't
  * re-derive one from the other.
+ *
+ * Minimalist added Sep 2026 when it became the Starter -> Professional
+ * upgrade default (see worker's SubscriptionService.upgradeStarterTemplate)
+ * — the previous default, Consulting, was specifically chosen for having
+ * this section (without it, the ATS Check's keyword-suggestion "add"
+ * buttons silently disappear with no explanation), so swapping the default
+ * template without also giving Minimalist this section would have
+ * reintroduced that exact bug. Renders with the default "Skills"/"Tools"
+ * labels (no skillsLabel/toolsLabel override), matching Minimalist's plain,
+ * unadorned aesthetic elsewhere.
  */
 const SKILLS_AND_TOOLS_TEMPLATE_KEYS = new Set([
   "government",
@@ -52,6 +62,7 @@ const SKILLS_AND_TOOLS_TEMPLATE_KEYS = new Set([
   "ats-optimized",
   "profile",
   "ledger",
+  "minimalist",
 ]);
 
 /** Whether `templateKey`'s layout has a "Skills & Tools" section at all — see SKILLS_AND_TOOLS_TEMPLATE_KEYS. */

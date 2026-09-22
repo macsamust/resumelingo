@@ -8,16 +8,28 @@ import { StripeService } from "./StripeService";
 import { EmailService } from "./EmailService";
 
 /**
- * Template swapped in on a Starter -> Professional upgrade for anyone still
- * on the Basic-tier "starter default" template — see syncSubscription's
+ * Template swapped in on a Starter -> paid upgrade for anyone still on the
+ * Basic-tier "starter default" template — see syncSubscription's
  * upgradeStarterTemplate. Classic is the template new resumes start on
  * (ResumeBuilderPage), so a subscriber who never touched it shouldn't be
  * stuck looking like they're still on the free tier the moment they've paid
  * to upgrade. Not applied to any other template — this only replaces the
  * specific "didn't pick one" default, never a template someone chose on purpose.
+ *
+ * Tier-specific (CJ's call, Sep 2026): Professional lands on Minimalist,
+ * Premium lands on ATS Optimized — previously both landed on the same
+ * Consulting default regardless of which tier they upgraded to. Both
+ * replacement templates keep a Skills & Tools section (Minimalist gained
+ * one specifically for this — see templateAccess.ts's
+ * SKILLS_AND_TOOLS_TEMPLATE_KEYS), so the ATS Check keyword-suggestion "add"
+ * buttons this swap was originally introduced to protect still work either
+ * way. ATS Optimized is Premium-category (assertTemplateAllowed would
+ * reject it for a Professional account) — deliberate, since it's only ever
+ * assigned to an account actually on Premium.
  */
 const STARTER_DEFAULT_TEMPLATE_KEY = "classic";
-const UPGRADED_DEFAULT_TEMPLATE_KEY = "consulting";
+const PROFESSIONAL_UPGRADE_TEMPLATE_KEY = "minimalist";
+const PREMIUM_UPGRADE_TEMPLATE_KEY = "ats-optimized";
 
 /**
  * Same responsibilities as the Node/Express SubscriptionService. One
@@ -247,28 +259,53 @@ export class SubscriptionService {
       });
     }
 
-    // Any transition off of Starter (Starter -> Professional or Starter ->
-    // Premium, but never Professional -> Premium) — see
-    // STARTER_DEFAULT_TEMPLATE_KEY's doc comment above for why only a
-    // starting-from-Starter transition swaps a template out from under the
-    // subscriber. Must cover Starter -> Premium too: "consulting" is the
-    // only template with a Skills & Tools section that a still-on-"classic"
-    // subscriber could be on, and without this swap their ATS Check keyword
-    // suggestions silently lose their "add" buttons the moment they unlock
-    // that feature, with no indication why.
-    if (tierChanged && user.subscriptionTier === SubscriptionTier.Starter && finalTier !== SubscriptionTier.Starter) {
-      await this.upgradeStarterTemplate(user.id).catch((err) => {
-        console.error("Failed to upgrade starter template on Professional upgrade:", err);
+    // Starter -> Professional or Starter -> Premium: swap the Classic
+    // "never touched it" default up to that tier's own default — see
+    // STARTER_DEFAULT_TEMPLATE_KEY's doc comment above.
+    if (
+      tierChanged &&
+      user.subscriptionTier === SubscriptionTier.Starter &&
+      (finalTier === SubscriptionTier.Professional || finalTier === SubscriptionTier.Premium)
+    ) {
+      await this.upgradeStarterTemplate(user.id, finalTier).catch((err) => {
+        console.error("Failed to upgrade starter template on upgrade:", err);
+      });
+    }
+
+    // Professional -> Premium: a further swap up to ATS Optimized, for
+    // anyone still on either "never touched it" default — Classic (skipped
+    // straight past the Starter->Professional swap above somehow, e.g. an
+    // account that was Professional before this feature existed) or
+    // Minimalist (the Starter->Professional swap's own default, itself
+    // never touched since). CJ's call, Sep 2026. Same "only ever replace a
+    // default this system assigned, never something picked on purpose"
+    // approximation as the Starter case — there's no stored signal
+    // distinguishing "auto-assigned Minimalist" from "deliberately chose
+    // Minimalist as a Professional subscriber," so this accepts the same
+    // small false-positive risk the original Classic swap always has.
+    if (tierChanged && user.subscriptionTier === SubscriptionTier.Professional && finalTier === SubscriptionTier.Premium) {
+      await this.upgradeProfessionalTemplate(user.id).catch((err) => {
+        console.error("Failed to upgrade professional template on Premium upgrade:", err);
       });
     }
   }
 
-  /** Switches every one of this user's resumes still on the Starter-default Classic template to Consulting. Leaves any resume where they picked a different template alone. */
-  private async upgradeStarterTemplate(userId: string): Promise<void> {
+  /** Switches every one of this user's resumes still on the Starter-default Classic template to that tier's upgrade default (see STARTER_DEFAULT_TEMPLATE_KEY's doc comment). Leaves any resume where they picked a different template alone. */
+  private async upgradeStarterTemplate(userId: string, tier: SubscriptionTier.Professional | SubscriptionTier.Premium): Promise<void> {
+    const templateKey = tier === SubscriptionTier.Premium ? PREMIUM_UPGRADE_TEMPLATE_KEY : PROFESSIONAL_UPGRADE_TEMPLATE_KEY;
     const resumes = await this.resumes.findAllForUser(userId);
     for (const resume of resumes) {
       if (resume.templateKey !== STARTER_DEFAULT_TEMPLATE_KEY) continue;
-      await this.resumes.update(resume.id, { templateKey: UPGRADED_DEFAULT_TEMPLATE_KEY }, { bumpUpdatedAt: false });
+      await this.resumes.update(resume.id, { templateKey }, { bumpUpdatedAt: false });
+    }
+  }
+
+  /** Switches every one of this user's resumes still on either "never touched it" default (Classic or Minimalist) to ATS Optimized, on a Professional -> Premium upgrade. Leaves any resume where they picked a different template alone. */
+  private async upgradeProfessionalTemplate(userId: string): Promise<void> {
+    const resumes = await this.resumes.findAllForUser(userId);
+    for (const resume of resumes) {
+      if (resume.templateKey !== STARTER_DEFAULT_TEMPLATE_KEY && resume.templateKey !== PROFESSIONAL_UPGRADE_TEMPLATE_KEY) continue;
+      await this.resumes.update(resume.id, { templateKey: PREMIUM_UPGRADE_TEMPLATE_KEY }, { bumpUpdatedAt: false });
     }
   }
 
