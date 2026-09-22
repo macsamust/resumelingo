@@ -1483,8 +1483,8 @@ export function ResumeEditPage() {
           {usesSkillsAndTools && (
             <CollapsibleSection title="Skills & Tools" forceOpen={forceOpen} complete={sectionProgress.skills}>
               <p className="hero-note" style={{ marginBottom: 16 }}>
-                Available on every Premium template. Click a suggested keyword to add it. Skills and tools are
-                grouped separately in both the picker and the resume itself.
+                Click a suggested keyword to add it. Skills and tools are grouped separately in both the picker and
+                the resume itself.
               </p>
               <SkillsAndToolsEditor
                 professionKey={professionKey}
