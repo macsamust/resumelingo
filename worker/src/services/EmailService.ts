@@ -7,8 +7,57 @@
  * Unlike server/'s version (which defaults to reading process.env),
  * everything here is wired explicitly from Env in createServices.ts, same
  * as every other worker service (Workers has no process.env).
+ *
+ * Every template's HTML-building is split into a private `buildX` method
+ * returning `{ subject, html }`, with the public `sendX` method just calling
+ * it and handing the result to `send()`. This exists so the Admin Console's
+ * Email Templates preview page (AdminEmailTemplateController, Sep 2026 — CJ
+ * wanted a way to see what every email actually looks like without digging
+ * through this file) can call `renderPreview()` and get the *exact* same
+ * markup a real send would produce, with no separate copy of the template to
+ * drift out of sync.
  */
 export class EmailService {
+  /**
+   * Metadata for every template this service can send — label, one-line
+   * trigger description, and its `key` for `renderPreview()`. The Admin
+   * Console's preview page reads this list directly rather than
+   * hardcoding its own copy. `account-suspended` is split into two keys
+   * (with-resumes / no-resumes) rather than one, since
+   * `sendAccountSuspendedEmail`'s `hasResumes` flag changes the body text
+   * materially enough that showing only one variant would hide real
+   * behavior from whoever's previewing it.
+   */
+  static readonly TEMPLATES: { key: string; label: string; trigger: string }[] = [
+    { key: "verification", label: "Verify your email address", trigger: "Sent on signup, and again on any email-address change." },
+    { key: "password-reset", label: "Reset your password", trigger: "Sent when a user requests a password reset." },
+    {
+      key: "account-suspended-with-resumes",
+      label: "Account suspended (has resumes)",
+      trigger: "Sent when an unverified account that owns resumes is auto-suspended, 1 hour after signup.",
+    },
+    {
+      key: "account-suspended-no-resumes",
+      label: "Account suspended (no resumes)",
+      trigger: "Sent when an unverified account with no resumes is auto-suspended, 1 hour after signup.",
+    },
+    { key: "payment-failed", label: "Payment didn't go through", trigger: "Sent when a Stripe subscription-renewal charge fails." },
+    { key: "welcome", label: "Welcome to ResumeLingo", trigger: "Sent once, right after signup." },
+    { key: "subscription-confirmation", label: "You're on the ___ plan", trigger: "Sent once per upgrade into a paid tier." },
+    { key: "view-digest", label: "Weekly resume view digest", trigger: "Sent weekly with a subscriber's resume view count." },
+    {
+      key: "resume-refresh-nudge",
+      label: "Resume check-in (CAR nudge)",
+      trigger: "Sent when a resume has gone quiet past its account's chosen refresh cadence.",
+    },
+    { key: "security-alert", label: "Security alert (critical)", trigger: "Sent immediately to every admin on a critical security event." },
+    {
+      key: "security-daily-digest",
+      label: "Security daily digest",
+      trigger: "Sent once daily to every admin, rolling up the day's non-critical security events.",
+    },
+  ];
+
   constructor(private readonly apiKey: string | undefined, private readonly fromEmail: string | undefined) {}
 
   private async send(input: { to: string; subject: string; html: string }): Promise<void> {
@@ -36,9 +85,69 @@ export class EmailService {
     }
   }
 
-  async sendPasswordResetEmail(to: string, resetUrl: string): Promise<void> {
-    await this.send({
-      to,
+  /**
+   * Renders any template in `TEMPLATES` with representative sample data, for
+   * the Admin Console's preview page only — never sent anywhere. Returns
+   * null for an unrecognized key rather than throwing, so the controller can
+   * turn that into a clean 404.
+   */
+  renderPreview(key: string): { subject: string; html: string } | null {
+    const sampleUrl = "https://resumelingo.com/sample-link";
+    switch (key) {
+      case "verification":
+        return this.buildVerificationEmail(sampleUrl);
+      case "password-reset":
+        return this.buildPasswordResetEmail(sampleUrl);
+      case "account-suspended-with-resumes":
+        return this.buildAccountSuspendedEmail(sampleUrl, true, 95);
+      case "account-suspended-no-resumes":
+        return this.buildAccountSuspendedEmail(sampleUrl, false, 95);
+      case "payment-failed":
+        return this.buildPaymentFailedEmail(sampleUrl);
+      case "welcome":
+        return this.buildWelcomeEmail("jordan@example.com", "Jordan Rivera", sampleUrl, {
+          planName: "Professional",
+          termsUrl: sampleUrl,
+          termsAcceptedAt: new Date().toISOString(),
+        });
+      case "subscription-confirmation":
+        return this.buildSubscriptionConfirmationEmail("Professional", sampleUrl);
+      case "view-digest":
+        return this.buildViewDigestEmail({ totalViews: 7, unsubscribeUrl: sampleUrl });
+      case "resume-refresh-nudge":
+        return this.buildResumeRefreshNudgeEmail({
+          resumes: [
+            {
+              resumeTitle: "Senior Product Manager Resume",
+              company: "Acme Corp",
+              jobTitle: "Senior Product Manager",
+              keywords: ["Roadmapping", "Stakeholder alignment", "SQL"],
+              nudgeUrl: sampleUrl,
+            },
+            {
+              resumeTitle: "UX Designer Resume",
+              company: null,
+              jobTitle: null,
+              keywords: [],
+              nudgeUrl: sampleUrl,
+            },
+          ],
+          unsubscribeUrl: sampleUrl,
+        });
+      case "security-alert":
+        return this.buildSecurityAlertEmail("login_brute_force", { ip: "203.0.113.42", attempts: 12 });
+      case "security-daily-digest":
+        return this.buildSecurityDailyDigestEmail([
+          { type: "register_burst", severity: "warning", count: 3 },
+          { type: "password_reset_spam", severity: "warning", count: 1 },
+        ]);
+      default:
+        return null;
+    }
+  }
+
+  private buildPasswordResetEmail(resetUrl: string): { subject: string; html: string } {
+    return {
       subject: "Reset your ResumeLingo password",
       html: `
         <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
@@ -51,13 +160,15 @@ export class EmailService {
           <p style="color: #94a3b8; font-size: 12px; word-break: break-all;">Or paste this link into your browser: ${resetUrl}</p>
         </div>
       `,
-    });
+    };
   }
 
-  /** Sent on register and on every email-address change (see AuthService.sendVerificationEmail) — confirms the account holder actually controls the address. Link expires in 1 hour (VERIFICATION_TOKEN_TTL_MS — shortened from an original 24h, see that constant's doc comment); the settings-page/AppShell banner can trigger a fresh one via resendVerificationEmail if it lapses. This doc comment and the email copy below previously still said 24 hours after the TTL was shortened — fixed alongside the stale-account cleanup work (Sep 2026), which is what surfaced the mismatch. */
-  async sendVerificationEmail(to: string, verifyUrl: string): Promise<void> {
-    await this.send({
-      to,
+  async sendPasswordResetEmail(to: string, resetUrl: string): Promise<void> {
+    await this.send({ to, ...this.buildPasswordResetEmail(resetUrl) });
+  }
+
+  private buildVerificationEmail(verifyUrl: string): { subject: string; html: string } {
+    return {
       subject: "Verify your ResumeLingo email address",
       html: `
         <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
@@ -71,7 +182,37 @@ export class EmailService {
           <p style="color: #94a3b8; font-size: 12px; word-break: break-all;">Or paste this link into your browser: ${verifyUrl}</p>
         </div>
       `,
-    });
+    };
+  }
+
+  /** Sent on register and on every email-address change (see AuthService.sendVerificationEmail) — confirms the account holder actually controls the address. Link expires in 1 hour (VERIFICATION_TOKEN_TTL_MS — shortened from an original 24h, see that constant's doc comment); the settings-page/AppShell banner can trigger a fresh one via resendVerificationEmail if it lapses. */
+  async sendVerificationEmail(to: string, verifyUrl: string): Promise<void> {
+    await this.send({ to, ...this.buildVerificationEmail(verifyUrl) });
+  }
+
+  private buildAccountSuspendedEmail(
+    verifyUrl: string,
+    hasResumes: boolean,
+    hoursUntilDeletion: number
+  ): { subject: string; html: string } {
+    const body = hasResumes
+      ? `Your email address was never verified, so this account has been automatically suspended. Any resume you shared has been visible only to you this whole time — the link doesn't open for anyone else until your email is verified. Verify now to restore access, or the account will be permanently removed in ${hoursUntilDeletion} hours.`
+      : `Your email address was never verified, and no resume has been created on this account, so it's been automatically suspended. Verify your email now to restore access — otherwise the account will be permanently removed in ${hoursUntilDeletion} hours.`;
+    const footer = "If you didn't create this account, no action is needed — it'll be removed automatically.";
+    return {
+      subject: "Your ResumeLingo account has been suspended — verify to restore it",
+      html: `
+        <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
+          <h2 style="margin-bottom: 8px;">Your account has been suspended</h2>
+          <p>${body}</p>
+          <p style="margin: 24px 0;">
+            <a href="${verifyUrl}" style="background: #4f46e5; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Verify email address</a>
+          </p>
+          <p style="color: #64748b; font-size: 13px;">${footer}</p>
+          <p style="color: #94a3b8; font-size: 12px; word-break: break-all;">Or paste this link into your browser: ${verifyUrl}</p>
+        </div>
+      `,
+    };
   }
 
   /**
@@ -97,31 +238,11 @@ export class EmailService {
    * created on this account" would just be false.
    */
   async sendAccountSuspendedEmail(to: string, verifyUrl: string, hasResumes: boolean, hoursUntilDeletion: number): Promise<void> {
-    const body = hasResumes
-      ? `Your email address was never verified, so this account has been automatically suspended. Any resume you shared has been visible only to you this whole time — the link doesn't open for anyone else until your email is verified. Verify now to restore access, or the account will be permanently removed in ${hoursUntilDeletion} hours.`
-      : `Your email address was never verified, and no resume has been created on this account, so it's been automatically suspended. Verify your email now to restore access — otherwise the account will be permanently removed in ${hoursUntilDeletion} hours.`;
-    const footer = "If you didn't create this account, no action is needed — it'll be removed automatically.";
-    await this.send({
-      to,
-      subject: "Your ResumeLingo account has been suspended — verify to restore it",
-      html: `
-        <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
-          <h2 style="margin-bottom: 8px;">Your account has been suspended</h2>
-          <p>${body}</p>
-          <p style="margin: 24px 0;">
-            <a href="${verifyUrl}" style="background: #4f46e5; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Verify email address</a>
-          </p>
-          <p style="color: #64748b; font-size: 13px;">${footer}</p>
-          <p style="color: #94a3b8; font-size: 12px; word-break: break-all;">Or paste this link into your browser: ${verifyUrl}</p>
-        </div>
-      `,
-    });
+    await this.send({ to, ...this.buildAccountSuspendedEmail(verifyUrl, hasResumes, hoursUntilDeletion) });
   }
 
-  /** Sent from SubscriptionService.handleWebhookEvent's "invoice.payment_failed" case — Stripe already retries the charge on its own schedule, this just makes sure the subscriber knows to update their card instead of finding out only once the subscription actually gets cancelled. */
-  async sendPaymentFailedEmail(to: string, dashboardUrl: string): Promise<void> {
-    await this.send({
-      to,
+  private buildPaymentFailedEmail(dashboardUrl: string): { subject: string; html: string } {
+    return {
       subject: "Your ResumeLingo payment didn't go through",
       html: `
         <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
@@ -133,40 +254,24 @@ export class EmailService {
           <p style="color: #64748b; font-size: 13px;">Click through to your dashboard and choose "Manage billing" to update your card. If you've already updated it, no action is needed. This will resolve on the next retry.</p>
         </div>
       `,
-    });
+    };
   }
 
-  /**
-   * Sent once, right after AuthService.register() — alongside (not instead
-   * of) the verification email above, which stays focused purely on proving
-   * the address. This one is the "yes, your account exists" receipt: it
-   * restates the email the account is under and gives a durable link back
-   * to the app, since a surprising number of signups close the tab and
-   * later can't remember where they signed up. Deliberately never includes
-   * a password, even a freshly-chosen one — plaintext credentials sitting
-   * in an inbox indefinitely is a real security anti-pattern regardless of
-   * how the account was created.
-   */
-  /**
-   * Doubles as the account-creation confirmation (name, plan, and Terms of
-   * Service acceptance) rather than sending a separate fourth email for
-   * that — see AuthService.register, which is this method's only caller.
-   * `details.termsAcceptedAt` is expected non-null here (register() always
-   * sets it, having already rejected an unaccepted signup before it gets
-   * this far) — rendered defensively anyway so a future caller that omits
-   * it gets a sane fallback instead of "Invalid Date" in the email.
-   */
-  async sendWelcomeEmail(
+  /** Sent from SubscriptionService.handleWebhookEvent's "invoice.payment_failed" case — Stripe already retries the charge on its own schedule, this just makes sure the subscriber knows to update their card instead of finding out only once the subscription actually gets cancelled. */
+  async sendPaymentFailedEmail(to: string, dashboardUrl: string): Promise<void> {
+    await this.send({ to, ...this.buildPaymentFailedEmail(dashboardUrl) });
+  }
+
+  private buildWelcomeEmail(
     to: string,
     name: string,
     loginUrl: string,
     details: { planName: string; termsUrl: string; termsAcceptedAt: string | null }
-  ): Promise<void> {
+  ): { subject: string; html: string } {
     const acceptedOn = details.termsAcceptedAt
       ? new Date(details.termsAcceptedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
       : null;
-    await this.send({
-      to,
+    return {
       subject: "Welcome to ResumeLingo",
       html: `
         <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
@@ -188,7 +293,44 @@ export class EmailService {
           <p style="color: #94a3b8; font-size: 12px; word-break: break-all;">Or paste this link into your browser: ${loginUrl}</p>
         </div>
       `,
-    });
+    };
+  }
+
+  /**
+   * Doubles as the account-creation confirmation (name, plan, and Terms of
+   * Service acceptance) rather than sending a separate fourth email for
+   * that — see AuthService.register, which is this method's only caller.
+   * `details.termsAcceptedAt` is expected non-null here (register() always
+   * sets it, having already rejected an unaccepted signup before it gets
+   * this far) — rendered defensively anyway so a future caller that omits
+   * it gets a sane fallback instead of "Invalid Date" in the email.
+   * Deliberately never includes a password, even a freshly-chosen one —
+   * plaintext credentials sitting in an inbox indefinitely is a real
+   * security anti-pattern regardless of how the account was created.
+   */
+  async sendWelcomeEmail(
+    to: string,
+    name: string,
+    loginUrl: string,
+    details: { planName: string; termsUrl: string; termsAcceptedAt: string | null }
+  ): Promise<void> {
+    await this.send({ to, ...this.buildWelcomeEmail(to, name, loginUrl, details) });
+  }
+
+  private buildSubscriptionConfirmationEmail(planName: string, dashboardUrl: string): { subject: string; html: string } {
+    return {
+      subject: `You're on the ${planName} plan`,
+      html: `
+        <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
+          <h2 style="margin-bottom: 8px;">You're now on the ${planName} plan</h2>
+          <p>Thanks for subscribing to ResumeLingo ${planName}. Your account has been updated and everything included in this plan is available now.</p>
+          <p style="margin: 24px 0;">
+            <a href="${dashboardUrl}" style="background: #4f46e5; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Go to your dashboard</a>
+          </p>
+          <p style="color: #64748b; font-size: 13px;">This isn't a billing receipt — for a record of the charge itself, check the payment confirmation from Stripe.</p>
+        </div>
+      `,
+    };
   }
 
   /**
@@ -201,27 +343,12 @@ export class EmailService {
    * out of sync with proration/discounts/tax Stripe actually applied.
    */
   async sendSubscriptionConfirmationEmail(to: string, planName: string, dashboardUrl: string): Promise<void> {
-    await this.send({
-      to,
-      subject: `You're on the ${planName} plan`,
-      html: `
-        <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
-          <h2 style="margin-bottom: 8px;">You're now on the ${planName} plan</h2>
-          <p>Thanks for subscribing to ResumeLingo ${planName}. Your account has been updated and everything included in this plan is available now.</p>
-          <p style="margin: 24px 0;">
-            <a href="${dashboardUrl}" style="background: #4f46e5; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">Go to your dashboard</a>
-          </p>
-          <p style="color: #64748b; font-size: 13px;">This isn't a billing receipt — for a record of the charge itself, check the payment confirmation from Stripe.</p>
-        </div>
-      `,
-    });
+    await this.send({ to, ...this.buildSubscriptionConfirmationEmail(planName, dashboardUrl) });
   }
 
-  /** Weekly re-engagement digest (ViewDigestService) — "N views this week" plus a mandatory unsubscribe link (CAN-SPAM requirement for any recurring email like this). */
-  async sendViewDigestEmail(to: string, input: { totalViews: number; unsubscribeUrl: string }): Promise<void> {
+  private buildViewDigestEmail(input: { totalViews: number; unsubscribeUrl: string }): { subject: string; html: string } {
     const viewsLabel = input.totalViews === 1 ? "1 view" : `${input.totalViews} views`;
-    await this.send({
-      to,
+    return {
       subject: `Your resume got ${viewsLabel} this week`,
       html: `
         <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
@@ -231,28 +358,18 @@ export class EmailService {
           <p style="color: #94a3b8; font-size: 12px; margin-top: 32px;">Don't want these emails? <a href="${input.unsubscribeUrl}" style="color: #94a3b8;">Unsubscribe from the weekly digest</a>.</p>
         </div>
       `,
-    });
+    };
   }
 
-  /**
-   * AI Resume Refresh nudge (ResumeRefreshNudgeService) — checks in on each
-   * resume that's gone quiet past its account's chosen cadence, one section
-   * per resume, all combined into a single email per subscriber (the
-   * product decision — see TODO.md — was "combine", not one email per stale
-   * resume). Each resume's "still working there?" question links to its own
-   * signed no-login landing page (nudgeUrl); the keyword list is the
-   * curated skill_suggestions catalog for that resume's profession, not a
-   * claim about live job postings — the copy here is written to stay honest
-   * about that (see TODO.md's "I do not want to oversell features"
-   * decision). Same mandatory unsubscribe link as the weekly digest.
-   */
-  async sendResumeRefreshNudgeEmail(
-    to: string,
-    input: {
-      resumes: { resumeTitle: string; company: string | null; jobTitle: string | null; keywords: string[]; nudgeUrl: string }[];
-      unsubscribeUrl: string;
-    }
-  ): Promise<void> {
+  /** Weekly re-engagement digest (ViewDigestService) — "N views this week" plus a mandatory unsubscribe link (CAN-SPAM requirement for any recurring email like this). */
+  async sendViewDigestEmail(to: string, input: { totalViews: number; unsubscribeUrl: string }): Promise<void> {
+    await this.send({ to, ...this.buildViewDigestEmail(input) });
+  }
+
+  private buildResumeRefreshNudgeEmail(input: {
+    resumes: { resumeTitle: string; company: string | null; jobTitle: string | null; keywords: string[]; nudgeUrl: string }[];
+    unsubscribeUrl: string;
+  }): { subject: string; html: string } {
     const subject =
       input.resumes.length === 1
         ? `Still at ${input.resumes[0].company ?? "the same job"}? Quick resume check-in`
@@ -279,8 +396,7 @@ export class EmailService {
       })
       .join("");
 
-    await this.send({
-      to,
+    return {
       subject,
       html: `
         <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
@@ -290,7 +406,29 @@ export class EmailService {
           <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">Don't want these emails? <a href="${input.unsubscribeUrl}" style="color: #94a3b8;">Unsubscribe from the resume refresh nudge</a>.</p>
         </div>
       `,
-    });
+    };
+  }
+
+  /**
+   * AI Resume Refresh nudge (ResumeRefreshNudgeService) — checks in on each
+   * resume that's gone quiet past its account's chosen cadence, one section
+   * per resume, all combined into a single email per subscriber (the
+   * product decision — see TODO.md — was "combine", not one email per stale
+   * resume). Each resume's "still working there?" question links to its own
+   * signed no-login landing page (nudgeUrl); the keyword list is the
+   * curated skill_suggestions catalog for that resume's profession, not a
+   * claim about live job postings — the copy here is written to stay honest
+   * about that (see TODO.md's "I do not want to oversell features"
+   * decision). Same mandatory unsubscribe link as the weekly digest.
+   */
+  async sendResumeRefreshNudgeEmail(
+    to: string,
+    input: {
+      resumes: { resumeTitle: string; company: string | null; jobTitle: string | null; keywords: string[]; nudgeUrl: string }[];
+      unsubscribeUrl: string;
+    }
+  ): Promise<void> {
+    await this.send({ to, ...this.buildResumeRefreshNudgeEmail(input) });
   }
 
   /** Human-readable label for a SecurityEventType — shared by the alert and digest emails below, and worth keeping in sync with AdminSecurityReportPage.tsx's client-side copy of the same labels. */
@@ -308,6 +446,26 @@ export class EmailService {
     return labels[type] ?? type;
   }
 
+  private buildSecurityAlertEmail(type: string, detail: Record<string, unknown> | null): { subject: string; html: string } {
+    const label = EmailService.securityEventLabel(type);
+    const detailRows = detail
+      ? Object.entries(detail)
+          .map(([k, v]) => `<li><strong>${k}:</strong> ${String(v)}</li>`)
+          .join("")
+      : "";
+    return {
+      subject: `[ResumeLingo Security] ${label}`,
+      html: `
+        <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
+          <h2 style="margin-bottom: 8px;">${label}</h2>
+          <p>The security monitor flagged this as a threshold-based signal — worth a look, not a confirmed breach.</p>
+          ${detailRows ? `<ul style="color: #475569; font-size: 14px;">${detailRows}</ul>` : ""}
+          <p style="color: #64748b; font-size: 13px;">See the full history on the Admin Console's Security Report page.</p>
+        </div>
+      `,
+    };
+  }
+
   /**
    * Fired immediately (not batched into the daily digest below) the moment
    * SecurityAlertService.recordIfNew writes a `critical` security_events row
@@ -318,24 +476,23 @@ export class EmailService {
    * unsubscribe/opt-out needed.
    */
   async sendSecurityAlertEmail(to: string, type: string, detail: Record<string, unknown> | null): Promise<void> {
-    const label = EmailService.securityEventLabel(type);
-    const detailRows = detail
-      ? Object.entries(detail)
-          .map(([k, v]) => `<li><strong>${k}:</strong> ${String(v)}</li>`)
-          .join("")
-      : "";
-    await this.send({
-      to,
-      subject: `[ResumeLingo Security] ${label}`,
+    await this.send({ to, ...this.buildSecurityAlertEmail(type, detail) });
+  }
+
+  private buildSecurityDailyDigestEmail(counts: { type: string; severity: string; count: number }[]): { subject: string; html: string } {
+    const rows = counts
+      .map((c) => `<li><strong>${EmailService.securityEventLabel(c.type)}</strong> (${c.severity}) — ${c.count}</li>`)
+      .join("");
+    return {
+      subject: `[ResumeLingo Security] Daily summary — ${counts.reduce((sum, c) => sum + c.count, 0)} flagged event(s)`,
       html: `
         <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
-          <h2 style="margin-bottom: 8px;">${label}</h2>
-          <p>The security monitor flagged this as a threshold-based signal — worth a look, not a confirmed breach.</p>
-          ${detailRows ? `<ul style="color: #475569; font-size: 14px;">${detailRows}</ul>` : ""}
+          <h2 style="margin-bottom: 8px;">Security signals — last 24 hours</h2>
+          <ul style="color: #475569; font-size: 14px;">${rows}</ul>
           <p style="color: #64748b; font-size: 13px;">See the full history on the Admin Console's Security Report page.</p>
         </div>
       `,
-    });
+    };
   }
 
   /**
@@ -347,19 +504,6 @@ export class EmailService {
    */
   async sendSecurityDailyDigestEmail(to: string, counts: { type: string; severity: string; count: number }[]): Promise<void> {
     if (counts.length === 0) return;
-    const rows = counts
-      .map((c) => `<li><strong>${EmailService.securityEventLabel(c.type)}</strong> (${c.severity}) — ${c.count}</li>`)
-      .join("");
-    await this.send({
-      to,
-      subject: `[ResumeLingo Security] Daily summary — ${counts.reduce((sum, c) => sum + c.count, 0)} flagged event(s)`,
-      html: `
-        <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
-          <h2 style="margin-bottom: 8px;">Security signals — last 24 hours</h2>
-          <ul style="color: #475569; font-size: 14px;">${rows}</ul>
-          <p style="color: #64748b; font-size: 13px;">See the full history on the Admin Console's Security Report page.</p>
-        </div>
-      `,
-    });
+    await this.send({ to, ...this.buildSecurityDailyDigestEmail(counts) });
   }
 }

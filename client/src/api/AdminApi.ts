@@ -5,6 +5,7 @@ import {
   AdminAuditLogEntry,
   AdminAuthUser,
   AdminDashboardSummary,
+  AdminEmailTemplate,
   AdminPlan,
   AdminResumeSearchResult,
   AdminRoleDescription,
@@ -290,6 +291,21 @@ export class AdminApi extends ApiClient {
 
   listRoleDescriptions() {
     return this.get<{ roleDescriptions: AdminRoleDescription[] }>("/admin/role-descriptions");
+  }
+
+  listEmailTemplates() {
+    return this.get<{ templates: AdminEmailTemplate[] }>("/admin/email-templates");
+  }
+
+  previewEmailTemplate(key: string) {
+    return this.get<{ subject: string; html: string }>(`/admin/email-templates/${key}/preview`);
+  }
+
+  saveEmailTemplateNote(key: string, note: string) {
+    return this.put<{ note: { templateKey: string; note: string; updatedAt: string; updatedByAdminEmail: string | null } }>(
+      `/admin/email-templates/${key}/note`,
+      { note }
+    );
   }
 
   createRoleDescription(input: {

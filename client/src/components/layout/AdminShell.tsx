@@ -36,6 +36,7 @@ const LINK_GROUPS = [
       { to: "/admin/audit-log", label: "Audit Log" },
       { to: "/admin/security", label: "Security" },
       { to: "/admin/security-report", label: "Security Report" },
+      { to: "/admin/email-templates", label: "Email Templates" },
     ],
   },
 ];

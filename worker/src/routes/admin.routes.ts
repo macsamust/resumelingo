@@ -14,6 +14,7 @@ import { AdminManagementController } from "../controllers/AdminManagementControl
 import { AdminSecurityController } from "../controllers/AdminSecurityController";
 import { AdminSecurityEventController } from "../controllers/AdminSecurityEventController";
 import { AdminDebugController } from "../controllers/AdminDebugController";
+import { AdminEmailTemplateController } from "../controllers/AdminEmailTemplateController";
 
 const admin = new Hono<AppEnv>();
 
@@ -84,6 +85,11 @@ admin.get("/role-descriptions", requireAdminAuth, roleDescriptionController.list
 admin.post("/role-descriptions", requireAdminAuth, roleDescriptionController.create);
 admin.put("/role-descriptions/:id", requireAdminAuth, roleDescriptionController.update);
 admin.delete("/role-descriptions/:id", requireAdminAuth, roleDescriptionController.remove);
+
+const emailTemplateController = new AdminEmailTemplateController();
+admin.get("/email-templates", requireAdminAuth, emailTemplateController.list);
+admin.get("/email-templates/:key/preview", requireAdminAuth, emailTemplateController.preview);
+admin.put("/email-templates/:key/note", requireAdminAuth, emailTemplateController.saveNote);
 
 // TEMPORARY — see AdminDebugController's doc comment. Remove once the AI
 // Resume Refresh nudge no longer needs manual poking in local dev.

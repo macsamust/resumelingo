@@ -10,6 +10,7 @@ import { TemplateRepository } from "../repositories/TemplateRepository";
 import { PlanRepository } from "../repositories/PlanRepository";
 import { SkillSuggestionRepository } from "../repositories/SkillSuggestionRepository";
 import { RoleDescriptionRepository } from "../repositories/RoleDescriptionRepository";
+import { EmailTemplateNoteRepository } from "../repositories/EmailTemplateNoteRepository";
 import { AdminAuditLogRepository } from "../repositories/AdminAuditLogRepository";
 import { AdminLoginIpLogRepository } from "../repositories/AdminLoginIpLogRepository";
 import { EmailVerificationIpLogRepository } from "../repositories/EmailVerificationIpLogRepository";
@@ -46,6 +47,8 @@ export interface Services {
   subscriptionService: SubscriptionService;
   adminService: AdminService;
   stripeService: StripeService;
+  /** Exposed directly (not just via the services that call it) for AdminEmailTemplateController's preview page — see EmailService.renderPreview/TEMPLATES. */
+  emailService: EmailService;
   /**
    * Every configured Stripe webhook signing secret (live + test mode — see
    * Env.STRIPE_WEBHOOK_SECRET/STRIPE_WEBHOOK_SECRET_TEST), passed through
@@ -58,6 +61,8 @@ export interface Services {
   planRepository: PlanRepository;
   skillSuggestionRepository: SkillSuggestionRepository;
   roleDescriptionRepository: RoleDescriptionRepository;
+  /** Backs the Admin Console's Email Templates preview page — see AdminEmailTemplateController. */
+  emailTemplateNoteRepository: EmailTemplateNoteRepository;
   adminAuditLogRepository: AdminAuditLogRepository;
   /** Backs the IP-based rate limit on admin login — see AdminAuthController.login. */
   adminLoginIpLogRepository: AdminLoginIpLogRepository;
@@ -126,6 +131,7 @@ export function createServices(env: Env): Services {
   const planRepository = new PlanRepository(env.DB);
   const skillSuggestionRepository = new SkillSuggestionRepository(env.DB);
   const roleDescriptionRepository = new RoleDescriptionRepository(env.DB);
+  const emailTemplateNoteRepository = new EmailTemplateNoteRepository(env.DB);
   const adminAuditLogRepository = new AdminAuditLogRepository(env.DB);
   const adminLoginIpLogRepository = new AdminLoginIpLogRepository(env.DB);
   const emailVerificationIpLogRepository = new EmailVerificationIpLogRepository(env.DB);
@@ -239,6 +245,7 @@ export function createServices(env: Env): Services {
     subscriptionService,
     adminService,
     stripeService,
+    emailService,
     stripeWebhookSecrets: [env.STRIPE_WEBHOOK_SECRET, env.STRIPE_WEBHOOK_SECRET_TEST].filter(
       (secret): secret is string => !!secret
     ),
@@ -246,6 +253,7 @@ export function createServices(env: Env): Services {
     planRepository,
     skillSuggestionRepository,
     roleDescriptionRepository,
+    emailTemplateNoteRepository,
     adminAuditLogRepository,
     adminLoginIpLogRepository,
     emailVerificationIpLogRepository,

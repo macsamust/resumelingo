@@ -464,6 +464,16 @@ export interface AdminSkillSuggestion extends SkillSuggestion {
   updatedAt: string;
 }
 
+/** One row of the Admin Console's Email Templates preview page — see worker's EmailService.TEMPLATES/AdminEmailTemplateController. */
+export interface AdminEmailTemplate {
+  key: string;
+  label: string;
+  trigger: string;
+  note: string;
+  noteUpdatedAt: string | null;
+  noteUpdatedByAdminEmail: string | null;
+}
+
 /**
  * Admin CRUD shape for a role description — the About statement voice for
  * either one named profession (professionKey set) or, when professionKey is
