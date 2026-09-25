@@ -5,6 +5,7 @@ import { ScrollToTop } from "./components/layout/ScrollToTop";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { LandingPage } from "./pages/LandingPage";
 import { CareerCenterPage } from "./pages/CareerCenterPage";
+import { ChangelogPage } from "./pages/ChangelogPage";
 import { FullCirclePage } from "./pages/FullCirclePage";
 import { HelpPage } from "./pages/HelpPage";
 import { PrivacyPolicyPage } from "./pages/PrivacyPolicyPage";
@@ -54,6 +55,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/career-center" element={<CareerCenterPage />} />
+        <Route path="/whats-new" element={<ChangelogPage />} />
         <Route path="/full-circle" element={<FullCirclePage />} />
         <Route path="/help" element={<HelpPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />

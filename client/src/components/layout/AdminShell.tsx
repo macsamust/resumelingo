@@ -86,6 +86,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <button className="btn btn-ghost admin-logout" onClick={onLogout} type="button">
           Log out
         </button>
+        {/* Build-derived identifier, not a hand-maintained version number — see vite.config.ts's doc comment. Admin-only placement since this is a debugging aid, not customer-facing (the public Footer shows the same tag). */}
+        <p className="admin-sidebar-build">
+          Build {__APP_VERSION__} · {new Date(__APP_BUILD_DATE__).toLocaleDateString()}
+        </p>
       </aside>
       <div className="app-content">{children}</div>
     </div>

@@ -1,8 +1,30 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { execSync } from "node:child_process";
+
+/**
+ * Embeds the deployed commit's short hash and build date directly into the
+ * client bundle, read by Footer.tsx/AdminShell.tsx (CJ, Sep 2026: "when
+ * should we start thinking about app versions?" — landed on build-derived
+ * identifiers over hand-maintained version numbers, since a git hash can't
+ * go stale or be forgotten the way a manual bump can). Falls back to
+ * "dev"/build-time-only if git isn't available (e.g. a source-only deploy
+ * environment without the .git directory) rather than failing the build.
+ */
+function gitShortHash(): string {
+  try {
+    return execSync("git rev-parse --short HEAD").toString().trim();
+  } catch {
+    return "dev";
+  }
+}
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __APP_VERSION__: JSON.stringify(gitShortHash()),
+    __APP_BUILD_DATE__: JSON.stringify(new Date().toISOString()),
+  },
   server: {
     port: 5173,
     // SEC-A01 (Sep 2026): subscriber auth now rides HttpOnly cookies with

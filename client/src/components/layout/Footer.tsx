@@ -31,6 +31,7 @@ export function Footer() {
             <Link to="/#how">How it works</Link>
             <Link to="/#features">Features</Link>
             <Link to="/#pricing">Pricing</Link>
+            <Link to="/whats-new">What's New</Link>
           </div>
           <div className="footer-col">
             <h4>Career Center</h4>
@@ -72,6 +73,8 @@ export function Footer() {
         <div className="footer-bottom">
           <p>© {new Date().getFullYear()} ResumeLingo. All rights reserved.</p>
           <p>Made for people who'd rather share a link than an attachment.</p>
+          {/* Build-derived identifier, not a hand-maintained version number — see vite.config.ts's doc comment. */}
+          <p className="footer-build-tag">Build {__APP_VERSION__}</p>
         </div>
       </div>
     </footer>
