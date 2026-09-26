@@ -367,7 +367,6 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .footer-link-button { display: block; font: inherit; font-size: 14px; color: var(--muted); margin-bottom: 10px; background: none; border: none; padding: 0; cursor: pointer; text-align: left; }
 .footer-link-button:hover { color: var(--indigo); }
 .footer-bottom { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 24px; font-size: 13px; color: var(--muted); flex-wrap: wrap; gap: 12px; }
-.footer-build-tag { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; opacity: .7; }
 
 /* AUTH FORMS */
 .auth-page { min-height: calc(100vh - 140px); display: flex; align-items: center; justify-content: center; padding: 60px 24px; }

@@ -73,8 +73,6 @@ export function Footer() {
         <div className="footer-bottom">
           <p>© {new Date().getFullYear()} ResumeLingo. All rights reserved.</p>
           <p>Made for people who'd rather share a link than an attachment.</p>
-          {/* Build-derived identifier, not a hand-maintained version number — see vite.config.ts's doc comment. */}
-          <p className="footer-build-tag">Build {__APP_VERSION__}</p>
         </div>
       </div>
     </footer>
