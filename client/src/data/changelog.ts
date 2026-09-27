@@ -13,6 +13,15 @@ export interface ChangelogEntry {
  * admin tooling, ops runbooks) is deliberately left out — this is what a
  * subscriber would actually notice, not an engineering log. Newest first;
  * add new entries to the top as user-facing changes ship.
+ *
+ * Inclusion bar (CJ, Sep 2026, after questioning a tablet-layout fix that
+ * didn't belong here): an entry only qualifies if a subscriber reading it
+ * would think "oh nice, that's better for me" or "good, I don't have to
+ * work around that anymore." A fix for a bug most subscribers never
+ * noticed or hit doesn't clear that bar — announcing it adds nothing and
+ * risks reading as "wait, was something broken?", which undercuts the
+ * whole point of this page (proof of active, positive momentum). When in
+ * doubt, leave it out rather than padding the list.
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
@@ -43,10 +52,5 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     title: "Clearer explanation when sharing is limited",
     description:
       "If your account hasn't verified its email yet, your resume's sharing status now explains why — and the verification email says up front that sharing stays off until you confirm your address.",
-  },
-  {
-    date: "2026-09-11",
-    title: "Success Stories now line up properly on tablet",
-    description: "Fixed a layout issue where the homepage's testimonial cards didn't sit in one row at tablet widths.",
   },
 ];
