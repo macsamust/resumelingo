@@ -42,6 +42,7 @@ import { AdminAdminsPage } from "./pages/admin/AdminAdminsPage";
 import { AdminSecurityPage } from "./pages/admin/AdminSecurityPage";
 import { AdminSecurityReportPage } from "./pages/admin/AdminSecurityReportPage";
 import { AdminEmailTemplatesPage } from "./pages/admin/AdminEmailTemplatesPage";
+import { AdminChangelogPage } from "./pages/admin/AdminChangelogPage";
 
 export default function App() {
   const location = useLocation();
@@ -234,6 +235,14 @@ export default function App() {
           element={
             <AdminProtectedRoute>
               <AdminEmailTemplatesPage />
+            </AdminProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/changelog"
+          element={
+            <AdminProtectedRoute>
+              <AdminChangelogPage />
             </AdminProtectedRoute>
           }
         />
