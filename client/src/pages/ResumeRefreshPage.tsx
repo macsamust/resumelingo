@@ -40,6 +40,16 @@ export function ResumeRefreshPage() {
 
   const [busy, setBusy] = useState(false);
   const [draftItems, setDraftItems] = useState<ResumeRefreshDraftItem[]>([]);
+  // Parallel to draftItems — the keyword each drafted bullet came from, so
+  // the review step can label a bullet by its keyword instead of a bare
+  // position number (CJ, Sep 2026: "This allows the subscriber to identify
+  // which bullets are related to each keyword selected in the previous
+  // screen"). null for a bullet drafted via the CAR form, which has no
+  // source keyword. Kept separate from ResumeRefreshDraftItem itself (rather
+  // than adding a field there) since that type's shape is also what gets
+  // posted to commit() — no need to send this along or risk the server
+  // rejecting an unexpected field.
+  const [draftKeywords, setDraftKeywords] = useState<(string | null)[]>([]);
   const [skippedDuplicates, setSkippedDuplicates] = useState(0);
   // Which step led into reviewBullets — so its Back button returns to the
   // right screen (the keyword picker with the selection still intact, or
@@ -100,6 +110,10 @@ export function ResumeRefreshPage() {
     try {
       const { achievements } = await resumeRefreshApi.previewKeywordBullet(token, selectedKeywords);
       setDraftItems(achievements.map((achievement) => ({ achievement, bulletText: achievement.action })));
+      // previewKeywordBullet returns one achievement per keyword, in the same
+      // order the keywords were sent (see ResumeRefreshApi.previewKeywordBullet's
+      // doc comment) — safe to zip by index.
+      setDraftKeywords(selectedKeywords);
       setReviewedFrom("pickKeyword");
       setStep("reviewBullets");
     } catch (err) {
@@ -119,6 +133,7 @@ export function ResumeRefreshPage() {
         result: carResult,
       });
       setDraftItems([{ achievement, bulletText }]);
+      setDraftKeywords([null]); // no source keyword — this bullet came from the CAR form
       setReviewedFrom("carForm");
       setStep("reviewBullets");
     } catch (err) {
@@ -174,6 +189,7 @@ export function ResumeRefreshPage() {
     setCarAction("");
     setCarResult("");
     setDraftItems([]);
+    setDraftKeywords([]);
     setSkippedDuplicates(0);
     setError(null);
     setStep("pickKeyword");
@@ -322,7 +338,9 @@ export function ResumeRefreshPage() {
             {draftItems.map((item, i) => (
               <div className="field" key={i}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <label style={{ marginBottom: 0 }}>Resume bullet {draftItems.length > 1 ? i + 1 : ""}</label>
+                  <label style={{ marginBottom: 0 }}>
+                    Resume bullet{draftKeywords[i] ? ` — ${draftKeywords[i]}` : draftItems.length > 1 ? ` ${i + 1}` : ""}
+                  </label>
                   <button
                     type="button"
                     className="btn-link"
