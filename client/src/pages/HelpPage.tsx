@@ -1,4 +1,6 @@
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { Link, MemoryRouter, useLocation } from "react-router-dom";
 import { useHashScroll } from "../hooks/useHashScroll";
 import { QUICK_START_STEPS } from "../config/quickStartSteps";
 
@@ -14,9 +16,21 @@ import { QUICK_START_STEPS } from "../config/quickStartSteps";
  * Cloudflare Email Routing rule noted in TODO.md. The copy here assumes
  * that's set up; don't publish/link this page until it actually is.
  */
-const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
+type FaqCategoryId = "getting-started" | "sharing" | "tools" | "account" | "emails";
+
+/** Display order and labels for the collapsed FAQ groups. Each FAQ_ITEMS entry picks one via its `category`. */
+const FAQ_CATEGORIES: { id: FaqCategoryId; label: string }[] = [
+  { id: "getting-started", label: "Getting started & editing" },
+  { id: "sharing", label: "Sharing & privacy" },
+  { id: "tools", label: "Premium & Professional tools" },
+  { id: "account", label: "Account & billing" },
+  { id: "emails", label: "Emails & guidance" },
+];
+
+const FAQ_ITEMS: { id: string; category: FaqCategoryId; question: string; answer: JSX.Element }[] = [
   {
     id: "changes-not-showing",
+    category: "getting-started",
     question: "I made changes to my resume but I don't see them when I view it. What happened?",
     answer: (
       <>
@@ -38,6 +52,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
   },
   {
     id: "sharing",
+    category: "sharing",
     question: "How do I share my resume with someone?",
     answer: (
       <p>
@@ -48,6 +63,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
   },
   {
     id: "branded-link",
+    category: "sharing",
     question: "I upgraded to Premium, why doesn't my existing resume's link show my name?",
     answer: (
       <p>
@@ -61,6 +77,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
   },
   {
     id: "link-visibility",
+    category: "sharing",
     question: "Who can see my resume link?",
     answer: (
       <p>
@@ -72,7 +89,20 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
     ),
   },
   {
+    id: "pause-link",
+    category: "sharing",
+    question: "Can I temporarily turn off my resume's public link?",
+    answer: (
+      <p>
+        Yes, on Professional and Premium plans. Each resume on your Dashboard has an <strong>Active</strong> /{" "}
+        <strong>Inactive</strong> toggle. Switch it to Inactive to pause the link without deleting anything, and
+        switch it back to Active whenever you're ready to share it again.
+      </p>
+    ),
+  },
+  {
     id: "verify-before-sharing",
+    category: "sharing",
     question: "Do I need to verify my email before sharing?",
     answer: (
       <p>
@@ -85,6 +115,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
   },
   {
     id: "resume-limit",
+    category: "getting-started",
     question: "How many resumes can I create?",
     answer: (
       <p>
@@ -95,6 +126,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
   },
   {
     id: "edit-summary",
+    category: "getting-started",
     question: "Can I edit the summary and bullet points Poly writes?",
     answer: (
       <p>
@@ -107,6 +139,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
   },
   {
     id: "ats-check",
+    category: "tools",
     question: "What's the ATS Check, and why can't I click on some of the suggested keywords?",
     answer: (
       <>
@@ -127,6 +160,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
   },
   {
     id: "templates",
+    category: "getting-started",
     question: "Can I change my resume's template later, and do all templates have the same sections?",
     answer: (
       <p>
@@ -140,6 +174,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
   },
   {
     id: "import-resume",
+    category: "getting-started",
     question: "Can I import an existing resume instead of starting from scratch?",
     answer: (
       <p>
@@ -151,6 +186,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
   },
   {
     id: "job-tracker",
+    category: "tools",
     question: "Is there a way to track the jobs I've applied to?",
     answer: (
       <p>
@@ -162,6 +198,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
   },
   {
     id: "career-center",
+    category: "tools",
     question: "What's the Career Center?",
     answer: (
       <p>
@@ -172,6 +209,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
   },
   {
     id: "ask-poly",
+    category: "tools",
     question: "What is Ask Poly?",
     answer: (
       <p>
@@ -182,6 +220,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
   },
   {
     id: "cover-and-thank-you-letters",
+    category: "tools",
     question: "Can ResumeLingo write cover letters or thank-you notes for me?",
     answer: (
       <p>
@@ -195,6 +234,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
   },
   {
     id: "recruiter-mode",
+    category: "tools",
     question: "What's Recruiter Mode?",
     answer: (
       <p>
@@ -208,7 +248,59 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
     ),
   },
   {
+    id: "references",
+    category: "tools",
+    question: "Can I add references to my resume?",
+    answer: (
+      <p>
+        Yes, on Professional and Premium plans. Open the <strong>References</strong> section in the editor, turn on
+        the option to add a References section, and enter at least one reference. It's off by default, so nothing
+        appears on your public link until you do. On Premium, you can also choose to show references only when
+        Recruiter Mode is on.
+      </p>
+    ),
+  },
+  {
+    id: "version-history",
+    category: "tools",
+    question: "Can I undo changes or go back to an earlier version of my resume?",
+    answer: (
+      <p>
+        Yes, with Premium. A version is saved automatically each time you save an edit, and the{" "}
+        <strong>Version History</strong> section in the editor lets you <strong>Restore</strong> any of the last 10.
+        Restoring saves your current version to history first, so you can undo the restore too.
+      </p>
+    ),
+  },
+  {
+    id: "resume-refresh-emails",
+    category: "emails",
+    question: "Why did I get an email asking about my current job?",
+    answer: (
+      <p>
+        That's the Resume Refresh nudge. If a resume looks like it hasn't been updated in a while, we email you
+        asking whether you're still in your latest role. The link opens a quick page, no login needed, where you can
+        pick keywords or describe a challenge, action, and result to get draft bullet points. You review and edit
+        them before anything is saved. Every email includes an unsubscribe link if you'd rather not receive them.
+      </p>
+    ),
+  },
+  {
+    id: "full-circle",
+    category: "emails",
+    question: "What's the \"circle\" I see on my resume after I create it?",
+    answer: (
+      <p>
+        That's Full Circle, a short post-publish checklist that walks you from a finished resume to actually using
+        it: share your link, track your applications (Professional and Premium), and write cover or thank-you
+        letters (Premium). You can snooze it for a week if you'd rather not see it. See the{" "}
+        <Link to="/full-circle">Full Circle page</Link> for the bigger picture.
+      </p>
+    ),
+  },
+  {
     id: "account-changes",
+    category: "account",
     question: "I want to change my email address or password.",
     answer: (
       <p>
@@ -220,6 +312,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
   },
   {
     id: "billing",
+    category: "account",
     question: "How do I cancel or change my subscription?",
     answer: (
       <p>
@@ -231,6 +324,7 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
   },
   {
     id: "privacy",
+    category: "sharing",
     question: "Is my resume data private?",
     answer: (
       <p>
@@ -244,6 +338,46 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
 
 export function HelpPage() {
   useHashScroll();
+  const location = useLocation();
+  const [openCats, setOpenCats] = useState<Set<string>>(new Set());
+  const [openQs, setOpenQs] = useState<Set<string>>(new Set());
+
+  // Deep links like /help#recruiter-mode (or #sharing-privacy for a whole group): open the
+  // target's collapsed group/question first, then re-scroll once it has expanded.
+  useEffect(() => {
+    const hash = location.hash.slice(1);
+    if (!hash) return;
+    const item = FAQ_ITEMS.find((f) => f.id === hash);
+    const cat = item?.category ?? FAQ_CATEGORIES.find((c) => `faq-${c.id}` === hash)?.id;
+    if (!cat) return;
+    setOpenCats((prev) => new Set(prev).add(cat));
+    if (item) setOpenQs((prev) => new Set(prev).add(item.id));
+    requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }, [location.hash]);
+
+  // Search: match the question plus the answer's plain text (JSX rendered once, tags stripped).
+  const [query, setQuery] = useState("");
+  const searchText = useMemo(
+    () =>
+      new Map(
+        FAQ_ITEMS.map((f) => [
+          f.id,
+          `${f.question} ${renderToStaticMarkup(<MemoryRouter>{f.answer}</MemoryRouter>).replace(/<[^>]*>/g, " ").replace(/&amp;/g, "&")}`.toLowerCase(),
+        ])
+      ),
+    []
+  );
+  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const searching = terms.length > 0;
+  const matches = (id: string) => terms.every((t) => searchText.get(id)?.includes(t));
+  const matchCount = searching ? FAQ_ITEMS.filter((f) => matches(f.id)).length : FAQ_ITEMS.length;
+
+  const toggle = (set: Set<string>, id: string, open: boolean) => {
+    const next = new Set(set);
+    if (open) next.add(id);
+    else next.delete(id);
+    return next;
+  };
 
   return (
     <main>
@@ -266,12 +400,50 @@ export function HelpPage() {
         </p>
 
         <h2 id="faq">Frequently asked questions</h2>
-        {FAQ_ITEMS.map((item) => (
-          <div key={item.id} id={item.id} style={{ marginBottom: 24 }}>
-            <h3 style={{ marginBottom: 8 }}>{item.question}</h3>
-            {item.answer}
-          </div>
-        ))}
+        <input
+          type="search"
+          className="faq-search"
+          placeholder="Search the FAQ"
+          aria-label="Search the FAQ"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        {searching && (
+          <p className="faq-search-status" role="status">
+            {matchCount === 0
+              ? "No matches. Try different words, or email support@resumelingo.com."
+              : `${matchCount} ${matchCount === 1 ? "match" : "matches"}`}
+          </p>
+        )}
+        {FAQ_CATEGORIES.map((cat) => {
+          const items = FAQ_ITEMS.filter((f) => f.category === cat.id && (!searching || matches(f.id)));
+          if (items.length === 0) return null;
+          return (
+            <details
+              key={cat.id}
+              id={`faq-${cat.id}`}
+              className="faq-group"
+              open={searching || openCats.has(cat.id)}
+              onToggle={(e) => !searching && setOpenCats((prev) => toggle(prev, cat.id, e.currentTarget.open))}
+            >
+              <summary>
+                {cat.label} <span className="faq-count">{items.length}</span>
+              </summary>
+              {items.map((item) => (
+                <details
+                  key={item.id}
+                  id={item.id}
+                  className="faq-item"
+                  open={searching || openQs.has(item.id)}
+                  onToggle={(e) => !searching && setOpenQs((prev) => toggle(prev, item.id, e.currentTarget.open))}
+                >
+                  <summary>{item.question}</summary>
+                  <div className="faq-answer">{item.answer}</div>
+                </details>
+              ))}
+            </details>
+          );
+        })}
 
         <h2 id="quick-start">Quick start: creating your first resume</h2>
         <ol className="career-tips" style={{ listStyle: "decimal", paddingLeft: 22 }}>

@@ -2368,3 +2368,16 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 @media (max-width: 640px) {
   .poly-save-toast { left: 16px; right: 16px; bottom: 16px; }
 }
+
+/* Help page FAQ: collapsed category groups containing collapsible questions */
+.faq-group { border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 12px; background: #fff; }
+.faq-group > summary { cursor: pointer; padding: 14px 18px; font-size: 16px; font-weight: 700; color: var(--navy); list-style: none; display: flex; align-items: center; gap: 10px; }
+.faq-group > summary::-webkit-details-marker, .faq-item > summary::-webkit-details-marker { display: none; }
+.faq-group > summary::before, .faq-item > summary::before { content: "\25B8"; color: var(--indigo); transition: transform .15s; }
+.faq-group[open] > summary::before, .faq-item[open] > summary::before { transform: rotate(90deg); }
+.faq-count { font-size: 12px; font-weight: 600; color: var(--indigo); background: #eef2ff; padding: 2px 9px; border-radius: 999px; }
+.faq-item { border-top: 1px solid #f0f1f4; padding: 0 18px; }
+.faq-item > summary { cursor: pointer; padding: 12px 0; font-size: 15px; font-weight: 600; color: var(--navy); list-style: none; display: flex; gap: 8px; }
+.faq-answer { padding: 0 0 6px 20px; }
+.faq-search { width: 100%; margin: 4px 0 14px; padding: 10px 14px; font-size: 15px; border: 1px solid #d9dce3; border-radius: 10px; }
+.faq-search-status { font-size: 13px; color: var(--navy-light); margin-bottom: 10px; }
