@@ -198,10 +198,12 @@ const FAQ_ITEMS: { id: string; question: string; answer: JSX.Element }[] = [
     question: "What's Recruiter Mode?",
     answer: (
       <p>
-        A Premium toggle in the editor that adds a candidate summary card to the top of your public resume link:
-        skills pulled automatically from your resume, plus optional fields like availability, clearance, location,
-        work authorization, expected salary, and remote preference. It's off by default, and every field is
-        optional even once you turn it on.
+        A Premium toggle in the editor that adds a candidate summary card to your public resume link: skills pulled
+        automatically from your resume, plus optional fields like availability, clearance, location, work
+        authorization, expected salary, and remote preference. It's off by default, and you set a{" "}
+        <strong>Recruiter access code</strong> when you turn it on. The card stays hidden until a recruiter enters
+        that code, so share it only with the people you want to see those details. Every field in the card is
+        optional.
       </p>
     ),
   },
