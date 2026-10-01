@@ -424,7 +424,11 @@ export function HelpPage() {
               id={`faq-${cat.id}`}
               className="faq-group"
               open={searching || openCats.has(cat.id)}
-              onToggle={(e) => !searching && setOpenCats((prev) => toggle(prev, cat.id, e.currentTarget.open))}
+              onToggle={(e) => {
+                if (searching) return;
+                const isOpen = e.currentTarget.open;
+                setOpenCats((prev) => toggle(prev, cat.id, isOpen));
+              }}
             >
               <summary>
                 {cat.label} <span className="faq-count">{items.length}</span>
@@ -435,7 +439,11 @@ export function HelpPage() {
                   id={item.id}
                   className="faq-item"
                   open={searching || openQs.has(item.id)}
-                  onToggle={(e) => !searching && setOpenQs((prev) => toggle(prev, item.id, e.currentTarget.open))}
+                  onToggle={(e) => {
+                    if (searching) return;
+                    const isOpen = e.currentTarget.open;
+                    setOpenQs((prev) => toggle(prev, item.id, isOpen));
+                  }}
                 >
                   <summary>{item.question}</summary>
                   <div className="faq-answer">{item.answer}</div>
