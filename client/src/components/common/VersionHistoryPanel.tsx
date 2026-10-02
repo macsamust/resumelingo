@@ -4,7 +4,7 @@ import { ResumeVersion } from "../../types";
 import { formatRelativeTime } from "../../utils/time";
 
 /**
- * "Version History" section on Edit Resume (Professional/Premium — see
+ * "Version History" section on Edit Resume (Premium only — see
  * ResumeService.assertVersionHistoryAllowed) — a lighter, automatic
  * counterpart to Clone's manual "save a copy." Every non-link-only save
  * snapshots the resume's *pre-save* content (see ResumeService.update), so
