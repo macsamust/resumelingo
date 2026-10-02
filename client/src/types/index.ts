@@ -514,7 +514,7 @@ export interface ResumeAnalytics {
   } | null;
 }
 
-/** One entry in a resume's version history — see ResumeApi.listVersions/restoreVersion. Professional/Premium only. Only the title is used for display; the rest of the snapshot's content isn't needed until the version is actually restored (server-side). */
+/** One entry in a resume's version history — see ResumeApi.listVersions/restoreVersion. Premium only. Only the title is used for display; the rest of the snapshot's content isn't needed until the version is actually restored (server-side). */
 export interface ResumeVersion {
   id: string;
   createdAt: string;
