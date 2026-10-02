@@ -2381,3 +2381,4 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .faq-answer { padding: 0 0 6px 20px; }
 .faq-search { width: 100%; margin: 4px 0 14px; padding: 10px 14px; font-size: 15px; border: 1px solid #d9dce3; border-radius: 10px; }
 .faq-search-status { font-size: 13px; color: var(--navy-light); margin-bottom: 10px; }
+::highlight(faq-search) { background-color: #fde68a; color: #1f2937; }

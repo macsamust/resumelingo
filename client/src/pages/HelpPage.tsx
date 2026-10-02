@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Link, MemoryRouter, useLocation } from "react-router-dom";
 import { useHashScroll } from "../hooks/useHashScroll";
@@ -372,6 +372,35 @@ export function HelpPage() {
   const matches = (id: string) => terms.every((t) => searchText.get(id)?.includes(t));
   const matchCount = searching ? FAQ_ITEMS.filter((f) => matches(f.id)).length : FAQ_ITEMS.length;
 
+  // Highlight matches with the CSS Custom Highlight API (styled via ::highlight(faq-search) in
+  // global.css). It paints over text ranges without touching the DOM React manages; browsers
+  // without support just skip the highlight and everything else still works.
+  const faqRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const css = (window as any).CSS;
+    const HighlightCtor = (window as any).Highlight;
+    if (!css?.highlights || !HighlightCtor) return;
+    css.highlights.delete("faq-search");
+    const root = faqRef.current;
+    if (!root || terms.length === 0) return;
+    const ranges: Range[] = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (!node.parentElement?.closest(".faq-item")) continue;
+      const text = (node.textContent ?? "").toLowerCase();
+      for (const term of terms) {
+        for (let at = text.indexOf(term); at !== -1; at = text.indexOf(term, at + term.length)) {
+          const range = new Range();
+          range.setStart(node, at);
+          range.setEnd(node, at + term.length);
+          ranges.push(range);
+        }
+      }
+    }
+    css.highlights.set("faq-search", new HighlightCtor(...ranges));
+    return () => css.highlights.delete("faq-search");
+  }, [query]);
+
   const toggle = (set: Set<string>, id: string, open: boolean) => {
     const next = new Set(set);
     if (open) next.add(id);
@@ -415,6 +444,7 @@ export function HelpPage() {
               : `${matchCount} ${matchCount === 1 ? "match" : "matches"}`}
           </p>
         )}
+        <div ref={faqRef}>
         {FAQ_CATEGORIES.map((cat) => {
           const items = FAQ_ITEMS.filter((f) => f.category === cat.id && (!searching || matches(f.id)));
           if (items.length === 0) return null;
@@ -452,6 +482,7 @@ export function HelpPage() {
             </details>
           );
         })}
+        </div>
 
         <h2 id="quick-start">Quick start: creating your first resume</h2>
         <ol className="career-tips" style={{ listStyle: "decimal", paddingLeft: 22 }}>
