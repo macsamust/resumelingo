@@ -25,6 +25,24 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    date: "2026-10-01",
+    title: "A tidier, searchable Help page",
+    description:
+      "Help & Support now groups its answers into collapsible topics and has a search box that highlights what it finds, so you can get to an answer without scrolling a long list.",
+  },
+  {
+    date: "2026-10-01",
+    title: "New answers in the Help center",
+    description:
+      "We added help articles for pausing your resume link, adding references, restoring earlier versions, the resume check-in emails, and the Full Circle checklist, and refreshed the Recruiter Mode answer.",
+  },
+  {
+    date: "2026-09-27",
+    title: "See which keyword each drafted bullet came from",
+    description:
+      "When you draft several resume bullets from a check-in email, each one is now labeled with the keyword it was built from, so it's easy to tell them apart before you save.",
+  },
+  {
     date: "2026-09-22",
     title: "Smarter keywords on your resume check-in",
     description:
