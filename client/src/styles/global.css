@@ -2382,3 +2382,12 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .faq-search { width: 100%; margin: 4px 0 14px; padding: 10px 14px; font-size: 15px; border: 1px solid #d9dce3; border-radius: 10px; }
 .faq-search-status { font-size: 13px; color: var(--navy-light); margin-bottom: 10px; }
 ::highlight(faq-search) { background-color: #fde68a; color: #1f2937; }
+
+/* What's New: monthly accordion (newest month open, earlier months collapsed) */
+.changelog-month-group { margin-bottom: 14px; }
+.changelog-month-group > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--indigo); padding: 12px 4px; }
+.changelog-month-group > summary::-webkit-details-marker { display: none; }
+.changelog-month-group > summary::before { content: "\25B8"; transition: transform .15s; }
+.changelog-month-group[open] > summary::before { transform: rotate(90deg); }
+.changelog-month-count { font-size: 12px; font-weight: 600; color: var(--indigo); background: #eef2ff; padding: 2px 9px; border-radius: 999px; letter-spacing: 0; }
+.changelog-month-group .changelog-entry { margin-bottom: 14px; }
