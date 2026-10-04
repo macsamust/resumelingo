@@ -85,6 +85,12 @@ export class StripeService {
       mode: "subscription",
       customer: input.customerId,
       line_items: [{ price: input.priceId, quantity: 1 }],
+      // Shows Stripe's own "Add promotion code" field on the hosted Checkout
+      // page (CJ, Oct 2026). Coupons/codes are created and managed entirely
+      // in the Stripe dashboard — see docs/ops/Promo-Codes.md — so there's no
+      // code-validation logic or table on our side, and nothing new touches
+      // card data (still hosted Checkout, same narrow PCI scope).
+      allow_promotion_codes: true,
       client_reference_id: input.userId,
       subscription_data: { metadata: { userId: input.userId } },
       success_url: input.successUrl,

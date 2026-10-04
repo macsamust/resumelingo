@@ -243,4 +243,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "New Admin Console page (`AdminChangelogPage.tsx` + `data/adminChangelog.ts`) mirroring every row of `docs/ops/session-log.md`, unfiltered — the counterpart to the curated subscriber-facing `/whats-new` page. Includes a search box over topic/outcome text given the list only grows over time.",
   },
+  {
+    id: "R035",
+    date: "2026-10-04",
+    topic: "Add a way to use promo codes",
+    outcome:
+      "Recommended using Stripe's built-in promotion codes on the existing hosted Checkout rather than building our own. Added `allow_promotion_codes: true` to `StripeService.createCheckoutSession` and wrote `docs/ops/Promo-Codes.md` (how to create a coupon/code in Stripe, plus caveats: list prices in-app stay undiscounted, no Admin Console reporting, no in-app code field yet).",
+  },
 ];
