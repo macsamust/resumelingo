@@ -250,4 +250,18 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "Recommended using Stripe's built-in promotion codes on the existing hosted Checkout rather than building our own. Added `allow_promotion_codes: true` to `StripeService.createCheckoutSession` and wrote `docs/ops/Promo-Codes.md` (how to create a coupon/code in Stripe, plus caveats: list prices in-app stay undiscounted, no Admin Console reporting, no in-app code field yet).",
   },
+  {
+    id: "R036",
+    date: "2026-10-23",
+    topic: "Promo code coupon strategy and production verification",
+    outcome:
+      "Recommended a launch coupon (25% off for 3 months, first-time customers, expiry date, ~100-redemption cap) with dollar impact worked out for Professional ($9.99 → $7.49) and Premium ($19.99 → $14.99). Test-card attempt failed because production runs the live Stripe key; a first live code showed \"invalid\" until the live-mode coupon/code was set up correctly. CJ then verified a promo code end to end in production. No code change.",
+  },
+  {
+    id: "R037",
+    date: "2026-10-23",
+    topic: "List all resources/services used to maintain the site, and save it for reference",
+    outcome:
+      "Inventoried hosting, third-party services, libraries (with installed versions), tooling and secret names from `wrangler.jsonc`, the `package.json` files and CI config. Saved to `docs/ops/Tech-Stack-Inventory.md`.",
+  },
 ];
