@@ -120,7 +120,7 @@ const FAQ_ITEMS: { id: string; category: FaqCategoryId; question: string; answer
     answer: (
       <p>
         Depends on your plan. Check the <Link to="/#pricing">Pricing</Link> page for current limits. If you're at
-        your limit, the "Create resume" flow will tell you before you start filling out a new one, rather than after.
+        your limit, the <strong>New Resume</strong> page will tell you before you start filling out a new one, rather than after.
       </p>
     ),
   },
