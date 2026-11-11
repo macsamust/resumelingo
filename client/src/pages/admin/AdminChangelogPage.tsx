@@ -38,6 +38,15 @@ export function AdminChangelogPage() {
     return entries.slice().reverse();
   }, [query]);
 
+  // Group the (already newest-first) results by month for display.
+  const months: { label: string; entries: typeof filtered }[] = [];
+  for (const entry of filtered) {
+    const label = new Date(`${entry.date}T00:00:00`).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    const last = months[months.length - 1];
+    if (last && last.label === label) last.entries.push(entry);
+    else months.push({ label, entries: [entry] });
+  }
+
   return (
     <AdminShell>
       <div className="app-page-head">
@@ -65,15 +74,38 @@ export function AdminChangelogPage() {
         )}
       </div>
       <div className="admin-changelog-list">
-        {filtered.map((entry) => (
-          <div className="admin-changelog-entry" key={entry.id}>
-            <div className="admin-changelog-entry-head">
-              <span className="admin-changelog-id">{entry.id}</span>
-              <span className="hero-note">{new Date(`${entry.date}T00:00:00`).toLocaleDateString()}</span>
+        {months.map((month) => (
+          <section key={month.label}>
+            <h2 className="admin-changelog-month">
+              {month.label} <span className="app-page-head-count">({month.entries.length})</span>
+            </h2>
+            <div className="admin-changelog-table-wrap">
+              <table className="admin-changelog-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Date</th>
+                    <th>Topic</th>
+                    <th>Outcome</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {month.entries.map((entry) => (
+                    <tr key={entry.id}>
+                      <td>
+                        <span className="admin-changelog-id">{entry.id}</span>
+                      </td>
+                      <td className="admin-changelog-date">
+                        {new Date(`${entry.date}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </td>
+                      <td className="admin-changelog-topic">{renderWithInlineCode(entry.topic)}</td>
+                      <td className="admin-changelog-outcome">{renderWithInlineCode(entry.outcome)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <p className="admin-changelog-topic">{renderWithInlineCode(entry.topic)}</p>
-            <p className="admin-changelog-outcome">{renderWithInlineCode(entry.outcome)}</p>
-          </div>
+          </section>
         ))}
         {filtered.length === 0 && <p className="hero-note">No entries match "{query}".</p>}
       </div>

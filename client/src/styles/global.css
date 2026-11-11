@@ -2163,9 +2163,18 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .admin-email-template-note-actions { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
 .admin-email-template-note-meta { margin: 0; }
 /* Admin Console > Changelog (AdminChangelogPage.tsx). */
-.admin-changelog-list { display: flex; flex-direction: column; gap: 14px; }
-.admin-changelog-entry { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; }
-.admin-changelog-entry-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.admin-changelog-list { display: flex; flex-direction: column; gap: 28px; }
+.admin-changelog-month { font-size: 18px; margin: 0 0 10px; color: var(--navy); }
+.admin-changelog-table-wrap { background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; }
+.admin-changelog-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.admin-changelog-table th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--navy-light); background: #f8fafc; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.admin-changelog-table th:nth-child(1) { width: 72px; }
+.admin-changelog-table th:nth-child(2) { width: 76px; }
+.admin-changelog-table th:nth-child(3) { width: 28%; }
+.admin-changelog-table td { vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.admin-changelog-table tr:last-child td { border-bottom: 0; }
+.admin-changelog-table tbody tr:nth-child(even) { background: #fcfdfe; }
+.admin-changelog-date { font-size: 13px; color: var(--navy-light); white-space: nowrap; }
 .admin-changelog-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; font-weight: 700; color: var(--indigo); background: #eef2ff; padding: 2px 8px; border-radius: 6px; }
 .admin-changelog-topic { font-weight: 600; font-size: 14.5px; margin: 0 0 6px; color: var(--navy); }
 .admin-changelog-outcome { font-size: 13.5px; color: var(--navy-light); margin: 0; line-height: 1.55; }

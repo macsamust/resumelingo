@@ -264,4 +264,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "Inventoried hosting, third-party services, libraries (with installed versions), tooling and secret names from `wrangler.jsonc`, the `package.json` files and CI config. Saved to `docs/ops/Tech-Stack-Inventory.md`.",
   },
+  {
+    id: "R038",
+    date: "2026-10-23",
+    topic: "Make the session log, tech-stack inventory and Admin changelog reader-friendly",
+    outcome:
+      "Regrouped `session-log.md` by month and day with an at-a-glance table and per-day tables; added an overview, layer table, jobs table and secrets table to `docs/ops/Tech-Stack-Inventory.md`; `/admin/changelog` now renders month sections as ID / Date / Topic / Outcome tables (`AdminChangelogPage.tsx`, `global.css`). No behavior change.",
+  },
 ];
