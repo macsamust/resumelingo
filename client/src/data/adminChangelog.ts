@@ -327,4 +327,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "Resume Import kept dropping content silently on long resumes. Raised the input limit from 20,000 to 30,000 characters (shared `MAX_INPUT_CHARS`; the over-limit error now says what to do instead) and replaced the flat 20-entry cap with per-list caps: 30 jobs, 20 education, 30 awards, 40 achievement bullets, 60 skills/tools; AI output budget raised from 6,144 to 8,192 tokens. Anything still capped is now reported on the import review screen (\"Imported 40 of 45 achievement bullets. Add the rest on the Edit Resume page.\"), and the AI is told to add a note when it leaves bullets out. Chunked split-and-merge import was considered and deferred until real demand shows up. Files: `ResumeImportService.ts`, `ResumeImportController.ts`, new `ResumeImportService.caps.test.ts`.",
   },
+  {
+    id: "R047",
+    date: "2026-11-16",
+    topic: "Warn before importing a long resume",
+    outcome:
+      "Resume Import now warns before the import, not only after. `ResumeImportPanel.tsx` shows a standing heads-up under the intro (about 8 to 10 pages / 30,000 characters, up to 30 jobs and 40 bullets, extras go on the Edit Resume page). After the file's text is read but before any upload or AI call, a file over the limit fails instantly with its character count and what to do; a file over ~22,000 characters gets a longer-wait note while analyzing. New shared constants `IMPORT_MAX_CHARS` / `IMPORT_LONG_CHARS` in `resumeImportExtract.ts` (mirror the Worker's `MAX_INPUT_CHARS`; keep in sync).",
+  },
 ];

@@ -10,6 +10,11 @@
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8MB — resumes are never this large; guards against someone uploading the wrong file entirely.
 
+/** Mirrors the Worker's MAX_INPUT_CHARS (ResumeImportService.ts) so a too-long file is caught here, before any upload or AI call. Keep the two in sync. */
+export const IMPORT_MAX_CHARS = 30000;
+/** Above this share of the limit the panel adds a "long resume" heads-up while analyzing. */
+export const IMPORT_LONG_CHARS = 22000;
+
 export class ResumeImportExtractError extends Error {}
 
 function extensionOf(file: File): string {

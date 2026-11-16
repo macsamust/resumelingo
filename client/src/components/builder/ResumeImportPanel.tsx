@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ApiError, resumeImportApi } from "../../api";
 import { ImportedResumeData } from "../../api/ResumeImportApi";
-import { extractResumeText, ResumeImportExtractError } from "../../utils/resumeImportExtract";
+import { extractResumeText, IMPORT_LONG_CHARS, IMPORT_MAX_CHARS, ResumeImportExtractError } from "../../utils/resumeImportExtract";
 
 interface Props {
   /** Professional/Premium-gated (see worker's ResumeImportController) — caller passes whether the account's tier can use this, so a Starter user sees an upgrade prompt instead of a broken/rejected upload. */
@@ -26,6 +26,7 @@ export function ResumeImportPanel({ canImport, onImported }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [notes, setNotes] = useState<string[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [longResume, setLongResume] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const reset = () => {
@@ -42,9 +43,17 @@ export function ResumeImportPanel({ canImport, onImported }: Props) {
     setFileName(file.name);
     setError(null);
     setNotes([]);
+    setLongResume(false);
     setStatus("extracting");
     try {
       const text = await extractResumeText(file);
+      // Caught here, before any upload or AI call, so a too-long file fails instantly and says exactly what to do.
+      if (text.length > IMPORT_MAX_CHARS) {
+        throw new ResumeImportExtractError(
+          `That resume has about ${text.length.toLocaleString()} characters, and the import limit is ${IMPORT_MAX_CHARS.toLocaleString()} (roughly 8 to 10 pages). Trim older roles or extra detail, import that, then add the rest on the Edit Resume page.`
+        );
+      }
+      setLongResume(text.length > IMPORT_LONG_CHARS);
       setStatus("analyzing");
       const { data } = await resumeImportApi.extract(text);
       setNotes(data.notes);
@@ -85,6 +94,11 @@ export function ResumeImportPanel({ canImport, onImported }: Props) {
         Upload a resume (PDF, Word .docx, or plain text) and Poly will pull your work history, education, and skills
         into the form below. Review and edit everything before saving.
       </p>
+      <p className="hero-note" style={{ marginBottom: 12 }}>
+        <strong>Heads up for long resumes:</strong> the import handles up to about 8 to 10 pages (30,000 characters),
+        and keeps up to 30 jobs and 40 achievement bullets. Anything beyond that won't be imported, so you'd add it on
+        the Edit Resume page afterward. We'll tell you if that happens.
+      </p>
       <input
         ref={inputRef}
         type="file"
@@ -102,6 +116,7 @@ export function ResumeImportPanel({ canImport, onImported }: Props) {
         <div className="import-status" role="status" aria-live="polite">
           <span className="spinner-ring" aria-hidden="true" />
           Poly is analyzing your resume, this can take up to 30 seconds…
+          {longResume && " This one is long, so it may take closer to a minute and might not catch every entry."}
         </div>
       )}
       {status === "error" && error && (
