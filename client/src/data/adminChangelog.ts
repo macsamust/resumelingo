@@ -341,4 +341,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "Additional Details changes. Renamed the `certifications` question to \"Certifications and Training\" on every profession (the saved key is unchanged, so existing answers carry over) and in the public resume, PDF and text exports. Added two questions to every profession from one place (`withUniversalQuestions` in `worker/src/config/professions.ts`): Security Clearance (reuses the existing `clearanceLevel` key, so the Govt Contractor template's clearance banner keeps working; Government Contractor and Military keep their own question type, relabeled from \"Clearance Level\") and a Military yes/no checkbox (stored as \"Yes\"; not added to the Military profession, where it's implied). New `checkbox` question type in `DynamicQuestionForm.tsx` and the shared/client `ProfessionQuestion` type. Both new answers show under Additional Details on the public resume/PDF, and are excluded from the generated summary's \"specializing in…\" phrase and fallback bullets (`NON_CONTENT_ANSWER_KEYS` in `ContentGenerator.ts`).",
   },
+  {
+    id: "R049",
+    date: "2026-11-16",
+    topic: "Public resume label: \"Years Experience\" should read \"Years of Experience\"",
+    outcome:
+      "The public resume, PDF and text download labeled the Years of Experience answer \"Years Experience\" (built by splitting the saved key). Added a `yearsExperience: \"Years of Experience\"` entry to `ANSWER_LABEL_OVERRIDES` in `PublicResumePage.tsx` and `pdfExport.ts` so it matches the Edit page's label.",
+  },
 ];
