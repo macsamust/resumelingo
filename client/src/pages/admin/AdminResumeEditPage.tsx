@@ -326,18 +326,6 @@ export function AdminResumeEditPage() {
             <ExperienceEditor experience={experience} onChange={setExperience} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Education" forceOpen={forceOpen} defaultOpen={true}>
-            <EducationEditor education={education} onChange={setEducation} />
-          </CollapsibleSection>
-
-          <CollapsibleSection title="Awards" forceOpen={forceOpen} defaultOpen={false}>
-            <AwardsEditor awards={awards} onChange={setAwards} />
-          </CollapsibleSection>
-
-          <CollapsibleSection title="Languages" forceOpen={forceOpen} defaultOpen={false}>
-            <LanguagesEditor languages={languages} onChange={setLanguages} />
-          </CollapsibleSection>
-
           <CollapsibleSection title="Highlights & Key Achievements" forceOpen={forceOpen} defaultOpen={true}>
             <label className="checkbox-field" style={{ marginBottom: 16 }}>
               <input
@@ -353,6 +341,14 @@ export function AdminResumeEditPage() {
               experience={experience}
               showJobLink={combineExperienceFormat}
             />
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Education" forceOpen={forceOpen} defaultOpen={true}>
+            <EducationEditor education={education} onChange={setEducation} />
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Languages" forceOpen={forceOpen} defaultOpen={false}>
+            <LanguagesEditor languages={languages} onChange={setLanguages} />
           </CollapsibleSection>
 
           <CollapsibleSection title="Generated Summary & Bullets" forceOpen={forceOpen} defaultOpen={false}>
@@ -371,6 +367,10 @@ export function AdminResumeEditPage() {
               <label>Bullets (one per line)</label>
               <textarea rows={6} value={generatedBulletsText} onChange={(e) => setGeneratedBulletsText(e.target.value)} />
             </div>
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Awards" forceOpen={forceOpen} defaultOpen={false}>
+            <AwardsEditor awards={awards} onChange={setAwards} />
           </CollapsibleSection>
 
           <button className="btn btn-primary btn-block" type="submit" disabled={saving} style={{ marginTop: 28 }}>

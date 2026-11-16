@@ -299,4 +299,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "Moved the \"Highlights & Key Achievements\" section to sit directly under \"Work Experience\" on the Edit Resume page (new order: Work Experience, Highlights & Key Achievements, Education, Languages, Generated Summary & Bullets). Reorder only in `ResumeEditPage.tsx`; no behavior change. The new-resume builder and Admin edit page keep their own order.",
   },
+  {
+    id: "R043",
+    date: "2026-11-16",
+    topic: "Make the other edit pages' section order match the Edit page",
+    outcome:
+      "Matched the Admin edit page's section order to the subscriber Edit page for the sections they share: Work Experience, Highlights & Key Achievements, Education, Languages, Generated Summary & Bullets, then Awards (Awards was previously above Languages). Reorder only in `AdminResumeEditPage.tsx`. The new-resume builder keeps its own numbered wizard order. Highlights already sat under Work Experience on both.",
+  },
 ];
