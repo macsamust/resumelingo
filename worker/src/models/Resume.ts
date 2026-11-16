@@ -4,6 +4,7 @@ import { getProfessionByKey } from "../config/professions";
 import { extractKeywords } from "../utils/keywords";
 import { buildCandidateSummary } from "../utils/candidateSummary";
 import { sha256Hex } from "../utils/crypto";
+import { resolveYears, ResolvedYears, swapYearsPhrase } from "../utils/yearsExperience";
 
 /**
  * Domain model for a resume. Handles JSON (de)serialization of the
@@ -72,7 +73,10 @@ export class Resume {
    */
   readonly recruiterAccessCodeHash: string | null;
   readonly combineExperienceFormat: boolean;
+  /** Effective answers: the reserved as-of key is stripped and yearsExperience already reflects the years elapsed since it was entered (see utils/yearsExperience.ts). */
   readonly answers: Record<string, string>;
+  /** The stored base number and as-of date behind answers.yearsExperience — what ResumeService.update compares against so an untouched value keeps its original date. */
+  readonly years: ResolvedYears;
   readonly experience: WorkExperienceEntry[];
   readonly education: EducationEntry[];
   readonly awards: AwardEntry[];
@@ -118,7 +122,8 @@ export class Resume {
     this.recruiterRemotePreference = record.recruiterRemotePreference;
     this.recruiterAccessCodeHash = record.recruiterAccessCodeHash;
     this.combineExperienceFormat = !!record.combineExperienceFormat;
-    this.answers = JSON.parse(record.answers || "{}");
+    this.years = resolveYears(JSON.parse(record.answers || "{}"), record.updatedAt);
+    this.answers = this.years.answers;
     this.experience = JSON.parse(record.experience || "[]");
     this.education = JSON.parse(record.education || "[]");
     this.awards = JSON.parse(record.awards || "[]");
@@ -128,7 +133,12 @@ export class Resume {
     this.referencesEnabled = !!record.referencesEnabled;
     this.references = JSON.parse(record.references || "[]");
     this.referencesRecruiterModeOnly = !!record.referencesRecruiterModeOnly;
-    this.generatedSummary = record.generatedSummary;
+    // Stored with the base number in its "N+ years of experience" phrase;
+    // swapped to the effective number on every read so it never goes stale.
+    this.generatedSummary =
+      this.years.base !== null && this.years.effective !== null
+        ? swapYearsPhrase(record.generatedSummary, this.years.base, this.years.effective)
+        : record.generatedSummary;
     this.generatedBullets = JSON.parse(record.generatedBullets || "[]");
     this.summaryManuallyEdited = !!record.summaryManuallyEdited;
     this.viewCount = record.viewCount;

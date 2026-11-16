@@ -54,6 +54,8 @@ export function DynamicQuestionForm({ questions, answers, onChange }: Props) {
               onChange={(e) => onChange(q.key, e.target.value)}
             />
           )}
+          {/* Counts up on its own each year on the server (see worker/src/utils/yearsExperience.ts), so the owner never has to revisit it. */}
+          {q.key === "yearsExperience" && <p className="field-hint">Updates automatically each year.</p>}
         </div>
       ))}
     </>
