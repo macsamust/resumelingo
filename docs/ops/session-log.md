@@ -23,8 +23,8 @@ An audit trail of requests made to Claude on this project and how each was resol
 | Sep 27 | 5 | R030–R034 | Branding and tooling decisions, check-in keyword labels, and the What's New inclusion bar plus the admin changelog. |
 | Oct 4 | 1 | R035 | Promo codes via Stripe. |
 | Oct 23 | 3 | R036–R038 | Promo-code strategy, production verification, the tech-stack inventory, and reader-friendly log formatting. |
-| Nov 16 | 1 | R039 | Collapsible, searchable Highlights & Key Achievements editor. |
-| **Total** | **39** | R001–R039 | |
+| Nov 16 | 2 | R039–R040 | Collapsible, searchable Highlights & Key Achievements editor, and a fix for the live-preview pane shrinking. |
+| **Total** | **40** | R001–R040 | |
 
 ## September 2026
 
@@ -121,8 +121,9 @@ Promo-code strategy, production verification, and the tech-stack inventory.
 
 ### Nov 16
 
-Collapsible, searchable Highlights & Key Achievements editor.
+Collapsible, searchable Highlights & Key Achievements editor, and a fix for the live-preview pane shrinking.
 
 | ID | Topic | Outcome |
 |---|---|---|
 | **R039** | Highlights & Key Achievements gets very long for seasoned users: roll it up | `AchievementEditor.tsx` now collapses every bullet to a one-line summary (one open for editing at a time), groups bullets under collapsible job headers with a bullet count when "Combine Work Experience with Achievements" is on (plus an "Other highlights" group for unlinked bullets), and adds a search box (shown at 4+ bullets) that filters by text and auto-opens matching groups. Per-job "Add achievement"; ↑/↓ reorder within a job. Display-only: the `AchievementEntry[]` data and `experienceId` links are unchanged. Also applies to the Resume Builder and Admin edit pages, which share the component. |
+| **R040** | Edit page: "Expand all" shrinks the live preview pane; keep both sides equal | Root cause: `.builder-grid` used `1fr 1fr`, and a plain `1fr` track has `min-width: auto`, so a long no-wrap line in the form (the new one-line achievement rows) widened the left column. Changed to `minmax(0, 1fr) minmax(0, 1fr)` plus `min-width: 0` on its children in `global.css`. No component change. |

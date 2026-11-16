@@ -278,4 +278,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "`AchievementEditor.tsx` now collapses every bullet to a one-line summary (one open for editing at a time), groups bullets under collapsible job headers with a bullet count when \"Combine Work Experience with Achievements\" is on (plus an \"Other highlights\" group for unlinked bullets), and adds a search box (shown at 4+ bullets) that filters by text and auto-opens matching groups. Per-job \"Add achievement\"; ↑/↓ reorder within a job. Display-only: the `AchievementEntry[]` data and `experienceId` links are unchanged. Also applies to the Resume Builder and Admin edit pages, which share the component.",
   },
+  {
+    id: "R040",
+    date: "2026-11-16",
+    topic: "Edit page: \"Expand all\" shrinks the live preview pane; keep both sides equal",
+    outcome:
+      "Root cause: `.builder-grid` used `1fr 1fr`, and a plain `1fr` track has `min-width: auto`, so a long no-wrap line in the form (the new one-line achievement rows) widened the left column. Changed to `minmax(0, 1fr) minmax(0, 1fr)` plus `min-width: 0` on its children in `global.css`. No component change.",
+  },
 ];
