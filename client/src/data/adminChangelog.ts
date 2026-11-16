@@ -271,4 +271,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "Regrouped `session-log.md` by month and day with an at-a-glance table and per-day tables; added an overview, layer table, jobs table and secrets table to `docs/ops/Tech-Stack-Inventory.md`; `/admin/changelog` now renders month sections as ID / Date / Topic / Outcome tables (`AdminChangelogPage.tsx`, `global.css`). No behavior change.",
   },
+  {
+    id: "R039",
+    date: "2026-11-16",
+    topic: "Highlights & Key Achievements gets very long for seasoned users: roll it up",
+    outcome:
+      "`AchievementEditor.tsx` now collapses every bullet to a one-line summary (one open for editing at a time), groups bullets under collapsible job headers with a bullet count when \"Combine Work Experience with Achievements\" is on (plus an \"Other highlights\" group for unlinked bullets), and adds a search box (shown at 4+ bullets) that filters by text and auto-opens matching groups. Per-job \"Add achievement\"; ↑/↓ reorder within a job. Display-only: the `AchievementEntry[]` data and `experienceId` links are unchanged. Also applies to the Resume Builder and Admin edit pages, which share the component.",
+  },
 ];

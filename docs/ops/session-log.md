@@ -23,7 +23,8 @@ An audit trail of requests made to Claude on this project and how each was resol
 | Sep 27 | 5 | R030–R034 | Branding and tooling decisions, check-in keyword labels, and the What's New inclusion bar plus the admin changelog. |
 | Oct 4 | 1 | R035 | Promo codes via Stripe. |
 | Oct 23 | 3 | R036–R038 | Promo-code strategy, production verification, the tech-stack inventory, and reader-friendly log formatting. |
-| **Total** | **38** | R001–R038 | |
+| Nov 16 | 1 | R039 | Collapsible, searchable Highlights & Key Achievements editor. |
+| **Total** | **39** | R001–R039 | |
 
 ## September 2026
 
@@ -115,3 +116,13 @@ Promo-code strategy, production verification, and the tech-stack inventory.
 | **R036** | Promo code coupon strategy and production verification | Recommended a launch coupon (25% off for 3 months, first-time customers, expiry date, ~100-redemption cap) with dollar impact worked out for Professional ($9.99 → $7.49) and Premium ($19.99 → $14.99). Test-card attempt failed because production runs the live Stripe key; a first live code showed "invalid" until the live-mode coupon/code was set up correctly. CJ then verified a promo code end to end in production. No code change. |
 | **R037** | List all resources/services used to maintain the site, and save it for reference | Inventoried hosting, third-party services, libraries (with installed versions), tooling and secret names from `wrangler.jsonc`, the `package.json` files and CI config. Saved to `docs/ops/Tech-Stack-Inventory.md`. |
 | **R038** | Make the session log, tech-stack inventory and Admin changelog reader-friendly | Regrouped `session-log.md` by month and day with an at-a-glance table and per-day tables; added an overview, layer table, jobs table and secrets table to `docs/ops/Tech-Stack-Inventory.md`; `/admin/changelog` now renders month sections as ID / Date / Topic / Outcome tables (`AdminChangelogPage.tsx`, `global.css`). No behavior change. |
+
+## November 2026
+
+### Nov 16
+
+Collapsible, searchable Highlights & Key Achievements editor.
+
+| ID | Topic | Outcome |
+|---|---|---|
+| **R039** | Highlights & Key Achievements gets very long for seasoned users: roll it up | `AchievementEditor.tsx` now collapses every bullet to a one-line summary (one open for editing at a time), groups bullets under collapsible job headers with a bullet count when "Combine Work Experience with Achievements" is on (plus an "Other highlights" group for unlinked bullets), and adds a search box (shown at 4+ bullets) that filters by text and auto-opens matching groups. Per-job "Add achievement"; ↑/↓ reorder within a job. Display-only: the `AchievementEntry[]` data and `experienceId` links are unchanged. Also applies to the Resume Builder and Admin edit pages, which share the component. |

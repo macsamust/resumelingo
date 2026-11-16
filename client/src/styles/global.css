@@ -946,6 +946,37 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .achievement-more-toggle:hover { border-color: var(--indigo); }
 .achievement-more-toggle .field-hint { display: block; margin-top: 3px; font-weight: 400; }
 
+/* Highlights & Key Achievements roll-up (AchievementEditor.tsx): bullets grouped
+   under collapsible job headers, each bullet collapsed to one line with only
+   one open for editing at a time, plus a search box. Display-only — the data
+   is still a flat AchievementEntry[]. */
+.ach-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+.ach-search { flex: 1; min-width: 0; }
+.ach-group { background: #fff; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; overflow: hidden; }
+.ach-group-head {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; border: 0; background: transparent;
+  text-align: left; font-family: inherit; font-size: 15px; cursor: pointer; color: var(--navy);
+}
+.ach-group-head:hover { background: #f8fafc; }
+.ach-group-title { flex: 1; font-weight: 600; min-width: 0; }
+.ach-group-title small { display: block; font-weight: 400; font-size: 12px; color: var(--navy-light); }
+.ach-group-count { background: #eef2ff; color: var(--indigo); font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; white-space: nowrap; }
+.ach-group-body { border-top: 1px solid var(--border); padding: 6px 10px 10px; }
+.ach-group-add { display: block; width: 100%; text-align: left; border: 0; background: transparent; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--indigo); padding: 8px 6px; cursor: pointer; }
+.ach-row { border-bottom: 1px solid var(--border); }
+.ach-row:last-of-type { border-bottom: 0; }
+.ach-row-head { display: flex; align-items: center; gap: 6px; padding: 4px 0; }
+.ach-row-main {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; border: 0; background: transparent;
+  text-align: left; font-family: inherit; font-size: 14px; color: var(--navy); padding: 8px 6px; cursor: pointer; border-radius: 8px;
+}
+.ach-row-main:hover { background: #f8fafc; }
+.ach-row-caret { color: var(--navy-light); width: 12px; flex: none; }
+.ach-row-text { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ach-row-empty { color: var(--navy-light); font-style: italic; }
+.ach-row-tag { flex: none; font-size: 11px; color: var(--navy-light); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; }
+.ach-row-editor { background: #f8fafc; border-radius: 10px; padding: 12px 14px 4px; margin: 2px 0 10px; }
+
 /* "Copy from another resume" control (CopyFromResume.tsx) — sits above the
    row list in Work Experience/Education. Only rendered at all when the user
    has another resume with something in that section to offer. */
