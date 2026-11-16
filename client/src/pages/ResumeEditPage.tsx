@@ -1551,6 +1551,7 @@ export function ResumeEditPage() {
               onChange={setAchievements}
               experience={experience}
               showJobLink={combineExperienceFormat}
+              aiAssist={{ enabled: canUseAiAssist, professionLabel: professionDetail?.label ?? resume.professionLabel }}
             />
           </CollapsibleSection>
 

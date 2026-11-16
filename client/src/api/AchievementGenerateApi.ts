@@ -15,8 +15,21 @@ export interface AchievementGenerateInput {
  * Resume Import. Used by AchievementGeneratorPanel.tsx's "Not sure what to
  * write?" option inside the Highlights & Key Achievements section.
  */
+export interface AchievementTightenInput {
+  professionLabel: string;
+  /** Optional — the job the bullets belong to, e.g. "Senior PM, Acme Corp". */
+  jobTitle?: string;
+  /** The person's own bullets, one string each (max 30 per call, see worker's MAX_TIGHTEN_BULLETS). */
+  bullets: string[];
+}
+
 export class AchievementGenerateApi extends ApiClient {
   generate(input: AchievementGenerateInput) {
     return this.post<{ achievements: AchievementEntry[] }>("/achievement-generate", input);
+  }
+
+  /** POST /api/achievement-generate/tighten — same count and order back; used by PasteBulletsPanel's "Have Poly tighten these". */
+  tighten(input: AchievementTightenInput) {
+    return this.post<{ bullets: string[] }>("/achievement-generate/tighten", input);
   }
 }

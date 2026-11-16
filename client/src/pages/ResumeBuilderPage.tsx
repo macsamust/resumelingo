@@ -569,16 +569,7 @@ export function ResumeBuilderPage() {
           </CollapsibleSection>
 
           <CollapsibleSection
-            title="4. Education"
-            forceOpen={forceOpen}
-            complete={sectionProgress.education}
-            defaultOpen={interviewJustCompleted && education.length > 0 ? false : undefined}
-          >
-            <EducationEditor education={education} onChange={setEducation} />
-          </CollapsibleSection>
-
-          <CollapsibleSection
-            title="5. Highlights & key achievements"
+            title="4. Highlights & key achievements"
             forceOpen={forceOpen}
             complete={sectionProgress.achievements}
             defaultOpen={interviewJustCompleted && achievements.length > 0 ? false : undefined}
@@ -618,7 +609,17 @@ export function ResumeBuilderPage() {
               onChange={setAchievements}
               experience={experience}
               showJobLink={false}
+              aiAssist={{ enabled: canUseAiAssist, professionLabel: professionDetail?.label ?? "" }}
             />
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title="5. Education"
+            forceOpen={forceOpen}
+            complete={sectionProgress.education}
+            defaultOpen={interviewJustCompleted && education.length > 0 ? false : undefined}
+          >
+            <EducationEditor education={education} onChange={setEducation} />
           </CollapsibleSection>
 
           <CollapsibleSection title="6. Awards" forceOpen={forceOpen} defaultOpen={false}>

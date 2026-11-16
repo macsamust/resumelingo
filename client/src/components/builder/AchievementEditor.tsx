@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { AchievementEntry, WorkExperienceEntry } from "../../types";
 import { duplicateItem } from "../../utils/listEditing";
 import { EmptyRowExample } from "./EmptyRowExample";
+import { PasteBulletsPanel } from "./PasteBulletsPanel";
 
 // Action first, matching the real form's field order below — it's the one
 // field a bullet actually needs (see AchievementEditor's doc comment), so
@@ -20,6 +21,8 @@ interface Props {
   experience: WorkExperienceEntry[];
   /** Only show the "which job" dropdown and group bullets under their jobs when the combined-format checkbox is on — it's meaningless data to collect otherwise, since the flat layout never reads experienceId. */
   showJobLink: boolean;
+  /** Enables "Have Poly tighten these" in the paste panel. Omit to hide the button (e.g. the Admin edit page); `enabled: false` shows it with an upgrade note for Starter accounts. */
+  aiAssist?: { enabled: boolean; professionLabel: string };
 }
 
 const BLANK_ENTRY: AchievementEntry = {
@@ -88,7 +91,7 @@ function matchesQuery(entry: AchievementEntry, q: string): boolean {
  * display-only change — the underlying AchievementEntry[] (including its
  * flat order and experienceId links) is untouched.
  */
-export function AchievementEditor({ achievements, onChange, experience, showJobLink }: Props) {
+export function AchievementEditor({ achievements, onChange, experience, showJobLink, aiAssist }: Props) {
   // Indices the person has explicitly expanded via "+ Add challenge &
   // result." Index-keyed, same identity convention as the rest of this
   // component's move/duplicate/remove (achievements have no stable id) —
@@ -156,6 +159,16 @@ export function AchievementEditor({ achievements, onChange, experience, showJobL
     setOpenRow(achievements.length);
     if (experienceId) setOpenGroups((prev) => new Set(prev).add(experienceId));
     else setOpenGroups((prev) => new Set(prev).add(OTHER_KEY));
+  };
+
+  // Which paste panel is open: a job's id, OTHER_KEY (flat layout / unlinked), or null. One at a time.
+  const [pasteFor, setPasteFor] = useState<string | null>(null);
+
+  /** Adds each pasted line as its own action-only bullet linked to `experienceId` (null = unlinked), and opens that job's group. */
+  const addPasted = (bullets: string[], experienceId: string | null) => {
+    onChange([...achievements, ...bullets.map((action) => ({ ...BLANK_ENTRY, action, experienceId }))]);
+    setOpenGroups((prev) => new Set(prev).add(experienceId ?? OTHER_KEY));
+    setPasteFor(null);
   };
 
   const removeEntry = (index: number) => {
@@ -388,9 +401,24 @@ export function AchievementEditor({ achievements, onChange, experience, showJobL
               <div className="ach-group-body">
                 {visible.map(({ entry, index }) => renderRow(entry, index))}
                 {!searching && g.jobId && (
-                  <button type="button" className="ach-group-add" onClick={() => addEntry(g.jobId)}>
-                    + Add achievement to this job
-                  </button>
+                  <div className="ach-group-adds">
+                    <button type="button" className="ach-group-add" onClick={() => addEntry(g.jobId)}>
+                      + Add achievement to this job
+                    </button>
+                    <button type="button" className="ach-group-add" onClick={() => setPasteFor(pasteFor === g.key ? null : g.key)}>
+                      Paste multiple bullets
+                    </button>
+                  </div>
+                )}
+                {!searching && pasteFor === g.key && (
+                  <PasteBulletsPanel
+                    jobLabel={g.title}
+                    jobTitle={g.jobId ? experience.find((j) => j.id === g.jobId)?.title : undefined}
+                    existing={g.items.map((x) => x.entry.action)}
+                    ai={aiAssist}
+                    onAdd={(bullets) => addPasted(bullets, g.jobId)}
+                    onCancel={() => setPasteFor(null)}
+                  />
                 )}
               </div>
             )}
@@ -401,6 +429,24 @@ export function AchievementEditor({ achievements, onChange, experience, showJobL
       <button type="button" className="btn btn-ghost btn-block" onClick={() => addEntry(null)}>
         + Add achievement
       </button>
+      {/* Grouped layout has a "Paste multiple bullets" per job; this one is for the flat layout, or bullets not tied to a job. */}
+      <button
+        type="button"
+        className="btn btn-ghost btn-block"
+        style={{ marginTop: 8 }}
+        onClick={() => setPasteFor(pasteFor === OTHER_KEY ? null : OTHER_KEY)}
+      >
+        Paste multiple bullets{grouped ? " (not linked to a job)" : ""}
+      </button>
+      {pasteFor === OTHER_KEY && (
+        <PasteBulletsPanel
+          jobLabel={null}
+          existing={achievements.filter((a) => keyOf(a) === OTHER_KEY).map((a) => a.action)}
+          ai={aiAssist}
+          onAdd={(bullets) => addPasted(bullets, null)}
+          onCancel={() => setPasteFor(null)}
+        />
+      )}
     </div>
   );
 }

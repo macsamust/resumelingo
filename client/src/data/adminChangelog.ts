@@ -313,4 +313,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "Moved \"Generated Summary & Bullets\" to sit directly under \"Highlights & Key Achievements\" on both the subscriber Edit page and the Admin edit page (order is now Work Experience, Highlights & Key Achievements, Generated Summary & Bullets, Education, Languages, Awards). Reworded the \"above\" references in the summary panel's helper text on both pages, since the sections it mentions are no longer all above it. The new-resume builder has no summary section, so it's unchanged. No behavior change.",
   },
+  {
+    id: "R045",
+    date: "2026-11-16",
+    topic: "Bulk paste of achievement bullets, with an AI \"tighten\" option",
+    outcome:
+      "New \"Paste multiple bullets\" option for adding many achievements at once. Each job group in the Highlights & Key Achievements editor (and the flat/unlinked list) gets a button that opens `PasteBulletsPanel.tsx`: paste a block, see a live cleaned preview (bullet markers and numbering stripped, wrapped lines joined, duplicates of existing bullets skipped; logic in `client/src/utils/parseBullets.ts` + tests), then add every line as its own action-only bullet linked to that job. Includes Have Poly tighten these (Professional/Premium, same gate as Generate from keywords): new `POST /api/achievement-generate/tighten` and `AchievementGeneratorService.tighten()` rewrite the pasted bullets into impact-focused wording, keeping the person's facts and numbers, never inventing any, returning exactly one bullet per input (original kept for any position the model skips). The preview shows what each bullet was before, with a \"Keep my original wording\" undo, and nothing is added until the person clicks Add. Starter accounts see an upgrade note; the Admin edit page omits the AI button. Tests: `parseBullets.test.ts`, `AchievementGeneratorService.test.ts`.",
+  },
 ];

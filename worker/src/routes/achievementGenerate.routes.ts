@@ -8,5 +8,6 @@ const controller = new AchievementGenerateController();
 
 achievementGenerate.use(requireAuth);
 achievementGenerate.post("/", controller.generate);
+achievementGenerate.post("/tighten", controller.tighten);
 
 export default achievementGenerate;

@@ -102,8 +102,72 @@ function sanitize(raw: Record<string, unknown>): AchievementEntry[] {
   return mapped.filter((e): e is AchievementEntry => e !== null);
 }
 
+/** Most bullets / characters one "tighten" call accepts — the client chunks bigger pastes (see PasteBulletsPanel). */
+export const MAX_TIGHTEN_BULLETS = 30;
+export const MAX_TIGHTEN_TOTAL_CHARS = 9000;
+
+export interface AchievementTightenRequest {
+  professionLabel: string;
+  /** Optional — the job the bullets belong to, e.g. "Senior PM at Acme Corp". */
+  jobTitle?: string;
+  bullets: string[];
+}
+
+const TIGHTEN_SYSTEM_PROMPT = `You tighten resume bullets. You're given a person's profession, optionally the role, and a numbered list of bullets they wrote themselves. Rewrite each one to be tighter and more impact-focused without changing what it says.
+
+Respond with ONLY a single JSON object (no prose, no markdown code fence) matching exactly this shape:
+{ "bullets": [string] }
+
+Rules:
+- Return exactly one rewritten bullet per input bullet, in the same order and the same count. Never merge, split, drop, or add bullets.
+- Keep every fact, number, percentage, name, tool, and timeframe exactly as given. Never invent a number, percentage, dollar amount, team size, employer, product, or outcome that isn't in the original bullet. Do not add bracketed placeholders.
+- Start with a strong action verb. Cut filler ("responsible for", "helped to", "worked on", "various", "etc."). Lead with the result or the most important action when the original makes it clear.
+- Keep each bullet to one sentence, ideally under 25 words. Keep the person's tense and meaning.
+- If a bullet is already tight and strong, return it unchanged.`;
+
 export class AchievementGeneratorService {
   constructor(private readonly ai: Ai) {}
+
+  /**
+   * Rewrites pasted bullets into tighter, impact-focused wording. Always
+   * returns exactly `request.bullets.length` strings: for any position the
+   * model skipped, blanked, or garbled, the person's original text is kept, so
+   * a flaky response can never lose or misalign a bullet.
+   */
+  async tighten(request: AchievementTightenRequest): Promise<string[]> {
+    const originals = request.bullets.map((b) => cleanString(b, MAX_ACTION_LENGTH));
+    if (originals.length === 0 || originals.every((b) => !b)) return originals;
+
+    const professionLabel = cleanString(request.professionLabel, MAX_PROFESSION_CHARS) || "professional";
+    const jobTitle = cleanString(request.jobTitle, MAX_JOB_TITLE_CHARS);
+    const numbered = originals.map((b, i) => `${i + 1}. ${b}`).join("\n");
+    const userContent = [`Profession: ${professionLabel}`, jobTitle && `Role: ${jobTitle}`, `Bullets:\n${numbered}`]
+      .filter(Boolean)
+      .join("\n");
+
+    let response: unknown;
+    try {
+      response = await this.ai.run("@cf/meta/llama-3.3-70b-instruct-fp8-fast", {
+        messages: [
+          { role: "system", content: TIGHTEN_SYSTEM_PROMPT },
+          { role: "user", content: userContent },
+        ],
+        temperature: 0.3,
+        max_tokens: 2048,
+      });
+    } catch (err) {
+      throw new AchievementGenerateError(
+        `Couldn't reach the AI (${err instanceof Error ? err.message : "unknown error"}). Try again, or keep your original wording.`
+      );
+    }
+
+    const parsed = extractParsedJson(response);
+    const list = Array.isArray(parsed.bullets) ? parsed.bullets : [];
+    return originals.map((original, i) => {
+      const rewritten = cleanString(list[i], MAX_ACTION_LENGTH);
+      return rewritten || original;
+    });
+  }
 
   async generate(request: AchievementGenerateRequest): Promise<AchievementEntry[]> {
     const keywords = request.keywords.trim().slice(0, MAX_KEYWORDS_CHARS);
