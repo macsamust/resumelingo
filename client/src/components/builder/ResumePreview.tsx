@@ -1,3 +1,4 @@
+import { AmericanFlag } from "../common/AmericanFlag";
 import type { CSSProperties } from "react";
 import { getTemplateStyle } from "../../config/templateStyles";
 import { AchievementEntry, AwardEntry, EducationEntry, LanguageEntry, SkillOrTool, WorkExperienceEntry } from "../../types";
@@ -53,6 +54,8 @@ interface Props {
    * renders directly rather than via the generic Additional Details list.
    */
   securityClearance?: string;
+  /** True when the resume's "Military" Additional Details checkbox is on — shows a small flag + "Military Service" badge above the summary (see militaryBadgeBlock). */
+  militaryService?: boolean;
 }
 
 /**
@@ -139,6 +142,8 @@ export function filterAnswerEntries(answers: Record<string, string>, skillsAndTo
   const hasToolChips = (skillsAndTools ?? []).some((s) => s.category === "tool");
   return Object.entries(answers).filter(([key, value]) => {
     if (!value || !value.trim()) return false;
+    // Shown as the flag + "Military Service" badge instead (see ResumePreview's militaryBadgeBlock), so it isn't listed twice.
+    if (key === "military") return false;
     if (hasToolChips && TOOL_DUPLICATE_ANSWER_KEYS.has(key)) return false;
     return true;
   });
@@ -287,6 +292,7 @@ export function ResumePreview({
   languages = [],
   hideFooterContact = false,
   securityClearance,
+  militaryService = false,
 }: Props) {
   const style = getTemplateStyle(templateKey ?? "modern");
   const cssVars = {
@@ -358,8 +364,20 @@ export function ResumePreview({
     <div className="tpl-clearance-banner">Security Clearance: {securityClearance.trim()}</div>
   );
 
+  // Small, quiet "flag + Military Service" badge (CJ, Nov 2026). Worded as
+  // service, not "veteran", so it's accurate for active, reserve and former
+  // members alike. Rendered inside summaryBlock (and the two families whose
+  // summary lives in the header) so every template picks it up the same way.
+  const militaryBadgeBlock = militaryService ? (
+    <span className="tpl-military-badge">
+      <AmericanFlag width={19} />
+      Military Service
+    </span>
+  ) : null;
+
   const summaryBlock = (
     <div className="tpl-section">
+      {militaryBadgeBlock}
       {sectionLabel(style.summaryLabel)}
       {summary ? (
         <p className="preview-summary">{summary}</p>
@@ -904,6 +922,7 @@ export function ResumePreview({
             <div className="tpl-pill-header-text">
               {fullName && <p className="tpl-fullname">{fullName}</p>}
               <h2>{heading}</h2>
+              {militaryBadgeBlock}
               {summary && <p className="tpl-pill-intro">{summary}</p>}
             </div>
           </div>
@@ -960,6 +979,7 @@ export function ResumePreview({
             <div className="tpl-photolist-header-text">
               {fullName && <p className="tpl-fullname">{fullName}</p>}
               <h2>{heading}</h2>
+              {militaryBadgeBlock}
               {summary ? (
                 <p className="tpl-photolist-intro">{summary}</p>
               ) : (

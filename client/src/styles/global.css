@@ -1193,6 +1193,14 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
   background: var(--tpl-accent); color: #fff; margin: 0 -28px 24px; padding: 12px 28px;
   text-align: center; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .05em;
 }
+/* "Military Service" badge (ResumePreview militaryBadgeBlock) — small, flat, and
+   inherits the template's own text color so it reads on light and dark themes alike. */
+.tpl-military-badge {
+  display: inline-flex; align-items: center; gap: 7px; margin: 0 0 10px; padding: 3px 11px 3px 8px;
+  border: 1px solid currentColor; border-radius: 999px; font-family: system-ui, sans-serif; font-size: 11px;
+  font-weight: 600; letter-spacing: .02em; color: inherit; background: rgba(127, 127, 127, .10);
+}
+.tpl-military-badge .tpl-military-flag { display: block; border-radius: 1px; flex: none; }
 .tpl-executive-banner .tpl-header h2 { color: #fff; }
 .tpl-executive-banner .tpl-header .tpl-role { color: rgba(255, 255, 255, .8); margin-bottom: 0; }
 .tpl-executive-banner.tpl-banner-center .tpl-header { text-align: center; }

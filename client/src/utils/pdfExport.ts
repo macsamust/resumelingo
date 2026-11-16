@@ -110,6 +110,32 @@ class ResumePdfWriter {
   }
 
   /**
+   * "Military Service" line led by a small flat U.S. flag drawn from filled
+   * rectangles (the PDF equivalent of ResumePreview's AmericanFlag badge). The
+   * words stay real text, so an ATS parser still reads "Military Service".
+   */
+  militaryService(): void {
+    const flagW = 17;
+    const flagH = (flagW * 10) / 19;
+    this.ensureSpace(LINE_HEIGHT + 2);
+    const top = this.y - flagH + 1;
+    this.doc.setFillColor(255, 255, 255);
+    this.doc.rect(PAGE_MARGIN, top, flagW, flagH, "F");
+    this.doc.setFillColor(178, 34, 52);
+    const stripe = flagH / 13;
+    for (let i = 0; i < 7; i++) this.doc.rect(PAGE_MARGIN, top + i * 2 * stripe, flagW, stripe, "F");
+    this.doc.setFillColor(60, 59, 110);
+    this.doc.rect(PAGE_MARGIN, top, (flagW * 7.6) / 19, (flagH * 5.38) / 10, "F");
+    this.doc.setDrawColor(180);
+    this.doc.rect(PAGE_MARGIN, top, flagW, flagH, "S");
+    this.doc.setFont(FONT, "normal");
+    this.doc.setFontSize(10.5);
+    this.doc.setTextColor(0);
+    this.doc.text("Military Service", PAGE_MARGIN + flagW + 6, this.y);
+    this.y += LINE_HEIGHT;
+  }
+
+  /**
    * Same as body(), plus a small row of drawn (not text-character) dots
    * appended after the last line, filled up to `level` out of `maxLevel` —
    * the PDF equivalent of ResumePreview.tsx's .tpl-languages-dot meter (see
@@ -188,6 +214,7 @@ export function downloadResumePdf(resume: PublicResume): void {
   w.subtitle(resume.headline || resume.title || "Untitled Resume");
   const contactLine = [resume.contactEmail, resume.contactPhone, resume.contactLinkedIn].filter(isRealContactValue).join("   |   ");
   if (contactLine) w.subtitle(contactLine);
+  if (resume.answers?.military === "Yes") w.militaryService();
   w.spacer(4);
 
   if (resume.generatedSummary) {

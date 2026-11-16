@@ -1121,6 +1121,7 @@ export function ResumeEditPage() {
       showSkillsAndTools={usesSkillsAndTools}
       languages={languages}
       securityClearance={answers.clearanceLevel}
+      militaryService={answers.military === "Yes"}
     />
   );
 

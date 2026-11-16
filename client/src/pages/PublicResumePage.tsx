@@ -51,6 +51,7 @@ function resumeToPlainText(resume: PublicResume): string {
   lines.push(resume.headline || resume.title || "Untitled Resume");
   const contactLine = [resume.contactEmail, resume.contactPhone, resume.contactLinkedIn].filter(isRealContactValue).join("  |  ");
   if (contactLine) lines.push(contactLine);
+  if (resume.answers?.military === "Yes") lines.push("Military Service");
   lines.push("");
 
   if (resume.generatedSummary) {
@@ -534,6 +535,7 @@ export function PublicResumePage() {
         languages={resume.languages}
         hideFooterContact={hasTrailingContent}
         securityClearance={resume.answers.clearanceLevel}
+        militaryService={resume.answers.military === "Yes"}
       />
       {/* Print-only — see .print-only-qr in global.css. Never visible on
           screen; this page already has its own "Print / Save as PDF" action

@@ -348,4 +348,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "The public resume, PDF and text download labeled the Years of Experience answer \"Years Experience\" (built by splitting the saved key). Added a `yearsExperience: \"Years of Experience\"` entry to `ANSWER_LABEL_OVERRIDES` in `PublicResumePage.tsx` and `pdfExport.ts` so it matches the Edit page's label.",
   },
+  {
+    id: "R050",
+    date: "2026-11-16",
+    topic: "Military checkbox: show a flag + \"Military Service\" badge on the resume",
+    outcome:
+      "When the Military checkbox is on, the resume now shows a small flat U.S. flag with the words \"Military Service\" above the summary (CJ chose option B from three mockups; worded as service rather than \"veteran\" so it fits active, reserve and former members). New `AmericanFlag.tsx` (inline SVG, so it renders the same on Windows, where the flag emoji shows as \"US\"). `ResumePreview.tsx` gets a `militaryService` prop and a `militaryBadgeBlock` rendered inside `summaryBlock` plus the two families whose summary sits in the header (pill-grid-cards, photo-header-list), so every template shows it; styled with `currentColor` to read on light and dark themes. Wired from the Edit, Builder and public pages; the PDF draws the flag from rectangles and keeps \"Military Service\" as real text, and the text download adds a \"Military Service\" line. \"Military: Yes\" is no longer listed under Additional Details since the badge replaces it. Not changed: Admin edit and template-preview pages (no badge there).",
+  },
 ];

@@ -339,6 +339,7 @@ export function ResumeBuilderPage() {
       awards={awards}
       showSkillsAndTools={templateHasSkillsAndTools(templateKey)}
       securityClearance={answers.clearanceLevel}
+      militaryService={answers.military === "Yes"}
     />
   );
 
