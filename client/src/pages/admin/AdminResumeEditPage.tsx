@@ -343,21 +343,13 @@ export function AdminResumeEditPage() {
             />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Education" forceOpen={forceOpen} defaultOpen={true}>
-            <EducationEditor education={education} onChange={setEducation} />
-          </CollapsibleSection>
-
-          <CollapsibleSection title="Languages" forceOpen={forceOpen} defaultOpen={false}>
-            <LanguagesEditor languages={languages} onChange={setLanguages} />
-          </CollapsibleSection>
-
           <CollapsibleSection title="Generated Summary & Bullets" forceOpen={forceOpen} defaultOpen={false}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
               Direct text overrides, same panel subscribers now have on their own Edit Resume page. Saving here does
               not set summaryManuallyEdited (that flag is only set from the subscriber's own save action), so
-              editing Work Experience, Education, or Achievements above and saving will still regenerate this text
-              and discard a manual edit made here in the same save; edit either this section or the ones above, not
-              both in one save.
+              editing Work Experience, Education, or Achievements and saving will still regenerate this text and
+              discard a manual edit made here in the same save; edit either this section or the others, not both in
+              one save.
             </p>
             <div className="field">
               <label>Summary</label>
@@ -367,6 +359,14 @@ export function AdminResumeEditPage() {
               <label>Bullets (one per line)</label>
               <textarea rows={6} value={generatedBulletsText} onChange={(e) => setGeneratedBulletsText(e.target.value)} />
             </div>
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Education" forceOpen={forceOpen} defaultOpen={true}>
+            <EducationEditor education={education} onChange={setEducation} />
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Languages" forceOpen={forceOpen} defaultOpen={false}>
+            <LanguagesEditor languages={languages} onChange={setLanguages} />
           </CollapsibleSection>
 
           <CollapsibleSection title="Awards" forceOpen={forceOpen} defaultOpen={false}>

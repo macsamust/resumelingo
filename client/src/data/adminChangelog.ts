@@ -306,4 +306,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "Matched the Admin edit page's section order to the subscriber Edit page for the sections they share: Work Experience, Highlights & Key Achievements, Education, Languages, Generated Summary & Bullets, then Awards (Awards was previously above Languages). Reorder only in `AdminResumeEditPage.tsx`. The new-resume builder keeps its own numbered wizard order. Highlights already sat under Work Experience on both.",
   },
+  {
+    id: "R044",
+    date: "2026-11-16",
+    topic: "Place Generated Summary & Bullets under Highlights & Key Achievements, everywhere",
+    outcome:
+      "Moved \"Generated Summary & Bullets\" to sit directly under \"Highlights & Key Achievements\" on both the subscriber Edit page and the Admin edit page (order is now Work Experience, Highlights & Key Achievements, Generated Summary & Bullets, Education, Languages, Awards). Reworded the \"above\" references in the summary panel's helper text on both pages, since the sections it mentions are no longer all above it. The new-resume builder has no summary section, so it's unchanged. No behavior change.",
+  },
 ];
