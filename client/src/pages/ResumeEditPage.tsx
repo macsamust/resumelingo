@@ -1514,23 +1514,6 @@ export function ResumeEditPage() {
             />
           </CollapsibleSection>
 
-          <CollapsibleSection title="Education" forceOpen={forceOpen} complete={sectionProgress.education}>
-            <CopyFromResume
-              otherResumes={otherResumes}
-              getItems={(r) => r.education}
-              onCopy={(items) => setEducation((prev) => [...prev, ...items])}
-              label="Copy education from…"
-            />
-            <EducationEditor education={education} onChange={setEducation} schoolSuggestions={schoolSuggestions} />
-          </CollapsibleSection>
-
-          <CollapsibleSection title="Languages" forceOpen={forceOpen}>
-            <p className="hero-note" style={{ marginBottom: 16 }}>
-              Optional: list any languages you speak and how fluently.
-            </p>
-            <LanguagesEditor languages={languages} onChange={setLanguages} />
-          </CollapsibleSection>
-
           <CollapsibleSection title="Highlights & Key Achievements" forceOpen={forceOpen} complete={sectionProgress.achievements}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
               Add a quick one line bullet, or describe a challenge, what you did, and the result for a more detailed,
@@ -1569,6 +1552,23 @@ export function ResumeEditPage() {
               experience={experience}
               showJobLink={combineExperienceFormat}
             />
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Education" forceOpen={forceOpen} complete={sectionProgress.education}>
+            <CopyFromResume
+              otherResumes={otherResumes}
+              getItems={(r) => r.education}
+              onCopy={(items) => setEducation((prev) => [...prev, ...items])}
+              label="Copy education from…"
+            />
+            <EducationEditor education={education} onChange={setEducation} schoolSuggestions={schoolSuggestions} />
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Languages" forceOpen={forceOpen}>
+            <p className="hero-note" style={{ marginBottom: 16 }}>
+              Optional: list any languages you speak and how fluently.
+            </p>
+            <LanguagesEditor languages={languages} onChange={setLanguages} />
           </CollapsibleSection>
 
           <CollapsibleSection title="Generated Summary & Bullets" forceOpen={forceOpen}>

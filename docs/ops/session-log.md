@@ -23,8 +23,8 @@ An audit trail of requests made to Claude on this project and how each was resol
 | Sep 27 | 5 | R030–R034 | Branding and tooling decisions, check-in keyword labels, and the What's New inclusion bar plus the admin changelog. |
 | Oct 4 | 1 | R035 | Promo codes via Stripe. |
 | Oct 23 | 3 | R036–R038 | Promo-code strategy, production verification, the tech-stack inventory, and reader-friendly log formatting. |
-| Nov 16 | 3 | R039–R041 | Collapsible, searchable Highlights & Key Achievements editor, a fix for the live-preview pane shrinking, and self-updating Years of Experience. |
-| **Total** | **41** | R001–R041 | |
+| Nov 16 | 4 | R039–R042 | Collapsible, searchable Highlights & Key Achievements editor, a fix for the live-preview pane shrinking, self-updating Years of Experience, and section reordering. |
+| **Total** | **42** | R001–R042 | |
 
 ## September 2026
 
@@ -121,10 +121,11 @@ Promo-code strategy, production verification, and the tech-stack inventory.
 
 ### Nov 16
 
-Collapsible, searchable Highlights & Key Achievements editor, a fix for the live-preview pane shrinking, and self-updating Years of Experience.
+Collapsible, searchable Highlights & Key Achievements editor, a fix for the live-preview pane shrinking, self-updating Years of Experience, and section reordering.
 
 | ID | Topic | Outcome |
 |---|---|---|
 | **R039** | Highlights & Key Achievements gets very long for seasoned users: roll it up | `AchievementEditor.tsx` now collapses every bullet to a one-line summary (one open for editing at a time), groups bullets under collapsible job headers with a bullet count when "Combine Work Experience with Achievements" is on (plus an "Other highlights" group for unlinked bullets), and adds a search box (shown at 4+ bullets) that filters by text and auto-opens matching groups. Per-job "Add achievement"; ↑/↓ reorder within a job. Display-only: the `AchievementEntry[]` data and `experienceId` links are unchanged. Also applies to the Resume Builder and Admin edit pages, which share the component. |
 | **R040** | Edit page: "Expand all" shrinks the live preview pane; keep both sides equal | Root cause: `.builder-grid` used `1fr 1fr`, and a plain `1fr` track has `min-width: auto`, so a long no-wrap line in the form (the new one-line achievement rows) widened the left column. Changed to `minmax(0, 1fr) minmax(0, 1fr)` plus `min-width: 0` on its children in `global.css`. No component change. |
 | **R041** | Additional Details: Years of Experience should update itself each year | Years of Experience now counts up on its own. The typed number is stored with the date it was entered (as a reserved `_yearsExperienceAsOf` key inside the existing answers JSON, so no migration); the `Resume` model strips that key and returns base + whole years elapsed everywhere (edit page, public link, PDF, versions). The generated Summary keeps the base number in its "N+ years of experience" phrase and is swapped forward on read, so it never needs regenerating; a hand-edited summary updates only if it still uses that exact phrase. Saving an unchanged value keeps its original date; changing it re-bases to today. Resumes saved before this count from their last-updated date (can only under-count). Non-numeric entries like "10-15" are left as typed. New `worker/src/utils/yearsExperience.ts` (+ tests), edits to `Resume.ts` and `ResumeService.ts` (create/update), and an "Updates automatically each year." hint under the field in `DynamicQuestionForm.tsx`. Not applied: version-restore (falls back to last-updated date) and the cover letter text. |
+| **R042** | Edit page: move Highlights & Key Achievements under Work Experience | Moved the "Highlights & Key Achievements" section to sit directly under "Work Experience" on the Edit Resume page (new order: Work Experience, Highlights & Key Achievements, Education, Languages, Generated Summary & Bullets). Reorder only in `ResumeEditPage.tsx`; no behavior change. The new-resume builder and Admin edit page keep their own order. |

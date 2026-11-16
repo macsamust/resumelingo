@@ -292,4 +292,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "Years of Experience now counts up on its own. The typed number is stored with the date it was entered (as a reserved `_yearsExperienceAsOf` key inside the existing answers JSON, so no migration); the `Resume` model strips that key and returns base + whole years elapsed everywhere (edit page, public link, PDF, versions). The generated Summary keeps the base number in its \"N+ years of experience\" phrase and is swapped forward on read, so it never needs regenerating; a hand-edited summary updates only if it still uses that exact phrase. Saving an unchanged value keeps its original date; changing it re-bases to today. Resumes saved before this count from their last-updated date (can only under-count). Non-numeric entries like \"10-15\" are left as typed. New `worker/src/utils/yearsExperience.ts` (+ tests), edits to `Resume.ts` and `ResumeService.ts` (create/update), and an \"Updates automatically each year.\" hint under the field in `DynamicQuestionForm.tsx`. Not applied: version-restore (falls back to last-updated date) and the cover letter text.",
   },
+  {
+    id: "R042",
+    date: "2026-11-16",
+    topic: "Edit page: move Highlights & Key Achievements under Work Experience",
+    outcome:
+      "Moved the \"Highlights & Key Achievements\" section to sit directly under \"Work Experience\" on the Edit Resume page (new order: Work Experience, Highlights & Key Achievements, Education, Languages, Generated Summary & Bullets). Reorder only in `ResumeEditPage.tsx`; no behavior change. The new-resume builder and Admin edit page keep their own order.",
+  },
 ];
