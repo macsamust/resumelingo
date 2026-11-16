@@ -15,8 +15,10 @@ import { AchievementEntry, AwardEntry, EducationEntry, SkillOrTool, WorkExperien
  * malformed or hallucinated response degrades to missing fields rather than
  * a crash or an unbounded response.
  */
-const MAX_INPUT_CHARS = 20000;
-const MAX_ARRAY_ENTRIES = 20;
+/** Raised from 20,000 (Nov 2026): at ~4 chars/token this is ~7.5k input tokens, which with the prompt and the 8,192-token output budget below still fits the model's context window with room to spare. The binding limit for a very long resume is the model's JSON *output* size, not the input. */
+export const MAX_INPUT_CHARS = 30000;
+/** Per-list caps on what an import keeps. Raised from a flat 20 (Nov 2026) — a long career easily has more than 20 bullets, and the extras used to vanish silently. Anything still dropped is reported in `notes` (see capNote). */
+const CAPS = { experience: 30, education: 20, awards: 30, achievements: 40, skills: 60, notes: 15 } as const;
 const MAX_SHORT_FIELD = 200;
 const MAX_DESCRIPTION_FIELD = 600;
 const MONTH_RE = /^\d{4}-\d{2}$/;
@@ -84,7 +86,7 @@ Rules:
 - Categorize concrete programming languages/methodologies as "skill" and named platforms/software/tools as "tool". This is a judgment call, do your best.
 - Never invent a company, school, date, or accomplishment that isn't supported by the text.
 - If something in the source is ambiguous or a judgment call (e.g. whether a short freelance gig counts as a real job), include it but add a one-sentence note explaining the call you made.
-- "achievements" is a list of resume bullet points pulled from anywhere in the text (bullet points under a job, or accomplishments described in prose). If the source already has one or more dedicated bulleted sections of accomplishments (e.g. "Areas of Strength," "Core Competencies," "Key Achievements," "Highlights," or similar, whether or not they're grouped under sub-headers), include EVERY bullet from those sections — the person already curated each one, so do not summarize, merge, or drop any to fit a small count. If accomplishments are only described loosely in prose with no dedicated bullet list, use judgment and produce the 3-8 strongest, most concrete bullets instead. Across the whole resume, do not exceed 20 achievements total (if there are genuinely more than 20 source bullets, keep the 20 strongest). For each one:
+- "achievements" is a list of resume bullet points pulled from anywhere in the text (bullet points under a job, or accomplishments described in prose). If the source already has one or more dedicated bulleted sections of accomplishments (e.g. "Areas of Strength," "Core Competencies," "Key Achievements," "Highlights," or similar, whether or not they're grouped under sub-headers), include EVERY bullet from those sections — the person already curated each one, so do not summarize, merge, or drop any to fit a small count. If accomplishments are only described loosely in prose with no dedicated bullet list, use judgment and produce the 3-8 strongest, most concrete bullets instead. Across the whole resume, do not exceed 40 achievements total (if there are genuinely more than 40 source bullets, keep the 40 strongest, and add a note to "notes" saying roughly how many source bullets you left out, e.g. "Left out about 12 bullets because only the 40 strongest are imported"). For each one:
   - "action" is REQUIRED: a single ordinary resume bullet sentence the way it would actually appear on a resume (e.g. "Led the rebuild of the shipment-tracking service, cutting p95 API latency from 1200ms to 180ms"). Lightly tighten wording, but don't invent numbers/metrics that aren't in the source.
   - "challenge" and "result" are OPTIONAL and should almost always be left as "". Only fill them in if the source text itself clearly and separately describes a problem/situation ("challenge") and a distinct outcome ("result") as separate ideas. Do NOT force every bullet into this shape, and do NOT split a single natural sentence into pieces just to fill the fields. When in doubt, leave both blank and put everything into "action".
   - "company" should be the exact company name (matching one of the "experience" entries' "company" field) this achievement belongs to, if it's clearly tied to one job. Leave it "" if it's not clearly tied to a specific job (e.g. a general skill or cross-role accomplishment).
@@ -127,7 +129,7 @@ function cleanArray<T>(value: unknown, max: number): unknown[] {
 }
 
 function sanitizeExperience(raw: unknown): WorkExperienceEntry[] {
-  return cleanArray(raw, MAX_ARRAY_ENTRIES).map((entry) => {
+  return cleanArray(raw, CAPS.experience).map((entry) => {
     const e = (entry ?? {}) as Record<string, unknown>;
     const current = e.current === true;
     return {
@@ -157,7 +159,7 @@ const MAX_ACHIEVEMENT_FIELD_LENGTH = 300;
  */
 function sanitizeAchievements(raw: unknown, experience: WorkExperienceEntry[]): AchievementEntry[] {
   const byCompany = new Map(experience.filter((e) => e.company).map((e) => [e.company.trim().toLowerCase(), e.id]));
-  const mapped: (AchievementEntry | null)[] = cleanArray(raw, MAX_ARRAY_ENTRIES).map((entry) => {
+  const mapped: (AchievementEntry | null)[] = cleanArray(raw, CAPS.achievements).map((entry) => {
     const e = (entry ?? {}) as Record<string, unknown>;
     const action = cleanString(e.action, MAX_ACHIEVEMENT_FIELD_LENGTH);
     if (!action) return null;
@@ -174,7 +176,7 @@ function sanitizeAchievements(raw: unknown, experience: WorkExperienceEntry[]): 
 }
 
 function sanitizeEducation(raw: unknown): EducationEntry[] {
-  return cleanArray(raw, MAX_ARRAY_ENTRIES).map((entry) => {
+  return cleanArray(raw, CAPS.education).map((entry) => {
     const e = (entry ?? {}) as Record<string, unknown>;
     const current = e.current === true;
     return {
@@ -189,7 +191,7 @@ function sanitizeEducation(raw: unknown): EducationEntry[] {
 }
 
 function sanitizeSkills(raw: unknown): SkillOrTool[] {
-  return cleanArray(raw, MAX_ARRAY_ENTRIES * 2)
+  return cleanArray(raw, CAPS.skills)
     .map((entry) => {
       const e = (entry ?? {}) as Record<string, unknown>;
       const label = cleanString(e.label, 60);
@@ -200,7 +202,7 @@ function sanitizeSkills(raw: unknown): SkillOrTool[] {
 }
 
 function sanitizeAwards(raw: unknown): AwardEntry[] {
-  const mapped: (AwardEntry | null)[] = cleanArray(raw, MAX_ARRAY_ENTRIES).map((entry) => {
+  const mapped: (AwardEntry | null)[] = cleanArray(raw, CAPS.awards).map((entry) => {
     const e = (entry ?? {}) as Record<string, unknown>;
     const title = cleanString(e.title, MAX_SHORT_FIELD);
     if (!title) return null;
@@ -215,8 +217,21 @@ function sanitizeAwards(raw: unknown): AwardEntry[] {
   return mapped.filter((e): e is AwardEntry => e !== null);
 }
 
+/** One user-facing note when the source had more entries than an import keeps, so a long resume never loses content silently. */
+function capNote(label: string, raw: unknown, cap: number): string | null {
+  const found = Array.isArray(raw) ? raw.length : 0;
+  return found > cap ? `Imported ${cap} of ${found} ${label}. Add the rest on the Edit Resume page.` : null;
+}
+
 function sanitize(raw: Record<string, unknown>): ImportedResumeData {
   const experience = sanitizeExperience(raw.experience);
+  const capNotes = [
+    capNote("jobs", raw.experience, CAPS.experience),
+    capNote("achievement bullets", raw.achievements, CAPS.achievements),
+    capNote("education entries", raw.education, CAPS.education),
+    capNote("awards", raw.awards, CAPS.awards),
+    capNote("skills and tools", raw.skillsAndTools, CAPS.skills),
+  ].filter((n): n is string => n !== null);
   return {
     fullName: cleanString(raw.fullName, MAX_SHORT_FIELD),
     contactEmail: cleanContactField(raw.contactEmail, MAX_SHORT_FIELD),
@@ -227,9 +242,12 @@ function sanitize(raw: Record<string, unknown>): ImportedResumeData {
     skillsAndTools: sanitizeSkills(raw.skillsAndTools),
     awards: sanitizeAwards(raw.awards),
     achievements: sanitizeAchievements(raw.achievements, experience),
-    notes: cleanArray(raw.notes, 10)
-      .filter((n): n is string => truthy(n))
-      .map((n) => n.trim().slice(0, 300)),
+    notes: [
+      ...capNotes,
+      ...cleanArray(raw.notes, CAPS.notes)
+        .filter((n): n is string => truthy(n))
+        .map((n) => n.trim().slice(0, 300)),
+    ],
   };
 }
 
@@ -305,7 +323,7 @@ export class ResumeImportService {
         // Without this, Workers AI's default output cap (commonly a few
         // hundred tokens) truncates the JSON mid-object for anything but a
         // trivially short resume — which is exactly what a "result couldn't
-        // be read" JSON.parse failure looks like. 6144 comfortably covers a
+        // be read" JSON.parse failure looks like. 8192 (raised from 6144 along with the per-list caps above) comfortably covers a
         // full multi-job resume's worth of structured output within this
         // model's context window, including up to 20 achievement bullets
         // (raised from 4096 once the achievements instruction above stopped
@@ -313,7 +331,7 @@ export class ResumeImportService {
         // dedicated bulleted list, e.g. "Areas of Strength," can now surface
         // every one of up to 20 bullets instead of being capped to 8, and
         // the JSON payload for that is meaningfully bigger).
-        max_tokens: 6144,
+        max_tokens: 8192,
       });
     } catch (err) {
       throw new ResumeImportError(

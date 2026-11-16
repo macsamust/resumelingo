@@ -2,7 +2,9 @@ import { Context } from "hono";
 import { AppEnv } from "../middleware/servicesMiddleware";
 import { SubscriptionTier } from "../types";
 
-const MAX_TEXT_LENGTH = 20000;
+import { MAX_INPUT_CHARS } from "../services/ResumeImportService";
+
+const MAX_TEXT_LENGTH = MAX_INPUT_CHARS;
 
 /** POST /api/resumes/import — see services/ResumeImportService.ts. Professional/Premium-gated — same tier as Clone and Version History, the closest existing "extra copy of your work" perks. */
 export class ResumeImportController {
@@ -18,7 +20,7 @@ export class ResumeImportController {
       return c.json({ error: "Resume text is required, nothing to import." }, 400);
     }
     if (text.length > MAX_TEXT_LENGTH) {
-      return c.json({ error: `That file's text is too long (limit is ${MAX_TEXT_LENGTH.toLocaleString()} characters).` }, 400);
+      return c.json({ error: `That file's text is too long (limit is ${MAX_TEXT_LENGTH.toLocaleString()} characters, about 8 to 10 pages). Try removing older roles or extra detail, import that, then add the rest on the Edit Resume page.` }, 400);
     }
 
     const { resumeImportService } = c.get("services");

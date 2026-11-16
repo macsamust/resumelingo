@@ -320,4 +320,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "New \"Paste multiple bullets\" option for adding many achievements at once. Each job group in the Highlights & Key Achievements editor (and the flat/unlinked list) gets a button that opens `PasteBulletsPanel.tsx`: paste a block, see a live cleaned preview (bullet markers and numbering stripped, wrapped lines joined, duplicates of existing bullets skipped; logic in `client/src/utils/parseBullets.ts` + tests), then add every line as its own action-only bullet linked to that job. Includes Have Poly tighten these (Professional/Premium, same gate as Generate from keywords): new `POST /api/achievement-generate/tighten` and `AchievementGeneratorService.tighten()` rewrite the pasted bullets into impact-focused wording, keeping the person's facts and numbers, never inventing any, returning exactly one bullet per input (original kept for any position the model skips). The preview shows what each bullet was before, with a \"Keep my original wording\" undo, and nothing is added until the person clicks Add. Starter accounts see an upgrade note; the Admin edit page omits the AI button. Tests: `parseBullets.test.ts`, `AchievementGeneratorService.test.ts`.",
   },
+  {
+    id: "R046",
+    date: "2026-11-16",
+    topic: "Allow larger resumes to import",
+    outcome:
+      "Resume Import kept dropping content silently on long resumes. Raised the input limit from 20,000 to 30,000 characters (shared `MAX_INPUT_CHARS`; the over-limit error now says what to do instead) and replaced the flat 20-entry cap with per-list caps: 30 jobs, 20 education, 30 awards, 40 achievement bullets, 60 skills/tools; AI output budget raised from 6,144 to 8,192 tokens. Anything still capped is now reported on the import review screen (\"Imported 40 of 45 achievement bullets. Add the rest on the Edit Resume page.\"), and the AI is told to add a note when it leaves bullets out. Chunked split-and-merge import was considered and deferred until real demand shows up. Files: `ResumeImportService.ts`, `ResumeImportController.ts`, new `ResumeImportService.caps.test.ts`.",
+  },
 ];
