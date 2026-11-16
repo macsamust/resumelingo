@@ -161,6 +161,8 @@ class ResumePdfWriter {
  */
 const ANSWER_LABEL_OVERRIDES: Record<string, string> = {
   languages: "Coding Languages",
+  certifications: "Certifications and Training",
+  clearanceLevel: "Security Clearance",
 };
 
 function formatAnswerLabel(key: string): string {

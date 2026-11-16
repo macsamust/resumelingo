@@ -25,7 +25,17 @@ export function DynamicQuestionForm({ questions, answers, onChange }: Props) {
         <PolyAnimated expression="wave" size={32} decorative />
         <span className="hero-note" style={{ margin: 0 }}>A few questions from Poly, tailored to your profession.</span>
       </div>
-      {questions.map((q) => (
+      {questions.map((q) =>
+        q.type === "checkbox" ? (
+          <label className="checkbox-field" key={q.key}>
+            <input
+              type="checkbox"
+              checked={answers[q.key] === "Yes"}
+              onChange={(e) => onChange(q.key, e.target.checked ? "Yes" : "")}
+            />
+            {q.label}
+          </label>
+        ) : (
         <div className="field" key={q.key}>
           <label>
             {q.label}
@@ -57,7 +67,8 @@ export function DynamicQuestionForm({ questions, answers, onChange }: Props) {
           {/* Counts up on its own each year on the server (see worker/src/utils/yearsExperience.ts), so the owner never has to revisit it. */}
           {q.key === "yearsExperience" && <p className="field-hint">Updates automatically each year.</p>}
         </div>
-      ))}
+        )
+      )}
     </>
   );
 }

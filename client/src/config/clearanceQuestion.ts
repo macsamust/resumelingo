@@ -12,7 +12,7 @@ import { ProfessionQuestion } from "../types";
  */
 export const CLEARANCE_QUESTION: ProfessionQuestion = {
   key: "clearanceLevel",
-  label: "Clearance Level",
+  label: "Security Clearance",
   type: "select",
   options: ["Public Trust", "L", "Q", "SAP", "Confidential", "Secret", "Top Secret", "Top Secret (SCI)"],
 };

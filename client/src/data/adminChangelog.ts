@@ -334,4 +334,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "Resume Import now warns before the import, not only after. `ResumeImportPanel.tsx` shows a standing heads-up under the intro (about 8 to 10 pages / 30,000 characters, up to 30 jobs and 40 bullets, extras go on the Edit Resume page). After the file's text is read but before any upload or AI call, a file over the limit fails instantly with its character count and what to do; a file over ~22,000 characters gets a longer-wait note while analyzing. New shared constants `IMPORT_MAX_CHARS` / `IMPORT_LONG_CHARS` in `resumeImportExtract.ts` (mirror the Worker's `MAX_INPUT_CHARS`; keep in sync).",
   },
+  {
+    id: "R048",
+    date: "2026-11-16",
+    topic: "Additional Details: add Security Clearance and Military checkbox; rename Certifications",
+    outcome:
+      "Additional Details changes. Renamed the `certifications` question to \"Certifications and Training\" on every profession (the saved key is unchanged, so existing answers carry over) and in the public resume, PDF and text exports. Added two questions to every profession from one place (`withUniversalQuestions` in `worker/src/config/professions.ts`): Security Clearance (reuses the existing `clearanceLevel` key, so the Govt Contractor template's clearance banner keeps working; Government Contractor and Military keep their own question type, relabeled from \"Clearance Level\") and a Military yes/no checkbox (stored as \"Yes\"; not added to the Military profession, where it's implied). New `checkbox` question type in `DynamicQuestionForm.tsx` and the shared/client `ProfessionQuestion` type. Both new answers show under Additional Details on the public resume/PDF, and are excluded from the generated summary's \"specializing in…\" phrase and fallback bullets (`NON_CONTENT_ANSWER_KEYS` in `ContentGenerator.ts`).",
+  },
 ];

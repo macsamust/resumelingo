@@ -54,7 +54,7 @@ export enum TemplateCategory {
 export interface ProfessionQuestion {
   key: string;
   label: string;
-  type: "text" | "textarea" | "list" | "number" | "select";
+  type: "text" | "textarea" | "list" | "number" | "select" | "checkbox";
   placeholder?: string;
   /** Required, and only meaningful, when type is "select" — the dropdown's options in display order. */
   options?: string[];

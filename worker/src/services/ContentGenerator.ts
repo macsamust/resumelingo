@@ -30,6 +30,14 @@ export interface IContentGenerator {
   ): Promise<GeneratedContent>;
 }
 
+/**
+ * Answers that are facts about the person, not content to restate as a
+ * "specializing in ..." phrase or a fallback bullet (Security Clearance, and
+ * the Military yes/no checkbox whose value is just "Yes"). They still show on
+ * the resume's Additional Details and still go to the AI as context.
+ */
+const NON_CONTENT_ANSWER_KEYS = new Set(["clearanceLevel", "military"]);
+
 export class ContentGenerateError extends Error {}
 
 const MAX_SUMMARY_LENGTH = 1200;
@@ -354,6 +362,7 @@ export class RuleBasedContentGenerator implements IContentGenerator {
     const bullets: string[] = [];
     for (const [key, value] of Object.entries(answers)) {
       if (!value || !value.trim()) continue;
+      if (NON_CONTENT_ANSWER_KEYS.has(key)) continue;
       bullets.push(this.turnAnswerIntoAchievement(key, value));
     }
     if (bullets.length === 0) {
@@ -374,8 +383,11 @@ export class RuleBasedContentGenerator implements IContentGenerator {
   }
 
   private firstListValue(answers: Record<string, string>): string | undefined {
-    const entry = Object.values(answers).find((v) => v && v.includes(","));
+    const values = Object.entries(answers)
+      .filter(([key]) => !NON_CONTENT_ANSWER_KEYS.has(key))
+      .map(([, v]) => v);
+    const entry = values.find((v) => v && v.includes(","));
     if (entry) return entry.split(",")[0].trim();
-    return Object.values(answers).find((v) => !!v);
+    return values.find((v) => !!v);
   }
 }

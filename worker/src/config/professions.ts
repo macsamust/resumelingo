@@ -5,7 +5,7 @@ import { ProfessionDefinition } from "../types";
  * Identical to the Node/Express version — this file has no I/O, so it
  * ports over unchanged.
  */
-export const PROFESSIONS: ProfessionDefinition[] = [
+const BASE_PROFESSIONS: ProfessionDefinition[] = [
   {
     key: "software-engineer",
     label: "Software Engineer",
@@ -13,7 +13,7 @@ export const PROFESSIONS: ProfessionDefinition[] = [
       { key: "languages", label: "Coding Languages", type: "list", placeholder: "TypeScript, C#, Python" },
       { key: "frameworks", label: "Frameworks", type: "list", placeholder: "React, .NET, Django" },
       { key: "cloudPlatforms", label: "Cloud Platforms", type: "list", placeholder: "Azure, AWS" },
-      { key: "certifications", label: "Certifications", type: "list" },
+      { key: "certifications", label: "Certifications and Training", type: "list" },
       { key: "methodologies", label: "Methodologies", type: "list", placeholder: "Agile, Scrum" },
       { key: "devOps", label: "DevOps", type: "text" },
       { key: "ciCd", label: "CI/CD", type: "text" },
@@ -30,7 +30,7 @@ export const PROFESSIONS: ProfessionDefinition[] = [
       { key: "specialties", label: "Specialties", type: "list", placeholder: "ICU, Pediatrics" },
       { key: "hospitals", label: "Hospitals", type: "list" },
       { key: "patientCare", label: "Patient Care", type: "textarea" },
-      { key: "certifications", label: "Certifications", type: "list" },
+      { key: "certifications", label: "Certifications and Training", type: "list" },
       { key: "clinicalExperience", label: "Clinical Experience", type: "textarea" },
       { key: "shiftExperience", label: "Shift Experience", type: "text" },
       { key: "emrSystems", label: "Electronic Medical Record Systems", type: "list", placeholder: "Epic, Cerner" },
@@ -63,7 +63,7 @@ export const PROFESSIONS: ProfessionDefinition[] = [
     label: "Project Manager",
     questions: [
       { key: "methodologies", label: "Methodologies", type: "list", placeholder: "Agile, Waterfall, PMP" },
-      { key: "certifications", label: "Certifications", type: "list", placeholder: "PMP, CSM" },
+      { key: "certifications", label: "Certifications and Training", type: "list", placeholder: "PMP, CSM" },
       { key: "toolsUsed", label: "Tools Used", type: "list", placeholder: "Jira, MS Project" },
       { key: "budgetManaged", label: "Budget Managed", type: "text" },
       { key: "teamSize", label: "Team Size Led", type: "number" },
@@ -81,7 +81,7 @@ export const PROFESSIONS: ProfessionDefinition[] = [
       },
       { key: "agenciesSupported", label: "Agencies Supported", type: "list" },
       { key: "contractVehicles", label: "Contract Vehicles", type: "list" },
-      { key: "certifications", label: "Certifications", type: "list" },
+      { key: "certifications", label: "Certifications and Training", type: "list" },
     ],
   },
   {
@@ -119,7 +119,7 @@ export const PROFESSIONS: ProfessionDefinition[] = [
     label: "Construction",
     questions: [
       { key: "trade", label: "Trade / Specialty", type: "text" },
-      { key: "certifications", label: "Certifications", type: "list", placeholder: "OSHA 30" },
+      { key: "certifications", label: "Certifications and Training", type: "list", placeholder: "OSHA 30" },
       { key: "projectsCompleted", label: "Notable Projects", type: "textarea" },
       { key: "equipmentOperated", label: "Equipment Operated", type: "list" },
     ],
@@ -137,7 +137,7 @@ export const PROFESSIONS: ProfessionDefinition[] = [
     questions: [
       { key: "functionalArea", label: "Functional Area", type: "text", placeholder: "e.g. Operations, HR, Finance, Business Analysis" },
       { key: "toolsUsed", label: "Tools Used", type: "list", placeholder: "Excel, Salesforce, SAP, Tableau" },
-      { key: "certifications", label: "Certifications", type: "list", placeholder: "e.g. Six Sigma, SHRM-CP, CPA" },
+      { key: "certifications", label: "Certifications and Training", type: "list", placeholder: "e.g. Six Sigma, SHRM-CP, CPA" },
       { key: "processImprovements", label: "Process Improvements", type: "textarea", placeholder: "Efficiency gains, cost savings, or workflow changes you led" },
       { key: "crossFunctionalWork", label: "Cross Functional Collaboration", type: "textarea" },
       { key: "yearsExperience", label: "Years of Experience", type: "number" },
@@ -153,7 +153,7 @@ export const PROFESSIONS: ProfessionDefinition[] = [
     key: "other",
     label: "Other",
     questions: [
-      { key: "certifications", label: "Certifications", type: "list", placeholder: "e.g. PMP, Six Sigma" },
+      { key: "certifications", label: "Certifications and Training", type: "list", placeholder: "e.g. PMP, Six Sigma" },
       { key: "skills", label: "Skills", type: "list", placeholder: "e.g. Data Analysis, Public Speaking" },
       { key: "yearsExperience", label: "Years of Experience", type: "number" },
       { key: "interests", label: "Interests", type: "list", placeholder: "e.g. Photography, Volunteering, Chess" },
@@ -161,6 +161,32 @@ export const PROFESSIONS: ProfessionDefinition[] = [
     ],
   },
 ];
+
+/** Options for the Security Clearance dropdown. Shared with the client's Govt Contractor template injection (see client config/clearanceQuestion.ts, which mirrors this list). */
+const CLEARANCE_OPTIONS = ["Public Trust", "L", "Q", "SAP", "Confidential", "Secret", "Top Secret", "Top Secret (SCI)"];
+
+/**
+ * Two Additional Details questions every profession gets (CJ, Nov 2026):
+ * Security Clearance and a Military yes/no checkbox. Added here, once, rather
+ * than copied into each profession above, so a new profession can't forget
+ * them. A profession that already asks for clearance (Government Contractor,
+ * Military) keeps its own question and type, just relabeled to match; the
+ * Military profession doesn't get the checkbox since choosing it already says so.
+ * Both keep their existing/stable keys: clearanceLevel also feeds the Govt
+ * Contractor template's clearance banner.
+ */
+function withUniversalQuestions(profession: ProfessionDefinition): ProfessionDefinition {
+  const questions = profession.questions.map((q) => (q.key === "clearanceLevel" ? { ...q, label: "Security Clearance" } : q));
+  if (!questions.some((q) => q.key === "clearanceLevel")) {
+    questions.push({ key: "clearanceLevel", label: "Security Clearance", type: "select", options: CLEARANCE_OPTIONS });
+  }
+  if (profession.key !== "military") {
+    questions.push({ key: "military", label: "Military", type: "checkbox" });
+  }
+  return { ...profession, questions };
+}
+
+export const PROFESSIONS: ProfessionDefinition[] = BASE_PROFESSIONS.map(withUniversalQuestions);
 
 export function getProfessionByKey(key: string): ProfessionDefinition | undefined {
   return PROFESSIONS.find((p) => p.key === key);
