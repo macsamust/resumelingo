@@ -1780,14 +1780,14 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
    (Nov 2026). The flexible third row now soaks up the extra height instead,
    keeping title, dates and company stacked together at the top. */
 .tpl-photolist-body .tpl-experience-item {
-  display: grid; grid-template-columns: 30% 1fr; grid-template-rows: auto auto 1fr; column-gap: 24px; margin-bottom: 20px;
+  display: grid; grid-template-columns: 30% 1fr; grid-template-rows: auto auto auto 1fr; column-gap: 24px; margin-bottom: 20px;
 }
 .tpl-photolist-body .tpl-experience-item:last-child { margin-bottom: 0; }
-.tpl-photolist-body .tpl-experience-head { display: block; grid-column: 1; }
-.tpl-photolist-body .tpl-experience-title { display: block; }
-.tpl-photolist-body .tpl-experience-dates { display: block; margin-top: 2px; }
-.tpl-photolist-body .tpl-experience-company { grid-column: 1; }
-.tpl-photolist-body .tpl-experience-bullets { grid-column: 2; grid-row: 1 / span 3; margin: 0; }
+.tpl-photolist-body .tpl-experience-head { display: contents; }
+.tpl-photolist-body .tpl-experience-title { display: block; grid-column: 1; grid-row: 1; }
+.tpl-photolist-body .tpl-experience-company { grid-column: 1; grid-row: 2; }
+.tpl-photolist-body .tpl-experience-dates { display: block; grid-column: 1; grid-row: 3; margin-top: 2px; }
+.tpl-photolist-body .tpl-experience-bullets { grid-column: 2; grid-row: 1 / span 4; margin: 0; }
 /* Questrial (already loaded for this template) instead of the template's
    default Poppins for every plain content paragraph/list item in the body
    — Experience bullets, Highlights, Skills & Tools, Awards descriptions,
