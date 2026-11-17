@@ -369,4 +369,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "Profile template: with Combine Work Experience with Achievements on, each job's meta column (title, dates, company) was spread down the whole entry, so the company sat far below its title and dates and entries looked like they were missing dates. Cause: the bullets list spanned only the first two grid rows (`grid-row: 1 / span 2`), so a tall list stretched both rows evenly. Fixed in `global.css` with `grid-template-rows: auto auto 1fr` and the bullets spanning all three rows, so the extra height goes to the flexible third row and title, company and dates stay stacked, with dates on the third line at the top. Scoped to the Profile (photo-header-list) template; the mobile single-column override is unchanged.",
   },
+  {
+    id: "R053",
+    date: "2026-11-17",
+    topic: "ATS Optimized: section header flanking lines missing on some headers",
+    outcome:
+      "ATS Optimized: the Education and Skills & Tools headers seemed to be missing their flanking lines while Awards and Certifications & Training showed them. All four render identical markup and CSS, so the likely cause is the line itself: a 1px box filled with the very pale accent-soft gray (#e5e7eb), which can fade out entirely on a fractional pixel. Replaced with a real 1px border in the template accent at 40% opacity so it shows consistently on every header.",
+  },
 ];
