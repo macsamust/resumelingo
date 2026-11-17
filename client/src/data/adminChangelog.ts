@@ -390,4 +390,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "Edit page, Skills & Tools: added a matching \"Skills Used (comma separated)\" box under the Skills pills, mirroring the Tools Used box from R054. Same behavior: Enter or Add turns each comma-separated name into a selected Skills pill, trimmed, de-duplicated case-insensitively and capped at 60 characters; click a pill to remove it. Both boxes now share one add routine. Client-only, no migration.",
   },
+  {
+    id: "R056",
+    date: "2026-11-17",
+    topic: "Remove \"Tools Used\" from Additional Details",
+    outcome:
+      "Removed the \"Tools Used\" question from Additional Details for Project Manager, Marketing and Business Professional, since tools are now added in Skills & Tools. For a resume that already has a Tools Used answer on a template with Skills & Tools, the names are moved over as Tools pills (de-duplicated, capped at 60 characters) when the Edit page opens and the old answer is dropped on the next save. On templates without Skills & Tools the existing answer is left alone and still shows under Additional Details. No migration.",
+  },
 ];

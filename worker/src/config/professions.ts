@@ -61,7 +61,6 @@ const BASE_PROFESSIONS: ProfessionDefinition[] = [
     label: "Project Manager",
     questions: [
       { key: "methodologies", label: "Methodologies", type: "list", placeholder: "Agile, Waterfall, PMP" },
-      { key: "toolsUsed", label: "Tools Used", type: "list", placeholder: "Jira, MS Project" },
       { key: "budgetManaged", label: "Budget Managed", type: "text" },
       { key: "teamSize", label: "Team Size Led", type: "number" },
     ],
@@ -107,7 +106,6 @@ const BASE_PROFESSIONS: ProfessionDefinition[] = [
     questions: [
       { key: "channels", label: "Channels", type: "list", placeholder: "SEO, Paid Social, Email" },
       { key: "campaignResults", label: "Campaign Results", type: "textarea" },
-      { key: "toolsUsed", label: "Tools Used", type: "list", placeholder: "HubSpot, GA4" },
     ],
   },
   {
@@ -131,7 +129,6 @@ const BASE_PROFESSIONS: ProfessionDefinition[] = [
     label: "Business Professional",
     questions: [
       { key: "functionalArea", label: "Functional Area", type: "text", placeholder: "e.g. Operations, HR, Finance, Business Analysis" },
-      { key: "toolsUsed", label: "Tools Used", type: "list", placeholder: "Excel, Salesforce, SAP, Tableau" },
       { key: "processImprovements", label: "Process Improvements", type: "textarea", placeholder: "Efficiency gains, cost savings, or workflow changes you led" },
       { key: "crossFunctionalWork", label: "Cross Functional Collaboration", type: "textarea" },
       { key: "yearsExperience", label: "Years of Experience", type: "number" },

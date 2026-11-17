@@ -24,8 +24,8 @@ An audit trail of requests made to Claude on this project and how each was resol
 | Oct 4 | 1 | R035 | Promo codes via Stripe. |
 | Oct 23 | 3 | R036–R038 | Promo-code strategy, production verification, the tech-stack inventory, and reader-friendly log formatting. |
 | Nov 16 | 14 | R039–R052 | Collapsible, searchable Highlights & Key Achievements editor, a fix for the live-preview pane shrinking, self-updating Years of Experience, and section reordering. |
-| Nov 17 | 3 | R053–R055 | ATS Optimized section header lines made reliably visible; typed "Tools Used" pills in Skills & Tools. |
-| **Total** | **55** | R001–R055 | |
+| Nov 17 | 4 | R053–R056 | ATS Optimized section header lines made reliably visible; typed "Tools Used" pills in Skills & Tools. |
+| **Total** | **56** | R001–R056 | |
 
 ## September 2026
 
@@ -148,3 +148,4 @@ Collapsible, searchable Highlights & Key Achievements editor, a fix for the live
 | **R053** | ATS Optimized: section header flanking lines missing on some headers | ATS Optimized: the Education and Skills & Tools headers seemed to be missing their flanking lines while Awards and Certifications & Training showed them. All four render identical markup and CSS, so the likely cause is the line itself: a 1px box filled with the very pale accent-soft gray (#e5e7eb), which can fade out entirely on a fractional pixel. Replaced with a real 1px border in the template accent at 40% opacity so it shows consistently on every header. |
 | **R054** | Edit page: "Tools Used (comma separated)" in Skills & Tools | Edit page, Skills & Tools: added a "Tools Used (comma separated)" box under the Tools pills. Type names separated by commas (e.g. Jira, Tableau, Terraform), press Enter or Add, and each becomes a selected Tools pill, trimmed, de-duplicated against existing tools (case-insensitive) and capped at 60 characters. Typed tools show under Tools alongside the suggestions and are removed by clicking the pill; they save and render on the resume exactly like picked tools. Works on the Admin edit page too (shared editor). Client-only, no migration. |
 | **R055** | Edit page: "Skills Used (comma separated)" in Skills & Tools | Edit page, Skills & Tools: added a matching "Skills Used (comma separated)" box under the Skills pills, mirroring the Tools Used box from R054. Same behavior: Enter or Add turns each comma-separated name into a selected Skills pill, trimmed, de-duplicated case-insensitively and capped at 60 characters; click a pill to remove it. Both boxes now share one add routine. Client-only, no migration. |
+| **R056** | Remove "Tools Used" from Additional Details | Removed the "Tools Used" question from Additional Details for Project Manager, Marketing and Business Professional, since tools are now added in Skills & Tools. For a resume that already has a Tools Used answer on a template with Skills & Tools, the names are moved over as Tools pills (de-duplicated, capped at 60 characters) when the Edit page opens and the old answer is dropped on the next save. On templates without Skills & Tools the existing answer is left alone and still shows under Additional Details. No migration. |

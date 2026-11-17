@@ -421,14 +421,36 @@ export function ResumeEditPage() {
         setReferences(r.references);
         setReferencesRecruiterModeOnly(r.referencesRecruiterModeOnly);
         setCombineExperienceFormat(r.combineExperienceFormat);
-        setAnswers(r.answers);
+        // "Tools Used" is no longer an Additional Details question (tools are
+        // added in Skills & Tools now). For a resume that still has an old
+        // answer and a template that has Skills & Tools, move those names
+        // over as Tools pills (de-duplicated) so nothing is lost. Other
+        // templates keep the answer untouched. Applied when the resume is
+        // next saved.
+        let loadedAnswers = r.answers;
+        let loadedSkillsAndTools = r.skillsAndTools;
+        const legacyTools = (r.answers.toolsUsed ?? "").trim();
+        if (legacyTools && templateHasSkillsAndTools(r.templateKey)) {
+          const have = new Set(loadedSkillsAndTools.filter((s) => s.category === "tool").map((s) => s.label.toLowerCase()));
+          const moved: SkillOrTool[] = [];
+          for (const raw of legacyTools.split(",")) {
+            const label = raw.trim().slice(0, 60);
+            if (!label || have.has(label.toLowerCase())) continue;
+            have.add(label.toLowerCase());
+            moved.push({ label, category: "tool" });
+          }
+          loadedSkillsAndTools = [...loadedSkillsAndTools, ...moved];
+          const { toolsUsed: _legacy, ...rest } = r.answers;
+          loadedAnswers = rest;
+        }
+        setAnswers(loadedAnswers);
         // Backfill a stable id onto any job saved before WorkExperienceEntry.id
         // existed, so achievements can link to it via experienceId.
         setExperience(r.experience.map((job) => (job.id ? job : { ...job, id: generateId() })));
         setEducation(r.education);
         setAwards(r.awards);
         setAchievements(r.achievements);
-        setSkillsAndTools(r.skillsAndTools);
+        setSkillsAndTools(loadedSkillsAndTools);
         setLanguages(r.languages);
         setCertifications(r.certifications ?? []);
         setSummaryDraft(r.generatedSummary);
