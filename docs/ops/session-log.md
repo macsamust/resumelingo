@@ -24,8 +24,8 @@ An audit trail of requests made to Claude on this project and how each was resol
 | Oct 4 | 1 | R035 | Promo codes via Stripe. |
 | Oct 23 | 3 | R036–R038 | Promo-code strategy, production verification, the tech-stack inventory, and reader-friendly log formatting. |
 | Nov 16 | 14 | R039–R052 | Collapsible, searchable Highlights & Key Achievements editor, a fix for the live-preview pane shrinking, self-updating Years of Experience, and section reordering. |
-| Nov 17 | 1 | R053 | ATS Optimized section header lines made reliably visible. |
-| **Total** | **53** | R001–R053 | |
+| Nov 17 | 2 | R053–R054 | ATS Optimized section header lines made reliably visible; typed "Tools Used" pills in Skills & Tools. |
+| **Total** | **54** | R001–R054 | |
 
 ## September 2026
 
@@ -146,3 +146,4 @@ Collapsible, searchable Highlights & Key Achievements editor, a fix for the live
 | ID | Topic | Outcome |
 |---|---|---|
 | **R053** | ATS Optimized: section header flanking lines missing on some headers | ATS Optimized: the Education and Skills & Tools headers seemed to be missing their flanking lines while Awards and Certifications & Training showed them. All four render identical markup and CSS, so the likely cause is the line itself: a 1px box filled with the very pale accent-soft gray (#e5e7eb), which can fade out entirely on a fractional pixel. Replaced with a real 1px border in the template accent at 40% opacity so it shows consistently on every header. |
+| **R054** | Edit page: "Tools Used (comma separated)" in Skills & Tools | Edit page, Skills & Tools: added a "Tools Used (comma separated)" box under the Tools pills. Type names separated by commas (e.g. Jira, Tableau, Terraform), press Enter or Add, and each becomes a selected Tools pill, trimmed, de-duplicated against existing tools (case-insensitive) and capped at 60 characters. Typed tools show under Tools alongside the suggestions and are removed by clicking the pill; they save and render on the resume exactly like picked tools. Works on the Admin edit page too (shared editor). Client-only, no migration. |

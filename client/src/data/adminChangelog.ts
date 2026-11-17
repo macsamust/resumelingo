@@ -376,4 +376,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "ATS Optimized: the Education and Skills & Tools headers seemed to be missing their flanking lines while Awards and Certifications & Training showed them. All four render identical markup and CSS, so the likely cause is the line itself: a 1px box filled with the very pale accent-soft gray (#e5e7eb), which can fade out entirely on a fractional pixel. Replaced with a real 1px border in the template accent at 40% opacity so it shows consistently on every header.",
   },
+  {
+    id: "R054",
+    date: "2026-11-17",
+    topic: "Edit page: \"Tools Used (comma separated)\" in Skills & Tools",
+    outcome:
+      "Edit page, Skills & Tools: added a \"Tools Used (comma separated)\" box under the Tools pills. Type names separated by commas (e.g. Jira, Tableau, Terraform), press Enter or Add, and each becomes a selected Tools pill, trimmed, de-duplicated against existing tools (case-insensitive) and capped at 60 characters. Typed tools show under Tools alongside the suggestions and are removed by clicking the pill; they save and render on the resume exactly like picked tools. Works on the Admin edit page too (shared editor). Client-only, no migration.",
+  },
 ];
