@@ -65,7 +65,7 @@ export function SkillsAndToolsEditor({ professionKey, professionLabel, value, on
   const [aiTools, setAiTools] = useState<string[]>([]);
   const [aiStatus, setAiStatus] = useState<"idle" | "loading" | "error">("idle");
   const [aiError, setAiError] = useState<string | null>(null);
-  const [customTools, setCustomTools] = useState("");
+  const [customInputs, setCustomInputs] = useState<Record<SkillOrTool["category"], string>>({ skill: "", tool: "" });
 
   useEffect(() => {
     let cancelled = false;
@@ -109,20 +109,20 @@ export function SkillsAndToolsEditor({ professionKey, professionLabel, value, on
     }
   };
 
-  // "Tools Used (comma separated)": typed names become selected "tool" pills,
+  // "Skills Used" / "Tools Used" (comma separated): typed names become selected pills,
   // the same shape as clicking a suggestion. Trimmed, de-duplicated
   // case-insensitively against what's already selected, capped at 60 chars each.
-  const addCustomTools = () => {
-    const have = new Set(value.filter((v) => v.category === "tool").map((v) => v.label.toLowerCase()));
+  const addCustom = (category: SkillOrTool["category"]) => {
+    const have = new Set(value.filter((v) => v.category === category).map((v) => v.label.toLowerCase()));
     const added: SkillOrTool[] = [];
-    for (const raw of customTools.split(",")) {
+    for (const raw of customInputs[category].split(",")) {
       const label = raw.trim().slice(0, 60);
       if (!label || have.has(label.toLowerCase())) continue;
       have.add(label.toLowerCase());
-      added.push({ label, category: "tool" });
+      added.push({ label, category });
     }
     if (added.length > 0) onChange([...value, ...added]);
-    setCustomTools("");
+    setCustomInputs((prev) => ({ ...prev, [category]: "" }));
   };
 
   const onSuggestWithAi = async () => {
@@ -150,12 +150,12 @@ export function SkillsAndToolsEditor({ professionKey, professionLabel, value, on
     }
   };
 
-  const renderGroup = (label: string, category: SkillOrTool["category"], items: string[], aiItems: string[] = [], showCustom = false) => {
+  const renderGroup = (label: string, category: SkillOrTool["category"], items: string[], aiItems: string[] = [], customLabel?: string) => {
     // Selected labels typed in by hand (not in the curated/AI lists) — shown as
     // selected pills in this group so they sit under "Tools" too.
     const known = new Set([...items, ...aiItems].map((i) => i.toLowerCase()));
     const customItems = value.filter((v) => v.category === category && !known.has(v.label.toLowerCase())).map((v) => v.label);
-    if (items.length === 0 && aiItems.length === 0 && customItems.length === 0 && !showCustom) return null;
+    if (items.length === 0 && aiItems.length === 0 && customItems.length === 0 && !customLabel) return null;
     return (
       <div className="skill-picker-group">
         <div className="skill-picker-group-label">{label}</div>
@@ -206,23 +206,23 @@ export function SkillsAndToolsEditor({ professionKey, professionLabel, value, on
             </button>
           ))}
         </div>
-        {showCustom && (
+        {customLabel && (
           <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
             <input
               type="text"
               style={{ flex: 1 }}
-              placeholder="Tools Used (comma separated), e.g. Jira, Tableau, Terraform"
-              aria-label="Tools Used (comma separated)"
-              value={customTools}
-              onChange={(e) => setCustomTools(e.target.value)}
+              placeholder={`${customLabel} (comma separated), e.g. ${category === "tool" ? "Jira, Tableau, Terraform" : "Budgeting, Negotiation, Mentoring"}`}
+              aria-label={`${customLabel} (comma separated)`}
+              value={customInputs[category]}
+              onChange={(e) => setCustomInputs((prev) => ({ ...prev, [category]: e.target.value }))}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  addCustomTools();
+                  addCustom(category);
                 }
               }}
             />
-            <button type="button" className="btn btn-ghost btn-sm" onClick={addCustomTools} disabled={!customTools.trim()}>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => addCustom(category)} disabled={!customInputs[category].trim()}>
               Add
             </button>
           </div>
@@ -245,8 +245,8 @@ export function SkillsAndToolsEditor({ professionKey, professionLabel, value, on
         </div>
       ) : (
         <>
-          {renderGroup("Skills", "skill", skills, aiSkills)}
-          {renderGroup("Tools", "tool", tools, aiTools, true)}
+          {renderGroup("Skills", "skill", skills, aiSkills, "Skills Used")}
+          {renderGroup("Tools", "tool", tools, aiTools, "Tools Used")}
         </>
       )}
 

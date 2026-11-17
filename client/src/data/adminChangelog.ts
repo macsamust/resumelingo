@@ -383,4 +383,11 @@ export const ADMIN_CHANGELOG_ENTRIES: AdminChangelogEntry[] = [
     outcome:
       "Edit page, Skills & Tools: added a \"Tools Used (comma separated)\" box under the Tools pills. Type names separated by commas (e.g. Jira, Tableau, Terraform), press Enter or Add, and each becomes a selected Tools pill, trimmed, de-duplicated against existing tools (case-insensitive) and capped at 60 characters. Typed tools show under Tools alongside the suggestions and are removed by clicking the pill; they save and render on the resume exactly like picked tools. Works on the Admin edit page too (shared editor). Client-only, no migration.",
   },
+  {
+    id: "R055",
+    date: "2026-11-17",
+    topic: "Edit page: \"Skills Used (comma separated)\" in Skills & Tools",
+    outcome:
+      "Edit page, Skills & Tools: added a matching \"Skills Used (comma separated)\" box under the Skills pills, mirroring the Tools Used box from R054. Same behavior: Enter or Add turns each comma-separated name into a selected Skills pill, trimmed, de-duplicated case-insensitively and capped at 60 characters; click a pill to remove it. Both boxes now share one add routine. Client-only, no migration.",
+  },
 ];
