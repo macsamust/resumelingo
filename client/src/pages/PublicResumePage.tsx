@@ -95,6 +95,13 @@ function resumeToPlainText(resume: PublicResume): string {
     lines.push("");
   }
 
+  const certifications = (resume.certifications ?? []).filter((c) => c.name.trim());
+  if (certifications.length > 0) {
+    lines.push("CERTIFICATIONS & TRAINING");
+    for (const cert of certifications) lines.push(`- ${cert.name.trim()}`);
+    lines.push("");
+  }
+
   const highlightBullets = grouped ? grouped.unlinked : resume.generatedBullets ?? [];
   if (highlightBullets.length > 0) {
     lines.push(bulletsLabel);
@@ -114,6 +121,19 @@ function resumeToPlainText(resume: PublicResume): string {
     lines.push("");
   }
 
+  // Filters out a blank-language row rather than falling back to "Untitled
+  // language" — a row like this only exists from clicking "+ Add language"
+  // and not filling it in (or an in-progress edit that never got saved), not
+  // from anything the subscriber actually meant to publish.
+  const languages = (resume.languages ?? []).filter((l) => l.language.trim());
+  if (languages.length > 0) {
+    lines.push("LANGUAGES");
+    for (const lang of languages) {
+      lines.push(`${lang.language}${lang.proficiency ? `, ${lang.proficiency}` : ""}`);
+    }
+    lines.push("");
+  }
+
   // Same "blank row was never meant to be published" filter as Languages
   // below — a title-less award only exists from an unfinished "+ Add award"
   // click or an edit that never actually saved.
@@ -124,19 +144,6 @@ function resumeToPlainText(resume: PublicResume): string {
     for (const award of awards) {
       lines.push(`${award.title}${award.issuer ? `, ${award.issuer}` : ""} (${formatMonth(award.date)})`);
       if (award.description) lines.push(award.description);
-    }
-    lines.push("");
-  }
-
-  // Filters out a blank-language row rather than falling back to "Untitled
-  // language" — a row like this only exists from clicking "+ Add language"
-  // and not filling it in (or an in-progress edit that never got saved), not
-  // from anything the subscriber actually meant to publish.
-  const languages = (resume.languages ?? []).filter((l) => l.language.trim());
-  if (languages.length > 0) {
-    lines.push("LANGUAGES");
-    for (const lang of languages) {
-      lines.push(`${lang.language}${lang.proficiency ? `, ${lang.proficiency}` : ""}`);
     }
     lines.push("");
   }
@@ -533,6 +540,7 @@ export function PublicResumePage() {
         skillsAndTools={resume.skillsAndTools}
         showSkillsAndTools={templateHasSkillsAndTools(resume.templateKey)}
         languages={resume.languages}
+        certifications={resume.certifications}
         hideFooterContact={hasTrailingContent}
         securityClearance={resume.answers.clearanceLevel}
         militaryService={resume.answers.military === "Yes"}

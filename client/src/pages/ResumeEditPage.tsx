@@ -11,6 +11,7 @@ import { AchievementEditor } from "../components/builder/AchievementEditor";
 import { AchievementGeneratorPanel } from "../components/builder/AchievementGeneratorPanel";
 import { SkillsAndToolsEditor } from "../components/builder/SkillsAndToolsEditor";
 import { LanguagesEditor } from "../components/builder/LanguagesEditor";
+import { CertificationsEditor } from "../components/builder/CertificationsEditor";
 import { ReferencesEditor } from "../components/builder/ReferencesEditor";
 import { PhotoUploader } from "../components/builder/PhotoUploader";
 import { isRealContactValue, ResumePreview } from "../components/builder/ResumePreview";
@@ -38,6 +39,7 @@ import {
   AchievementEntry,
   AwardEntry,
   EducationEntry,
+  CertificationEntry,
   LanguageEntry,
   LinkVisibility,
   ProfessionDefinition,
@@ -205,6 +207,7 @@ export function ResumeEditPage() {
   const [achievements, setAchievements] = useState<AchievementEntry[]>([]);
   const [skillsAndTools, setSkillsAndTools] = useState<SkillOrTool[]>([]);
   const [languages, setLanguages] = useState<LanguageEntry[]>([]);
+  const [certifications, setCertifications] = useState<CertificationEntry[]>([]);
   const [coverLetterEnabled, setCoverLetterEnabled] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
   const [recruiterModeEnabled, setRecruiterModeEnabled] = useState(false);
@@ -427,6 +430,7 @@ export function ResumeEditPage() {
         setAchievements(r.achievements);
         setSkillsAndTools(r.skillsAndTools);
         setLanguages(r.languages);
+        setCertifications(r.certifications ?? []);
         setSummaryDraft(r.generatedSummary);
         setBulletsDraftText(r.generatedBullets.join("\n"));
         setSummaryManuallyEdited(r.summaryManuallyEdited);
@@ -500,6 +504,7 @@ export function ResumeEditPage() {
     achievements,
     skillsAndTools,
     languages,
+    certifications,
     coverLetterEnabled,
     recruiterModeEnabled,
     recruiterAccessCode,
@@ -706,6 +711,7 @@ export function ResumeEditPage() {
       // section at all (see usesSkillsAndTools below).
       skillsAndTools: usesSkillsAndTools ? skillsAndTools : undefined,
       languages,
+      certifications,
     });
     return matchKeywords(jobDescription, resumeText);
   }, [
@@ -721,6 +727,7 @@ export function ResumeEditPage() {
     usesSkillsAndTools,
     skillsAndTools,
     languages,
+    certifications,
   ]);
 
   /**
@@ -805,6 +812,7 @@ export function ResumeEditPage() {
     achievements,
     skillsAndTools,
     languages,
+    certifications,
     referencesEnabled,
     references,
     referencesRecruiterModeOnly,
@@ -1120,6 +1128,7 @@ export function ResumeEditPage() {
       skillsAndTools={skillsAndTools}
       showSkillsAndTools={usesSkillsAndTools}
       languages={languages}
+      certifications={certifications}
       securityClearance={answers.clearanceLevel}
       militaryService={answers.military === "Yes"}
     />
@@ -1612,15 +1621,18 @@ export function ResumeEditPage() {
             <EducationEditor education={education} onChange={setEducation} schoolSuggestions={schoolSuggestions} />
           </CollapsibleSection>
 
+          <CollapsibleSection title="Certifications & Training" forceOpen={forceOpen}>
+            <p className="hero-note" style={{ marginBottom: 16 }}>
+              Optional: certifications, licenses, and training courses, one per line.
+            </p>
+            <CertificationsEditor certifications={certifications} onChange={setCertifications} />
+          </CollapsibleSection>
+
           <CollapsibleSection title="Languages" forceOpen={forceOpen}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
               Optional: list any languages you speak and how fluently.
             </p>
             <LanguagesEditor languages={languages} onChange={setLanguages} />
-          </CollapsibleSection>
-
-          <CollapsibleSection title="Awards" forceOpen={forceOpen}>
-            <AwardsEditor awards={awards} onChange={setAwards} />
           </CollapsibleSection>
 
           <CollapsibleSection
@@ -1683,6 +1695,10 @@ export function ResumeEditPage() {
               )}
             </CollapsibleSection>
           )}
+
+          <CollapsibleSection title="Awards" forceOpen={forceOpen}>
+            <AwardsEditor awards={awards} onChange={setAwards} />
+          </CollapsibleSection>
 
           {isPremium && (
             <div className="builder-divider">

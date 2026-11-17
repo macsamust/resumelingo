@@ -8,6 +8,7 @@ import { AwardsEditor } from "../../components/builder/AwardsEditor";
 import { AchievementEditor } from "../../components/builder/AchievementEditor";
 import { SkillsAndToolsEditor } from "../../components/builder/SkillsAndToolsEditor";
 import { LanguagesEditor } from "../../components/builder/LanguagesEditor";
+import { CertificationsEditor } from "../../components/builder/CertificationsEditor";
 import { PhotoUploader } from "../../components/builder/PhotoUploader";
 import { isRealContactValue, ResumePreview } from "../../components/builder/ResumePreview";
 import { ConfirmDialog } from "../../components/common/ConfirmDialog";
@@ -21,6 +22,7 @@ import {
   AchievementEntry,
   AwardEntry,
   EducationEntry,
+  CertificationEntry,
   LanguageEntry,
   LinkVisibility,
   Resume,
@@ -81,6 +83,7 @@ export function AdminResumeEditPage() {
   const [achievements, setAchievements] = useState<AchievementEntry[]>([]);
   const [skillsAndTools, setSkillsAndTools] = useState<SkillOrTool[]>([]);
   const [languages, setLanguages] = useState<LanguageEntry[]>([]);
+  const [certifications, setCertifications] = useState<CertificationEntry[]>([]);
   const [combineExperienceFormat, setCombineExperienceFormat] = useState(false);
   // Direct text overrides — the one capability this editor has that the
   // subscriber's own Edit Resume page doesn't: hand-editing the AI-generated
@@ -130,6 +133,7 @@ export function AdminResumeEditPage() {
         setAchievements(r.achievements);
         setSkillsAndTools(r.skillsAndTools);
         setLanguages(r.languages);
+        setCertifications(r.certifications ?? []);
         setCombineExperienceFormat(r.combineExperienceFormat);
         setGeneratedSummary(r.generatedSummary);
         setGeneratedBulletsText(r.generatedBullets.join("\n"));
@@ -162,6 +166,7 @@ export function AdminResumeEditPage() {
         achievements,
         skillsAndTools,
         languages,
+        certifications,
         generatedSummary,
         generatedBullets,
       });
@@ -365,6 +370,10 @@ export function AdminResumeEditPage() {
             <EducationEditor education={education} onChange={setEducation} />
           </CollapsibleSection>
 
+          <CollapsibleSection title="Certifications & Training" forceOpen={forceOpen} defaultOpen={false}>
+            <CertificationsEditor certifications={certifications} onChange={setCertifications} />
+          </CollapsibleSection>
+
           <CollapsibleSection title="Languages" forceOpen={forceOpen} defaultOpen={false}>
             <LanguagesEditor languages={languages} onChange={setLanguages} />
           </CollapsibleSection>
@@ -399,6 +408,7 @@ export function AdminResumeEditPage() {
             skillsAndTools={skillsAndTools}
             showSkillsAndTools={usesSkillsAndTools}
             languages={languages}
+            certifications={certifications}
           />
         </div>
       </form>

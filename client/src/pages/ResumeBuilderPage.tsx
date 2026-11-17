@@ -6,6 +6,7 @@ import { DynamicQuestionForm } from "../components/builder/DynamicQuestionForm";
 import { ExperienceEditor } from "../components/builder/ExperienceEditor";
 import { EducationEditor } from "../components/builder/EducationEditor";
 import { AwardsEditor } from "../components/builder/AwardsEditor";
+import { CertificationsEditor } from "../components/builder/CertificationsEditor";
 import { AchievementEditor } from "../components/builder/AchievementEditor";
 import { AchievementGeneratorPanel } from "../components/builder/AchievementGeneratorPanel";
 import { PhotoUploader } from "../components/builder/PhotoUploader";
@@ -27,6 +28,7 @@ import { withClearanceQuestion } from "../config/clearanceQuestion";
 import {
   AchievementEntry,
   AwardEntry,
+  CertificationEntry,
   EducationEntry,
   ProfessionDefinition,
   ProfessionSummary,
@@ -54,6 +56,7 @@ export function ResumeBuilderPage() {
   const [experience, setExperience] = useState<WorkExperienceEntry[]>([]);
   const [education, setEducation] = useState<EducationEntry[]>([]);
   const [awards, setAwards] = useState<AwardEntry[]>([]);
+  const [certifications, setCertifications] = useState<CertificationEntry[]>([]);
   // Highlights and Key Achievements are the same underlying list — a
   // "highlight" is just an achievement with only Action filled in (see
   // HighlightsEditor.tsx). Populated either by hand (Challenge/Action/Result
@@ -254,6 +257,7 @@ export function ResumeBuilderPage() {
         education,
         awards,
         achievements,
+        certifications,
       });
       // Every subscriber gets a one-time "nice work" nudge (celebrating Poly
       // included) right after their very first resume — shown on the edit
@@ -337,6 +341,7 @@ export function ResumeBuilderPage() {
       experience={experience}
       education={education}
       awards={awards}
+      certifications={certifications}
       showSkillsAndTools={templateHasSkillsAndTools(templateKey)}
       securityClearance={answers.clearanceLevel}
       militaryService={answers.military === "Yes"}
@@ -623,11 +628,11 @@ export function ResumeBuilderPage() {
             <EducationEditor education={education} onChange={setEducation} />
           </CollapsibleSection>
 
-          <CollapsibleSection title="6. Awards" forceOpen={forceOpen} defaultOpen={false}>
+          <CollapsibleSection title="6. Certifications & training" forceOpen={forceOpen} defaultOpen={false}>
             <p className="hero-note" style={{ marginBottom: 16 }}>
               Optional: you can always add these later from the Edit Resume page.
             </p>
-            <AwardsEditor awards={awards} onChange={setAwards} />
+            <CertificationsEditor certifications={certifications} onChange={setCertifications} />
           </CollapsibleSection>
 
           <CollapsibleSection title="7. Answer a few questions" forceOpen={forceOpen} defaultOpen={false}>
@@ -641,6 +646,13 @@ export function ResumeBuilderPage() {
                 onChange={(key, value) => setAnswers((prev) => ({ ...prev, [key]: value }))}
               />
             )}
+          </CollapsibleSection>
+
+          <CollapsibleSection title="8. Awards" forceOpen={forceOpen} defaultOpen={false}>
+            <p className="hero-note" style={{ marginBottom: 16 }}>
+              Optional: you can always add these later from the Edit Resume page.
+            </p>
+            <AwardsEditor awards={awards} onChange={setAwards} />
           </CollapsibleSection>
 
           <button

@@ -349,6 +349,11 @@ export interface SkillOrTool {
   category: "skill" | "tool";
 }
 
+/** One line in the "Certifications & Training" section (e.g. "PMP", "AWS Solutions Architect", "OSHA 30"). An object rather than a bare string so issuer/date can be added later without a data migration. */
+export interface CertificationEntry {
+  name: string;
+}
+
 /**
  * One language entry in the optional "Languages" section — `proficiency`
  * is a free string but the builder's LanguagesEditor only offers the
@@ -446,6 +451,7 @@ export interface ResumeRecord {
   achievements: string; // JSON-serialized AchievementEntry[]
   skillsAndTools: string; // JSON-serialized SkillOrTool[]
   languages: string; // JSON-serialized LanguageEntry[]
+  certifications: string; // JSON-serialized CertificationEntry[]
   /**
    * "References" section (Edit Resume, Premium subscribers only —
    * re-checked and silently coerced off on every update in

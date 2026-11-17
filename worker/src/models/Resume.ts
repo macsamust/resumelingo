@@ -1,9 +1,10 @@
-import { AchievementEntry, AwardEntry, EducationEntry, LanguageEntry, LinkVisibility, ReferenceEntry, ResumeRecord, SkillOrTool, WorkExperienceEntry } from "../types";
+import { AchievementEntry, AwardEntry, CertificationEntry, EducationEntry, LanguageEntry, LinkVisibility, ReferenceEntry, ResumeRecord, SkillOrTool, WorkExperienceEntry } from "../types";
 import { getTemplateByKey } from "../config/templates";
 import { getProfessionByKey } from "../config/professions";
 import { extractKeywords } from "../utils/keywords";
 import { buildCandidateSummary } from "../utils/candidateSummary";
 import { sha256Hex } from "../utils/crypto";
+import { splitLegacyCertifications } from "../utils/certifications";
 import { resolveYears, ResolvedYears, swapYearsPhrase } from "../utils/yearsExperience";
 
 /**
@@ -83,6 +84,8 @@ export class Resume {
   readonly achievements: AchievementEntry[];
   readonly skillsAndTools: SkillOrTool[];
   readonly languages: LanguageEntry[];
+  /** "Certifications & Training" entries. For a resume saved before this section existed, derived on read from the old Additional Details `certifications` answer (see the constructor). */
+  readonly certifications: CertificationEntry[];
   readonly referencesEnabled: boolean;
   readonly references: ReferenceEntry[];
   readonly referencesRecruiterModeOnly: boolean;
@@ -123,7 +126,15 @@ export class Resume {
     this.recruiterAccessCodeHash = record.recruiterAccessCodeHash;
     this.combineExperienceFormat = !!record.combineExperienceFormat;
     this.years = resolveYears(JSON.parse(record.answers || "{}"), record.updatedAt);
-    this.answers = this.years.answers;
+    // "Certifications" used to be an Additional Details answer (a comma-separated
+    // list). It's a real section now, so that answer is pulled out of `answers`
+    // and, while the new column is still empty, converted into entries here —
+    // existing resumes show their certifications in the new section immediately,
+    // and the old key disappears for good the next time the resume is saved.
+    const { certifications: legacyCertifications, ...answersWithoutCertifications } = this.years.answers;
+    this.answers = answersWithoutCertifications;
+    const storedCertifications: CertificationEntry[] = JSON.parse(record.certifications || "[]");
+    this.certifications = storedCertifications.length > 0 ? storedCertifications : splitLegacyCertifications(legacyCertifications);
     this.experience = JSON.parse(record.experience || "[]");
     this.education = JSON.parse(record.education || "[]");
     this.awards = JSON.parse(record.awards || "[]");
@@ -338,6 +349,7 @@ export class Resume {
       achievements: this.achievements,
       skillsAndTools: this.skillsAndTools,
       languages: this.languages,
+      certifications: this.certifications,
       referencesEnabled: this.referencesEnabled,
       references: this.references,
       referencesRecruiterModeOnly: this.referencesRecruiterModeOnly,
@@ -396,6 +408,7 @@ export class Resume {
       achievements: this.achievements,
       skillsAndTools: this.skillsAndTools,
       languages: this.languages,
+      certifications: this.certifications,
       references: this.publicReferences,
       generatedSummary: this.generatedSummary,
       generatedBullets: this.generatedBullets,

@@ -13,7 +13,6 @@ const BASE_PROFESSIONS: ProfessionDefinition[] = [
       { key: "languages", label: "Coding Languages", type: "list", placeholder: "TypeScript, C#, Python" },
       { key: "frameworks", label: "Frameworks", type: "list", placeholder: "React, .NET, Django" },
       { key: "cloudPlatforms", label: "Cloud Platforms", type: "list", placeholder: "Azure, AWS" },
-      { key: "certifications", label: "Certifications and Training", type: "list" },
       { key: "methodologies", label: "Methodologies", type: "list", placeholder: "Agile, Scrum" },
       { key: "devOps", label: "DevOps", type: "text" },
       { key: "ciCd", label: "CI/CD", type: "text" },
@@ -30,7 +29,6 @@ const BASE_PROFESSIONS: ProfessionDefinition[] = [
       { key: "specialties", label: "Specialties", type: "list", placeholder: "ICU, Pediatrics" },
       { key: "hospitals", label: "Hospitals", type: "list" },
       { key: "patientCare", label: "Patient Care", type: "textarea" },
-      { key: "certifications", label: "Certifications and Training", type: "list" },
       { key: "clinicalExperience", label: "Clinical Experience", type: "textarea" },
       { key: "shiftExperience", label: "Shift Experience", type: "text" },
       { key: "emrSystems", label: "Electronic Medical Record Systems", type: "list", placeholder: "Epic, Cerner" },
@@ -63,7 +61,6 @@ const BASE_PROFESSIONS: ProfessionDefinition[] = [
     label: "Project Manager",
     questions: [
       { key: "methodologies", label: "Methodologies", type: "list", placeholder: "Agile, Waterfall, PMP" },
-      { key: "certifications", label: "Certifications and Training", type: "list", placeholder: "PMP, CSM" },
       { key: "toolsUsed", label: "Tools Used", type: "list", placeholder: "Jira, MS Project" },
       { key: "budgetManaged", label: "Budget Managed", type: "text" },
       { key: "teamSize", label: "Team Size Led", type: "number" },
@@ -81,7 +78,6 @@ const BASE_PROFESSIONS: ProfessionDefinition[] = [
       },
       { key: "agenciesSupported", label: "Agencies Supported", type: "list" },
       { key: "contractVehicles", label: "Contract Vehicles", type: "list" },
-      { key: "certifications", label: "Certifications and Training", type: "list" },
     ],
   },
   {
@@ -119,7 +115,6 @@ const BASE_PROFESSIONS: ProfessionDefinition[] = [
     label: "Construction",
     questions: [
       { key: "trade", label: "Trade / Specialty", type: "text" },
-      { key: "certifications", label: "Certifications and Training", type: "list", placeholder: "OSHA 30" },
       { key: "projectsCompleted", label: "Notable Projects", type: "textarea" },
       { key: "equipmentOperated", label: "Equipment Operated", type: "list" },
     ],
@@ -137,7 +132,6 @@ const BASE_PROFESSIONS: ProfessionDefinition[] = [
     questions: [
       { key: "functionalArea", label: "Functional Area", type: "text", placeholder: "e.g. Operations, HR, Finance, Business Analysis" },
       { key: "toolsUsed", label: "Tools Used", type: "list", placeholder: "Excel, Salesforce, SAP, Tableau" },
-      { key: "certifications", label: "Certifications and Training", type: "list", placeholder: "e.g. Six Sigma, SHRM-CP, CPA" },
       { key: "processImprovements", label: "Process Improvements", type: "textarea", placeholder: "Efficiency gains, cost savings, or workflow changes you led" },
       { key: "crossFunctionalWork", label: "Cross Functional Collaboration", type: "textarea" },
       { key: "yearsExperience", label: "Years of Experience", type: "number" },
@@ -153,7 +147,6 @@ const BASE_PROFESSIONS: ProfessionDefinition[] = [
     key: "other",
     label: "Other",
     questions: [
-      { key: "certifications", label: "Certifications and Training", type: "list", placeholder: "e.g. PMP, Six Sigma" },
       { key: "skills", label: "Skills", type: "list", placeholder: "e.g. Data Analysis, Public Speaking" },
       { key: "yearsExperience", label: "Years of Experience", type: "number" },
       { key: "interests", label: "Interests", type: "list", placeholder: "e.g. Photography, Volunteering, Chess" },

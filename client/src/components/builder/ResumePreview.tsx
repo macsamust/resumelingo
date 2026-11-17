@@ -1,7 +1,7 @@
 import { AmericanFlag } from "../common/AmericanFlag";
 import type { CSSProperties } from "react";
 import { getTemplateStyle } from "../../config/templateStyles";
-import { AchievementEntry, AwardEntry, EducationEntry, LanguageEntry, SkillOrTool, WorkExperienceEntry } from "../../types";
+import { AchievementEntry, AwardEntry, EducationEntry, LanguageEntry, SkillOrTool, WorkExperienceEntry, CertificationEntry } from "../../types";
 import { groupAchievementsByExperience } from "../../utils/starBullet";
 import { PROFICIENCY_MAX_LEVEL, proficiencyLevel } from "../../utils/languageProficiency";
 
@@ -56,6 +56,8 @@ interface Props {
   securityClearance?: string;
   /** True when the resume's "Military" Additional Details checkbox is on — shows a small flag + "Military Service" badge above the summary (see militaryBadgeBlock). */
   militaryService?: boolean;
+  /** "Certifications & Training" entries (name only), rendered directly under Education. */
+  certifications?: CertificationEntry[];
 }
 
 /**
@@ -293,6 +295,7 @@ export function ResumePreview({
   hideFooterContact = false,
   securityClearance,
   militaryService = false,
+  certifications = [],
 }: Props) {
   const style = getTemplateStyle(templateKey ?? "modern");
   const cssVars = {
@@ -478,6 +481,20 @@ export function ResumePreview({
     </div>
   );
 
+  // "Certifications & Training": name-only lines, directly under Education in
+  // every template. Blank rows (an unfinished "+ Add" click) are never published.
+  const namedCertifications = certifications.filter((c) => c.name.trim());
+  const certificationsBlock = namedCertifications.length > 0 && (
+    <div className="tpl-section">
+      {sectionLabel(style.certificationsLabel ?? "Certifications & Training")}
+      <ul className="preview-bullets tpl-cert-list">
+        {namedCertifications.map((c, i) => (
+          <li key={i}>{c.name.trim()}</li>
+        ))}
+      </ul>
+    </div>
+  );
+
   // Same "blank row was never meant to be published" filter as Languages
   // above — a title-less award only exists from an unfinished "+ Add award"
   // click or an edit that never actually saved.
@@ -581,6 +598,7 @@ export function ResumePreview({
       {style.skillsAfterSummary && skillsAndToolsBlock}
       {experienceBlock}
       {!style.educationAfterSkills && educationBlock}
+      {!style.educationAfterSkills && certificationsBlock}
       {bulletsBlock}
     </>
   );
@@ -612,6 +630,7 @@ export function ResumePreview({
           </span>
         )}
         {educationBlock}
+        {certificationsBlock}
       </div>
     );
     const mainContent = (
@@ -621,8 +640,8 @@ export function ResumePreview({
         {experienceBlock}
         {bulletsBlock}
         {skillsAndToolsBlock}
-        {awardsBlock}
         {languagesBlock}
+        {awardsBlock}
       </div>
     );
 
@@ -677,13 +696,14 @@ export function ResumePreview({
               {sidebarContact}
               {clearanceBannerBlock}
               {educationBlock}
+              {certificationsBlock}
             </div>
             <div className="tpl-timeline-main">
               {summaryBlock}
               {bulletsBlock}
               {experienceBlock}
-              {awardsBlock}
               {languagesBlock}
+              {awardsBlock}
             </div>
           </div>
         </div>
@@ -733,9 +753,10 @@ export function ResumePreview({
             </div>
             <div className="tpl-photo-side">
               {educationBlock}
+              {certificationsBlock}
               {skillsAndToolsBlock}
-              {awardsBlock}
               {languagesBlock}
+              {awardsBlock}
             </div>
           </div>
         </div>
@@ -796,6 +817,7 @@ export function ResumePreview({
               {summaryBlock}
               {contactList}
               {educationBlock}
+              {certificationsBlock}
               {skillsAndToolsBlock}
               {languagesBlock}
             </div>
@@ -860,6 +882,7 @@ export function ResumePreview({
             <div className="tpl-mono-side">
               {sidebarContact}
               {educationBlock}
+              {certificationsBlock}
               {skillsAndToolsBlock}
               {languagesBlock}
             </div>
@@ -896,6 +919,7 @@ export function ResumePreview({
     );
     const experienceCard = experienceBlock && <div className="tpl-pill-card tpl-pill-experience">{experienceBlock}</div>;
     const educationCard = educationBlock && <div className="tpl-pill-card tpl-pill-education">{educationBlock}</div>;
+    const certificationsCard = certificationsBlock && <div className="tpl-pill-card tpl-pill-certifications">{certificationsBlock}</div>;
     const awardsCard = awardsBlock && <div className="tpl-pill-card tpl-pill-awards">{awardsBlock}</div>;
     const languagesCard = languagesBlock && <div className="tpl-pill-card tpl-pill-languages">{languagesBlock}</div>;
 
@@ -932,8 +956,9 @@ export function ResumePreview({
               {skillsCard}
               {skillsAndToolsCard}
               {educationCard}
-              {awardsCard}
+              {certificationsCard}
               {languagesCard}
+              {awardsCard}
             </div>
             <div className="tpl-pill-col">
               {experienceCard}
@@ -1000,6 +1025,7 @@ export function ResumePreview({
             {clearanceBannerBlock}
             {experienceBlock}
             {educationBlock}
+            {certificationsBlock}
             {bulletsBlock}
             {skillsAndToolsBlock && (
               <div className="tpl-photolist-skills-wrap">
@@ -1007,8 +1033,8 @@ export function ResumePreview({
                 <div className="tpl-photolist-dots tpl-photolist-dots-corner" aria-hidden="true" />
               </div>
             )}
-            {awardsBlock}
             {languagesBlock}
+            {awardsBlock}
           </div>
         </div>
       </div>
@@ -1089,8 +1115,9 @@ export function ResumePreview({
               </div>
               <div className="tpl-dark-card">
                 {educationBlock}
-                {awardsBlock}
+                {certificationsBlock}
                 {languagesBlock}
+                {awardsBlock}
               </div>
             </div>
           </div>
@@ -1123,6 +1150,7 @@ export function ResumePreview({
     const ledgerFooterColumns = [
       skillsAndToolsBlock && <div className="tpl-ledger-footer-col" key="skills">{skillsAndToolsBlock}</div>,
       educationBlock && <div className="tpl-ledger-footer-col" key="education">{educationBlock}</div>,
+      certificationsBlock && <div className="tpl-ledger-footer-col" key="certifications">{certificationsBlock}</div>,
       contactList && (
         <div className="tpl-ledger-footer-col" key="contact">
           <div className="tpl-section">
@@ -1170,8 +1198,8 @@ export function ResumePreview({
                 </div>
               </>
             )}
-            {awardsBlock}
             {languagesBlock}
+            {awardsBlock}
           </div>
         </div>
       </div>
@@ -1216,9 +1244,10 @@ export function ResumePreview({
         {style.badge && <span className="tpl-badge">{style.badge}</span>}
         {orderedSections}
         {!style.skillsAfterSummary && skillsAndToolsBlock}
-        {awardsBlock}
         {style.educationAfterSkills && educationBlock}
+        {style.educationAfterSkills && certificationsBlock}
         {languagesBlock}
+        {awardsBlock}
         {style.contactInFooter && !hideFooterContact && contactLine && <div className="tpl-footer-contact">{contactLine}</div>}
       </div>
     </div>

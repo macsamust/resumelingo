@@ -126,6 +126,11 @@ export interface SkillOrTool {
   category: "skill" | "tool";
 }
 
+/** One line in the "Certifications & Training" section (e.g. "PMP", "OSHA 30"). See components/builder/CertificationsEditor.tsx. */
+export interface CertificationEntry {
+  name: string;
+}
+
 /**
  * One language entry in the optional "Languages" section (see
  * components/builder/LanguagesEditor.tsx). `proficiency` is a free string,
@@ -238,6 +243,8 @@ export interface Resume {
   skillsAndTools: SkillOrTool[];
   /** Optional "Languages" section — see LanguageEntry. */
   languages: LanguageEntry[];
+  /** "Certifications & Training" section — see CertificationEntry. */
+  certifications: CertificationEntry[];
   /** "References" section toggle — Premium subscribers only, off by default. See ReferenceEntry. */
   referencesEnabled: boolean;
   references: ReferenceEntry[];
@@ -294,6 +301,7 @@ export interface PublicResume {
   achievements: AchievementEntry[];
   skillsAndTools: SkillOrTool[];
   languages: LanguageEntry[];
+  certifications: CertificationEntry[];
   /** Already gated server-side (see server's Resume.publicReferences) — empty whenever referencesEnabled is off, so there's no separate flag to check here. */
   references: ReferenceEntry[];
   generatedSummary: string;

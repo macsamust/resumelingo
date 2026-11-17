@@ -43,6 +43,8 @@ export interface TemplateStyle {
   experienceLabel?: string;
   /** Overrides the Education section's label — defaults to "Education" (see ResumePreview.tsx). */
   educationLabel?: string;
+  /** Heading for the Certifications & Training section, which renders directly under Education. Defaults to "Certifications & Training". */
+  certificationsLabel?: string;
   /** Overrides the Awards section's label — defaults to "Awards" (see ResumePreview.tsx). */
   awardsLabel?: string;
   /** Overrides the Skills & Tools section's two group labels — default to "Skills"/"Tools" (see ResumePreview.tsx). */

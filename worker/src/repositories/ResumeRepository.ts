@@ -4,6 +4,7 @@ import {
   AchievementEntry,
   AwardEntry,
   EducationEntry,
+  CertificationEntry,
   LanguageEntry,
   LinkVisibility,
   ReferenceEntry,
@@ -41,6 +42,7 @@ export interface CreateResumeInput {
   achievements: AchievementEntry[];
   skillsAndTools?: SkillOrTool[];
   languages?: LanguageEntry[];
+  certifications?: CertificationEntry[];
   generatedSummary: string;
   generatedBullets: string[];
   /** Premium-only branded slug (see ResumeService.create's generateBrandedSlug call) — omitted for every other tier, which keeps today's {title}-{random6} behavior untouched. */
@@ -86,6 +88,7 @@ export interface UpdateResumeInput {
   achievements?: AchievementEntry[];
   skillsAndTools?: SkillOrTool[];
   languages?: LanguageEntry[];
+  certifications?: CertificationEntry[];
   referencesEnabled?: boolean;
   references?: ReferenceEntry[];
   referencesRecruiterModeOnly?: boolean;
@@ -433,6 +436,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       achievements: JSON.stringify(input.achievements),
       skillsAndTools: JSON.stringify(input.skillsAndTools ?? []),
       languages: JSON.stringify(input.languages ?? []),
+      certifications: JSON.stringify(input.certifications ?? []),
       // References, like Recruiter Mode, is only ever turned on from Edit
       // Resume, never at creation time.
       referencesEnabled: false,
@@ -502,6 +506,7 @@ export class ResumeRepository extends BaseRepository<ResumeRecord> {
       achievements: input.achievements ? JSON.stringify(input.achievements) : existing.achievements,
       skillsAndTools: input.skillsAndTools ? JSON.stringify(input.skillsAndTools) : existing.skillsAndTools,
       languages: input.languages ? JSON.stringify(input.languages) : existing.languages,
+      certifications: input.certifications ? JSON.stringify(input.certifications) : existing.certifications,
       referencesEnabled: input.referencesEnabled !== undefined ? input.referencesEnabled : existing.referencesEnabled,
       references: input.references ? JSON.stringify(input.references) : existing.references,
       referencesRecruiterModeOnly:

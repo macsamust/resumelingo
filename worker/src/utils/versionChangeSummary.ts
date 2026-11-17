@@ -55,6 +55,7 @@ export function summarizeVersionChange(existing: Resume, input: UpdateResumeInpu
   if (changedDeep("achievements", existing.achievements)) lines.push("Updated Key Achievements");
   if (changedDeep("skillsAndTools", existing.skillsAndTools)) lines.push("Updated Skills & Tools");
   if (changedDeep("languages", existing.languages)) lines.push("Updated Languages");
+  if (changedDeep("certifications", existing.certifications)) lines.push("Updated Certifications & Training");
   if (
     changedDeep("generatedSummary", existing.generatedSummary) ||
     changedDeep("generatedBullets", existing.generatedBullets)

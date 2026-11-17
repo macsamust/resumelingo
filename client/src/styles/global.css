@@ -968,6 +968,9 @@ footer { padding: 56px 0 40px; border-top: 1px solid var(--border); }
 .ach-group-count { background: #eef2ff; color: var(--indigo); font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; white-space: nowrap; }
 .ach-group-body { border-top: 1px solid var(--border); padding: 6px 10px 10px; }
 .ach-group-add { display: block; width: 100%; text-align: left; border: 0; background: transparent; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--indigo); padding: 8px 6px; cursor: pointer; }
+.tpl-cert-list { margin: 0; }
+.cert-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.cert-row input { flex: 1; min-width: 0; }
 .ach-group-adds { display: flex; gap: 16px; flex-wrap: wrap; }
 /* "Paste multiple bullets" panel (PasteBulletsPanel.tsx) */
 .paste-bullets { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin: 8px 0 12px; }

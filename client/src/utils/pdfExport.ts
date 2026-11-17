@@ -255,6 +255,13 @@ export function downloadResumePdf(resume: PublicResume): void {
     w.spacer();
   }
 
+  const certifications = (resume.certifications ?? []).filter((c) => c.name.trim());
+  if (certifications.length > 0) {
+    w.sectionHeading("Certifications & Training");
+    for (const cert of certifications) w.bullet(cert.name.trim());
+    w.spacer();
+  }
+
   const highlightBullets = grouped ? grouped.unlinked : resume.generatedBullets ?? [];
   if (highlightBullets.length > 0) {
     w.sectionHeading(bulletsLabel);
@@ -268,20 +275,6 @@ export function downloadResumePdf(resume: PublicResume): void {
     w.sectionHeading("Skills & Tools");
     if (skills.length > 0) w.body(`Skills: ${skills.map((s) => s.label).join(", ")}`);
     if (tools.length > 0) w.body(`Tools: ${tools.map((s) => s.label).join(", ")}`);
-    w.spacer();
-  }
-
-  // Same "blank row was never meant to be published" filter as
-  // ResumePreview.tsx/PublicResumePage.tsx — a title-less award only exists
-  // from an unfinished "+ Add award" click or an edit that never saved.
-  const namedAwards = (resume.awards ?? []).filter((a) => a.title.trim());
-  const awards = namedAwards.length > 0 ? sortAwards(namedAwards) : [];
-  if (awards.length > 0) {
-    w.sectionHeading("Awards");
-    for (const award of awards) {
-      w.entryTitle(`${award.title}${award.issuer ? `, ${award.issuer}` : ""} (${formatMonth(award.date)})`);
-      if (award.description) w.body(award.description);
-    }
     w.spacer();
   }
 
@@ -300,6 +293,20 @@ export function downloadResumePdf(resume: PublicResume): void {
       } else {
         w.body(text);
       }
+    }
+    w.spacer();
+  }
+
+  // Same "blank row was never meant to be published" filter as
+  // ResumePreview.tsx/PublicResumePage.tsx — a title-less award only exists
+  // from an unfinished "+ Add award" click or an edit that never saved.
+  const namedAwards = (resume.awards ?? []).filter((a) => a.title.trim());
+  const awards = namedAwards.length > 0 ? sortAwards(namedAwards) : [];
+  if (awards.length > 0) {
+    w.sectionHeading("Awards");
+    for (const award of awards) {
+      w.entryTitle(`${award.title}${award.issuer ? `, ${award.issuer}` : ""} (${formatMonth(award.date)})`);
+      if (award.description) w.body(award.description);
     }
     w.spacer();
   }

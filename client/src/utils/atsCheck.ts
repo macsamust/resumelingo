@@ -209,6 +209,8 @@ export function buildResumeTextBlob(input: {
   skillsAndTools?: { label: string }[];
   /** Optional — languages this resume lists, if any. */
   languages?: { language: string }[];
+  /** Optional — Certifications & Training entries, if any. */
+  certifications?: { name: string }[];
 }): string {
   const parts: string[] = [input.title, input.professionLabel, input.summary, ...input.bullets];
   for (const job of input.experience) parts.push(job.title, job.company);
@@ -218,5 +220,6 @@ export function buildResumeTextBlob(input: {
   for (const value of Object.values(input.answers)) parts.push(value);
   for (const item of input.skillsAndTools ?? []) parts.push(item.label);
   for (const lang of input.languages ?? []) parts.push(lang.language);
+  for (const cert of input.certifications ?? []) parts.push(cert.name);
   return parts.filter(Boolean).join(" \n ");
 }
